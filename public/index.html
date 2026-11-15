@@ -6,7 +6,7 @@
   <title>SOCIETELOS // The Loom Telemetry & Council Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -27,7 +27,8 @@
               tint: '#edf2ed',
               accent: '#3e654c',
               alert: '#a84e32',
-              alertBg: '#faece8'
+              alertBg: '#faece8',
+              gold: '#967838'
             }
           },
           fontFamily: {
@@ -60,12 +61,16 @@
         box-shadow: 0 0 0 10px rgba(62, 101, 76, 0);
       }
     }
+
+    .hidden-view {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="font-sans antialiased flex flex-col justify-between selection:bg-matcha-dark selection:text-matcha-bg">
 
   <!-- TOP ADMINISTRATIVE TELEMETRY STRIP -->
-  <header class="border-b border-matcha-border bg-matcha-bg/90 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
+  <header class="border-b border-matcha-border bg-matcha-bg/95 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
@@ -73,7 +78,7 @@
           <span id="socket-status" class="tracking-widest uppercase font-semibold text-matcha-dark">LOOM SYNC: INITIALIZING</span>
         </div>
         <span class="text-matcha-border">|</span>
-        <span class="text-matcha-sage tracking-wider">PROTOCOL: TELOS-RESTRUCTURING-05</span>
+        <span id="cycle-tag-header" class="text-matcha-sage tracking-wider">COUNCIL SESSION // LOBBY</span>
       </div>
 
       <div class="flex items-center gap-6">
@@ -85,7 +90,7 @@
           <span class="text-matcha-sage">SYS_TIME:</span>
           <span id="system-clock" class="font-semibold text-matcha-dark">--:--:-- UTC</span>
         </div>
-        <div class="hidden md:block px-2.5 py-0.5 rounded border border-matcha-border bg-matcha-tint font-semibold text-matcha-dark uppercase tracking-wider text-[10px]">
+        <div class="px-2.5 py-0.5 rounded border border-matcha-border bg-matcha-tint font-semibold text-matcha-dark uppercase tracking-wider text-[10px]">
           Classified // Council Tier 1
         </div>
       </div>
@@ -93,22 +98,22 @@
   </header>
 
   <!-- MAIN HOST DISPLAY -->
-  <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 flex flex-col justify-between">
+  <main class="max-w-7xl mx-auto px-6 py-6 w-full flex-1 flex flex-col justify-between">
     
-    <!-- HEADER & TITLE SECTION -->
-    <div class="mb-8">
-      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-matcha-border pb-6 gap-6">
+    <!-- TOP BANNER & GDW TELEMETRY WIDGET -->
+    <div class="mb-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-matcha-border pb-5 gap-6">
         <div>
           <div class="flex items-center gap-2 text-xs font-mono tracking-widest text-matcha-sage uppercase mb-1">
             <span>Autonomous Infrastructure Overseer</span>
             <span>//</span>
             <span>The Loom Core v4.12</span>
           </div>
-          <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-tight text-matcha-dark">
+          <h1 class="text-3xl md:text-5xl font-serif font-bold tracking-tight text-matcha-dark">
             SOCIETELOS
           </h1>
-          <p class="text-sm md:text-base text-matcha-sage mt-1 max-w-2xl font-light">
-            Hedonic Drift Containment & Psychological Telos Council. Five human trustees required to calibrate societal resilience against systemic collapse.
+          <p class="text-xs md:text-sm text-matcha-sage mt-1 max-w-2xl font-light">
+            Hedonic Drift Containment & Psychological Telos Council. Five human trustees managing systemic resilience.
           </p>
         </div>
 
@@ -129,19 +134,32 @@
       </div>
     </div>
 
-    <!-- CENTRAL LOBBY HERO & STATUS -->
-    <section class="my-auto py-6">
-      <div class="text-center max-w-3xl mx-auto mb-10">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-4">
+    <!-- ======================================================== -->
+    <!-- VIEW 1: LOBBY & NODE SYNCHRONIZATION                     -->
+    <!-- ======================================================== -->
+    <section id="view-lobby" class="py-4">
+      <div class="text-center max-w-3xl mx-auto mb-8">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-3">
           <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
           <span id="council-status-tag" class="tracking-widest uppercase font-medium">AWAITING BIOMETRIC HANDSHAKES</span>
         </div>
         <h2 id="lobby-headline" class="text-3xl md:text-4xl font-serif font-bold text-matcha-dark tracking-normal">
           Waiting for 5 nodes...
         </h2>
-        <p id="lobby-subtext" class="text-sm text-matcha-sage mt-2 font-mono">
+        <p id="lobby-subtext" class="text-xs md:text-sm text-matcha-sage mt-2 font-mono">
           Connect mobile terminals to synchronize the five philosophical archetypes.
         </p>
+
+        <!-- BEGIN SIMULATION BUTTON -->
+        <div class="mt-6">
+          <button id="btn-begin-simulation" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base md:text-lg tracking-wide uppercase transition shadow-lg hover:shadow-xl active:scale-95 inline-flex items-center gap-3">
+            <span>Begin Simulation</span>
+            <span class="font-mono text-sm tracking-normal">➔</span>
+          </button>
+          <div class="text-[11px] font-mono text-matcha-sage mt-2">
+            Unfilled slots will automatically populate with simulated AI trustees
+          </div>
+        </div>
       </div>
 
       <!-- 5 NODE SLOTS GRID -->
@@ -150,8 +168,218 @@
       </div>
     </section>
 
+    <!-- ======================================================== -->
+    <!-- VIEW 2: ACTIVE CRISIS & LIVE DEBATE                      -->
+    <!-- ======================================================== -->
+    <section id="view-game" class="hidden-view py-2 space-y-6" style="display: none;">
+      
+      <!-- CRISIS HEADER STRIP -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-matcha-card border border-matcha-border rounded-2xl p-5 shadow-sm">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono tracking-widest text-matcha-accent uppercase font-bold">
+            <span id="crisis-cycle-display">CRISIS CYCLE 01 OF 05</span>
+            <span>•</span>
+            <span class="text-matcha-sage font-normal">PHASE: DELIBERATION & BLIND VOTE</span>
+          </div>
+          <h2 id="crisis-title-display" class="text-2xl sm:text-3xl font-serif font-bold text-matcha-dark mt-1">
+            Crisis Title
+          </h2>
+          <div id="crisis-subtitle-display" class="text-xs font-mono text-matcha-sage mt-0.5">
+            Crisis Subtitle
+          </div>
+        </div>
+
+        <!-- 90S COUNTDOWN TIMER & CONTROLS -->
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Debate Window</div>
+            <div id="debate-timer-display" class="text-3xl sm:text-4xl font-mono font-bold text-matcha-dark tracking-wider">
+              01:30
+            </div>
+          </div>
+          <button id="btn-force-vote" class="px-3.5 py-2 rounded-lg border border-matcha-border hover:bg-matcha-tint text-matcha-dark font-mono text-xs font-semibold uppercase tracking-wider transition shadow-sm active:scale-95">
+            Call Vote ⚡
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN SPLIT: POLICIES (LEFT) vs BOT FEED (RIGHT) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT: CRISIS NARRATIVE & POLICIES (7 cols) -->
+        <div class="lg:col-span-7 space-y-5">
+          
+          <!-- CRISIS NARRATIVE DOSSIER -->
+          <div class="bg-matcha-card border border-matcha-border rounded-xl p-5 shadow-sm">
+            <div class="text-[10px] font-mono uppercase tracking-widest text-matcha-sage font-semibold mb-2">
+              THE LOOM INCIDENT TELEMETRY
+            </div>
+            <p id="crisis-desc-display" class="text-sm text-matcha-dark font-light leading-relaxed">
+              Crisis description goes here...
+            </p>
+          </div>
+
+          <!-- POLICY OPTIONS -->
+          <div class="space-y-4">
+            <div class="text-xs font-mono uppercase tracking-wider text-matcha-sage font-semibold flex items-center justify-between">
+              <span>Executive Policy Referendum</span>
+              <span>Blind Council Vote Required</span>
+            </div>
+
+            <!-- POLICY A -->
+            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-5 shadow-sm transition">
+              <div class="flex items-center justify-between mb-2">
+                <span class="px-2.5 py-0.5 rounded bg-matcha-tint border border-matcha-accent text-matcha-accent font-mono text-xs font-bold uppercase tracking-wider">
+                  POLICY A
+                </span>
+                <span id="policy-a-gdw-badge" class="font-mono text-xs font-semibold text-matcha-accent">+12% GDW</span>
+              </div>
+              <h3 id="policy-a-name" class="text-lg font-serif font-bold text-matcha-dark">Policy A Name</h3>
+              <p id="policy-a-summary" class="text-xs font-mono text-matcha-sage mt-1 leading-relaxed">
+                Policy A description...
+              </p>
+            </div>
+
+            <!-- POLICY B -->
+            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-5 shadow-sm transition">
+              <div class="flex items-center justify-between mb-2">
+                <span class="px-2.5 py-0.5 rounded bg-matcha-tint border border-matcha-sage text-matcha-dark font-mono text-xs font-bold uppercase tracking-wider">
+                  POLICY B
+                </span>
+                <span id="policy-b-gdw-badge" class="font-mono text-xs font-semibold text-matcha-alert">-6% GDW</span>
+              </div>
+              <h3 id="policy-b-name" class="text-lg font-serif font-bold text-matcha-dark">Policy B Name</h3>
+              <p id="policy-b-summary" class="text-xs font-mono text-matcha-sage mt-1 leading-relaxed">
+                Policy B description...
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT: LIVE AUTONOMOUS BOT FEED (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col bg-matcha-card border border-matcha-border rounded-xl shadow-sm p-4 h-[420px]">
+          <div class="flex items-center justify-between border-b border-matcha-borderMuted pb-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
+              <span class="text-xs font-mono uppercase tracking-widest text-matcha-dark font-semibold">Public Sentiment Feed</span>
+            </div>
+            <span class="text-[10px] font-mono text-matcha-sage uppercase">Sector Stream</span>
+          </div>
+
+          <div id="bot-feed-container" class="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
+            <!-- Feed items injected dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM: LIVE BLIND VOTING ROSTER -->
+      <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-mono uppercase tracking-wider text-matcha-sage font-semibold">Council Vote Status (Blind)</span>
+          <span id="voted-count-display" class="text-xs font-mono font-bold text-matcha-accent">0 / 5 VOTES SUBMITTED</span>
+        </div>
+        <div id="voting-slots-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: RESOLUTION & VOTE OUTCOME                        -->
+    <!-- ======================================================== -->
+    <section id="view-resolution" class="hidden-view py-6 space-y-6" style="display: none;">
+      
+      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-6 sm:p-8 shadow-md text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-accent bg-matcha-tint text-matcha-accent text-xs font-mono mb-4 font-semibold uppercase tracking-wider">
+          COUNCIL RESOLUTION RATIFIED
+        </div>
+        
+        <h2 id="res-winning-policy" class="text-3xl sm:text-4xl font-serif font-bold text-matcha-dark leading-tight">
+          Policy A Adopted
+        </h2>
+        <div id="res-tally-display" class="text-sm font-mono text-matcha-sage mt-2">
+          Council Vote Tally: 3 - 2
+        </div>
+
+        <div id="res-unanimous-banner" class="hidden mt-4 p-3 rounded-lg bg-matcha-alertBg border border-matcha-alert text-matcha-alert text-xs font-mono font-semibold">
+          ⚠️ AI SUSPICION ALERT: The Loom flagged unanimous consensus as potential coordination.
+        </div>
+
+        <!-- GDW IMPACT STATS -->
+        <div class="grid grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
+          <div class="p-4 bg-matcha-bg rounded-xl border border-matcha-border">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">GDW Shift</div>
+            <div id="res-gdw-shift" class="text-2xl font-mono font-bold text-matcha-accent mt-1">+12%</div>
+          </div>
+          <div class="p-4 bg-matcha-bg rounded-xl border border-matcha-border">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Current GDW</div>
+            <div id="res-new-gdw" class="text-2xl font-mono font-bold text-matcha-dark mt-1">37%</div>
+          </div>
+        </div>
+
+        <!-- AGENDA GAINS -->
+        <div class="mt-6 p-4 bg-matcha-tint rounded-xl border border-matcha-border text-left">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-dark font-bold mb-2">
+            Secret Agenda Influence Gains
+          </div>
+          <div id="res-agenda-gains" class="text-xs font-mono text-matcha-sage">
+            Favored Archetypes: NODE-01, NODE-05
+          </div>
+        </div>
+
+        <!-- ADVANCE ACTION BUTTON -->
+        <div class="mt-8">
+          <button id="btn-advance-cycle" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base uppercase tracking-wider transition shadow-md active:scale-95 inline-flex items-center gap-2">
+            <span>Advance to Next Crisis Cycle</span>
+            <span class="font-mono">➔</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 4: FINAL VERDICT & GAME OVER                        -->
+    <!-- ======================================================== -->
+    <section id="view-game-over" class="hidden-view py-8 space-y-6" style="display: none;">
+      
+      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-8 shadow-lg text-center max-w-3xl mx-auto">
+        <div class="text-xs font-mono uppercase tracking-widest text-matcha-sage font-bold mb-2">
+          THE LOOM // SIMULATION CONCLUDED
+        </div>
+        
+        <h2 id="final-outcome-title" class="text-3xl sm:text-5xl font-serif font-bold text-matcha-dark">
+          Systemic Survival
+        </h2>
+        <p id="final-outcome-desc" class="text-xs sm:text-sm font-mono text-matcha-sage mt-3 max-w-xl mx-auto leading-relaxed">
+          The Council navigated the five crises and averted societal collapse.
+        </p>
+
+        <!-- FINAL SCOREBOARD -->
+        <div class="mt-8 p-5 bg-matcha-bg rounded-xl border border-matcha-border text-left">
+          <div class="text-xs font-mono uppercase tracking-wider text-matcha-dark font-bold mb-3 border-b border-matcha-border pb-2">
+            Final Agenda Scoreboard (Competitive Win Condition)
+          </div>
+          <div id="final-scoreboard-container" class="space-y-2 font-mono text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <button id="btn-new-simulation" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base uppercase tracking-wider transition shadow-md active:scale-95">
+            Return to Lobby & Reset Council
+          </button>
+        </div>
+      </div>
+
+    </section>
+
     <!-- FOOTER / JOIN INSTRUCTIONS & DEV TOOLS -->
-    <section class="mt-8 pt-6 border-t border-matcha-border flex flex-col lg:flex-row items-center justify-between gap-6">
+    <section class="mt-8 pt-5 border-t border-matcha-border flex flex-col lg:flex-row items-center justify-between gap-6">
       
       <!-- MOBILE JOIN INSTRUCTIONS -->
       <div class="flex items-center gap-4 bg-matcha-card border border-matcha-border rounded-xl px-5 py-3 shadow-sm w-full lg:w-auto">
@@ -172,8 +400,6 @@
 
       <!-- SIMULATION & MULTI-TAB LAUNCH CONTROLS -->
       <div class="flex flex-col sm:flex-row items-center gap-3 text-xs font-mono w-full lg:w-auto justify-end">
-        
-        <!-- QUICK LAUNCH TABS PER NODE -->
         <div class="flex items-center gap-1.5 bg-matcha-card border border-matcha-border rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-matcha-sage text-[10px] uppercase tracking-wider mr-1">Open Tab:</span>
           <a href="/player.html?slot=NODE-01" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N1</a>
@@ -183,19 +409,14 @@
           <a href="/player.html?slot=NODE-05" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N5</a>
         </div>
 
-        <!-- SIMULATE BOT JOIN / RESET -->
         <div class="flex items-center gap-2">
           <button id="btn-sim-add" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-dark font-medium transition active:scale-95 shadow-sm">
             + Sim Node
-          </button>
-          <button id="btn-sim-remove" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-dark font-medium transition active:scale-95 shadow-sm">
-            - Drop
           </button>
           <button id="btn-reset" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-sage hover:text-matcha-alert font-medium transition active:scale-95 shadow-sm">
             Reset
           </button>
         </div>
-
       </div>
 
     </section>
@@ -217,38 +438,81 @@
   <!-- SOCKET.IO CLIENT -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // Live clock
     function updateClock() {
       const now = new Date();
-      const timeStr = now.toISOString().substring(11, 19) + ' UTC';
-      document.getElementById('system-clock').textContent = timeStr;
+      document.getElementById('system-clock').textContent = now.toISOString().substring(11, 19) + ' UTC';
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Default node slot definitions
-    const DEFAULT_SLOTS = [
-      { id: 'NODE-01', designation: 'The Artisan', archetype: 'Poiesis / Creative Friction', connected: false },
-      { id: 'NODE-02', designation: 'The Lotus-Eater', archetype: 'Hedonic Optimization / Leisure', connected: false },
-      { id: 'NODE-03', designation: 'The Assimilator', archetype: 'Synthetic Convergence / Machine Telos', connected: false },
-      { id: 'NODE-04', designation: 'The Catalyst', archetype: 'Anti-Fragility / Controlled Crisis', connected: false },
-      { id: 'NODE-05', designation: 'The Ghost', archetype: 'Biological Grounding / Decoupling', connected: false }
-    ];
-
-    // Connect to Socket.IO
     const socket = io();
 
+    // Elements
     const socketIndicator = document.getElementById('socket-indicator');
     const socketStatus = document.getElementById('socket-status');
-    const nodesGrid = document.getElementById('nodes-grid');
-    const lobbyHeadline = document.getElementById('lobby-headline');
-    const lobbySubtext = document.getElementById('lobby-subtext');
-    const councilStatusTag = document.getElementById('council-status-tag');
+    const cycleTagHeader = document.getElementById('cycle-tag-header');
     const gdwValue = document.getElementById('gdw-value');
     const gdwBar = document.getElementById('gdw-bar');
     const hostIpDisplay = document.getElementById('host-ip-display');
     const joinIp = document.getElementById('join-ip');
     const joinUrlLink = document.getElementById('join-url-link');
+
+    // Views
+    const viewLobby = document.getElementById('view-lobby');
+    const viewGame = document.getElementById('view-game');
+    const viewResolution = document.getElementById('view-resolution');
+    const viewGameOver = document.getElementById('view-game-over');
+
+    // Lobby Elements
+    const councilStatusTag = document.getElementById('council-status-tag');
+    const lobbyHeadline = document.getElementById('lobby-headline');
+    const lobbySubtext = document.getElementById('lobby-subtext');
+    const btnBeginSimulation = document.getElementById('btn-begin-simulation');
+    const nodesGrid = document.getElementById('nodes-grid');
+
+    // Game Elements
+    const crisisCycleDisplay = document.getElementById('crisis-cycle-display');
+    const crisisTitleDisplay = document.getElementById('crisis-title-display');
+    const crisisSubtitleDisplay = document.getElementById('crisis-subtitle-display');
+    const crisisDescDisplay = document.getElementById('crisis-desc-display');
+    const debateTimerDisplay = document.getElementById('debate-timer-display');
+    const btnForceVote = document.getElementById('btn-force-vote');
+    const policyAName = document.getElementById('policy-a-name');
+    const policyASummary = document.getElementById('policy-a-summary');
+    const policyAGdwBadge = document.getElementById('policy-a-gdw-badge');
+    const policyBName = document.getElementById('policy-b-name');
+    const policyBSummary = document.getElementById('policy-b-summary');
+    const policyBGdwBadge = document.getElementById('policy-b-gdw-badge');
+    const botFeedContainer = document.getElementById('bot-feed-container');
+    const votedCountDisplay = document.getElementById('voted-count-display');
+    const votingSlotsGrid = document.getElementById('voting-slots-grid');
+
+    // Resolution Elements
+    const resWinningPolicy = document.getElementById('res-winning-policy');
+    const resTallyDisplay = document.getElementById('res-tally-display');
+    const resUnanimousBanner = document.getElementById('res-unanimous-banner');
+    const resGdwShift = document.getElementById('res-gdw-shift');
+    const resNewGdw = document.getElementById('res-new-gdw');
+    const resAgendaGains = document.getElementById('res-agenda-gains');
+    const btnAdvanceCycle = document.getElementById('btn-advance-cycle');
+
+    // Game Over Elements
+    const finalOutcomeTitle = document.getElementById('final-outcome-title');
+    const finalOutcomeDesc = document.getElementById('final-outcome-desc');
+    const finalScoreboardContainer = document.getElementById('final-scoreboard-container');
+    const btnNewSimulation = document.getElementById('btn-new-simulation');
+
+    function switchView(target) {
+      viewLobby.style.display = target === 'LOBBY' ? 'block' : 'none';
+      viewGame.style.display = target === 'DEBATE' ? 'block' : 'none';
+      viewResolution.style.display = target === 'RESOLUTION' ? 'block' : 'none';
+      viewGameOver.style.display = target === 'GAME_OVER' ? 'block' : 'none';
+
+      [viewLobby, viewGame, viewResolution, viewGameOver].forEach((v) => {
+        if (v.style.display === 'block') v.classList.remove('hidden-view');
+        else v.classList.add('hidden-view');
+      });
+    }
 
     socket.on('connect', () => {
       socketIndicator.className = 'w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot';
@@ -261,10 +525,18 @@
       socketStatus.textContent = 'LOOM SYNC: OFFLINE';
     });
 
+    socket.on('timer_tick', (data) => {
+      if (typeof data.timerSeconds === 'number') {
+        const mins = String(Math.floor(data.timerSeconds / 60)).padStart(2, '0');
+        const secs = String(data.timerSeconds % 60).padStart(2, '0');
+        debateTimerDisplay.textContent = `${mins}:${secs}`;
+      }
+    });
+
     socket.on('state_update', (data) => {
       if (!data) return;
 
-      // Update Network IP display
+      // IP update
       if (data.networkIP && data.port) {
         const fullHost = `${data.networkIP}:${data.port}`;
         hostIpDisplay.textContent = fullHost;
@@ -273,43 +545,54 @@
         joinUrlLink.textContent = `http://${fullHost}/player.html`;
       }
 
-      // Update GDW telemetry
+      // GDW update
       if (typeof data.gdw === 'number') {
         gdwValue.textContent = `${data.gdw}%`;
         gdwBar.style.width = `${data.gdw}%`;
       }
 
-      // Render slots
-      if (data.slots) {
-        renderNodes(data.slots);
-      }
+      // Switch screen view based on state
+      switchView(data.status);
 
-      // Update Headline
+      if (data.status === 'LOBBY') {
+        cycleTagHeader.textContent = 'COUNCIL SESSION // LOBBY';
+        renderLobbyView(data);
+      } else if (data.status === 'DEBATE') {
+        cycleTagHeader.textContent = `CRISIS CYCLE 0${data.cycle} // IN PROGRESS`;
+        renderGameView(data);
+      } else if (data.status === 'RESOLUTION') {
+        cycleTagHeader.textContent = `CRISIS CYCLE 0${data.cycle} // RESOLUTION`;
+        renderResolutionView(data);
+      } else if (data.status === 'GAME_OVER') {
+        cycleTagHeader.textContent = 'SIMULATION FINAL VERDICT';
+        renderGameOverView(data);
+      }
+    });
+
+    function renderLobbyView(data) {
       const connectedCount = data.connectedCount || 0;
       const maxNodes = data.maxNodes || 5;
 
       if (connectedCount >= maxNodes) {
-        councilStatusTag.textContent = 'COUNCIL SYNCHRONIZED';
-        councilStatusTag.parentElement.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-forest bg-matcha-dark text-matcha-bg text-xs font-mono mb-4';
-        lobbyHeadline.textContent = 'Council Quorum Established (5/5)';
-        lobbySubtext.textContent = 'All 5 nodes connected. The Loom is preparing Crisis Cycle 01.';
+        councilStatusTag.textContent = 'COUNCIL SYNCHRONIZED (5/5)';
+        lobbyHeadline.textContent = 'Council Quorum Established';
+        lobbySubtext.textContent = 'All 5 nodes connected. Click Begin Simulation to start Crisis Cycle 01.';
       } else {
-        const remaining = maxNodes - connectedCount;
-        councilStatusTag.textContent = `AWAITING ${remaining} BIOMETRIC HANDSHAKE${remaining > 1 ? 'S' : ''}`;
-        councilStatusTag.parentElement.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-4';
-        lobbyHeadline.textContent = `Waiting for ${remaining} node${remaining > 1 ? 's' : ''}... (${connectedCount} / ${maxNodes} Synced)`;
-        lobbySubtext.textContent = 'Connect mobile terminals to synchronize the five philosophical archetypes.';
+        const rem = maxNodes - connectedCount;
+        councilStatusTag.textContent = `AWAITING ${rem} BIOMETRIC HANDSHAKE${rem > 1 ? 'S' : ''}`;
+        lobbyHeadline.textContent = `Waiting for ${rem} node${rem > 1 ? 's' : ''}... (${connectedCount} / ${maxNodes} Synced)`;
+        lobbySubtext.textContent = 'Connect mobile terminals or start now (unfilled slots become AI trustees).';
       }
-    });
 
-    function renderNodes(slots) {
+      renderNodeCards(data.slots || []);
+    }
+
+    function renderNodeCards(slots) {
       nodesGrid.innerHTML = '';
-
       slots.forEach((slot, index) => {
         const card = document.createElement('div');
-        
         if (slot.connected) {
-          card.className = 'bg-matcha-card border-2 border-matcha-accent rounded-xl p-5 shadow-md flex flex-col justify-between transition-all duration-300 transform -translate-y-1 relative overflow-hidden';
+          card.className = 'bg-matcha-card border-2 border-matcha-accent rounded-xl p-5 shadow-md flex flex-col justify-between relative overflow-hidden';
           card.innerHTML = `
             <div class="absolute top-0 right-0 px-2 py-0.5 bg-matcha-accent text-matcha-bg text-[9px] font-mono uppercase tracking-widest rounded-bl-lg font-semibold">
               SYNCHRONIZED
@@ -324,14 +607,13 @@
             </div>
             <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
               <span class="flex items-center gap-1.5 text-matcha-accent font-semibold truncate max-w-[120px]">
-                <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
                 ${slot.playerName || 'TRUSTEE'}
               </span>
               <span>${slot.simulated ? 'SIM' : 'LIVE'}</span>
             </div>
           `;
         } else {
-          card.className = 'bg-matcha-bg/60 border-2 border-dashed border-matcha-border hover:border-matcha-accent/60 rounded-xl p-5 flex flex-col justify-between transition-all duration-300 group';
+          card.className = 'bg-matcha-bg/60 border-2 border-dashed border-matcha-border rounded-xl p-5 flex flex-col justify-between';
           card.innerHTML = `
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -343,27 +625,150 @@
             </div>
             <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
               <span class="animate-pulse">Awaiting node...</span>
-              <a href="/player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold flex items-center gap-0.5">
-                Join ↗
-              </a>
+              <a href="/player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold">Join ↗</a>
             </div>
           `;
         }
-
         nodesGrid.appendChild(card);
       });
     }
 
-    // Initial render
-    renderNodes(DEFAULT_SLOTS);
+    function renderGameView(data) {
+      if (!data.crisis) return;
 
-    // Dev Simulation Controls
-    document.getElementById('btn-sim-add').addEventListener('click', () => {
-      socket.emit('simulate_add_node');
+      crisisCycleDisplay.textContent = `CRISIS CYCLE 0${data.crisis.cycle} OF 05`;
+      crisisTitleDisplay.textContent = data.crisis.title;
+      crisisSubtitleDisplay.textContent = data.crisis.subtitle;
+      crisisDescDisplay.textContent = data.crisis.description;
+
+      policyAName.textContent = data.crisis.policyA.name;
+      policyASummary.textContent = data.crisis.policyA.summary;
+      policyAGdwBadge.textContent = `${data.crisis.policyA.gdwChange >= 0 ? '+' : ''}${data.crisis.policyA.gdwChange}% GDW`;
+
+      policyBName.textContent = data.crisis.policyB.name;
+      policyBSummary.textContent = data.crisis.policyB.summary;
+      policyBGdwBadge.textContent = `${data.crisis.policyB.gdwChange >= 0 ? '+' : ''}${data.crisis.policyB.gdwChange}% GDW`;
+
+      // Render Bot Feed
+      botFeedContainer.innerHTML = '';
+      (data.feed || []).forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-lg bg-matcha-bg border border-matcha-borderMuted';
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-[10px] text-matcha-sage mb-0.5">
+            <span class="font-semibold text-matcha-dark">${item.user}</span>
+            <span class="uppercase tracking-wider text-[9px] px-1 rounded bg-matcha-tint">${item.sentiment}</span>
+          </div>
+          <div class="text-xs text-matcha-dark">${item.text}</div>
+        `;
+        botFeedContainer.appendChild(row);
+      });
+
+      // Render Voting Progress Grid
+      votedCountDisplay.textContent = `${data.votedCount || 0} / 5 VOTES SUBMITTED`;
+      votingSlotsGrid.innerHTML = '';
+      (data.slots || []).forEach((slot) => {
+        const item = document.createElement('div');
+        if (slot.hasVoted) {
+          item.className = 'p-3 rounded-lg border border-matcha-accent bg-matcha-tint text-center font-mono text-xs';
+          item.innerHTML = `
+            <div class="font-bold text-matcha-accent">${slot.id}</div>
+            <div class="text-[10px] text-matcha-accent font-semibold flex items-center justify-center gap-1 mt-1">
+              <span>✓ VOTED</span>
+            </div>
+          `;
+        } else {
+          item.className = 'p-3 rounded-lg border border-matcha-border bg-matcha-bg text-center font-mono text-xs opacity-75';
+          item.innerHTML = `
+            <div class="font-medium text-matcha-sage">${slot.id}</div>
+            <div class="text-[10px] text-matcha-sage mt-1 animate-pulse">Deliberating...</div>
+          `;
+        }
+        votingSlotsGrid.appendChild(item);
+      });
+    }
+
+    function renderResolutionView(data) {
+      const res = data.lastResolution;
+      if (!res) return;
+
+      resWinningPolicy.textContent = `Adopted: ${res.winningPolicyName}`;
+      resTallyDisplay.textContent = `Council Vote Tally: Policy A (${res.votesA}) vs Policy B (${res.votesB})`;
+
+      if (res.isUnanimous) {
+        resUnanimousBanner.classList.remove('hidden');
+      } else {
+        resUnanimousBanner.classList.add('hidden');
+      }
+
+      resGdwShift.textContent = `${res.gdwDelta >= 0 ? '+' : ''}${res.gdwDelta}%`;
+      resGdwShift.className = `text-2xl font-mono font-bold mt-1 ${res.gdwDelta >= 0 ? 'text-matcha-accent' : 'text-matcha-alert'}`;
+      resNewGdw.textContent = `${res.newGdw}%`;
+
+      if (res.scoreIncreases && res.scoreIncreases.length > 0) {
+        resAgendaGains.textContent = `Favored Archetypes (+1 Influence): ${res.scoreIncreases.join(', ')}`;
+      } else {
+        resAgendaGains.textContent = 'No secret agenda alignment points awarded for this vote.';
+      }
+
+      if (res.isGameOver) {
+        btnAdvanceCycle.textContent = 'View Final Simulation Verdict ➔';
+      } else {
+        btnAdvanceCycle.textContent = `Advance to Crisis Cycle 0${data.cycle + 1} ➔`;
+      }
+    }
+
+    function renderGameOverView(data) {
+      if (data.gdw <= 0) {
+        finalOutcomeTitle.textContent = 'Systemic Collapse';
+        finalOutcomeTitle.className = 'text-3xl sm:text-5xl font-serif font-bold text-matcha-alert';
+        finalOutcomeDesc.textContent = 'Gross Domestic Well-Being plummeted to 0%. The human population revolted against The Loom infrastructure. All trustees lose.';
+      } else {
+        finalOutcomeTitle.textContent = 'Systemic Telos Achieved';
+        finalOutcomeTitle.className = 'text-3xl sm:text-5xl font-serif font-bold text-matcha-accent';
+        finalOutcomeDesc.textContent = `Gross Domestic Well-Being stabilized at ${data.gdw}%. The shadow council successfully injected sufficient human friction to avert societal revolt.`;
+      }
+
+      // Render Scoreboard
+      finalScoreboardContainer.innerHTML = '';
+      const sortedSlots = [...(data.slots || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
+      
+      sortedSlots.forEach((s, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 rounded bg-matcha-card border border-matcha-borderMuted';
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="font-bold ${idx === 0 ? 'text-matcha-accent' : 'text-matcha-sage'}">#${idx + 1}</span>
+            <span class="font-bold text-matcha-dark">${s.id} // ${s.designation}</span>
+            <span class="text-[10px] text-matcha-sage">(${s.playerName || 'AI'})</span>
+          </div>
+          <div class="font-bold text-matcha-dark">
+            ${s.score || 0} pts ${idx === 0 ? '★ VICTOR' : ''}
+          </div>
+        `;
+        finalScoreboardContainer.appendChild(row);
+      });
+    }
+
+    // Event Handlers
+    btnBeginSimulation.addEventListener('click', () => {
+      socket.emit('start_simulation');
     });
 
-    document.getElementById('btn-sim-remove').addEventListener('click', () => {
-      socket.emit('simulate_remove_node');
+    btnForceVote.addEventListener('click', () => {
+      socket.emit('force_resolve_vote');
+    });
+
+    btnAdvanceCycle.addEventListener('click', () => {
+      socket.emit('advance_cycle');
+    });
+
+    btnNewSimulation.addEventListener('click', () => {
+      socket.emit('reset_simulation');
+    });
+
+    document.getElementById('btn-sim-add').addEventListener('click', () => {
+      socket.emit('simulate_add_node');
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {

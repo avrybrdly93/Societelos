@@ -70,8 +70,8 @@
       <span id="conn-status" class="uppercase font-semibold tracking-wider text-matcha-dark">CONNECTING</span>
     </div>
     <div class="flex items-center gap-2">
-      <span class="text-[10px] text-matcha-sage uppercase font-mono">LOOM V4.12</span>
-      <span class="px-2 py-0.5 rounded border border-matcha-border bg-matcha-cream text-[10px] tracking-wider uppercase font-semibold">
+      <span id="header-timer" class="hidden px-2 py-0.5 rounded bg-matcha-tint font-bold text-matcha-accent">01:30</span>
+      <span id="header-node-badge" class="px-2 py-0.5 rounded border border-matcha-border bg-matcha-cream text-[10px] tracking-wider uppercase font-semibold">
         TRUSTEE TERMINAL
       </span>
     </div>
@@ -115,7 +115,6 @@
         </div>
 
         <div id="slots-container" class="space-y-2">
-          <!-- Dynamically populated via state_update -->
           <div class="p-4 bg-matcha-card border border-matcha-border rounded-xl text-center text-xs font-mono text-matcha-sage">
             Connecting to The Loom telemetry...
           </div>
@@ -123,15 +122,12 @@
       </div>
     </div>
 
-    <!-- ================= VIEW 2: CONNECTED / SYNCHRONIZED TERMINAL ================= -->
-    <div id="view-connected" class="space-y-5 hidden-view" style="display: none;">
-      
+    <!-- ================= VIEW 2: LOBBY WAITING SCREEN ================= -->
+    <div id="view-lobby-wait" class="space-y-5 hidden-view" style="display: none;">
       <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-5 sm:p-6 shadow-md relative overflow-hidden">
-        
-        <!-- TOP AUTH BADGE -->
         <div class="flex items-center justify-between border-b border-matcha-borderMuted pb-4 mb-4">
           <div>
-            <span class="text-[10px] font-mono uppercase tracking-widest text-matcha-sage">COUNCIL NODE ASSIGNED</span>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-matcha-sage">AUTHENTICATED NODE</span>
             <h2 id="assigned-node-id" class="text-2xl sm:text-3xl font-mono font-bold text-matcha-accent tracking-wider">---</h2>
           </div>
           <div class="text-right">
@@ -143,7 +139,6 @@
           </div>
         </div>
 
-        <!-- ROLE & ARCHETYPE DETAILS -->
         <div class="space-y-4">
           <div>
             <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Philosophical Archetype</div>
@@ -156,32 +151,114 @@
               <svg class="w-3.5 h-3.5 text-matcha-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
               CLASSIFIED AGENDA (SECRET MANDATE)
             </div>
-            <p id="assigned-role-agenda" class="text-xs font-mono text-matcha-dark leading-relaxed">
-              ---
-            </p>
+            <p id="assigned-role-agenda" class="text-xs font-mono text-matcha-dark leading-relaxed">---</p>
           </div>
         </div>
 
-        <!-- LOBBY STATUS FOOTER -->
         <div class="mt-6 pt-4 border-t border-matcha-borderMuted bg-matcha-cream/60 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4">
           <div class="flex items-center justify-between text-xs font-mono">
             <div class="flex items-center gap-2 text-matcha-dark">
               <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
-              <span id="player-lobby-status">Waiting for all 5 nodes to establish quorum...</span>
+              <span id="player-lobby-status">Waiting for host to begin simulation...</span>
             </div>
           </div>
         </div>
-
       </div>
 
-      <!-- LEAVE / RELINQUISH BUTTON -->
       <div class="flex justify-between items-center px-1">
         <span class="text-[10px] font-mono text-matcha-sage">Terminal linked to active council session</span>
         <button id="btn-relinquish" class="text-xs font-mono text-matcha-sage hover:text-matcha-alert underline transition">
           Relinquish Seat
         </button>
       </div>
+    </div>
 
+    <!-- ================= VIEW 3: ACTIVE CRISIS DELIBERATION & VOTING ================= -->
+    <div id="view-active-game" class="space-y-4 hidden-view" style="display: none;">
+      
+      <!-- CRISIS HEADER CARD -->
+      <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-between text-[10px] font-mono text-matcha-sage uppercase">
+          <span id="player-crisis-cycle">CYCLE 01 OF 05</span>
+          <span id="player-timer-badge" class="font-bold text-matcha-dark">01:30 REMAINING</span>
+        </div>
+        <h2 id="player-crisis-title" class="text-xl font-serif font-bold text-matcha-dark mt-1">Crisis Title</h2>
+        <div id="player-crisis-subtitle" class="text-[11px] font-mono text-matcha-sage">Crisis Subtitle</div>
+      </div>
+
+      <!-- CLASSIFIED WEAPONIZED RESEARCH INTEL DROP -->
+      <div class="bg-matcha-dark text-matcha-bg rounded-xl p-4 shadow-md space-y-2 relative overflow-hidden">
+        <div class="flex items-center justify-between text-[10px] font-mono text-matcha-lightSage uppercase tracking-wider">
+          <span class="flex items-center gap-1 font-semibold">
+            <svg class="w-3 h-3 text-matcha-accent" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+            CLASSIFIED INTEL DROP
+          </span>
+          <span class="text-matcha-border">EYES ONLY</span>
+        </div>
+        <h3 id="intel-concept" class="text-sm font-serif font-bold text-matcha-cream">Intel Concept</h3>
+        <p id="intel-quote" class="text-xs font-mono text-matcha-tint italic leading-relaxed">
+          "Research quote goes here..."
+        </p>
+        <div class="pt-2 border-t border-matcha-forest text-[11px] font-mono text-matcha-lightSage">
+          <span class="font-bold text-matcha-bg">TACTICAL MANDATE:</span>
+          <span id="intel-tip">Tip goes here...</span>
+        </div>
+      </div>
+
+      <!-- BLIND VOTING STATION -->
+      <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm space-y-3">
+        <div class="text-xs font-mono uppercase tracking-wider text-matcha-dark font-bold text-center">
+          Cast Confidential Council Vote
+        </div>
+
+        <div class="grid grid-cols-1 gap-2.5">
+          <!-- VOTE BUTTON A -->
+          <button id="btn-vote-a" class="btn-vote p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-bg text-left transition flex flex-col justify-between active:scale-98">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs font-mono font-bold text-matcha-accent tracking-wider">VOTE POLICY A</span>
+              <span id="vote-check-a" class="hidden text-xs font-bold text-matcha-accent">✓ SELECTED</span>
+            </div>
+            <div id="player-policy-a-name" class="text-sm font-serif font-bold text-matcha-dark">Policy A Name</div>
+            <div id="player-policy-a-summary" class="text-[11px] font-mono text-matcha-sage mt-0.5">Policy A summary...</div>
+          </button>
+
+          <!-- VOTE BUTTON B -->
+          <button id="btn-vote-b" class="btn-vote p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-bg text-left transition flex flex-col justify-between active:scale-98">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs font-mono font-bold text-matcha-dark tracking-wider">VOTE POLICY B</span>
+              <span id="vote-check-b" class="hidden text-xs font-bold text-matcha-accent">✓ SELECTED</span>
+            </div>
+            <div id="player-policy-b-name" class="text-sm font-serif font-bold text-matcha-dark">Policy B Name</div>
+            <div id="player-policy-b-summary" class="text-[11px] font-mono text-matcha-sage mt-0.5">Policy B summary...</div>
+          </button>
+        </div>
+
+        <div id="vote-status-banner" class="text-[11px] font-mono text-center text-matcha-sage pt-1">
+          Select Policy A or B to register your blind vote with The Loom.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 4: CYCLE RESOLUTION SCREEN ================= -->
+    <div id="view-player-resolution" class="space-y-4 hidden-view" style="display: none;">
+      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-5 shadow-md text-center space-y-4">
+        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-matcha-tint border border-matcha-accent text-[10px] font-mono text-matcha-accent font-semibold uppercase">
+          VOTE RATIFIED
+        </div>
+        <h2 id="player-res-policy-name" class="text-xl font-serif font-bold text-matcha-dark">
+          Policy A Adopted
+        </h2>
+        <div id="player-res-gdw" class="text-sm font-mono text-matcha-sage">
+          GDW Shift: +12%
+        </div>
+        <div id="player-res-agenda-impact" class="p-3 rounded-lg bg-matcha-bg border border-matcha-border text-xs font-mono text-matcha-dark">
+          Checking secret agenda score...
+        </div>
+        <p class="text-[11px] font-mono text-matcha-sage">
+          Look up at the central projector for societal consequence telemetry.
+        </p>
+      </div>
     </div>
 
   </main>
@@ -194,7 +271,6 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // Tab-specific unique session key
     const SESSION_KEY = 'societelos_node_session_id';
     let currentSessionId = sessionStorage.getItem(SESSION_KEY);
     if (!currentSessionId) {
@@ -202,24 +278,31 @@
       sessionStorage.setItem(SESSION_KEY, currentSessionId);
     }
 
-    // Check URL parameters for pre-assigned slot e.g. ?slot=NODE-02
     const urlParams = new URLSearchParams(window.location.search);
     const requestedSlotFromUrl = urlParams.get('slot');
 
-    // Socket.io instance
     const socket = io();
 
-    // DOM Elements
+    // DOM
     const connDot = document.getElementById('conn-dot');
     const connStatus = document.getElementById('conn-status');
+    const headerTimer = document.getElementById('header-timer');
+    const headerNodeBadge = document.getElementById('header-node-badge');
+
+    // Views
     const viewJoin = document.getElementById('view-join');
-    const viewConnected = document.getElementById('view-connected');
+    const viewLobbyWait = document.getElementById('view-lobby-wait');
+    const viewActiveGame = document.getElementById('view-active-game');
+    const viewPlayerResolution = document.getElementById('view-player-resolution');
+
+    // Join elements
     const inputPlayerName = document.getElementById('input-player-name');
     const btnQuickJoin = document.getElementById('btn-quick-join');
     const joinError = document.getElementById('join-error');
     const slotsContainer = document.getElementById('slots-container');
     const slotsCountBadge = document.getElementById('slots-count-badge');
 
+    // Lobby Wait elements
     const assignedNodeId = document.getElementById('assigned-node-id');
     const assignedPlayerDisplay = document.getElementById('assigned-player-display');
     const assignedRoleName = document.getElementById('assigned-role-name');
@@ -228,39 +311,47 @@
     const playerLobbyStatus = document.getElementById('player-lobby-status');
     const btnRelinquish = document.getElementById('btn-relinquish');
 
-    // Local cached state
-    let cachedSlots = [];
-    let isAssigned = false;
+    // Active Game elements
+    const playerCrisisCycle = document.getElementById('player-crisis-cycle');
+    const playerTimerBadge = document.getElementById('player-timer-badge');
+    const playerCrisisTitle = document.getElementById('player-crisis-title');
+    const playerCrisisSubtitle = document.getElementById('player-crisis-subtitle');
+    const intelConcept = document.getElementById('intel-concept');
+    const intelQuote = document.getElementById('intel-quote');
+    const intelTip = document.getElementById('intel-tip');
+    const btnVoteA = document.getElementById('btn-vote-a');
+    const btnVoteB = document.getElementById('btn-vote-b');
+    const voteCheckA = document.getElementById('vote-check-a');
+    const voteCheckB = document.getElementById('vote-check-b');
+    const playerPolicyAName = document.getElementById('player-policy-a-name');
+    const playerPolicyASummary = document.getElementById('player-policy-a-summary');
+    const playerPolicyBName = document.getElementById('player-policy-b-name');
+    const playerPolicyBSummary = document.getElementById('player-policy-b-summary');
+    const voteStatusBanner = document.getElementById('vote-status-banner');
 
-    // View Switching
-    function showJoinView() {
-      isAssigned = false;
-      viewJoin.style.display = 'block';
-      viewConnected.style.display = 'none';
-      viewConnected.classList.add('hidden-view');
-      viewJoin.classList.remove('hidden-view');
+    // Resolution elements
+    const playerResPolicyName = document.getElementById('player-res-policy-name');
+    const playerResGdw = document.getElementById('player-res-gdw');
+    const playerResAgendaImpact = document.getElementById('player-res-agenda-impact');
+
+    let myNodeData = null;
+    let selectedVote = null;
+
+    function switchPlayerView(viewName) {
+      viewJoin.style.display = viewName === 'JOIN' ? 'block' : 'none';
+      viewLobbyWait.style.display = viewName === 'LOBBY' ? 'block' : 'none';
+      viewActiveGame.style.display = viewName === 'DEBATE' ? 'block' : 'none';
+      viewPlayerResolution.style.display = viewName === 'RESOLUTION' ? 'block' : 'none';
+
+      [viewJoin, viewLobbyWait, viewActiveGame, viewPlayerResolution].forEach((v) => {
+        if (v.style.display === 'block') v.classList.remove('hidden-view');
+        else v.classList.add('hidden-view');
+      });
     }
 
-    function showConnectedView(data) {
-      isAssigned = true;
-      assignedNodeId.textContent = data.nodeId;
-      assignedPlayerDisplay.textContent = data.playerName || 'Trustee';
-      assignedRoleName.textContent = data.designation;
-      assignedRoleArchetype.textContent = data.archetype;
-      assignedRoleAgenda.textContent = data.agenda || 'Confidential mandate active.';
-
-      viewJoin.style.display = 'none';
-      viewConnected.style.display = 'block';
-      viewJoin.classList.add('hidden-view');
-      viewConnected.classList.remove('hidden-view');
-    }
-
-    // Socket Lifecycle
     socket.on('connect', () => {
       connDot.className = 'w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot';
       connStatus.textContent = 'ONLINE';
-      
-      // If this tab already had an active assignment, check if server still recognizes it
       socket.emit('check_session', { sessionId: currentSessionId });
     });
 
@@ -270,67 +361,138 @@
     });
 
     socket.on('session_not_found', () => {
-      // If server does not have an active session for this tab, show join view
-      if (!isAssigned) {
-        showJoinView();
-        // If URL requested a specific slot, auto-attempt join
-        if (requestedSlotFromUrl && cachedSlots.length > 0) {
-          attemptJoin(requestedSlotFromUrl);
-        }
+      if (!myNodeData) {
+        switchPlayerView('JOIN');
       }
     });
 
     socket.on('node_assigned', (data) => {
-      showConnectedView(data);
+      myNodeData = data;
+      headerNodeBadge.textContent = `${data.nodeId} // ${data.designation}`;
+      assignedNodeId.textContent = data.nodeId;
+      assignedPlayerDisplay.textContent = data.playerName || 'Trustee';
+      assignedRoleName.textContent = data.designation;
+      assignedRoleArchetype.textContent = data.archetype;
+      assignedRoleAgenda.textContent = data.agenda || 'Confidential mandate active.';
     });
 
-    socket.on('node_join_rejected', (data) => {
-      joinError.textContent = data.reason || 'Could not join slot.';
-      joinError.classList.remove('hidden');
-    });
-
-    socket.on('node_left_confirmed', () => {
-      sessionStorage.removeItem(SESSION_KEY);
-      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10);
-      sessionStorage.setItem(SESSION_KEY, currentSessionId);
-      showJoinView();
-    });
-
-    socket.on('lobby_reset_broadcast', () => {
-      sessionStorage.removeItem(SESSION_KEY);
-      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10);
-      sessionStorage.setItem(SESSION_KEY, currentSessionId);
-      showJoinView();
+    socket.on('timer_tick', (data) => {
+      if (typeof data.timerSeconds === 'number') {
+        const mins = String(Math.floor(data.timerSeconds / 60)).padStart(2, '0');
+        const secs = String(data.timerSeconds % 60).padStart(2, '0');
+        const timeStr = `${mins}:${secs}`;
+        headerTimer.textContent = timeStr;
+        playerTimerBadge.textContent = `${timeStr} REMAINING`;
+      }
     });
 
     socket.on('state_update', (data) => {
       if (!data) return;
-      cachedSlots = data.slots || [];
 
-      // Update slot roster on Join View
-      renderSlotCards(cachedSlots);
-
-      // Update occupied count
+      // Slot count on join screen
       const connectedCount = data.connectedCount || 0;
       const maxNodes = data.maxNodes || 5;
       slotsCountBadge.textContent = `${connectedCount} / ${maxNodes} OCCUPIED`;
+      renderSlotCards(data.slots || []);
 
-      // Update quorum status on connected view
-      if (data.isReady) {
-        playerLobbyStatus.textContent = 'Council quorum established (5/5). Stand by for Crisis Cycle 01.';
-      } else {
-        const remaining = maxNodes - connectedCount;
-        playerLobbyStatus.textContent = `Awaiting ${remaining} more node${remaining > 1 ? 's' : ''}... (${connectedCount}/${maxNodes} synced)`;
-      }
-
-      // If URL parameter requested a slot and we are still unassigned and slot is available
-      if (!isAssigned && requestedSlotFromUrl) {
-        const target = cachedSlots.find(s => s.id === requestedSlotFromUrl);
+      if (requestedSlotFromUrl && !myNodeData) {
+        const target = (data.slots || []).find((s) => s.id === requestedSlotFromUrl);
         if (target && !target.connected) {
           attemptJoin(requestedSlotFromUrl);
         }
       }
+
+      // If not yet joined, stay on join screen
+      if (!myNodeData) {
+        switchPlayerView('JOIN');
+        return;
+      }
+
+      // If joined, switch according to game state
+      if (data.status === 'LOBBY') {
+        headerTimer.classList.add('hidden');
+        switchPlayerView('LOBBY');
+        if (data.isReady) {
+          playerLobbyStatus.textContent = 'Council quorum established. Waiting for host to begin.';
+        } else {
+          playerLobbyStatus.textContent = `Awaiting ${maxNodes - connectedCount} more nodes...`;
+        }
+      } else if (data.status === 'DEBATE') {
+        headerTimer.classList.remove('hidden');
+        switchPlayerView('DEBATE');
+        renderActiveGame(data);
+      } else if (data.status === 'RESOLUTION') {
+        headerTimer.classList.add('hidden');
+        switchPlayerView('RESOLUTION');
+        renderPlayerResolution(data);
+      } else if (data.status === 'GAME_OVER') {
+        headerTimer.classList.add('hidden');
+        switchPlayerView('RESOLUTION');
+        playerResPolicyName.textContent = 'Simulation Concluded';
+        playerResGdw.textContent = `Final GDW: ${data.gdw}%`;
+        playerResAgendaImpact.textContent = 'Inspect central projector for final council standings.';
+      }
     });
+
+    function renderActiveGame(data) {
+      if (!data.crisis) return;
+
+      playerCrisisCycle.textContent = `CYCLE 0${data.crisis.cycle} OF 05`;
+      playerCrisisTitle.textContent = data.crisis.title;
+      playerCrisisSubtitle.textContent = data.crisis.subtitle;
+
+      // Secret Intel Drop
+      if (data.secretIntel) {
+        intelConcept.textContent = data.secretIntel.concept;
+        intelQuote.textContent = `"${data.secretIntel.quote}"`;
+        intelTip.textContent = ` ${data.secretIntel.tip}`;
+      }
+
+      playerPolicyAName.textContent = data.crisis.policyA.name;
+      playerPolicyASummary.textContent = data.crisis.policyA.summary;
+
+      playerPolicyBName.textContent = data.crisis.policyB.name;
+      playerPolicyBSummary.textContent = data.crisis.policyB.summary;
+
+      // Update vote selection UI
+      const myVote = data.myVote || selectedVote;
+      if (myVote === 'A') {
+        btnVoteA.className = 'btn-vote p-3.5 rounded-xl border-2 border-matcha-accent bg-matcha-tint text-left transition flex flex-col justify-between shadow-sm';
+        btnVoteB.className = 'btn-vote p-3.5 rounded-xl border border-matcha-border bg-matcha-bg text-left opacity-70 transition flex flex-col justify-between';
+        voteCheckA.classList.remove('hidden');
+        voteCheckB.classList.add('hidden');
+        voteStatusBanner.innerHTML = '<span class="text-matcha-accent font-semibold">✓ Blind Vote Recorded for Policy A.</span> You may change your vote before time expires.';
+      } else if (myVote === 'B') {
+        btnVoteB.className = 'btn-vote p-3.5 rounded-xl border-2 border-matcha-accent bg-matcha-tint text-left transition flex flex-col justify-between shadow-sm';
+        btnVoteA.className = 'btn-vote p-3.5 rounded-xl border border-matcha-border bg-matcha-bg text-left opacity-70 transition flex flex-col justify-between';
+        voteCheckB.classList.remove('hidden');
+        voteCheckA.classList.add('hidden');
+        voteStatusBanner.innerHTML = '<span class="text-matcha-accent font-semibold">✓ Blind Vote Recorded for Policy B.</span> You may change your vote before time expires.';
+      } else {
+        btnVoteA.className = 'btn-vote p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-bg text-left transition flex flex-col justify-between';
+        btnVoteB.className = 'btn-vote p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-bg text-left transition flex flex-col justify-between';
+        voteCheckA.classList.add('hidden');
+        voteCheckB.classList.add('hidden');
+        voteStatusBanner.textContent = 'Select Policy A or B to register your confidential vote.';
+      }
+    }
+
+    function renderPlayerResolution(data) {
+      const res = data.lastResolution;
+      if (!res) return;
+
+      playerResPolicyName.textContent = `Adopted: ${res.winningPolicyName}`;
+      playerResGdw.textContent = `GDW Shift: ${res.gdwDelta >= 0 ? '+' : ''}${res.gdwDelta}% (Total: ${res.newGdw}%)`;
+
+      const myNodeId = myNodeData ? myNodeData.nodeId : null;
+      const favored = res.scoreIncreases && res.scoreIncreases.some((item) => item.includes(myNodeId));
+
+      if (favored) {
+        playerResAgendaImpact.innerHTML = '<span class="text-matcha-accent font-bold">★ AGENDA ALIGNED:</span> Your secret agenda gained +1 Influence Point!';
+      } else {
+        playerResAgendaImpact.textContent = 'This policy did not align directly with your hidden agenda win condition.';
+      }
+    }
 
     function renderSlotCards(slots) {
       if (!slots || slots.length === 0) return;
@@ -338,10 +500,8 @@
 
       slots.forEach((slot) => {
         const card = document.createElement('div');
-        const isOccupied = slot.connected;
-
-        if (isOccupied) {
-          card.className = 'p-3.5 rounded-xl border border-matcha-border bg-matcha-cream/40 opacity-70 flex items-center justify-between gap-3 text-left transition';
+        if (slot.connected) {
+          card.className = 'p-3 rounded-xl border border-matcha-border bg-matcha-cream/40 opacity-70 flex items-center justify-between gap-3 text-left';
           card.innerHTML = `
             <div>
               <div class="flex items-center gap-2">
@@ -349,14 +509,11 @@
                 <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-matcha-border text-matcha-dark uppercase font-semibold">OCCUPIED</span>
               </div>
               <div class="text-sm font-serif font-medium text-matcha-dark/70">${slot.designation}</div>
-              <div class="text-[11px] font-mono text-matcha-sage line-clamp-1">${slot.archetype}</div>
             </div>
-            <div class="text-[11px] font-mono text-matcha-sage font-medium whitespace-nowrap">
-              ${slot.playerName ? slot.playerName : 'Locked'}
-            </div>
+            <div class="text-[11px] font-mono text-matcha-sage font-medium whitespace-nowrap">${slot.playerName || 'Locked'}</div>
           `;
         } else {
-          card.className = 'p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-card flex items-center justify-between gap-3 text-left transition shadow-sm';
+          card.className = 'p-3 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-card flex items-center justify-between gap-3 text-left shadow-sm';
           card.innerHTML = `
             <div>
               <div class="flex items-center gap-2">
@@ -364,19 +521,15 @@
                 <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-matcha-tint text-matcha-accent uppercase font-semibold">AVAILABLE</span>
               </div>
               <div class="text-sm font-serif font-bold text-matcha-dark">${slot.designation}</div>
-              <div class="text-[11px] font-mono text-matcha-sage line-clamp-1">${slot.archetype}</div>
             </div>
-            <button class="btn-claim-slot px-3.5 py-1.5 rounded-lg bg-matcha-dark hover:bg-matcha-forest text-matcha-bg text-xs font-mono font-semibold uppercase tracking-wider transition active:scale-95 whitespace-nowrap" data-node-id="${slot.id}">
+            <button class="btn-claim-slot px-3.5 py-1.5 rounded-lg bg-matcha-dark hover:bg-matcha-forest text-matcha-bg text-xs font-mono font-semibold uppercase tracking-wider transition active:scale-95" data-node-id="${slot.id}">
               Claim
             </button>
           `;
-
-          card.querySelector('.btn-claim-slot').addEventListener('click', (e) => {
-            e.stopPropagation();
+          card.querySelector('.btn-claim-slot').addEventListener('click', () => {
             attemptJoin(slot.id);
           });
         }
-
         slotsContainer.appendChild(card);
       });
     }
@@ -386,8 +539,8 @@
       const playerName = inputPlayerName.value.trim() || 'Trustee';
       socket.emit('node_join', {
         sessionId: currentSessionId,
-        requestedNodeId: requestedNodeId,
-        playerName: playerName
+        requestedNodeId,
+        playerName
       });
     }
 
@@ -397,6 +550,22 @@
 
     btnRelinquish.addEventListener('click', () => {
       socket.emit('node_leave', { sessionId: currentSessionId });
+      myNodeData = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10);
+      sessionStorage.setItem(SESSION_KEY, currentSessionId);
+      switchPlayerView('JOIN');
+    });
+
+    // Voting Buttons
+    btnVoteA.addEventListener('click', () => {
+      selectedVote = 'A';
+      socket.emit('submit_vote', { sessionId: currentSessionId, vote: 'A' });
+    });
+
+    btnVoteB.addEventListener('click', () => {
+      selectedVote = 'B';
+      socket.emit('submit_vote', { sessionId: currentSessionId, vote: 'B' });
     });
   </script>
 </body>
