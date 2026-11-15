@@ -1,9 +1,12 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const os = require('os');
 const { Server } = require('socket.io');
-const { CRISES } = require('./crises');
+
+const sim = require('./sim/engine');
+const loom = require('./loom');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +21,14 @@ const PORT = process.env.PORT || 3000;
 // Serve static assets from public
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Convenient mobile routes
+app.get('/mobile', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'player.html'));
+});
+app.get('/play', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'player.html'));
+});
+
 // Helper to get local network IP address
 function getLocalNetworkIP() {
   const interfaces = os.networkInterfaces();
@@ -31,42 +42,41 @@ function getLocalNetworkIP() {
   return 'localhost';
 }
 
-// Fixed Council Archetypes
-const MAX_NODES = 5;
-const NODE_DEFINITIONS = [
-  {
-    id: 'NODE-01',
-    designation: 'The Artisan',
-    archetype: 'Poiesis / Creative Friction',
-    agenda: 'Pushes for creative struggle and manual friction. Believes fulfillment requires human effort over automation.'
-  },
-  {
-    id: 'NODE-02',
-    designation: 'The Lotus-Eater',
-    archetype: 'Hedonic Optimization / Frictionless Leisure',
-    agenda: 'Pushes for absolute, frictionless comfort and pleasure. Believes telos is found in peace and leisure.'
-  },
-  {
-    id: 'NODE-03',
-    designation: 'The Assimilator',
-    archetype: 'Synthetic Convergence / Machine Telos',
-    agenda: 'Believes humanity’s telos is to merge entirely with The Loom. Grants the AI cognitive and emotional control.'
-  },
-  {
-    id: 'NODE-04',
-    designation: 'The Catalyst',
-    archetype: 'Anti-Fragility / Controlled Crisis',
-    agenda: 'Injects chaotic crises to force human resilience. Thrives on controlled systemic volatility.'
-  },
-  {
-    id: 'NODE-05',
-    designation: 'The Ghost',
-    archetype: 'Biological Grounding / Subversive Decoupling',
-    agenda: 'Seeks to dismantle The Loom entirely and return humanity to biological and earthen roots.'
-  }
-];
+// Standardized Phase State Constants
+const STATE_LOBBY = 'STATE_LOBBY';
+const STATE_VOTING = 'STATE_VOTING';
+const STATE_RESOLUTION = 'STATE_RESOLUTION';
+const STATE_GAME_OVER = 'STATE_GAME_OVER';
 
-// Slots state
+// Load content from /data
+const ROLES_PATH = path.join(__dirname, '..', 'data', 'roles.json');
+const CRISES_PATH = path.join(__dirname, '..', 'data', 'crises.json');
+const CITIZENS_PATH = path.join(__dirname, '..', 'data', 'citizens.json');
+
+let NODE_DEFINITIONS = [];
+try {
+  NODE_DEFINITIONS = JSON.parse(fs.readFileSync(ROLES_PATH, 'utf-8'));
+} catch (e) {
+  console.error('[Error reading roles.json]', e);
+}
+
+let CRISES_DATA = { fixedCrises: [], worlds: {} };
+try {
+  CRISES_DATA = JSON.parse(fs.readFileSync(CRISES_PATH, 'utf-8'));
+} catch (e) {
+  console.error('[Error reading crises.json]', e);
+}
+
+let CITIZENS = [];
+try {
+  CITIZENS = JSON.parse(fs.readFileSync(CITIZENS_PATH, 'utf-8'));
+} catch (e) {
+  console.error('[Error reading citizens.json]', e);
+}
+
+const MAX_NODES = 5;
+
+// Slots state (NODE-01 to NODE-05)
 let nodeSlots = {
   'NODE-01': null,
   'NODE-02': null,
@@ -75,7 +85,7 @@ let nodeSlots = {
   'NODE-05': null
 };
 
-// Agenda scores per node
+// Hidden Agenda points per node
 let nodeScores = {
   'NODE-01': 0,
   'NODE-02': 0,
@@ -84,20 +94,66 @@ let nodeScores = {
   'NODE-05': 0
 };
 
-// Game lifecycle state
+// 1x Override per player per game
+let nodeOverridesUsed = {
+  'NODE-01': false,
+  'NODE-02': false,
+  'NODE-03': false,
+  'NODE-04': false,
+  'NODE-05': false
+};
+
+// Global Monte Carlo simulation cohorts
+let cohorts = sim.createInitialState();
+
+// Master Game State
 let gameState = {
-  status: 'LOBBY', // LOBBY, DEBATE, RESOLUTION, GAME_OVER
+  phase: STATE_LOBBY,
   cycle: 0,
   totalCycles: 5,
-  gdw: 25, // Gross Domestic Well-Being starts at 25%
+  gdw: 25,
   timerSeconds: 90,
-  timerRunning: false,
-  votes: {}, // nodeId -> 'A' | 'B'
+  timerPaused: false,
+  volatility: 1.0,
+  vote1: null, // 'A' or 'B'
+  vote2: null, // 'A' or 'B'
+  worldKey: null, // 'AA', 'AB', 'BA', 'BB'
+  worldName: null,
+  votes: {}, // nodeId -> { vote: 'A'|'B', override: boolean }
   lastResolution: null,
-  currentFeed: []
+  currentFeed: [],
+  history: [],
+  districts: sim.DISTRICTS.map((d) => ({ id: d.id, name: d.name, gdw: 25 }))
 };
 
 let debateInterval = null;
+
+function getCurrentCrisis() {
+  if (gameState.cycle === 1) return CRISES_DATA.fixedCrises[0];
+  if (gameState.cycle === 2) return CRISES_DATA.fixedCrises[1];
+
+  if (gameState.worldKey && CRISES_DATA.worlds[gameState.worldKey]) {
+    const world = CRISES_DATA.worlds[gameState.worldKey];
+    if (gameState.cycle === 3) return world.crises[0];
+    if (gameState.cycle === 4) return world.crises[1];
+    if (gameState.cycle === 5) {
+      // Finale
+      const fin = world.finale;
+      return {
+        cycle: 5,
+        title: fin.title,
+        subtitle: fin.subtitle,
+        description: fin.incident,
+        teacherPrompt: fin.teacherPrompt,
+        policyA: fin.fallbackPolicyA,
+        policyB: fin.fallbackPolicyB,
+        intelDrops: CRISES_DATA.fixedCrises[0].intelDrops
+      };
+    }
+  }
+
+  return CRISES_DATA.fixedCrises[0];
+}
 
 function getSlotSummary() {
   return NODE_DEFINITIONS.map((def) => {
@@ -105,33 +161,30 @@ function getSlotSummary() {
     return {
       id: def.id,
       designation: def.designation,
+      icon: def.icon,
       archetype: def.archetype,
       agenda: def.agenda,
+      winCondition: def.winCondition,
       connected: !!occupant,
       playerName: occupant ? occupant.playerName : null,
       joinedAt: occupant ? occupant.joinedAt : null,
       simulated: occupant ? !!occupant.simulated : false,
       score: nodeScores[def.id] || 0,
+      overrideUsed: !!nodeOverridesUsed[def.id],
       hasVoted: !!gameState.votes[def.id]
     };
   });
 }
 
-function getCurrentCrisis() {
-  if (gameState.cycle >= 1 && gameState.cycle <= CRISES.length) {
-    return CRISES[gameState.cycle - 1];
-  }
-  return null;
-}
-
-function getFullGameStatePayload() {
+function getFullStatePayload() {
   const crisis = getCurrentCrisis();
   const slots = getSlotSummary();
   const connectedCount = Object.values(nodeSlots).filter(Boolean).length;
   const votedCount = Object.keys(gameState.votes).length;
 
   return {
-    status: gameState.status,
+    phase: gameState.phase,
+    status: gameState.phase,
     gdw: gameState.gdw,
     cycle: gameState.cycle,
     totalCycles: gameState.totalCycles,
@@ -139,62 +192,60 @@ function getFullGameStatePayload() {
     maxNodes: MAX_NODES,
     isReady: connectedCount >= MAX_NODES,
     timerSeconds: gameState.timerSeconds,
-    timerRunning: gameState.timerRunning,
+    timerPaused: gameState.timerPaused,
     votedCount,
+    worldKey: gameState.worldKey,
+    worldName: gameState.worldName,
     crisis: crisis
       ? {
           cycle: crisis.cycle,
           title: crisis.title,
           subtitle: crisis.subtitle,
-          description: crisis.description,
-          policyA: {
-            name: crisis.policyA.name,
-            summary: crisis.policyA.summary,
-            gdwChange: crisis.policyA.gdwChange
-          },
-          policyB: {
-            name: crisis.policyB.name,
-            summary: crisis.policyB.summary,
-            gdwChange: crisis.policyB.gdwChange
-          }
+          description: crisis.description || crisis.incident,
+          teacherPrompt: crisis.teacherPrompt,
+          policyA: crisis.policyA,
+          policyB: crisis.policyB
         }
       : null,
     feed: gameState.currentFeed,
     lastResolution: gameState.lastResolution,
     slots,
+    history: gameState.history,
+    districts: gameState.districts,
     networkIP: getLocalNetworkIP(),
     port: PORT
   };
 }
 
 function getPlayerStatePayload(nodeId) {
-  const base = getFullGameStatePayload();
+  const base = getFullStatePayload();
   const crisis = getCurrentCrisis();
   let secretIntel = null;
 
-  if (crisis && nodeId && crisis.intelDrops[nodeId]) {
+  if (crisis && nodeId && crisis.intelDrops && crisis.intelDrops[nodeId]) {
     secretIntel = crisis.intelDrops[nodeId];
   }
+
+  const voteRecord = gameState.votes[nodeId] || null;
 
   return {
     ...base,
     myNodeId: nodeId,
-    myVote: gameState.votes[nodeId] || null,
+    myVote: voteRecord ? voteRecord.vote : null,
+    myOverrideUsed: !!nodeOverridesUsed[nodeId],
     secretIntel
   };
 }
 
 function broadcastState() {
-  // Send customized payloads to nodes (so their secret intel is securely targeted)
   for (const [nodeId, occupant] of Object.entries(nodeSlots)) {
     if (occupant && occupant.socketId) {
       io.to(occupant.socketId).emit('state_update', getPlayerStatePayload(nodeId));
     }
   }
 
-  // Send general payload to host room and unassigned sockets
-  io.to('host_room').emit('state_update', getFullGameStatePayload());
-  io.emit('lobby_telemetry', getFullGameStatePayload());
+  io.to('host_room').emit('state_update', getFullStatePayload());
+  io.emit('lobby_telemetry', getFullStatePayload());
 }
 
 function findSlotBySession(sessionId) {
@@ -213,18 +264,22 @@ function findSlotBySocket(socketId) {
   return null;
 }
 
-// Timer management
+// Timer
 function startDebateTimer() {
   stopDebateTimer();
-  gameState.timerRunning = true;
+  gameState.timerPaused = false;
   debateInterval = setInterval(() => {
-    if (gameState.timerSeconds > 0) {
-      gameState.timerSeconds--;
-      io.emit('timer_tick', { timerSeconds: gameState.timerSeconds });
-    } else {
-      stopDebateTimer();
-      // Auto-resolve or nudge to resolution if time runs out
-      checkAllVotesIn(true);
+    if (!gameState.timerPaused) {
+      if (gameState.timerSeconds > 0) {
+        gameState.timerSeconds--;
+        io.emit('timer_tick', {
+          timerSeconds: gameState.timerSeconds,
+          timerPaused: gameState.timerPaused
+        });
+      } else {
+        stopDebateTimer();
+        checkAllVotesIn(true);
+      }
     }
   }, 1000);
 }
@@ -234,83 +289,149 @@ function stopDebateTimer() {
     clearInterval(debateInterval);
     debateInterval = null;
   }
-  gameState.timerRunning = false;
 }
 
 function initializeCycle(cycleNumber) {
   stopDebateTimer();
-  gameState.status = 'DEBATE';
+  gameState.phase = STATE_VOTING;
   gameState.cycle = cycleNumber;
   gameState.timerSeconds = 90;
+  gameState.timerPaused = false;
   gameState.votes = {};
   gameState.lastResolution = null;
 
-  const crisis = CRISES[cycleNumber - 1];
+  const crisis = getCurrentCrisis();
   if (crisis) {
-    gameState.currentFeed = [...crisis.initialBotFeed];
+    gameState.currentFeed = crisis.feed || crisis.initialBotFeed || [];
   }
 
   startDebateTimer();
-  console.log(`[Crisis Started] Cycle ${cycleNumber}: ${crisis ? crisis.title : ''}`);
+  console.log(`[Cycle ${cycleNumber}] Initialized: ${crisis ? crisis.title : ''}`);
   broadcastState();
 }
 
-function resolveVotes() {
+async function resolveVotes() {
   stopDebateTimer();
   const crisis = getCurrentCrisis();
   if (!crisis) return;
 
-  const votesA = Object.values(gameState.votes).filter((v) => v === 'A').length;
-  const votesB = Object.values(gameState.votes).filter((v) => v === 'B').length;
+  // Calculate weighted votes (accounting for 2x Override)
+  let weightA = 0;
+  let weightB = 0;
+  let rawCountA = 0;
+  let rawCountB = 0;
 
-  let winningPolicyKey = 'A';
-  if (votesB > votesA) {
-    winningPolicyKey = 'B';
-  } else if (votesA === votesB) {
-    // Tie-breaker: Loom AI bias (defaults to machine stability / Policy B)
-    winningPolicyKey = Math.random() > 0.5 ? 'A' : 'B';
+  for (const [nodeId, record] of Object.entries(gameState.votes)) {
+    const multiplier = record.override ? 2 : 1;
+    if (record.vote === 'A') {
+      weightA += multiplier;
+      rawCountA++;
+    } else {
+      weightB += multiplier;
+      rawCountB++;
+    }
   }
 
-  const winningPolicy = winningPolicyKey === 'A' ? crisis.policyA : crisis.policyB;
-  const totalVotes = votesA + votesB;
-  const isUnanimous = totalVotes >= 3 && (votesA === 0 || votesB === 0);
+  let winningKey = 'A';
+  if (weightB > weightA) {
+    winningKey = 'B';
+  } else if (weightA === weightB) {
+    winningKey = Math.random() > 0.5 ? 'A' : 'B';
+  }
 
-  // Update GDW
+  // Branching world calculation after Cycle 1 & 2
+  if (gameState.cycle === 1) gameState.vote1 = winningKey;
+  if (gameState.cycle === 2) {
+    gameState.vote2 = winningKey;
+    gameState.worldKey = `${gameState.vote1}${gameState.vote2}`;
+    const worldObj = CRISES_DATA.worlds[gameState.worldKey];
+    gameState.worldName = worldObj ? worldObj.name : 'The Unknown World';
+    if (gameState.vote2 === 'A') gameState.volatility = 1.5; // Assembly adds volatility
+    console.log(`[World Established] Key: ${gameState.worldKey} -> ${gameState.worldName}`);
+  }
+
+  const winningPolicy = winningKey === 'A' ? crisis.policyA : crisis.policyB;
+  const totalVotes = rawCountA + rawCountB;
+  const isUnanimous = totalVotes >= 3 && (rawCountA === 0 || rawCountB === 0);
+
+  // Run Monte Carlo Cohort Simulation
+  const seed = 2026 + gameState.cycle * 137;
+  const simResult = sim.runSimulationCycle(cohorts, winningPolicy.effects, seed, gameState.volatility);
+
+  cohorts = simResult.realizedCohorts;
   const oldGdw = gameState.gdw;
-  gameState.gdw = Math.max(0, Math.min(100, gameState.gdw + winningPolicy.gdwChange));
+  gameState.gdw = simResult.realizedGdw;
+  gameState.districts = simResult.districtSummaries;
 
-  // Update hidden agenda scores
+  // Update Hidden Agenda scores
   const scoreIncreases = [];
-  winningPolicy.favoredRoles.forEach((favoredNodeId) => {
-    if (nodeScores[favoredNodeId] !== undefined) {
-      nodeScores[favoredNodeId] += 1;
-      const def = NODE_DEFINITIONS.find((d) => d.id === favoredNodeId);
-      scoreIncreases.push(`${favoredNodeId} (${def ? def.designation : ''})`);
-    }
+  const rolesTagged = winningPolicy.roles || [];
+
+  rolesTagged.forEach((roleTag) => {
+    NODE_DEFINITIONS.forEach((def) => {
+      const match = def.designation.toLowerCase().includes(roleTag.toLowerCase());
+      if (match && nodeScores[def.id] !== undefined) {
+        nodeScores[def.id] += 1;
+        scoreIncreases.push(`${def.id} (${def.designation})`);
+      }
+    });
   });
 
-  // Append new bot reaction feed
-  gameState.currentFeed = [...winningPolicy.botReactions, ...gameState.currentFeed];
+  // Catalyst check: scores +1 if GDW swings by >= 10 points and stays > 0
+  const gdwSwing = Math.abs(gameState.gdw - oldGdw);
+  if (gdwSwing >= 10 && gameState.gdw > 0) {
+    nodeScores['NODE-04'] += 1;
+    scoreIncreases.push(`NODE-04 (The Catalyst: +${gdwSwing}% Volatility Bonus)`);
+  }
 
-  gameState.status = 'RESOLUTION';
+  // Generate Loom AI Narrative & Citizen Reactions
+  const loomNarrative = await loom.narrateResolution(crisis, winningPolicy, {
+    realizedGdw: gameState.gdw,
+    oldGdw
+  });
+
+  const formattedMessages = (loomNarrative.messages || []).map((m) => {
+    const citizen = CITIZENS.find((c) => c.id === m.citizenId) || { name: m.citizenId, handle: `@${m.citizenId}` };
+    return {
+      user: citizen.handle || citizen.name,
+      text: m.text,
+      sentiment: 'reaction'
+    };
+  });
+
+  gameState.currentFeed = [
+    { user: '@THE_LOOM', text: loomNarrative.loomLine, sentiment: 'telemetry' },
+    ...formattedMessages,
+    ...gameState.currentFeed
+  ];
+
+  gameState.phase = STATE_RESOLUTION;
   gameState.lastResolution = {
     cycle: gameState.cycle,
-    winningPolicyKey,
+    winningPolicyKey: winningKey,
     winningPolicyName: winningPolicy.name,
-    votesA,
-    votesB,
+    teacherPrompt: crisis.teacherPrompt,
+    votesA: weightA,
+    votesB: weightB,
     totalVotes,
     isUnanimous,
-    gdwDelta: winningPolicy.gdwChange,
+    gdwDelta: gameState.gdw - oldGdw,
     oldGdw,
     newGdw: gameState.gdw,
+    forecast: simResult.forecast,
     scoreIncreases,
-    breakdown: { ...gameState.votes },
     isGameOver: gameState.gdw <= 0 || gameState.cycle >= gameState.totalCycles,
     isCollapse: gameState.gdw <= 0
   };
 
-  console.log(`[Vote Resolved] Cycle ${gameState.cycle}: Policy ${winningPolicyKey} won (${votesA}-${votesB}). GDW: ${oldGdw} -> ${gameState.gdw}`);
+  gameState.history.push({
+    cycle: gameState.cycle,
+    crisisTitle: crisis.title,
+    winningPolicy: winningPolicy.name,
+    gdw: gameState.gdw
+  });
+
+  console.log(`[Vote Resolved] Cycle ${gameState.cycle}: ${winningPolicy.name} won (${weightA}-${weightB}). GDW: ${oldGdw} -> ${gameState.gdw}`);
   broadcastState();
 }
 
@@ -320,31 +441,27 @@ function checkAllVotesIn(force = false) {
   const votedCount = Object.keys(gameState.votes).length;
 
   if (force || (votedCount >= targetCount && targetCount > 0)) {
-    // Default uncast votes
     activeSlots.forEach((slotId) => {
       if (!gameState.votes[slotId]) {
-        gameState.votes[slotId] = Math.random() > 0.5 ? 'A' : 'B';
+        gameState.votes[slotId] = {
+          vote: Math.random() > 0.5 ? 'A' : 'B',
+          override: false
+        };
       }
     });
     resolveVotes();
   }
 }
 
-// SOCKET.IO EVENTS
+// Socket handlers
 io.on('connection', (socket) => {
-  console.log(`[Socket Connected] Client: ${socket.id}`);
+  socket.emit('state_update', getFullStatePayload());
 
-  // Push immediate state snapshot
-  socket.emit('state_update', getFullGameStatePayload());
-
-  // Host registers itself
   socket.on('register_host', () => {
     socket.join('host_room');
-    socket.emit('state_update', getFullGameStatePayload());
-    console.log(`[Host Registered] Socket ID: ${socket.id}`);
+    socket.emit('state_update', getFullStatePayload());
   });
 
-  // Check existing session for player reconnect
   socket.on('check_session', (data = {}) => {
     const { sessionId } = data;
     const existingNodeId = findSlotBySession(sessionId);
@@ -359,7 +476,8 @@ io.on('connection', (socket) => {
         designation: def.designation,
         archetype: def.archetype,
         agenda: def.agenda,
-        sessionId: sessionId,
+        winCondition: def.winCondition,
+        sessionId,
         playerName: nodeSlots[existingNodeId].playerName
       });
 
@@ -369,7 +487,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Node (Player) joins council
   socket.on('node_join', (data = {}) => {
     const sessionId = data.sessionId || `session_${Math.random().toString(36).substring(2, 10)}`;
     const playerName = (data.playerName || '').trim() || 'Trustee';
@@ -387,6 +504,7 @@ io.on('connection', (socket) => {
         designation: def.designation,
         archetype: def.archetype,
         agenda: def.agenda,
+        winCondition: def.winCondition,
         sessionId,
         playerName
       });
@@ -398,14 +516,12 @@ io.on('connection', (socket) => {
     if (requestedNodeId && (nodeSlots[requestedNodeId] === null || nodeSlots[requestedNodeId].simulated)) {
       targetNodeId = requestedNodeId;
     } else {
-      // First look for strictly vacant slots
       for (const def of NODE_DEFINITIONS) {
         if (nodeSlots[def.id] === null) {
           targetNodeId = def.id;
           break;
         }
       }
-      // If none completely vacant, take over a simulated AI slot
       if (!targetNodeId) {
         for (const def of NODE_DEFINITIONS) {
           if (nodeSlots[def.id] && nodeSlots[def.id].simulated) {
@@ -438,6 +554,7 @@ io.on('connection', (socket) => {
       designation: def.designation,
       archetype: def.archetype,
       agenda: def.agenda,
+      winCondition: def.winCondition,
       sessionId,
       playerName
     });
@@ -446,11 +563,9 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // Node voluntarily leaves
   socket.on('node_leave', (data = {}) => {
     const slot = findSlotBySession(data.sessionId) || findSlotBySocket(socket.id);
     if (slot) {
-      console.log(`[Node Left] Relinquishing ${slot}`);
       nodeSlots[slot] = null;
       delete gameState.votes[slot];
       socket.leave('node_room');
@@ -459,10 +574,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  // GAME ACTION: Host starts simulation
+  // Host starts simulation
   socket.on('start_simulation', () => {
-    console.log('[Host Action] Starting Simulation -> Crisis Cycle 01');
-    // If not all nodes are filled by humans, auto-populate remaining slots as simulated nodes
+    console.log('[Simulation Started]');
     NODE_DEFINITIONS.forEach((def) => {
       if (nodeSlots[def.id] === null) {
         const simSession = `sim_${Math.random().toString(36).substring(2, 8)}`;
@@ -475,13 +589,12 @@ io.on('connection', (socket) => {
         };
       }
     });
-
     initializeCycle(1);
   });
 
-  // GAME ACTION: Player submits vote
+  // Player votes (supports 1x Override)
   socket.on('submit_vote', (data = {}) => {
-    const { sessionId, vote } = data; // 'A' or 'B'
+    const { sessionId, vote, useOverride } = data;
     const nodeId = findSlotBySession(sessionId) || findSlotBySocket(socket.id);
 
     if (!nodeId) {
@@ -489,19 +602,26 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (gameState.status !== 'DEBATE') {
+    if (gameState.phase !== STATE_VOTING) {
       socket.emit('vote_error', { message: 'Voting is not active.' });
       return;
     }
 
     if (vote === 'A' || vote === 'B') {
-      gameState.votes[nodeId] = vote;
-      console.log(`[Vote Cast] ${nodeId} voted for Policy ${vote}`);
+      const canOverride = useOverride && !nodeOverridesUsed[nodeId];
+      if (canOverride) {
+        nodeOverridesUsed[nodeId] = true;
+      }
 
-      socket.emit('vote_confirmed', { vote });
+      gameState.votes[nodeId] = {
+        vote,
+        override: !!canOverride
+      };
+
+      console.log(`[Vote] ${nodeId} voted ${vote} (Override: ${!!canOverride})`);
+      socket.emit('vote_confirmed', { vote, override: !!canOverride });
       broadcastState();
 
-      // Check if all active nodes have voted
       const activeSlots = Object.keys(nodeSlots).filter((k) => nodeSlots[k] !== null);
       if (Object.keys(gameState.votes).length >= activeSlots.length) {
         resolveVotes();
@@ -509,32 +629,47 @@ io.on('connection', (socket) => {
     }
   });
 
-  // GAME ACTION: Host calls vote / skips debate timer
+  // Teacher / Host Controls
+  socket.on('toggle_pause_timer', () => {
+    gameState.timerPaused = !gameState.timerPaused;
+    broadcastState();
+  });
+
+  socket.on('add_timer_seconds', (sec = 30) => {
+    gameState.timerSeconds += sec;
+    broadcastState();
+  });
+
   socket.on('force_resolve_vote', () => {
-    console.log('[Host Action] Forcing vote resolution');
     checkAllVotesIn(true);
   });
 
-  // GAME ACTION: Host advances to next crisis
   socket.on('advance_cycle', () => {
     if (gameState.cycle < gameState.totalCycles && gameState.gdw > 0) {
       initializeCycle(gameState.cycle + 1);
     } else {
-      gameState.status = 'GAME_OVER';
+      gameState.phase = STATE_GAME_OVER;
       broadcastState();
     }
   });
 
-  // GAME ACTION: Reset to lobby
   socket.on('reset_simulation', () => {
     stopDebateTimer();
-    gameState.status = 'LOBBY';
+    cohorts = sim.createInitialState();
+    gameState.phase = STATE_LOBBY;
     gameState.cycle = 0;
     gameState.gdw = 25;
     gameState.timerSeconds = 90;
+    gameState.timerPaused = false;
+    gameState.volatility = 1.0;
+    gameState.vote1 = null;
+    gameState.vote2 = null;
+    gameState.worldKey = null;
+    gameState.worldName = null;
     gameState.votes = {};
     gameState.lastResolution = null;
     gameState.currentFeed = [];
+    gameState.history = [];
     nodeScores = {
       'NODE-01': 0,
       'NODE-02': 0,
@@ -542,61 +677,38 @@ io.on('connection', (socket) => {
       'NODE-04': 0,
       'NODE-05': 0
     };
+    nodeOverridesUsed = {
+      'NODE-01': false,
+      'NODE-02': false,
+      'NODE-03': false,
+      'NODE-04': false,
+      'NODE-05': false
+    };
     broadcastState();
-  });
-
-  // Dev controls
-  socket.on('simulate_add_node', () => {
-    for (const def of NODE_DEFINITIONS) {
-      if (nodeSlots[def.id] === null) {
-        const simSession = `sim_${Math.random().toString(36).substring(2, 8)}`;
-        nodeSlots[def.id] = {
-          sessionId: simSession,
-          socketId: null,
-          playerName: `Simulated Node`,
-          joinedAt: Date.now(),
-          simulated: true
-        };
-        broadcastState();
-        break;
-      }
-    }
-  });
-
-  socket.on('simulate_remove_node', () => {
-    const occupiedKeys = Object.keys(nodeSlots).filter((k) => nodeSlots[k] !== null);
-    if (occupiedKeys.length > 0) {
-      const lastKey = occupiedKeys[occupiedKeys.length - 1];
-      nodeSlots[lastKey] = null;
-      delete gameState.votes[lastKey];
-      broadcastState();
-    }
   });
 
   socket.on('reset_lobby', () => {
     stopDebateTimer();
-    for (const key of Object.keys(nodeSlots)) {
-      nodeSlots[key] = null;
+    cohorts = sim.createInitialState();
+    for (const k of Object.keys(nodeSlots)) {
+      nodeSlots[k] = null;
     }
-    gameState.status = 'LOBBY';
+    gameState.phase = STATE_LOBBY;
     gameState.cycle = 0;
     gameState.gdw = 25;
     gameState.votes = {};
     gameState.lastResolution = null;
     gameState.currentFeed = [];
+    gameState.history = [];
     io.emit('lobby_reset_broadcast');
     broadcastState();
   });
 
-  // Disconnection handler
   socket.on('disconnect', () => {
     const slot = findSlotBySocket(socket.id);
-    if (slot && gameState.status === 'LOBBY') {
-      console.log(`[Lobby Disconnect] Releasing ${slot}`);
+    if (slot && gameState.phase === STATE_LOBBY) {
       nodeSlots[slot] = null;
       broadcastState();
-    } else {
-      console.log(`[Socket Disconnected] ${socket.id}`);
     }
   });
 });
@@ -604,9 +716,9 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
   const ip = getLocalNetworkIP();
   console.log(`=======================================================`);
-  console.log(`  SOCIETELOS // THE LOOM PROTOCOL ENGINE ONLINE       `);
-  console.log(`  Host Screen:   http://localhost:${PORT}             `);
-  console.log(`  Mobile Join:   http://${ip}:${PORT}/player.html     `);
-  console.log(`  Target Nodes:  5 Human Trustees                      `);
+  console.log(`  SOCIETELOS // THE LOOM SIMULATION ENGINE ONLINE     `);
+  console.log(`  Host Projector:  http://localhost:${PORT}           `);
+  console.log(`  Mobile Join:     http://${ip}:${PORT}/mobile        `);
+  console.log(`  Monte Carlo:     5 Districts // 20 Cohorts Ready    `);
   console.log(`=======================================================`);
 });

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "hollis",
+    "name": "Hollis Sterling",
+    "handle": "@hollis_d1",
+    "district": "D1 Old Harbour",
+    "cohort": "Former Elite",
+    "avatar": "🏛️",
+    "bio": "Former shareholder in The Loom consortium. Lives on coastal estate."
+  },
+  {
+    "id": "ruth",
+    "name": "Ruth Vance",
+    "handle": "@ruth_d4",
+    "district": "D4 Eastworks",
+    "cohort": "Elders",
+    "avatar": "⚓",
+    "bio": "Retired crane operator and union shop steward before automated cranes took over."
+  },
+  {
+    "id": "kai",
+    "name": "Kai Chen",
+    "handle": "@kai_offline",
+    "district": "D2 The Grid",
+    "cohort": "Youth",
+    "avatar": "🎧",
+    "bio": "Spends 16 hours daily in sensory immersion pods. Ambivalent about physical world."
+  },
+  {
+    "id": "maya",
+    "name": "Maya Lin",
+    "handle": "@maya_code",
+    "district": "D2 The Grid",
+    "cohort": "Former Workers",
+    "avatar": "💻",
+    "bio": "Former systems architect. Now watches The Loom autonomously compile code."
+  },
+  {
+    "id": "david",
+    "name": "David Morales",
+    "handle": "@david_teach",
+    "district": "D3 Riverside",
+    "cohort": "Former Workers",
+    "avatar": "📚",
+    "bio": "High school literature teacher wondering what students should learn when AI knows all."
+  },
+  {
+    "id": "linnea",
+    "name": "Linnea Berg",
+    "handle": "@linnea_drift",
+    "district": "D3 Riverside",
+    "cohort": "Youth",
+    "avatar": "🎨",
+    "bio": "Digital artist struggling to find motivation when The Loom generates symphonies."
+  },
+  {
+    "id": "marcus",
+    "name": "Marcus O'Connor",
+    "handle": "@marcus_east",
+    "district": "D4 Eastworks",
+    "cohort": "Former Workers",
+    "avatar": "🛠️",
+    "bio": "Third-generation machinist. Rebuilt manual wood lathe in abandoned warehouse."
+  },
+  {
+    "id": "sora",
+    "name": "Sora Takahashi",
+    "handle": "@sora_craft",
+    "district": "D4 Eastworks",
+    "cohort": "Youth",
+    "avatar": "🏺",
+    "bio": "Potter and ceramist refusing to use automated Kiln assistants."
+  },
+  {
+    "id": "aaron",
+    "name": "Aaron Thorne",
+    "handle": "@unplugged_aaron",
+    "district": "D5 Highlands",
+    "cohort": "Former Workers",
+    "avatar": "🌾",
+    "bio": "Highland homesteader practicing bio-farming with zero synth inputs."
+  },
+  {
+    "id": "elena",
+    "name": "Elena Rostova",
+    "handle": "@elena_highlands",
+    "district": "D5 Highlands",
+    "cohort": "Elders",
+    "avatar": "🌿",
+    "bio": "Herbalist and elder community leader skeptical of The Loom off-switch claims."
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "NODE-01",
+    "designation": "The Artisan",
+    "icon": "🛠️",
+    "archetype": "Poiesis / Creative Friction",
+    "agenda": "Pushes for creative struggle, manual craft, and friction. Believes human fulfillment requires physical effort over automated ease.",
+    "winCondition": "Wins if policies favor human effort, manual labor, and physical struggle over machine automation."
+  },
+  {
+    "id": "NODE-02",
+    "designation": "The Lotus-Eater",
+    "icon": "🪷",
+    "archetype": "Hedonic Optimization / Frictionless Leisure",
+    "agenda": "Pushes for absolute, frictionless comfort, tranquility, and pleasure. Believes telos is achieved through painless leisure and ataraxia.",
+    "winCondition": "Wins if policies maximize immediate citizen comfort, sensory pleasure, and leisure."
+  },
+  {
+    "id": "NODE-03",
+    "designation": "The Assimilator",
+    "icon": "⚙️",
+    "archetype": "Synthetic Convergence / Machine Telos",
+    "agenda": "Believes humanity's ultimate telos is to merge with The Loom. Grants the AI cognitive, emotional, and infrastructural control.",
+    "winCondition": "Wins if policies grant The Loom more direct neural, psychological, and systemic governance."
+  },
+  {
+    "id": "NODE-04",
+    "designation": "The Catalyst",
+    "icon": "🌪️",
+    "archetype": "Anti-Fragility / Controlled Crisis",
+    "agenda": "Injects chaotic crises to force human resilience. Believes calm breeds systemic fragility; only acute volatility sparks evolution.",
+    "winCondition": "Wins if policies create volatility, divide the council, or disrupt complacent status quo without hitting 0% GDW."
+  },
+  {
+    "id": "NODE-05",
+    "designation": "The Ghost",
+    "icon": "🌿",
+    "archetype": "Biological Grounding / Subversive Decoupling",
+    "agenda": "Seeks to dismantle The Loom entirely and return humanity to biological, earthen, and sovereign roots.",
+    "winCondition": "Wins if policies systematically reject artificial infrastructure in favor of biological autonomy."
+  }
+]

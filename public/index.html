@@ -51,17 +51,13 @@
       background-size: 100% 100%, 32px 32px, 32px 32px;
       min-height: 100vh;
     }
-
     .pulse-dot {
       box-shadow: 0 0 0 0 rgba(62, 101, 76, 0.6);
       animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
     }
     @keyframes pulse-ring {
-      to {
-        box-shadow: 0 0 0 10px rgba(62, 101, 76, 0);
-      }
+      to { box-shadow: 0 0 0 10px rgba(62, 101, 76, 0); }
     }
-
     .hidden-view {
       display: none !important;
     }
@@ -75,33 +71,39 @@
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
           <span id="socket-indicator" class="w-2.5 h-2.5 rounded-full bg-matcha-sage pulse-dot"></span>
-          <span id="socket-status" class="tracking-widest uppercase font-semibold text-matcha-dark">LOOM SYNC: INITIALIZING</span>
+          <span id="socket-status" class="tracking-widest uppercase font-semibold text-matcha-dark">LOOM SYNC: ONLINE</span>
         </div>
         <span class="text-matcha-border">|</span>
         <span id="cycle-tag-header" class="text-matcha-sage tracking-wider">COUNCIL SESSION // LOBBY</span>
       </div>
 
-      <div class="flex items-center gap-6">
+      <div class="flex items-center gap-4 sm:gap-6">
+        <!-- AUDIO SYNTH TOGGLE -->
+        <button id="btn-sound-toggle" class="flex items-center gap-1.5 px-2.5 py-1 rounded border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-[11px] font-mono text-matcha-dark transition">
+          <span id="sound-icon">🔈</span>
+          <span id="sound-label">Audio: OFF</span>
+        </button>
+
         <div class="hidden sm:flex items-center gap-2">
-          <span class="text-matcha-sage">HOST NODE:</span>
+          <span class="text-matcha-sage">HOST:</span>
           <span id="host-ip-display" class="font-semibold text-matcha-dark">127.0.0.1:3000</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-matcha-sage">SYS_TIME:</span>
-          <span id="system-clock" class="font-semibold text-matcha-dark">--:--:-- UTC</span>
+          <span class="text-matcha-sage">UTC:</span>
+          <span id="system-clock" class="font-semibold text-matcha-dark">--:--:--</span>
         </div>
         <div class="px-2.5 py-0.5 rounded border border-matcha-border bg-matcha-tint font-semibold text-matcha-dark uppercase tracking-wider text-[10px]">
-          Classified // Council Tier 1
+          Classified // Tier 1
         </div>
       </div>
     </div>
   </header>
 
   <!-- MAIN HOST DISPLAY -->
-  <main class="max-w-7xl mx-auto px-6 py-6 w-full flex-1 flex flex-col justify-between">
+  <main class="max-w-7xl mx-auto px-6 py-5 w-full flex-1 flex flex-col justify-between">
     
-    <!-- TOP BANNER & GDW TELEMETRY WIDGET -->
-    <div class="mb-6">
+    <!-- TOP BANNER & DYNAMIC CANVAS GDW WIDGET -->
+    <div class="mb-5">
       <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-matcha-border pb-5 gap-6">
         <div>
           <div class="flex items-center gap-2 text-xs font-mono tracking-widest text-matcha-sage uppercase mb-1">
@@ -117,17 +119,20 @@
           </p>
         </div>
 
-        <!-- GDW TELEMETRY WIDGET -->
-        <div class="w-full md:w-80 bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
-          <div class="flex justify-between items-baseline mb-2">
+        <!-- GDW DYNAMIC CANVAS & TELEMETRY WIDGET -->
+        <div class="w-full md:w-96 bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm relative overflow-hidden">
+          <div class="flex justify-between items-baseline mb-1 relative z-10">
             <span class="text-[11px] font-mono uppercase tracking-widest text-matcha-sage font-medium">Gross Domestic Well-Being (GDW)</span>
-            <span id="gdw-value" class="text-xl font-mono font-bold text-matcha-alert">25%</span>
+            <span id="gdw-value" class="text-2xl font-mono font-bold text-matcha-alert">25%</span>
           </div>
-          <div class="w-full h-3 bg-matcha-cream rounded-full overflow-hidden p-0.5 border border-matcha-borderMuted">
-            <div id="gdw-bar" class="h-full bg-matcha-alert rounded-full transition-all duration-700 ease-out" style="width: 25%;"></div>
+
+          <!-- HTML5 CANVAS: Dynamic Harmonic Resonance Waveform -->
+          <div class="w-full h-14 bg-matcha-cream/60 rounded-lg border border-matcha-borderMuted relative overflow-hidden mb-2">
+            <canvas id="gdw-canvas" class="w-full h-full block"></canvas>
           </div>
-          <div class="flex justify-between text-[10px] font-mono text-matcha-sage mt-2">
-            <span class="text-matcha-alert font-semibold tracking-wider">▲ CRITICAL COLLAPSE THRESHOLD</span>
+
+          <div class="flex justify-between text-[10px] font-mono text-matcha-sage relative z-10">
+            <span id="gdw-threshold-tag" class="text-matcha-alert font-semibold tracking-wider">▲ CRITICAL COLLAPSE THRESHOLD</span>
             <span>TARGET: &gt;70%</span>
           </div>
         </div>
@@ -137,8 +142,8 @@
     <!-- ======================================================== -->
     <!-- VIEW 1: LOBBY & NODE SYNCHRONIZATION                     -->
     <!-- ======================================================== -->
-    <section id="view-lobby" class="py-4">
-      <div class="text-center max-w-3xl mx-auto mb-8">
+    <section id="view-lobby" class="py-2">
+      <div class="text-center max-w-3xl mx-auto mb-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-3">
           <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
           <span id="council-status-tag" class="tracking-widest uppercase font-medium">AWAITING BIOMETRIC HANDSHAKES</span>
@@ -151,7 +156,7 @@
         </p>
 
         <!-- BEGIN SIMULATION BUTTON -->
-        <div class="mt-6">
+        <div class="mt-5">
           <button id="btn-begin-simulation" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base md:text-lg tracking-wide uppercase transition shadow-lg hover:shadow-xl active:scale-95 inline-flex items-center gap-3">
             <span>Begin Simulation</span>
             <span class="font-mono text-sm tracking-normal">➔</span>
@@ -171,10 +176,10 @@
     <!-- ======================================================== -->
     <!-- VIEW 2: ACTIVE CRISIS & LIVE DEBATE                      -->
     <!-- ======================================================== -->
-    <section id="view-game" class="hidden-view py-2 space-y-6" style="display: none;">
+    <section id="view-game" class="hidden-view py-1 space-y-5" style="display: none;">
       
-      <!-- CRISIS HEADER STRIP -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-matcha-card border border-matcha-border rounded-2xl p-5 shadow-sm">
+      <!-- CRISIS HEADER & TEACHER CONTROLS STRIP -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-matcha-card border border-matcha-border rounded-2xl p-4 sm:p-5 shadow-sm">
         <div>
           <div class="flex items-center gap-2 text-xs font-mono tracking-widest text-matcha-accent uppercase font-bold">
             <span id="crisis-cycle-display">CRISIS CYCLE 01 OF 05</span>
@@ -189,66 +194,75 @@
           </div>
         </div>
 
-        <!-- 90S COUNTDOWN TIMER & CONTROLS -->
-        <div class="flex items-center gap-4">
+        <!-- 90S COUNTDOWN TIMER & TEACHER CONTROLS -->
+        <div class="flex items-center gap-4 bg-matcha-bg p-2.5 rounded-xl border border-matcha-border">
           <div class="text-right">
-            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Debate Window</div>
-            <div id="debate-timer-display" class="text-3xl sm:text-4xl font-mono font-bold text-matcha-dark tracking-wider">
+            <div class="text-[9px] font-mono uppercase tracking-wider text-matcha-sage">Council Timer</div>
+            <div id="debate-timer-display" class="text-2xl sm:text-3xl font-mono font-bold text-matcha-dark tracking-wider">
               01:30
             </div>
           </div>
-          <button id="btn-force-vote" class="px-3.5 py-2 rounded-lg border border-matcha-border hover:bg-matcha-tint text-matcha-dark font-mono text-xs font-semibold uppercase tracking-wider transition shadow-sm active:scale-95">
-            Call Vote ⚡
-          </button>
+          
+          <div class="flex items-center gap-1.5 border-l border-matcha-border pl-3">
+            <button id="btn-pause-timer" class="px-2.5 py-1.5 rounded-lg border border-matcha-border hover:bg-matcha-tint text-matcha-dark font-mono text-xs font-semibold transition" title="Pause / Resume Timer">
+              ⏸
+            </button>
+            <button id="btn-add-time" class="px-2.5 py-1.5 rounded-lg border border-matcha-border hover:bg-matcha-tint text-matcha-dark font-mono text-xs font-semibold transition" title="Add 30 Seconds">
+              +30s
+            </button>
+            <button id="btn-force-vote" class="px-3 py-1.5 rounded-lg bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-mono text-xs font-semibold uppercase tracking-wider transition active:scale-95">
+              Call Vote ⚡
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- MAIN SPLIT: POLICIES (LEFT) vs BOT FEED (RIGHT) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         <!-- LEFT: CRISIS NARRATIVE & POLICIES (7 cols) -->
-        <div class="lg:col-span-7 space-y-5">
+        <div class="lg:col-span-7 space-y-4">
           
           <!-- CRISIS NARRATIVE DOSSIER -->
-          <div class="bg-matcha-card border border-matcha-border rounded-xl p-5 shadow-sm">
+          <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 sm:p-5 shadow-sm">
             <div class="text-[10px] font-mono uppercase tracking-widest text-matcha-sage font-semibold mb-2">
               THE LOOM INCIDENT TELEMETRY
             </div>
-            <p id="crisis-desc-display" class="text-sm text-matcha-dark font-light leading-relaxed">
+            <p id="crisis-desc-display" class="text-xs sm:text-sm text-matcha-dark font-light leading-relaxed">
               Crisis description goes here...
             </p>
           </div>
 
           <!-- POLICY OPTIONS -->
-          <div class="space-y-4">
+          <div class="space-y-3">
             <div class="text-xs font-mono uppercase tracking-wider text-matcha-sage font-semibold flex items-center justify-between">
               <span>Executive Policy Referendum</span>
               <span>Blind Council Vote Required</span>
             </div>
 
             <!-- POLICY A -->
-            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-5 shadow-sm transition">
-              <div class="flex items-center justify-between mb-2">
+            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-4 sm:p-5 shadow-sm transition">
+              <div class="flex items-center justify-between mb-1.5">
                 <span class="px-2.5 py-0.5 rounded bg-matcha-tint border border-matcha-accent text-matcha-accent font-mono text-xs font-bold uppercase tracking-wider">
                   POLICY A
                 </span>
                 <span id="policy-a-gdw-badge" class="font-mono text-xs font-semibold text-matcha-accent">+12% GDW</span>
               </div>
-              <h3 id="policy-a-name" class="text-lg font-serif font-bold text-matcha-dark">Policy A Name</h3>
+              <h3 id="policy-a-name" class="text-base sm:text-lg font-serif font-bold text-matcha-dark">Policy A Name</h3>
               <p id="policy-a-summary" class="text-xs font-mono text-matcha-sage mt-1 leading-relaxed">
                 Policy A description...
               </p>
             </div>
 
             <!-- POLICY B -->
-            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-5 shadow-sm transition">
-              <div class="flex items-center justify-between mb-2">
+            <div class="bg-matcha-card border-2 border-matcha-border hover:border-matcha-accent rounded-xl p-4 sm:p-5 shadow-sm transition">
+              <div class="flex items-center justify-between mb-1.5">
                 <span class="px-2.5 py-0.5 rounded bg-matcha-tint border border-matcha-sage text-matcha-dark font-mono text-xs font-bold uppercase tracking-wider">
                   POLICY B
                 </span>
                 <span id="policy-b-gdw-badge" class="font-mono text-xs font-semibold text-matcha-alert">-6% GDW</span>
               </div>
-              <h3 id="policy-b-name" class="text-lg font-serif font-bold text-matcha-dark">Policy B Name</h3>
+              <h3 id="policy-b-name" class="text-base sm:text-lg font-serif font-bold text-matcha-dark">Policy B Name</h3>
               <p id="policy-b-summary" class="text-xs font-mono text-matcha-sage mt-1 leading-relaxed">
                 Policy B description...
               </p>
@@ -259,16 +273,16 @@
         </div>
 
         <!-- RIGHT: LIVE AUTONOMOUS BOT FEED (5 cols) -->
-        <div class="lg:col-span-5 flex flex-col bg-matcha-card border border-matcha-border rounded-xl shadow-sm p-4 h-[420px]">
+        <div class="lg:col-span-5 flex flex-col bg-matcha-card border border-matcha-border rounded-xl shadow-sm p-4 h-[380px] sm:h-[420px]">
           <div class="flex items-center justify-between border-b border-matcha-borderMuted pb-3 mb-3">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
-              <span class="text-xs font-mono uppercase tracking-widest text-matcha-dark font-semibold">Public Sentiment Feed</span>
+              <span class="text-xs font-mono uppercase tracking-widest text-matcha-dark font-semibold">Public Sentiment Stream</span>
             </div>
-            <span class="text-[10px] font-mono text-matcha-sage uppercase">Sector Stream</span>
+            <span class="text-[10px] font-mono text-matcha-sage uppercase">Sector Chatter</span>
           </div>
 
-          <div id="bot-feed-container" class="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
+          <div id="bot-feed-container" class="flex-1 overflow-y-auto space-y-2 pr-1 font-mono text-xs">
             <!-- Feed items injected dynamically -->
           </div>
         </div>
@@ -277,7 +291,7 @@
 
       <!-- BOTTOM: LIVE BLIND VOTING ROSTER -->
       <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between mb-2.5">
           <span class="text-xs font-mono uppercase tracking-wider text-matcha-sage font-semibold">Council Vote Status (Blind)</span>
           <span id="voted-count-display" class="text-xs font-mono font-bold text-matcha-accent">0 / 5 VOTES SUBMITTED</span>
         </div>
@@ -289,41 +303,52 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- VIEW 3: RESOLUTION & VOTE OUTCOME                        -->
+    <!-- VIEW 3: RESOLUTION & TEACHER DISCUSSION PROMPT           -->
     <!-- ======================================================== -->
-    <section id="view-resolution" class="hidden-view py-6 space-y-6" style="display: none;">
+    <section id="view-resolution" class="hidden-view py-4 space-y-5" style="display: none;">
       
       <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-6 sm:p-8 shadow-md text-center max-w-3xl mx-auto">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-accent bg-matcha-tint text-matcha-accent text-xs font-mono mb-4 font-semibold uppercase tracking-wider">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-accent bg-matcha-tint text-matcha-accent text-xs font-mono mb-3 font-semibold uppercase tracking-wider">
           COUNCIL RESOLUTION RATIFIED
         </div>
         
-        <h2 id="res-winning-policy" class="text-3xl sm:text-4xl font-serif font-bold text-matcha-dark leading-tight">
+        <h2 id="res-winning-policy" class="text-2xl sm:text-4xl font-serif font-bold text-matcha-dark leading-tight">
           Policy A Adopted
         </h2>
-        <div id="res-tally-display" class="text-sm font-mono text-matcha-sage mt-2">
+        <div id="res-tally-display" class="text-sm font-mono text-matcha-sage mt-1">
           Council Vote Tally: 3 - 2
         </div>
 
-        <div id="res-unanimous-banner" class="hidden mt-4 p-3 rounded-lg bg-matcha-alertBg border border-matcha-alert text-matcha-alert text-xs font-mono font-semibold">
+        <div id="res-unanimous-banner" class="hidden mt-3 p-3 rounded-lg bg-matcha-alertBg border border-matcha-alert text-matcha-alert text-xs font-mono font-semibold">
           ⚠️ AI SUSPICION ALERT: The Loom flagged unanimous consensus as potential coordination.
         </div>
 
         <!-- GDW IMPACT STATS -->
-        <div class="grid grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
-          <div class="p-4 bg-matcha-bg rounded-xl border border-matcha-border">
+        <div class="grid grid-cols-2 gap-4 mt-6 max-w-md mx-auto">
+          <div class="p-3.5 bg-matcha-bg rounded-xl border border-matcha-border">
             <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">GDW Shift</div>
-            <div id="res-gdw-shift" class="text-2xl font-mono font-bold text-matcha-accent mt-1">+12%</div>
+            <div id="res-gdw-shift" class="text-2xl font-mono font-bold text-matcha-accent mt-0.5">+12%</div>
           </div>
-          <div class="p-4 bg-matcha-bg rounded-xl border border-matcha-border">
+          <div class="p-3.5 bg-matcha-bg rounded-xl border border-matcha-border">
             <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Current GDW</div>
-            <div id="res-new-gdw" class="text-2xl font-mono font-bold text-matcha-dark mt-1">37%</div>
+            <div id="res-new-gdw" class="text-2xl font-mono font-bold text-matcha-dark mt-0.5">37%</div>
           </div>
         </div>
 
+        <!-- TEACHER DEBRIEF DISCUSSION BOX -->
+        <div class="mt-6 p-4 rounded-xl bg-matcha-cream/80 border border-matcha-border text-left">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-dark font-bold mb-1 flex items-center gap-1.5">
+            <span>🎓</span>
+            <span>CLASSROOM DEBRIEF PROMPT (TEACHER DISCUSSION)</span>
+          </div>
+          <p id="res-teacher-prompt" class="text-xs sm:text-sm font-serif text-matcha-dark italic">
+            "Classroom debrief prompt..."
+          </p>
+        </div>
+
         <!-- AGENDA GAINS -->
-        <div class="mt-6 p-4 bg-matcha-tint rounded-xl border border-matcha-border text-left">
-          <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-dark font-bold mb-2">
+        <div class="mt-4 p-3 bg-matcha-tint rounded-xl border border-matcha-border text-left">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-dark font-bold mb-1">
             Secret Agenda Influence Gains
           </div>
           <div id="res-agenda-gains" class="text-xs font-mono text-matcha-sage">
@@ -332,7 +357,7 @@
         </div>
 
         <!-- ADVANCE ACTION BUTTON -->
-        <div class="mt-8">
+        <div class="mt-6">
           <button id="btn-advance-cycle" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base uppercase tracking-wider transition shadow-md active:scale-95 inline-flex items-center gap-2">
             <span>Advance to Next Crisis Cycle</span>
             <span class="font-mono">➔</span>
@@ -345,9 +370,9 @@
     <!-- ======================================================== -->
     <!-- VIEW 4: FINAL VERDICT & GAME OVER                        -->
     <!-- ======================================================== -->
-    <section id="view-game-over" class="hidden-view py-8 space-y-6" style="display: none;">
+    <section id="view-game-over" class="hidden-view py-6 space-y-6" style="display: none;">
       
-      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-8 shadow-lg text-center max-w-3xl mx-auto">
+      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-6 sm:p-8 shadow-lg text-center max-w-3xl mx-auto">
         <div class="text-xs font-mono uppercase tracking-widest text-matcha-sage font-bold mb-2">
           THE LOOM // SIMULATION CONCLUDED
         </div>
@@ -355,12 +380,12 @@
         <h2 id="final-outcome-title" class="text-3xl sm:text-5xl font-serif font-bold text-matcha-dark">
           Systemic Survival
         </h2>
-        <p id="final-outcome-desc" class="text-xs sm:text-sm font-mono text-matcha-sage mt-3 max-w-xl mx-auto leading-relaxed">
+        <p id="final-outcome-desc" class="text-xs sm:text-sm font-mono text-matcha-sage mt-2 max-w-xl mx-auto leading-relaxed">
           The Council navigated the five crises and averted societal collapse.
         </p>
 
         <!-- FINAL SCOREBOARD -->
-        <div class="mt-8 p-5 bg-matcha-bg rounded-xl border border-matcha-border text-left">
+        <div class="mt-6 p-4 sm:p-5 bg-matcha-bg rounded-xl border border-matcha-border text-left">
           <div class="text-xs font-mono uppercase tracking-wider text-matcha-dark font-bold mb-3 border-b border-matcha-border pb-2">
             Final Agenda Scoreboard (Competitive Win Condition)
           </div>
@@ -369,7 +394,7 @@
           </div>
         </div>
 
-        <div class="mt-8">
+        <div class="mt-6">
           <button id="btn-new-simulation" class="px-8 py-3.5 rounded-xl bg-matcha-dark hover:bg-matcha-forest text-matcha-bg font-serif font-bold text-base uppercase tracking-wider transition shadow-md active:scale-95">
             Return to Lobby & Reset Council
           </button>
@@ -379,11 +404,11 @@
     </section>
 
     <!-- FOOTER / JOIN INSTRUCTIONS & DEV TOOLS -->
-    <section class="mt-8 pt-5 border-t border-matcha-border flex flex-col lg:flex-row items-center justify-between gap-6">
+    <section class="mt-6 pt-4 border-t border-matcha-border flex flex-col lg:flex-row items-center justify-between gap-5">
       
       <!-- MOBILE JOIN INSTRUCTIONS -->
       <div class="flex items-center gap-4 bg-matcha-card border border-matcha-border rounded-xl px-5 py-3 shadow-sm w-full lg:w-auto">
-        <div class="w-12 h-12 rounded-lg bg-matcha-cream border border-matcha-border flex items-center justify-center font-mono text-xs font-bold text-matcha-dark">
+        <div class="w-10 h-10 rounded-lg bg-matcha-cream border border-matcha-border flex items-center justify-center font-mono text-xs font-bold text-matcha-dark">
           WIFI
         </div>
         <div>
@@ -399,7 +424,7 @@
       </div>
 
       <!-- SIMULATION & MULTI-TAB LAUNCH CONTROLS -->
-      <div class="flex flex-col sm:flex-row items-center gap-3 text-xs font-mono w-full lg:w-auto justify-end">
+      <div class="flex flex-col sm:flex-row items-center gap-2.5 text-xs font-mono w-full lg:w-auto justify-end">
         <div class="flex items-center gap-1.5 bg-matcha-card border border-matcha-border rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-matcha-sage text-[10px] uppercase tracking-wider mr-1">Open Tab:</span>
           <a href="/player.html?slot=NODE-01" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N1</a>
@@ -424,7 +449,7 @@
   </main>
 
   <!-- BOTTOM ACCENT BAR -->
-  <footer class="border-t border-matcha-borderMuted px-6 py-2.5 bg-matcha-cream/50 text-[11px] font-mono text-matcha-sage flex justify-between items-center">
+  <footer class="border-t border-matcha-borderMuted px-6 py-2 bg-matcha-cream/50 text-[11px] font-mono text-matcha-sage flex justify-between items-center">
     <div>Aves Studios // Societelos Classroom Simulation</div>
     <div class="flex items-center gap-4">
       <span>Cycles: 5</span>
@@ -435,27 +460,150 @@
     </div>
   </footer>
 
-  <!-- SOCKET.IO CLIENT -->
+  <!-- ZERO-DEPENDENCY WEB AUDIO SYNTHESIZER -->
+  <script>
+    class LoomAudioSynth {
+      constructor() {
+        this.ctx = null;
+        this.enabled = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      }
+      playTone(freq, duration = 0.15, type = 'sine', gainVal = 0.08) {
+        if (!this.enabled || !this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+      playVoteChime() {
+        this.playTone(523.25, 0.12, 'sine', 0.06); // C5
+        setTimeout(() => this.playTone(659.25, 0.2, 'sine', 0.06), 90); // E5
+      }
+      playTick() {
+        this.playTone(800, 0.04, 'triangle', 0.03);
+      }
+      playResolutionChime() {
+        [440, 554.37, 659.25].forEach((f, i) => {
+          setTimeout(() => this.playTone(f, 0.4, 'sine', 0.08), i * 120);
+        });
+      }
+      playWarning() {
+        this.playTone(220, 0.3, 'sawtooth', 0.05);
+      }
+    }
+    const audio = new LoomAudioSynth();
+  </script>
+
+  <!-- HTML5 CANVAS: GDW DYNAMIC HARMONIC OSCILLATOR -->
+  <script>
+    const canvas = document.getElementById('gdw-canvas');
+    const ctx = canvas.getContext('2d');
+    let targetGdw = 25;
+    let animatedGdw = 25;
+    let wavePhase = 0;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawGdwCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      // Smooth interpolation towards target GDW
+      animatedGdw += (targetGdw - animatedGdw) * 0.05;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid guidelines
+      ctx.strokeStyle = 'rgba(26, 46, 34, 0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      // Determine wave character based on GDW
+      // Low GDW (<30) = erratic, noisy, jittery red/dark wave
+      // High GDW (>60) = harmonic, smooth, resonant green waves
+      const isCritical = animatedGdw < 35;
+      const waveSpeed = isCritical ? 0.08 : 0.03;
+      wavePhase += waveSpeed;
+
+      const amplitude = (h / 3) * (1 - Math.min(animatedGdw, 85) / 100 * 0.5);
+      const frequency = isCritical ? 0.045 : 0.025;
+
+      // Draw Wave
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        let jitter = 0;
+        if (isCritical) {
+          jitter = (Math.sin(x * 0.2 + wavePhase * 3) + Math.cos(x * 0.15)) * (40 - animatedGdw) * 0.15;
+        }
+        const y = h / 2 + Math.sin(x * frequency + wavePhase) * amplitude + jitter;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = isCritical ? '#a84e32' : '#3e654c';
+      ctx.lineWidth = isCritical ? 2.5 : 2;
+      ctx.stroke();
+
+      // Subtle filled area under wave
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fillStyle = isCritical ? 'rgba(168, 78, 50, 0.08)' : 'rgba(62, 101, 76, 0.08)';
+      ctx.fill();
+
+      requestAnimationFrame(drawGdwCanvas);
+    }
+    requestAnimationFrame(drawGdwCanvas);
+  </script>
+
+  <!-- SOCKET.IO CLIENT & GAME LOGIC -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
     function updateClock() {
       const now = new Date();
-      document.getElementById('system-clock').textContent = now.toISOString().substring(11, 19) + ' UTC';
+      document.getElementById('system-clock').textContent = now.toISOString().substring(11, 19);
     }
     setInterval(updateClock, 1000);
     updateClock();
 
     const socket = io();
 
-    // Elements
+    // DOM Elements
     const socketIndicator = document.getElementById('socket-indicator');
     const socketStatus = document.getElementById('socket-status');
     const cycleTagHeader = document.getElementById('cycle-tag-header');
     const gdwValue = document.getElementById('gdw-value');
-    const gdwBar = document.getElementById('gdw-bar');
+    const gdwThresholdTag = document.getElementById('gdw-threshold-tag');
     const hostIpDisplay = document.getElementById('host-ip-display');
     const joinIp = document.getElementById('join-ip');
     const joinUrlLink = document.getElementById('join-url-link');
+    const btnSoundToggle = document.getElementById('btn-sound-toggle');
+    const soundIcon = document.getElementById('sound-icon');
+    const soundLabel = document.getElementById('sound-label');
 
     // Views
     const viewLobby = document.getElementById('view-lobby');
@@ -476,6 +624,8 @@
     const crisisSubtitleDisplay = document.getElementById('crisis-subtitle-display');
     const crisisDescDisplay = document.getElementById('crisis-desc-display');
     const debateTimerDisplay = document.getElementById('debate-timer-display');
+    const btnPauseTimer = document.getElementById('btn-pause-timer');
+    const btnAddTime = document.getElementById('btn-add-time');
     const btnForceVote = document.getElementById('btn-force-vote');
     const policyAName = document.getElementById('policy-a-name');
     const policyASummary = document.getElementById('policy-a-summary');
@@ -493,6 +643,7 @@
     const resUnanimousBanner = document.getElementById('res-unanimous-banner');
     const resGdwShift = document.getElementById('res-gdw-shift');
     const resNewGdw = document.getElementById('res-new-gdw');
+    const resTeacherPrompt = document.getElementById('res-teacher-prompt');
     const resAgendaGains = document.getElementById('res-agenda-gains');
     const btnAdvanceCycle = document.getElementById('btn-advance-cycle');
 
@@ -502,11 +653,26 @@
     const finalScoreboardContainer = document.getElementById('final-scoreboard-container');
     const btnNewSimulation = document.getElementById('btn-new-simulation');
 
+    let previousVotedCount = 0;
+
+    btnSoundToggle.addEventListener('click', () => {
+      audio.init();
+      audio.enabled = !audio.enabled;
+      soundIcon.textContent = audio.enabled ? '🔊' : '🔈';
+      soundLabel.textContent = `Audio: ${audio.enabled ? 'ON' : 'OFF'}`;
+      if (audio.enabled) audio.playVoteChime();
+    });
+
     function switchView(target) {
-      viewLobby.style.display = target === 'LOBBY' ? 'block' : 'none';
-      viewGame.style.display = target === 'DEBATE' ? 'block' : 'none';
-      viewResolution.style.display = target === 'RESOLUTION' ? 'block' : 'none';
-      viewGameOver.style.display = target === 'GAME_OVER' ? 'block' : 'none';
+      const isLobby = target === 'STATE_LOBBY' || target === 'LOBBY';
+      const isGame = target === 'STATE_VOTING' || target === 'STATE_CRISIS_INTRO' || target === 'DEBATE';
+      const isResolution = target === 'STATE_RESOLUTION' || target === 'RESOLUTION';
+      const isGameOver = target === 'STATE_GAME_OVER' || target === 'GAME_OVER';
+
+      viewLobby.style.display = isLobby ? 'block' : 'none';
+      viewGame.style.display = isGame ? 'block' : 'none';
+      viewResolution.style.display = isResolution ? 'block' : 'none';
+      viewGameOver.style.display = isGameOver ? 'block' : 'none';
 
       [viewLobby, viewGame, viewResolution, viewGameOver].forEach((v) => {
         if (v.style.display === 'block') v.classList.remove('hidden-view');
@@ -530,13 +696,16 @@
         const mins = String(Math.floor(data.timerSeconds / 60)).padStart(2, '0');
         const secs = String(data.timerSeconds % 60).padStart(2, '0');
         debateTimerDisplay.textContent = `${mins}:${secs}`;
+        if (data.timerSeconds <= 10 && data.timerSeconds > 0) {
+          audio.playTick();
+        }
       }
+      btnPauseTimer.textContent = data.timerPaused ? '▶' : '⏸';
     });
 
     socket.on('state_update', (data) => {
       if (!data) return;
 
-      // IP update
       if (data.networkIP && data.port) {
         const fullHost = `${data.networkIP}:${data.port}`;
         hostIpDisplay.textContent = fullHost;
@@ -547,23 +716,38 @@
 
       // GDW update
       if (typeof data.gdw === 'number') {
+        targetGdw = data.gdw;
         gdwValue.textContent = `${data.gdw}%`;
-        gdwBar.style.width = `${data.gdw}%`;
+        if (data.gdw < 35) {
+          gdwValue.className = 'text-2xl font-mono font-bold text-matcha-alert';
+          gdwThresholdTag.textContent = '▲ CRITICAL COLLAPSE THRESHOLD';
+          gdwThresholdTag.className = 'text-matcha-alert font-semibold tracking-wider';
+        } else {
+          gdwValue.className = 'text-2xl font-mono font-bold text-matcha-accent';
+          gdwThresholdTag.textContent = '● RESILIENT EQUILIBRIUM';
+          gdwThresholdTag.className = 'text-matcha-accent font-semibold tracking-wider';
+        }
       }
 
-      // Switch screen view based on state
-      switchView(data.status);
+      // Sound notification on vote cast
+      if (typeof data.votedCount === 'number' && data.votedCount > previousVotedCount) {
+        audio.playVoteChime();
+      }
+      previousVotedCount = data.votedCount || 0;
 
-      if (data.status === 'LOBBY') {
+      const currentPhase = data.phase || data.status;
+      switchView(currentPhase);
+
+      if (currentPhase === 'STATE_LOBBY' || currentPhase === 'LOBBY') {
         cycleTagHeader.textContent = 'COUNCIL SESSION // LOBBY';
         renderLobbyView(data);
-      } else if (data.status === 'DEBATE') {
+      } else if (currentPhase === 'STATE_VOTING' || currentPhase === 'DEBATE') {
         cycleTagHeader.textContent = `CRISIS CYCLE 0${data.cycle} // IN PROGRESS`;
         renderGameView(data);
-      } else if (data.status === 'RESOLUTION') {
+      } else if (currentPhase === 'STATE_RESOLUTION' || currentPhase === 'RESOLUTION') {
         cycleTagHeader.textContent = `CRISIS CYCLE 0${data.cycle} // RESOLUTION`;
         renderResolutionView(data);
-      } else if (data.status === 'GAME_OVER') {
+      } else if (currentPhase === 'STATE_GAME_OVER' || currentPhase === 'GAME_OVER') {
         cycleTagHeader.textContent = 'SIMULATION FINAL VERDICT';
         renderGameOverView(data);
       }
@@ -589,23 +773,26 @@
 
     function renderNodeCards(slots) {
       nodesGrid.innerHTML = '';
-      slots.forEach((slot, index) => {
+      slots.forEach((slot) => {
         const card = document.createElement('div');
         if (slot.connected) {
-          card.className = 'bg-matcha-card border-2 border-matcha-accent rounded-xl p-5 shadow-md flex flex-col justify-between relative overflow-hidden';
+          card.className = 'bg-matcha-card border-2 border-matcha-accent rounded-xl p-4 sm:p-5 shadow-md flex flex-col justify-between relative overflow-hidden';
           card.innerHTML = `
             <div class="absolute top-0 right-0 px-2 py-0.5 bg-matcha-accent text-matcha-bg text-[9px] font-mono uppercase tracking-widest rounded-bl-lg font-semibold">
               SYNCHRONIZED
             </div>
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-mono font-bold text-matcha-accent tracking-widest">${slot.id}</span>
                 <span class="w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot"></span>
               </div>
-              <h3 class="text-lg font-serif font-bold text-matcha-dark leading-tight">${slot.designation}</h3>
-              <p class="text-[11px] font-mono text-matcha-sage mt-2 line-clamp-2">${slot.archetype}</p>
+              <h3 class="text-base sm:text-lg font-serif font-bold text-matcha-dark leading-tight flex items-center gap-1.5">
+                <span>${slot.icon || '🏛️'}</span>
+                <span>${slot.designation}</span>
+              </h3>
+              <p class="text-[11px] font-mono text-matcha-sage mt-1.5 line-clamp-2">${slot.archetype}</p>
             </div>
-            <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
+            <div class="mt-5 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
               <span class="flex items-center gap-1.5 text-matcha-accent font-semibold truncate max-w-[120px]">
                 ${slot.playerName || 'TRUSTEE'}
               </span>
@@ -613,17 +800,20 @@
             </div>
           `;
         } else {
-          card.className = 'bg-matcha-bg/60 border-2 border-dashed border-matcha-border rounded-xl p-5 flex flex-col justify-between';
+          card.className = 'bg-matcha-bg/60 border-2 border-dashed border-matcha-border rounded-xl p-4 sm:p-5 flex flex-col justify-between';
           card.innerHTML = `
             <div>
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-mono font-semibold text-matcha-sage tracking-widest">${slot.id}</span>
                 <span class="w-2 h-2 rounded-full bg-matcha-border"></span>
               </div>
-              <h3 class="text-base font-serif font-medium text-matcha-dark/70 leading-tight">${slot.designation}</h3>
-              <p class="text-[11px] font-mono text-matcha-sage/80 mt-2 line-clamp-2">${slot.archetype}</p>
+              <h3 class="text-base font-serif font-medium text-matcha-dark/70 leading-tight flex items-center gap-1.5">
+                <span>${slot.icon || '🏛️'}</span>
+                <span>${slot.designation}</span>
+              </h3>
+              <p class="text-[11px] font-mono text-matcha-sage/80 mt-1.5 line-clamp-2">${slot.archetype}</p>
             </div>
-            <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
+            <div class="mt-5 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
               <span class="animate-pulse">Awaiting node...</span>
               <a href="/player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold">Join ↗</a>
             </div>
@@ -653,7 +843,7 @@
       botFeedContainer.innerHTML = '';
       (data.feed || []).forEach((item) => {
         const row = document.createElement('div');
-        row.className = 'p-2.5 rounded-lg bg-matcha-bg border border-matcha-borderMuted';
+        row.className = 'p-2 rounded-lg bg-matcha-bg border border-matcha-borderMuted';
         row.innerHTML = `
           <div class="flex items-center justify-between text-[10px] text-matcha-sage mb-0.5">
             <span class="font-semibold text-matcha-dark">${item.user}</span>
@@ -692,6 +882,8 @@
       const res = data.lastResolution;
       if (!res) return;
 
+      audio.playResolutionChime();
+
       resWinningPolicy.textContent = `Adopted: ${res.winningPolicyName}`;
       resTallyDisplay.textContent = `Council Vote Tally: Policy A (${res.votesA}) vs Policy B (${res.votesB})`;
 
@@ -702,8 +894,15 @@
       }
 
       resGdwShift.textContent = `${res.gdwDelta >= 0 ? '+' : ''}${res.gdwDelta}%`;
-      resGdwShift.className = `text-2xl font-mono font-bold mt-1 ${res.gdwDelta >= 0 ? 'text-matcha-accent' : 'text-matcha-alert'}`;
+      resGdwShift.className = `text-2xl font-mono font-bold mt-0.5 ${res.gdwDelta >= 0 ? 'text-matcha-accent' : 'text-matcha-alert'}`;
       resNewGdw.textContent = `${res.newGdw}%`;
+
+      // Teacher Debrief Question
+      if (res.teacherPrompt) {
+        resTeacherPrompt.textContent = `"${res.teacherPrompt}"`;
+      } else {
+        resTeacherPrompt.textContent = '"Classroom discussion: How does this decision shift human autonomy vs comfort?"';
+      }
 
       if (res.scoreIncreases && res.scoreIncreases.length > 0) {
         resAgendaGains.textContent = `Favored Archetypes (+1 Influence): ${res.scoreIncreases.join(', ')}`;
@@ -720,16 +919,17 @@
 
     function renderGameOverView(data) {
       if (data.gdw <= 0) {
+        audio.playWarning();
         finalOutcomeTitle.textContent = 'Systemic Collapse';
         finalOutcomeTitle.className = 'text-3xl sm:text-5xl font-serif font-bold text-matcha-alert';
         finalOutcomeDesc.textContent = 'Gross Domestic Well-Being plummeted to 0%. The human population revolted against The Loom infrastructure. All trustees lose.';
       } else {
+        audio.playResolutionChime();
         finalOutcomeTitle.textContent = 'Systemic Telos Achieved';
         finalOutcomeTitle.className = 'text-3xl sm:text-5xl font-serif font-bold text-matcha-accent';
         finalOutcomeDesc.textContent = `Gross Domestic Well-Being stabilized at ${data.gdw}%. The shadow council successfully injected sufficient human friction to avert societal revolt.`;
       }
 
-      // Render Scoreboard
       finalScoreboardContainer.innerHTML = '';
       const sortedSlots = [...(data.slots || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
       
@@ -739,6 +939,7 @@
         row.innerHTML = `
           <div class="flex items-center gap-2">
             <span class="font-bold ${idx === 0 ? 'text-matcha-accent' : 'text-matcha-sage'}">#${idx + 1}</span>
+            <span class="text-sm">${s.icon || '🏛️'}</span>
             <span class="font-bold text-matcha-dark">${s.id} // ${s.designation}</span>
             <span class="text-[10px] text-matcha-sage">(${s.playerName || 'AI'})</span>
           </div>
@@ -750,9 +951,18 @@
       });
     }
 
-    // Event Handlers
+    // Teacher & Host Controls
     btnBeginSimulation.addEventListener('click', () => {
+      audio.init();
       socket.emit('start_simulation');
+    });
+
+    btnPauseTimer.addEventListener('click', () => {
+      socket.emit('toggle_pause_timer');
+    });
+
+    btnAddTime.addEventListener('click', () => {
+      socket.emit('add_timer_seconds', 30);
     });
 
     btnForceVote.addEventListener('click', () => {
