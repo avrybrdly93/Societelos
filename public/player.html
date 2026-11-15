@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SOCIETELOS // Council Node Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            matcha: {
+              bg: '#f7f5f0',
+              card: '#ffffff',
+              dark: '#1a2e22',
+              forest: '#243c2e',
+              border: '#d7dfd7',
+              borderMuted: '#e3e8e2',
+              cream: '#f1ede4',
+              sage: '#5c7865',
+              lightSage: '#8ea895',
+              tint: '#edf2ed',
+              accent: '#3e654c',
+              alert: '#a84e32',
+              alertBg: '#faece8'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+            serif: ['Cinzel', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #f7f5f0;
+      color: #1a2e22;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(92, 120, 101, 0.04) 0%, transparent 60%),
+        linear-gradient(to right, rgba(26, 46, 34, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(26, 46, 34, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 24px 24px, 24px 24px;
+      min-height: 100vh;
+    }
+    .pulse-dot {
+      box-shadow: 0 0 0 0 rgba(62, 101, 76, 0.6);
+      animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to { box-shadow: 0 0 0 8px rgba(62, 101, 76, 0); }
+    }
+    .hidden-view {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-matcha-bg text-matcha-dark font-sans min-h-screen flex flex-col justify-between p-4 sm:p-6 selection:bg-matcha-dark selection:text-matcha-bg">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-matcha-border pb-3 flex items-center justify-between font-mono text-xs max-w-lg mx-auto w-full">
+    <div class="flex items-center gap-2">
+      <span id="conn-dot" class="w-2.5 h-2.5 rounded-full bg-matcha-sage"></span>
+      <span id="conn-status" class="uppercase font-semibold tracking-wider text-matcha-dark">CONNECTING</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] text-matcha-sage uppercase font-mono">LOOM V4.12</span>
+      <span class="px-2 py-0.5 rounded border border-matcha-border bg-matcha-cream text-[10px] tracking-wider uppercase font-semibold">
+        TRUSTEE TERMINAL
+      </span>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="my-auto py-4 max-w-lg mx-auto w-full">
+    
+    <!-- ================= VIEW 1: JOIN / HANDSHAKE SCREEN ================= -->
+    <div id="view-join" class="space-y-5" style="display: block;">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-matcha-border bg-matcha-tint text-[10px] font-mono text-matcha-dark uppercase tracking-wider mb-2">
+          <span>COUNCIL CONVOCATION</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-matcha-dark">Council Handshake</h1>
+        <p class="text-xs text-matcha-sage font-mono mt-1">
+          Select an available archetype slot or join next open position.
+        </p>
+      </div>
+
+      <!-- PLAYER NAME / IDENTITY INPUT -->
+      <div class="bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
+        <label class="block text-[11px] font-mono uppercase tracking-wider text-matcha-sage mb-1 font-medium">
+          Trustee Codename / Name
+        </label>
+        <div class="flex gap-2">
+          <input id="input-player-name" type="text" placeholder="e.g. Trustee or your name" maxlength="20"
+            class="flex-1 bg-matcha-bg border border-matcha-border rounded-lg px-3 py-2 text-sm font-mono text-matcha-dark focus:outline-none focus:border-matcha-dark" />
+          <button id="btn-quick-join" class="px-4 py-2 rounded-lg bg-matcha-dark hover:bg-matcha-forest text-matcha-bg text-xs font-mono font-semibold uppercase tracking-wider transition active:scale-95 whitespace-nowrap shadow-sm">
+            Quick Join
+          </button>
+        </div>
+        <p id="join-error" class="text-xs font-mono text-matcha-alert mt-2 hidden"></p>
+      </div>
+
+      <!-- AVAILABLE SLOTS ROSTER -->
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-matcha-sage uppercase px-1">
+          <span>Council Archetype Slots</span>
+          <span id="slots-count-badge">0 / 5 OCCUPIED</span>
+        </div>
+
+        <div id="slots-container" class="space-y-2">
+          <!-- Dynamically populated via state_update -->
+          <div class="p-4 bg-matcha-card border border-matcha-border rounded-xl text-center text-xs font-mono text-matcha-sage">
+            Connecting to The Loom telemetry...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 2: CONNECTED / SYNCHRONIZED TERMINAL ================= -->
+    <div id="view-connected" class="space-y-5 hidden-view" style="display: none;">
+      
+      <div class="bg-matcha-card border-2 border-matcha-accent rounded-2xl p-5 sm:p-6 shadow-md relative overflow-hidden">
+        
+        <!-- TOP AUTH BADGE -->
+        <div class="flex items-center justify-between border-b border-matcha-borderMuted pb-4 mb-4">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-matcha-sage">COUNCIL NODE ASSIGNED</span>
+            <h2 id="assigned-node-id" class="text-2xl sm:text-3xl font-mono font-bold text-matcha-accent tracking-wider">---</h2>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-matcha-tint border border-matcha-accent text-matcha-accent font-mono text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-matcha-accent pulse-dot"></span>
+              SYNCHRONIZED
+            </span>
+            <div id="assigned-player-display" class="text-[10px] font-mono text-matcha-sage mt-1">Trustee</div>
+          </div>
+        </div>
+
+        <!-- ROLE & ARCHETYPE DETAILS -->
+        <div class="space-y-4">
+          <div>
+            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-sage">Philosophical Archetype</div>
+            <div id="assigned-role-name" class="text-xl sm:text-2xl font-serif font-bold text-matcha-dark">---</div>
+            <div id="assigned-role-archetype" class="text-xs font-mono text-matcha-accent mt-0.5 font-medium">---</div>
+          </div>
+
+          <div class="p-3.5 bg-matcha-tint border border-matcha-border rounded-xl">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-matcha-dark font-semibold mb-1 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-matcha-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              CLASSIFIED AGENDA (SECRET MANDATE)
+            </div>
+            <p id="assigned-role-agenda" class="text-xs font-mono text-matcha-dark leading-relaxed">
+              ---
+            </p>
+          </div>
+        </div>
+
+        <!-- LOBBY STATUS FOOTER -->
+        <div class="mt-6 pt-4 border-t border-matcha-borderMuted bg-matcha-cream/60 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center gap-2 text-matcha-dark">
+              <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
+              <span id="player-lobby-status">Waiting for all 5 nodes to establish quorum...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LEAVE / RELINQUISH BUTTON -->
+      <div class="flex justify-between items-center px-1">
+        <span class="text-[10px] font-mono text-matcha-sage">Terminal linked to active council session</span>
+        <button id="btn-relinquish" class="text-xs font-mono text-matcha-sage hover:text-matcha-alert underline transition">
+          Relinquish Seat
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- BOTTOM FOOTER -->
+  <footer class="text-center font-mono text-[10px] text-matcha-sage py-2 border-t border-matcha-borderMuted max-w-lg mx-auto w-full flex justify-between items-center">
+    <span>Aves Studios // Societelos</span>
+    <span>Post-Labor Telos Protocol</span>
+  </footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Tab-specific unique session key
+    const SESSION_KEY = 'societelos_node_session_id';
+    let currentSessionId = sessionStorage.getItem(SESSION_KEY);
+    if (!currentSessionId) {
+      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      sessionStorage.setItem(SESSION_KEY, currentSessionId);
+    }
+
+    // Check URL parameters for pre-assigned slot e.g. ?slot=NODE-02
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedSlotFromUrl = urlParams.get('slot');
+
+    // Socket.io instance
+    const socket = io();
+
+    // DOM Elements
+    const connDot = document.getElementById('conn-dot');
+    const connStatus = document.getElementById('conn-status');
+    const viewJoin = document.getElementById('view-join');
+    const viewConnected = document.getElementById('view-connected');
+    const inputPlayerName = document.getElementById('input-player-name');
+    const btnQuickJoin = document.getElementById('btn-quick-join');
+    const joinError = document.getElementById('join-error');
+    const slotsContainer = document.getElementById('slots-container');
+    const slotsCountBadge = document.getElementById('slots-count-badge');
+
+    const assignedNodeId = document.getElementById('assigned-node-id');
+    const assignedPlayerDisplay = document.getElementById('assigned-player-display');
+    const assignedRoleName = document.getElementById('assigned-role-name');
+    const assignedRoleArchetype = document.getElementById('assigned-role-archetype');
+    const assignedRoleAgenda = document.getElementById('assigned-role-agenda');
+    const playerLobbyStatus = document.getElementById('player-lobby-status');
+    const btnRelinquish = document.getElementById('btn-relinquish');
+
+    // Local cached state
+    let cachedSlots = [];
+    let isAssigned = false;
+
+    // View Switching
+    function showJoinView() {
+      isAssigned = false;
+      viewJoin.style.display = 'block';
+      viewConnected.style.display = 'none';
+      viewConnected.classList.add('hidden-view');
+      viewJoin.classList.remove('hidden-view');
+    }
+
+    function showConnectedView(data) {
+      isAssigned = true;
+      assignedNodeId.textContent = data.nodeId;
+      assignedPlayerDisplay.textContent = data.playerName || 'Trustee';
+      assignedRoleName.textContent = data.designation;
+      assignedRoleArchetype.textContent = data.archetype;
+      assignedRoleAgenda.textContent = data.agenda || 'Confidential mandate active.';
+
+      viewJoin.style.display = 'none';
+      viewConnected.style.display = 'block';
+      viewJoin.classList.add('hidden-view');
+      viewConnected.classList.remove('hidden-view');
+    }
+
+    // Socket Lifecycle
+    socket.on('connect', () => {
+      connDot.className = 'w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot';
+      connStatus.textContent = 'ONLINE';
+      
+      // If this tab already had an active assignment, check if server still recognizes it
+      socket.emit('check_session', { sessionId: currentSessionId });
+    });
+
+    socket.on('disconnect', () => {
+      connDot.className = 'w-2.5 h-2.5 rounded-full bg-matcha-alert';
+      connStatus.textContent = 'OFFLINE';
+    });
+
+    socket.on('session_not_found', () => {
+      // If server does not have an active session for this tab, show join view
+      if (!isAssigned) {
+        showJoinView();
+        // If URL requested a specific slot, auto-attempt join
+        if (requestedSlotFromUrl && cachedSlots.length > 0) {
+          attemptJoin(requestedSlotFromUrl);
+        }
+      }
+    });
+
+    socket.on('node_assigned', (data) => {
+      showConnectedView(data);
+    });
+
+    socket.on('node_join_rejected', (data) => {
+      joinError.textContent = data.reason || 'Could not join slot.';
+      joinError.classList.remove('hidden');
+    });
+
+    socket.on('node_left_confirmed', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10);
+      sessionStorage.setItem(SESSION_KEY, currentSessionId);
+      showJoinView();
+    });
+
+    socket.on('lobby_reset_broadcast', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      currentSessionId = 'node_' + Math.random().toString(36).substring(2, 10);
+      sessionStorage.setItem(SESSION_KEY, currentSessionId);
+      showJoinView();
+    });
+
+    socket.on('state_update', (data) => {
+      if (!data) return;
+      cachedSlots = data.slots || [];
+
+      // Update slot roster on Join View
+      renderSlotCards(cachedSlots);
+
+      // Update occupied count
+      const connectedCount = data.connectedCount || 0;
+      const maxNodes = data.maxNodes || 5;
+      slotsCountBadge.textContent = `${connectedCount} / ${maxNodes} OCCUPIED`;
+
+      // Update quorum status on connected view
+      if (data.isReady) {
+        playerLobbyStatus.textContent = 'Council quorum established (5/5). Stand by for Crisis Cycle 01.';
+      } else {
+        const remaining = maxNodes - connectedCount;
+        playerLobbyStatus.textContent = `Awaiting ${remaining} more node${remaining > 1 ? 's' : ''}... (${connectedCount}/${maxNodes} synced)`;
+      }
+
+      // If URL parameter requested a slot and we are still unassigned and slot is available
+      if (!isAssigned && requestedSlotFromUrl) {
+        const target = cachedSlots.find(s => s.id === requestedSlotFromUrl);
+        if (target && !target.connected) {
+          attemptJoin(requestedSlotFromUrl);
+        }
+      }
+    });
+
+    function renderSlotCards(slots) {
+      if (!slots || slots.length === 0) return;
+      slotsContainer.innerHTML = '';
+
+      slots.forEach((slot) => {
+        const card = document.createElement('div');
+        const isOccupied = slot.connected;
+
+        if (isOccupied) {
+          card.className = 'p-3.5 rounded-xl border border-matcha-border bg-matcha-cream/40 opacity-70 flex items-center justify-between gap-3 text-left transition';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-semibold text-matcha-sage line-through">${slot.id}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-matcha-border text-matcha-dark uppercase font-semibold">OCCUPIED</span>
+              </div>
+              <div class="text-sm font-serif font-medium text-matcha-dark/70">${slot.designation}</div>
+              <div class="text-[11px] font-mono text-matcha-sage line-clamp-1">${slot.archetype}</div>
+            </div>
+            <div class="text-[11px] font-mono text-matcha-sage font-medium whitespace-nowrap">
+              ${slot.playerName ? slot.playerName : 'Locked'}
+            </div>
+          `;
+        } else {
+          card.className = 'p-3.5 rounded-xl border-2 border-matcha-border hover:border-matcha-accent bg-matcha-card flex items-center justify-between gap-3 text-left transition shadow-sm';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-bold text-matcha-accent">${slot.id}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-matcha-tint text-matcha-accent uppercase font-semibold">AVAILABLE</span>
+              </div>
+              <div class="text-sm font-serif font-bold text-matcha-dark">${slot.designation}</div>
+              <div class="text-[11px] font-mono text-matcha-sage line-clamp-1">${slot.archetype}</div>
+            </div>
+            <button class="btn-claim-slot px-3.5 py-1.5 rounded-lg bg-matcha-dark hover:bg-matcha-forest text-matcha-bg text-xs font-mono font-semibold uppercase tracking-wider transition active:scale-95 whitespace-nowrap" data-node-id="${slot.id}">
+              Claim
+            </button>
+          `;
+
+          card.querySelector('.btn-claim-slot').addEventListener('click', (e) => {
+            e.stopPropagation();
+            attemptJoin(slot.id);
+          });
+        }
+
+        slotsContainer.appendChild(card);
+      });
+    }
+
+    function attemptJoin(requestedNodeId = null) {
+      joinError.classList.add('hidden');
+      const playerName = inputPlayerName.value.trim() || 'Trustee';
+      socket.emit('node_join', {
+        sessionId: currentSessionId,
+        requestedNodeId: requestedNodeId,
+        playerName: playerName
+      });
+    }
+
+    btnQuickJoin.addEventListener('click', () => {
+      attemptJoin(null);
+    });
+
+    btnRelinquish.addEventListener('click', () => {
+      socket.emit('node_leave', { sessionId: currentSessionId });
+    });
+  </script>
+</body>
+</html>

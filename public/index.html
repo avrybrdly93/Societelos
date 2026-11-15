@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOCIETELOS // The Loom Telemetry & Council Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            matcha: {
+              bg: '#f7f5f0',
+              card: '#ffffff',
+              dark: '#1a2e22',
+              deep: '#101d15',
+              forest: '#243c2e',
+              border: '#d7dfd7',
+              borderMuted: '#e3e8e2',
+              cream: '#f1ede4',
+              sage: '#5c7865',
+              lightSage: '#8ea895',
+              tint: '#edf2ed',
+              accent: '#3e654c',
+              alert: '#a84e32',
+              alertBg: '#faece8'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+            serif: ['Cinzel', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #f7f5f0;
+      color: #1a2e22;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(92, 120, 101, 0.05) 0%, transparent 60%),
+        linear-gradient(to right, rgba(26, 46, 34, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(26, 46, 34, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+      min-height: 100vh;
+    }
+
+    .pulse-dot {
+      box-shadow: 0 0 0 0 rgba(62, 101, 76, 0.6);
+      animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to {
+        box-shadow: 0 0 0 10px rgba(62, 101, 76, 0);
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased flex flex-col justify-between selection:bg-matcha-dark selection:text-matcha-bg">
+
+  <!-- TOP ADMINISTRATIVE TELEMETRY STRIP -->
+  <header class="border-b border-matcha-border bg-matcha-bg/90 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span id="socket-indicator" class="w-2.5 h-2.5 rounded-full bg-matcha-sage pulse-dot"></span>
+          <span id="socket-status" class="tracking-widest uppercase font-semibold text-matcha-dark">LOOM SYNC: INITIALIZING</span>
+        </div>
+        <span class="text-matcha-border">|</span>
+        <span class="text-matcha-sage tracking-wider">PROTOCOL: TELOS-RESTRUCTURING-05</span>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div class="hidden sm:flex items-center gap-2">
+          <span class="text-matcha-sage">HOST NODE:</span>
+          <span id="host-ip-display" class="font-semibold text-matcha-dark">127.0.0.1:3000</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-matcha-sage">SYS_TIME:</span>
+          <span id="system-clock" class="font-semibold text-matcha-dark">--:--:-- UTC</span>
+        </div>
+        <div class="hidden md:block px-2.5 py-0.5 rounded border border-matcha-border bg-matcha-tint font-semibold text-matcha-dark uppercase tracking-wider text-[10px]">
+          Classified // Council Tier 1
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN HOST DISPLAY -->
+  <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 flex flex-col justify-between">
+    
+    <!-- HEADER & TITLE SECTION -->
+    <div class="mb-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-matcha-border pb-6 gap-6">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono tracking-widest text-matcha-sage uppercase mb-1">
+            <span>Autonomous Infrastructure Overseer</span>
+            <span>//</span>
+            <span>The Loom Core v4.12</span>
+          </div>
+          <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-tight text-matcha-dark">
+            SOCIETELOS
+          </h1>
+          <p class="text-sm md:text-base text-matcha-sage mt-1 max-w-2xl font-light">
+            Hedonic Drift Containment & Psychological Telos Council. Five human trustees required to calibrate societal resilience against systemic collapse.
+          </p>
+        </div>
+
+        <!-- GDW TELEMETRY WIDGET -->
+        <div class="w-full md:w-80 bg-matcha-card border border-matcha-border rounded-xl p-4 shadow-sm">
+          <div class="flex justify-between items-baseline mb-2">
+            <span class="text-[11px] font-mono uppercase tracking-widest text-matcha-sage font-medium">Gross Domestic Well-Being (GDW)</span>
+            <span id="gdw-value" class="text-xl font-mono font-bold text-matcha-alert">25%</span>
+          </div>
+          <div class="w-full h-3 bg-matcha-cream rounded-full overflow-hidden p-0.5 border border-matcha-borderMuted">
+            <div id="gdw-bar" class="h-full bg-matcha-alert rounded-full transition-all duration-700 ease-out" style="width: 25%;"></div>
+          </div>
+          <div class="flex justify-between text-[10px] font-mono text-matcha-sage mt-2">
+            <span class="text-matcha-alert font-semibold tracking-wider">▲ CRITICAL COLLAPSE THRESHOLD</span>
+            <span>TARGET: &gt;70%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTRAL LOBBY HERO & STATUS -->
+    <section class="my-auto py-6">
+      <div class="text-center max-w-3xl mx-auto mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-4">
+          <span class="w-2 h-2 rounded-full bg-matcha-accent animate-ping"></span>
+          <span id="council-status-tag" class="tracking-widest uppercase font-medium">AWAITING BIOMETRIC HANDSHAKES</span>
+        </div>
+        <h2 id="lobby-headline" class="text-3xl md:text-4xl font-serif font-bold text-matcha-dark tracking-normal">
+          Waiting for 5 nodes...
+        </h2>
+        <p id="lobby-subtext" class="text-sm text-matcha-sage mt-2 font-mono">
+          Connect mobile terminals to synchronize the five philosophical archetypes.
+        </p>
+      </div>
+
+      <!-- 5 NODE SLOTS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="nodes-grid">
+        <!-- Rendered reactively via JS -->
+      </div>
+    </section>
+
+    <!-- FOOTER / JOIN INSTRUCTIONS & DEV TOOLS -->
+    <section class="mt-8 pt-6 border-t border-matcha-border flex flex-col lg:flex-row items-center justify-between gap-6">
+      
+      <!-- MOBILE JOIN INSTRUCTIONS -->
+      <div class="flex items-center gap-4 bg-matcha-card border border-matcha-border rounded-xl px-5 py-3 shadow-sm w-full lg:w-auto">
+        <div class="w-12 h-12 rounded-lg bg-matcha-cream border border-matcha-border flex items-center justify-center font-mono text-xs font-bold text-matcha-dark">
+          WIFI
+        </div>
+        <div>
+          <div class="text-[10px] font-mono tracking-widest uppercase text-matcha-sage">Mobile Terminal Connection</div>
+          <div class="text-sm font-mono font-semibold text-matcha-dark flex items-center gap-2">
+            <span>Direct:</span>
+            <a id="join-url-link" href="/player.html" target="_blank" class="underline decoration-matcha-sage hover:text-matcha-accent transition-colors">
+              http://<span id="join-ip">localhost</span>:3000/player.html
+            </a>
+          </div>
+          <div class="text-[11px] text-matcha-sage">Open on student phones or test across browser tabs</div>
+        </div>
+      </div>
+
+      <!-- SIMULATION & MULTI-TAB LAUNCH CONTROLS -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 text-xs font-mono w-full lg:w-auto justify-end">
+        
+        <!-- QUICK LAUNCH TABS PER NODE -->
+        <div class="flex items-center gap-1.5 bg-matcha-card border border-matcha-border rounded-xl px-3 py-1.5 shadow-sm">
+          <span class="text-matcha-sage text-[10px] uppercase tracking-wider mr-1">Open Tab:</span>
+          <a href="/player.html?slot=NODE-01" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N1</a>
+          <a href="/player.html?slot=NODE-02" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N2</a>
+          <a href="/player.html?slot=NODE-03" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N3</a>
+          <a href="/player.html?slot=NODE-04" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N4</a>
+          <a href="/player.html?slot=NODE-05" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N5</a>
+        </div>
+
+        <!-- SIMULATE BOT JOIN / RESET -->
+        <div class="flex items-center gap-2">
+          <button id="btn-sim-add" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-dark font-medium transition active:scale-95 shadow-sm">
+            + Sim Node
+          </button>
+          <button id="btn-sim-remove" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-dark font-medium transition active:scale-95 shadow-sm">
+            - Drop
+          </button>
+          <button id="btn-reset" class="px-3 py-1.5 rounded-lg border border-matcha-border bg-matcha-card hover:bg-matcha-tint text-matcha-sage hover:text-matcha-alert font-medium transition active:scale-95 shadow-sm">
+            Reset
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- BOTTOM ACCENT BAR -->
+  <footer class="border-t border-matcha-borderMuted px-6 py-2.5 bg-matcha-cream/50 text-[11px] font-mono text-matcha-sage flex justify-between items-center">
+    <div>Aves Studios // Societelos Classroom Simulation</div>
+    <div class="flex items-center gap-4">
+      <span>Cycles: 5</span>
+      <span>•</span>
+      <span>Duration: 10m</span>
+      <span>•</span>
+      <span class="text-matcha-dark font-semibold">The Loom AI Oversight Active</span>
+    </div>
+  </footer>
+
+  <!-- SOCKET.IO CLIENT -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toISOString().substring(11, 19) + ' UTC';
+      document.getElementById('system-clock').textContent = timeStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Default node slot definitions
+    const DEFAULT_SLOTS = [
+      { id: 'NODE-01', designation: 'The Artisan', archetype: 'Poiesis / Creative Friction', connected: false },
+      { id: 'NODE-02', designation: 'The Lotus-Eater', archetype: 'Hedonic Optimization / Leisure', connected: false },
+      { id: 'NODE-03', designation: 'The Assimilator', archetype: 'Synthetic Convergence / Machine Telos', connected: false },
+      { id: 'NODE-04', designation: 'The Catalyst', archetype: 'Anti-Fragility / Controlled Crisis', connected: false },
+      { id: 'NODE-05', designation: 'The Ghost', archetype: 'Biological Grounding / Decoupling', connected: false }
+    ];
+
+    // Connect to Socket.IO
+    const socket = io();
+
+    const socketIndicator = document.getElementById('socket-indicator');
+    const socketStatus = document.getElementById('socket-status');
+    const nodesGrid = document.getElementById('nodes-grid');
+    const lobbyHeadline = document.getElementById('lobby-headline');
+    const lobbySubtext = document.getElementById('lobby-subtext');
+    const councilStatusTag = document.getElementById('council-status-tag');
+    const gdwValue = document.getElementById('gdw-value');
+    const gdwBar = document.getElementById('gdw-bar');
+    const hostIpDisplay = document.getElementById('host-ip-display');
+    const joinIp = document.getElementById('join-ip');
+    const joinUrlLink = document.getElementById('join-url-link');
+
+    socket.on('connect', () => {
+      socketIndicator.className = 'w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot';
+      socketStatus.textContent = 'LOOM SYNC: ONLINE';
+      socket.emit('register_host');
+    });
+
+    socket.on('disconnect', () => {
+      socketIndicator.className = 'w-2.5 h-2.5 rounded-full bg-matcha-alert';
+      socketStatus.textContent = 'LOOM SYNC: OFFLINE';
+    });
+
+    socket.on('state_update', (data) => {
+      if (!data) return;
+
+      // Update Network IP display
+      if (data.networkIP && data.port) {
+        const fullHost = `${data.networkIP}:${data.port}`;
+        hostIpDisplay.textContent = fullHost;
+        joinIp.textContent = data.networkIP;
+        joinUrlLink.href = `http://${fullHost}/player.html`;
+        joinUrlLink.textContent = `http://${fullHost}/player.html`;
+      }
+
+      // Update GDW telemetry
+      if (typeof data.gdw === 'number') {
+        gdwValue.textContent = `${data.gdw}%`;
+        gdwBar.style.width = `${data.gdw}%`;
+      }
+
+      // Render slots
+      if (data.slots) {
+        renderNodes(data.slots);
+      }
+
+      // Update Headline
+      const connectedCount = data.connectedCount || 0;
+      const maxNodes = data.maxNodes || 5;
+
+      if (connectedCount >= maxNodes) {
+        councilStatusTag.textContent = 'COUNCIL SYNCHRONIZED';
+        councilStatusTag.parentElement.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-forest bg-matcha-dark text-matcha-bg text-xs font-mono mb-4';
+        lobbyHeadline.textContent = 'Council Quorum Established (5/5)';
+        lobbySubtext.textContent = 'All 5 nodes connected. The Loom is preparing Crisis Cycle 01.';
+      } else {
+        const remaining = maxNodes - connectedCount;
+        councilStatusTag.textContent = `AWAITING ${remaining} BIOMETRIC HANDSHAKE${remaining > 1 ? 'S' : ''}`;
+        councilStatusTag.parentElement.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full border border-matcha-border bg-matcha-tint text-matcha-dark text-xs font-mono mb-4';
+        lobbyHeadline.textContent = `Waiting for ${remaining} node${remaining > 1 ? 's' : ''}... (${connectedCount} / ${maxNodes} Synced)`;
+        lobbySubtext.textContent = 'Connect mobile terminals to synchronize the five philosophical archetypes.';
+      }
+    });
+
+    function renderNodes(slots) {
+      nodesGrid.innerHTML = '';
+
+      slots.forEach((slot, index) => {
+        const card = document.createElement('div');
+        
+        if (slot.connected) {
+          card.className = 'bg-matcha-card border-2 border-matcha-accent rounded-xl p-5 shadow-md flex flex-col justify-between transition-all duration-300 transform -translate-y-1 relative overflow-hidden';
+          card.innerHTML = `
+            <div class="absolute top-0 right-0 px-2 py-0.5 bg-matcha-accent text-matcha-bg text-[9px] font-mono uppercase tracking-widest rounded-bl-lg font-semibold">
+              SYNCHRONIZED
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-mono font-bold text-matcha-accent tracking-widest">${slot.id}</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-matcha-accent pulse-dot"></span>
+              </div>
+              <h3 class="text-lg font-serif font-bold text-matcha-dark leading-tight">${slot.designation}</h3>
+              <p class="text-[11px] font-mono text-matcha-sage mt-2 line-clamp-2">${slot.archetype}</p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
+              <span class="flex items-center gap-1.5 text-matcha-accent font-semibold truncate max-w-[120px]">
+                <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                ${slot.playerName || 'TRUSTEE'}
+              </span>
+              <span>${slot.simulated ? 'SIM' : 'LIVE'}</span>
+            </div>
+          `;
+        } else {
+          card.className = 'bg-matcha-bg/60 border-2 border-dashed border-matcha-border hover:border-matcha-accent/60 rounded-xl p-5 flex flex-col justify-between transition-all duration-300 group';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-mono font-semibold text-matcha-sage tracking-widest">${slot.id}</span>
+                <span class="w-2 h-2 rounded-full bg-matcha-border"></span>
+              </div>
+              <h3 class="text-base font-serif font-medium text-matcha-dark/70 leading-tight">${slot.designation}</h3>
+              <p class="text-[11px] font-mono text-matcha-sage/80 mt-2 line-clamp-2">${slot.archetype}</p>
+            </div>
+            <div class="mt-6 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
+              <span class="animate-pulse">Awaiting node...</span>
+              <a href="/player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold flex items-center gap-0.5">
+                Join ↗
+              </a>
+            </div>
+          `;
+        }
+
+        nodesGrid.appendChild(card);
+      });
+    }
+
+    // Initial render
+    renderNodes(DEFAULT_SLOTS);
+
+    // Dev Simulation Controls
+    document.getElementById('btn-sim-add').addEventListener('click', () => {
+      socket.emit('simulate_add_node');
+    });
+
+    document.getElementById('btn-sim-remove').addEventListener('click', () => {
+      socket.emit('simulate_remove_node');
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      socket.emit('reset_lobby');
+    });
+  </script>
+</body>
+</html>
