@@ -205,3 +205,60 @@ test('integration: with GEMINI_API_KEY unset the game narrates offline and never
     globalThis.fetch = realFetch;
   }
 });
+
+/** Play all 5 cycles to END on shrunk timers; phones write and rank in the finale. */
+function playFiveCycles({ gameId, world = 'AA' }) {
+  const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS };
+  process.env.FAST_TIMERS = 'true';
+  process.env.FAST_TIMER_SECONDS = '0.01';
+  const game = new GameState({ roomCode: 'FIVE' });
+  for (const [k, v] of [['FAST_TIMERS', saved.fast], ['FAST_TIMER_SECONDS', saved.secs]]) {
+    if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
+  game.gameId = gameId;
+  const out = { game, phases: [], resolutions: [] };
+  const log = console.log;
+  console.log = () => {};
+  NODE_IDS.forEach((node, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(node, true); });
+  game.on('resolution', (r) => out.resolutions.push(r));
+  game.on('finale:ballot', ({ node, policies }) => setImmediate(() => game.rankPolicies(node, policies.map((p) => p.id))));
+  return new Promise((resolve, reject) => {
+    const guard = setTimeout(() => { game.stop(); console.log = log; reject(new Error(`stalled: ${out.phases.slice(-4).join(' ')}`)); }, 20000);
+    game.on('phase', (p) => {
+      out.phases.push(`${p.cycle}:${p.phase}`);
+      if (p.phase === 'VOTE') NODE_IDS.forEach((n, i) => game.castVote(n, p.cycle <= 2 ? world[p.cycle - 1] : i < 3 ? 'A' : 'B'));
+      if (p.phase === 'FINALE_WRITE') NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Council proposal number ${i + 1}`));
+      if (p.phase === 'END') {
+        clearTimeout(guard);
+        setImmediate(() => { game.stop(); console.log = log; resolve(out); });
+      }
+    });
+    game.startIntroPhase();
+  });
+}
+
+test('full 5-cycle state machine on FAST_TIMERS: write-and-rank finale through to END', async () => {
+  const loom = require('../loom');
+  const original = loom.moderate;
+  loom.moderate = async (subs) => subs.map((s, i) => ({ node: s.node, status: 'ok', cleaned: s.text, feedback: '', roles: [['artisan'], ['lotus'], ['ghost'], ['assimilator'], []][i], effects: { purpose: 0.1 * i, connection: 0, health: 0.1, trust: 0, fairness: -0.1, autonomy: 0 } }));
+  try {
+    const out = await playFiveCycles({ gameId: 'fivecycles01', world: 'AA' });
+    const five = out.phases.filter((p) => p.startsWith('5:'));
+    assert.deepEqual(five, ['5:INCIDENT', '5:FINALE_WRITE', '5:FINALE_MOD', '5:FINALE_DEBATE', '5:FINALE_RANK', '5:FINALE_ENACT', '5:END']);
+    assert.equal(out.resolutions.length, 5);
+    const finale = out.resolutions[4].result;
+    assert.equal(finale.finale, true);
+    assert.equal(finale.enacted.length, 3);
+    assert.equal(out.game.gdwHistory.length, 1 + 5 * 12);
+  } finally {
+    loom.moderate = original;
+  }
+});
+
+test('full 5-cycle state machine on FAST_TIMERS: offline finale falls back to A/B and still ENDs', async () => {
+  const out = await playFiveCycles({ gameId: 'fivecycles02', world: 'AB' });
+  const five = out.phases.filter((p) => p.startsWith('5:'));
+  assert.deepEqual(five, ['5:INCIDENT', '5:FINALE_WRITE', '5:FINALE_MOD', '5:DEBATE', '5:VOTE', '5:RESOLUTION', '5:END']);
+  assert.equal(out.resolutions.length, 5);
+  assert.ok(['A', 'B'].includes(out.resolutions[4].result.winner));
+});
