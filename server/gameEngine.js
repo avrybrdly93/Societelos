@@ -115,7 +115,8 @@ const PHASE_STARTERS = {
   FINALE_WRITE: 'startFinaleWritePhase',
   FINALE_MOD: 'startFinaleModPhase',
   FINALE_DEBATE: 'startFinaleDebatePhase',
-  FINALE_RANK: 'startFinaleRankPhase'
+  FINALE_RANK: 'startFinaleRankPhase',
+  FINALE_ENACT: 'startFinaleEnactPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -853,6 +854,30 @@ class GameState extends EventEmitter {
     if (!order.every((id) => ballot.includes(id))) return { ok: false, reason: 'UNKNOWN_POLICY' };
     this.finale.ranks[node] = order.slice();
     return { ok: true };
+  }
+
+  /**
+   * Close FINALE_RANK: a node that never ranked (disconnected or idle) gets a
+   * deterministic default order, its ballot shuffled by a seed from the game
+   * id and node (no bias toward POLICY-1). Returns the defaulted nodes.
+   */
+  closeRanking() {
+    const finale = this.finale;
+    finale.rankingOpen = false;
+    const defaulted = [];
+    for (const node of Object.keys(this.players)) {
+      if (finale.ranks[node]) continue;
+      finale.ranks[node] = seededShuffle(finale.ballots[node] || [], hashSeed(this.gameId, 'finale-rank', node));
+      defaulted.push(node);
+    }
+    finale.rankDefaulted = defaulted;
+    return defaulted;
+  }
+
+  /** FINALE_ENACT (20 s): rankings close and the council's package is enacted. */
+  startFinaleEnactPhase() {
+    this.closeRanking();
+    this.enterPhase(PHASES.FINALE_ENACT);
   }
 
   /** Nodes that have ranked (never their order). */

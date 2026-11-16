@@ -453,6 +453,7 @@ test('Cycle 5 detects a writein crisis and starts the write-and-rank finale', ()
 /** A game sitting at the cycle 5 INCIDENT of world `world`, real durations. */
 function finaleGame(world = 'AA') {
   const game = votingGame();
+  game.gameId = `finale-${world}-0001`; // reproducible shuffles and defaults
   game.assignRoles(game.data.roles);
   game.worldKey = world;
   game.voteHistory = { 1: world[0], 2: world[1], 3: 'A', 4: 'A' };
@@ -885,4 +886,23 @@ test('finale:rank must list exactly the 4 ballot policies, once each, never the 
   assert.equal(game.rankPolicies('NODE-02', 'POLICY-1').reason, 'BAD_ORDER');
   assert.equal(game.finale.ranks['NODE-02'], undefined);
   assert.equal(game.rankPolicies('NODE-02', ballot.slice().reverse()).ok, true);
+});
+
+test('players who do not rank before FINALE_RANK expires get a deterministic default ranking', async () => {
+  const run = async () => {
+    const { game } = await rankingFinale();
+    game.rankPolicies('NODE-01', game.finale.ballots['NODE-01'].slice().reverse());
+    quiet(() => game.advancePhase()); // the 30 s timer expiring
+    game.stop();
+    return game;
+  };
+  const a = await run();
+  const b = await run();
+  assert.deepEqual(a.finale.rankDefaulted.sort(), ['NODE-02', 'NODE-03', 'NODE-04', 'NODE-05']);
+  for (const node of NODE_IDS) {
+    assert.equal(a.finale.ranks[node].length, 4);
+    assert.deepEqual(a.finale.ranks[node].slice().sort(), a.finale.ballots[node].slice().sort(), 'a permutation of the ballot');
+  }
+  assert.deepEqual(a.finale.ranks, b.finale.ranks, 'same game, same defaults');
+  assert.deepEqual(a.finale.ranks['NODE-01'], a.finale.ballots['NODE-01'].slice().reverse(), 'real rankings kept');
 });
