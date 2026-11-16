@@ -499,21 +499,22 @@
       ],
       "options": {
         "A": {
-          "name": "Daytime Immersion Blackout",
-          "text": "Cut pod power for 6 hours daily. Force citizens to walk the physical streets and face the weather.",
+          "name": "Daylight Ban",
+          "text": "Ban full-immersion VR during daylight hours. From sunrise to sunset the pods switch off and the streets, parks and workshops are the only places left to go.",
           "roles": [
             "artisan",
             "ghost"
           ],
           "effects": {
-            "purpose": 0.5,
+            "purpose": 0.4,
             "connection": 0.6,
             "health": 0.3,
             "trust": -0.5,
-            "fairness": 0.2,
-            "autonomy": 0.5
+            "fairness": 0.1,
+            "autonomy": -0.2
           },
-          "targetGdwDelta": 5
+          "targetGdwDelta": 5,
+          "loomLine": "Pods powered down at sunrise. Citizens are outside. Several are squinting at the sky."
         },
         "B": {
           "name": "Shared Collective VR Realms",
