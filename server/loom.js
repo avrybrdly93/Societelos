@@ -108,6 +108,74 @@ async function narrate(context = {}) {
   throw new Error('narrate: not implemented yet');
 }
 
+// ---------------------------------------------------------------------------
+// Output hygiene shared by every call.
+// ---------------------------------------------------------------------------
+
+const TRAITS = ['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy'];
+const ROLE_TAGS = ['artisan', 'lotus', 'assimilator', 'ghost'];
+const STATUSES = ['ok', 'revise', 'reject'];
+
+const truncate = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+const clamp = (v) => (Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
+
+function zeroEffects() {
+  return Object.fromEntries(TRAITS.map((t) => [t, 0]));
+}
+
+/** Clamp every trait to [-1, 1]; missing or non-numeric traits become 0. */
+function cleanEffects(effects) {
+  const out = zeroEffects();
+  if (effects && typeof effects === 'object') for (const t of TRAITS) out[t] = clamp(Number(effects[t]));
+  return out;
+}
+
+/** Keep at most 2 known role tags. */
+function cleanRoles(roles) {
+  return Array.isArray(roles) ? roles.filter((r) => ROLE_TAGS.includes(r)).slice(0, 2) : [];
+}
+
+// ---------------------------------------------------------------------------
+// moderate()
+// ---------------------------------------------------------------------------
+
+const MODERATION_SCHEMA = {
+  type: 'ARRAY',
+  items: {
+    type: 'OBJECT',
+    properties: {
+      node: { type: 'STRING' },
+      status: { type: 'STRING', enum: STATUSES },
+      cleaned: { type: 'STRING' },
+      feedback: { type: 'STRING' },
+      roles: { type: 'ARRAY', items: { type: 'STRING', enum: ROLE_TAGS } },
+      effects: {
+        type: 'OBJECT',
+        properties: Object.fromEntries(TRAITS.map((t) => [t, { type: 'NUMBER' }])),
+        required: TRAITS
+      }
+    },
+    required: ['node', 'status', 'cleaned', 'feedback', 'roles', 'effects']
+  }
+};
+
+/**
+ * Offline fallback: every policy passes as written (trimmed to 140 chars)
+ * with no role tags and a zero effect vector. Flagged `fallback: true` so the
+ * engine can switch to the authored A/B finale instead.
+ */
+function moderateFallback(submissions) {
+  return submissions.map((s) => ({
+    node: s.node,
+    status: 'ok',
+    cleaned: truncate(s.text, 140),
+    feedback: '',
+    roles: [],
+    effects: zeroEffects(),
+    fallback: true
+  }));
+}
+
 /**
  * Moderate finale write-ins: clean text, status, private feedback, role tags
  * and an effect vector per submission.
@@ -115,8 +183,34 @@ async function narrate(context = {}) {
  * @param {object} crisis
  * @returns {Promise<{ node, status: 'ok'|'revise'|'reject', cleaned, feedback, roles: string[], effects: object, fallback?: boolean }[]>}
  */
-async function moderate(submissions = [], crisis = {}) {
-  throw new Error('moderate: not implemented yet');
+async function moderate(submissions = [], crisis = {}, opts = {}) {
+  const list = (submissions || []).map((s) => ({ node: s.node, text: truncate(s.text, 280) }));
+  const cfg = opts.config || getConfig();
+  if (!cfg.enabled || !list.length) return moderateFallback(list);
+  try {
+    const prompt = [
+      `Crisis: ${truncate(crisis.title, 120)}. ${truncate(crisis.incident, 400)}`,
+      'Moderate and translate each council submission. Return one object per submission, same node ids, as a JSON array.',
+      JSON.stringify(list)
+    ].join('\n\n');
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: MODERATION_SCHEMA, temperature: 0.2 });
+    if (!Array.isArray(result)) throw new Error('moderation: not an array');
+    return list.map((s) => {
+      const r = result.find((x) => x && x.node === s.node);
+      if (!r) return moderateFallback([s])[0];
+      return {
+        node: s.node,
+        status: STATUSES.includes(r.status) ? r.status : 'revise',
+        cleaned: truncate(r.cleaned, 140),
+        feedback: truncate(r.feedback, 200),
+        roles: cleanRoles(r.roles),
+        effects: cleanEffects(r.effects)
+      };
+    });
+  } catch (err) {
+    console.warn(`[loom] moderate fell back: ${err.message}`);
+    return moderateFallback(list);
+  }
 }
 
 // Legacy names used by the pre-hackathon prototype (npm run start:legacy).
@@ -127,4 +221,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
