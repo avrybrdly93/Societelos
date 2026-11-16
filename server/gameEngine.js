@@ -470,6 +470,7 @@ function rankBorda(tally, medianOf = () => 0) {
 // Enactment weights for the top three finale policies.
 const FINALE_WEIGHTS = Object.freeze([0.5, 0.25, 0.25]);
 const FINALE_PLACES = Object.freeze(['first', 'second', 'third']);
+const FINALE_ROLE_POINTS = Object.freeze({ first: 2, second: 1, third: 1 });
 
 /** The top three of a rankBorda() result: [{ id, place, weight, points }]. */
 function selectEnacted(rows) {
@@ -950,6 +951,25 @@ class GameState extends EventEmitter {
   startFinaleEnactPhase() {
     this.closeRanking();
     this.enterPhase(PHASES.FINALE_ENACT);
+  }
+
+  /**
+   * Finale role scoring: roles tagged on the 1st-place policy score +2, on
+   * the 2nd and 3rd +1 each, cumulatively (a role on several enacted
+   * policies collects each award). Returns { node: points } for nodes scored.
+   */
+  awardFinaleRolePoints(enacted) {
+    const awards = {};
+    const byId = Object.fromEntries((this.finale.policies || []).map((p) => [p.id, p]));
+    for (const { id, place } of enacted) {
+      const points = FINALE_ROLE_POINTS[place] || 0;
+      const tags = new Set((byId[id] && byId[id].roles) || []);
+      for (const [node, role] of Object.entries(this.roleAssignment || {})) {
+        if (role && tags.has(role.key)) awards[node] = (awards[node] || 0) + points;
+      }
+    }
+    for (const [node, pts] of Object.entries(awards)) this.scores[node] = (this.scores[node] || 0) + pts;
+    return awards;
   }
 
   /** Nodes that have ranked (never their order). */

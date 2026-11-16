@@ -461,6 +461,7 @@ function finaleGame(world = 'AA') {
   const log = console.log;
   console.log = () => {};
   try { game.startIncidentPhase(); } finally { console.log = log; }
+  game.clearPhaseTimer(); // tests drive the phases themselves
   return game;
 }
 
@@ -943,4 +944,24 @@ test('packageEffects weights the top 3 at 0.50 / 0.25 / 0.25', () => {
   const effects = { P1: { purpose: 0.8, autonomy: -0.4 }, P2: { purpose: 0.4, health: 1 }, P3: { purpose: -0.4, health: -1 } };
   const pkg = engine.packageEffects(engine.selectEnacted([{ id: 'P1' }, { id: 'P2' }, { id: 'P3' }]), (id) => effects[id]);
   assert.deepEqual(pkg, { purpose: 0.4, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: -0.2 });
+});
+
+/** A game with fixed roles and hand-made finale policies for scoring tests. */
+function scoringFinale(policyRoles) {
+  const game = finaleGame();
+  game.roleAssignment = {};
+  ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost'].forEach((key, i) => { game.roleAssignment[NODE_IDS[i]] = { key }; });
+  game.finale.policies = policyRoles.map((roles, i) => ({ id: `POLICY-${i + 1}`, node: NODE_IDS[(i + 2) % 5], text: `P${i + 1}`, roles, effects: {} }));
+  game.finale.authors = Object.fromEntries(game.finale.policies.map((p) => [p.id, p.node]));
+  NODE_IDS.forEach((n) => { game.scores[n] = 0; });
+  return game;
+}
+const ENACT = [{ id: 'POLICY-1', place: 'first', weight: 0.5 }, { id: 'POLICY-2', place: 'second', weight: 0.25 }, { id: 'POLICY-3', place: 'third', weight: 0.25 }];
+
+test('finale role points: +2 for 1st, +1 for 2nd and 3rd', () => {
+  const game = scoringFinale([['artisan'], ['lotus'], ['ghost'], ['assimilator'], []]);
+  const awards = game.awardFinaleRolePoints(ENACT);
+  assert.deepEqual(awards, { 'NODE-01': 2, 'NODE-02': 1, 'NODE-05': 1 });
+  assert.equal(game.scores['NODE-04'], 0, 'the Catalyst never scores on tags');
+  assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the 4th policy');
 });
