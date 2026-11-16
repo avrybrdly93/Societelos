@@ -20,6 +20,53 @@ function detectClientType(socket) {
   return CLIENT_TYPES.includes(raw) ? raw : 'phone';
 }
 
+/**
+ * Payload validation. A schema maps field -> rule, where a rule is a type name
+ * ('string' | 'boolean' | 'number' | 'array'), optionally suffixed with '?' for
+ * optional fields, or a function returning true when the value is valid.
+ * Returns true when `payload` is a plain object matching the schema.
+ */
+function isValidPayload(payload, schema = {}) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  for (const [field, rule] of Object.entries(schema)) {
+    const value = payload[field];
+    if (typeof rule === 'function') {
+      if (!rule(value)) return false;
+      continue;
+    }
+    const optional = rule.endsWith('?');
+    const type = optional ? rule.slice(0, -1) : rule;
+    if (value === undefined || value === null) {
+      if (optional) continue;
+      return false;
+    }
+    if (type === 'array' ? !Array.isArray(value) : typeof value !== type) return false;
+  }
+  return true;
+}
+
+/**
+ * Register a handler that silently ignores malformed packets: the payload is
+ * validated against `schema` first (an empty payload counts as {}), handler
+ * errors are caught so one bad packet can't crash the server, and an ack
+ * callback, if sent, always gets a reply.
+ */
+function onValid(socket, event, schema, handler) {
+  socket.on(event, (payload, ack) => {
+    const reply = typeof ack === 'function' ? ack : () => {};
+    const body = payload === undefined || payload === null ? {} : payload;
+    if (!isValidPayload(body, schema)) return reply({ ok: false, reason: 'BAD_PAYLOAD' });
+    try {
+      return handler(body, reply);
+    } catch (err) {
+      console.error(`[socket] ${event} handler failed: ${err.message}`);
+      return reply({ ok: false, reason: 'SERVER_ERROR' });
+    }
+  });
+}
+
+const nonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 64;
+
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
 function roleCard(role) {
   return {
@@ -90,8 +137,7 @@ function initSockets(io, gameEngine) {
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
     // host:start {} -> begin the phase flow once all 5 nodes have joined.
-    socket.on('host:start', (payload, ack) => {
-      const reply = typeof ack === 'function' ? ack : () => {};
+    onValid(socket, 'host:start', {}, (payload, reply) => {
       const joined = Object.keys(game.players).length;
       if (joined < gameEngine.MAX_PLAYERS) {
         socket.emit('host:error', { reason: 'NOT_ENOUGH_PLAYERS', joined });
@@ -139,19 +185,14 @@ function initSockets(io, gameEngine) {
     if (handshakeToken && !resumeSession(socket, handshakeToken)) {
       socket.emit('session:invalid', {});
     }
-    socket.on('session:resume', (payload, ack) => {
-      const reply = typeof ack === 'function' ? ack : () => {};
-      const ok = !!(payload && resumeSession(socket, payload.token));
+    onValid(socket, 'session:resume', { token: nonEmptyString }, (payload, reply) => {
+      const ok = resumeSession(socket, payload.token);
       if (!ok) socket.emit('session:invalid', {});
       reply({ ok });
     });
 
     // lobby:join { name, room? } -> seat the phone in a NODE slot.
-    socket.on('lobby:join', (payload, ack) => {
-      const reply = typeof ack === 'function' ? ack : () => {};
-      if (!payload || typeof payload !== 'object' || typeof payload.name !== 'string' || !payload.name.trim()) {
-        return reply({ ok: false, reason: 'BAD_PAYLOAD' });
-      }
+    onValid(socket, 'lobby:join', { name: nonEmptyString, room: 'string?' }, (payload, reply) => {
       if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
       const game = findPhoneRoom(payload.room);
       if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
@@ -171,11 +212,10 @@ function initSockets(io, gameEngine) {
     });
 
     // vote:cast { choice: 'A' | 'B', override: bool } -> record a blind vote.
-    socket.on('vote:cast', (payload, ack) => {
-      const reply = typeof ack === 'function' ? ack : () => {};
+    const voteSchema = { choice: (v) => v === 'A' || v === 'B', override: 'boolean?' };
+    onValid(socket, 'vote:cast', voteSchema, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
-      if (!payload || typeof payload !== 'object') return reply({ ok: false, reason: 'BAD_PAYLOAD' });
       const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
       reply(result);
       // Early advance: end VOTE as soon as all 5 nodes have voted.
@@ -195,12 +235,12 @@ function initSockets(io, gameEngine) {
     });
 
     // lobby:ready { ready? } -> set or toggle this phone's ready flag.
-    socket.on('lobby:ready', (payload) => {
+    onValid(socket, 'lobby:ready', { ready: 'boolean?' }, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
-      if (!game || !socket.data.node || game.phase !== 'LOBBY') return;
-      const ready = payload && typeof payload.ready === 'boolean' ? payload.ready : undefined;
-      game.setReady(socket.data.node, ready);
-      broadcastLobby(game);
+      if (!game || !socket.data.node || game.phase !== 'LOBBY') return reply({ ok: false, reason: 'NOT_IN_LOBBY' });
+      const ready = game.setReady(socket.data.node, payload.ready);
+      reply({ ok: true, ready });
+      return broadcastLobby(game);
     });
   }
 
@@ -214,4 +254,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload };
