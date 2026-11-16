@@ -20,6 +20,7 @@
  * @property {number} seed
  * @property {number[]} gdw                    GDW per month (13 values)
  * @property {number} finalGdw
+ * @property {boolean} collapsed               true when W <= 0.20 at month 12 (GDW clamped to 0)
  * @property {Object<string, number>[]} districts  per month: { D1: wellbeing W, ... D5 } for the map
  * @property {{ month, district, trait, amount }[]} shocks  shocks that fired
  *
@@ -39,7 +40,7 @@
  * @property {SimSummary} summary
  */
 
-const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
+const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood } = require('./state');
 const { runSingleSimulation } = require('./step');
 const { hashSeed } = require('./prng');
 
@@ -139,10 +140,14 @@ function simulate(state, effects, opts = {}) {
   const realizedRun = runSingleSimulation(start, effects, seed, false, { volatility, effectVector });
   const startGdw = computeGDW(start);
   const finalGdw = realizedRun.gdw[months];
+  // Collapse: region wellbeing W <= floorWellbeing (0.20) at month 12, which
+  // computeGDW already clamps to GDW 0.
+  const collapsed = finalGdw <= 0;
   const realized = {
     seed,
     gdw: realizedRun.gdw,
     finalGdw,
+    collapsed,
     districts: realizedRun.districts,
     shocks: realizedRun.shocks
   };
@@ -172,10 +177,31 @@ function simulateStub(state, opts = {}) {
   const line = Array.from({ length: months + 1 }, (_, m) => (m === 0 ? startGdw : endGdw));
   return {
     forecast: { runs: opts.runs || 0, median: line.slice(), p5: line.slice(), p95: line.slice(), pCollapse: 0, pUnrest: endGdw < 15 ? 1 : 0 },
-    realized: { seed: opts.seed >>> 0, gdw: line.slice(), finalGdw: endGdw, districts: [], shocks: [] },
+    realized: { seed: opts.seed >>> 0, gdw: line.slice(), finalGdw: endGdw, collapsed: endGdw <= 0, districts: [], shocks: [] },
     finalState: sim ? cloneState(sim) : null,
     summary: { startGdw, realizedDelta: endGdw - startGdw, medianDelta: endGdw - startGdw, pCollapse: 0, pUnrest: 0, topMoves: [], shocks: [], stub: true }
   };
 }
 
-module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, percentile };
+/**
+ * Each citizen's mood after a cycle and what changed for their cohort:
+ * [{ id, mood (GDW-scaled, 0-100), moodChange, topChange: { trait, change } }].
+ * `before` and `after` are sim states (e.g. the cycle's start and finalState).
+ */
+function citizenMoods(before, after, citizens = []) {
+  if (!before || !after) return [];
+  return citizens.map((c) => {
+    const was = getCitizenMood(before, c);
+    const now = getCitizenMood(after, c);
+    if (!was || !now) return { id: c.id };
+    let top = null;
+    for (const t of Object.keys(now.traits)) {
+      const change = now.traits[t] - was.traits[t];
+      if (!top || Math.abs(change) > Math.abs(top.change)) top = { trait: t, change };
+    }
+    const r1 = (v) => Math.round(v * 10) / 10;
+    return { id: c.id, mood: r1(now.gdw), moodChange: r1(now.gdw - was.gdw), topChange: top && { trait: top.trait, change: Math.round(top.change * 1000) / 1000 } };
+  });
+}
+
+module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };

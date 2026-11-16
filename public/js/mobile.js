@@ -17,11 +17,18 @@
   }
 
   const saved = loadSession();
-  const socket = window.io({ auth: { clientType: 'phone', token: saved && saved.token } });
+  // auth is a function so every (re)connect sends the latest saved token: a
+  // phone that joined after page load keeps its seat across a network drop.
+  const socket = window.io({
+    auth: (cb) => {
+      const current = loadSession();
+      cb({ clientType: 'phone', token: (current && current.token) || undefined });
+    }
+  });
 
   const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
 
-  socket.on('connect', () => console.log('[mobile] connected'));
+  socket.on('connect', () => console.debug('[mobile] connected'));
   socket.on('disconnect', (reason) => console.warn('[mobile] disconnected:', reason));
 
   // A stale token (server restarted, new game) means starting from the join form.
@@ -35,8 +42,38 @@
     renderRole(info.role);
     onPhase({ phase: info.phase, cycle: info.cycle, endsAt: info.endsAt });
     state.roomCode = info.roomCode;
-    saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
+    const current = loadSession();
+    saveSession({ node: info.node, token: (current && current.token) || (saved && saved.token), roomCode: info.roomCode });
   });
+
+  // ---------------------------------------------------------------------------
+  // Screen lock / wake resilience: students look up at the projector for the
+  // 90 s debate. Ask for a Screen Wake Lock while seated (where supported),
+  // and when the page becomes visible again re-acquire it, reconnect if the
+  // socket dropped, and re-sync state with the server.
+  // ---------------------------------------------------------------------------
+  let wakeLock = null;
+  async function requestWakeLock() {
+    try {
+      if (!('wakeLock' in navigator) || wakeLock || document.visibilityState !== 'visible' || !state.node) return;
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) { wakeLock = null; /* denied, low battery or unsupported */ }
+  }
+  function resyncAfterWake() {
+    if (document.visibilityState !== 'visible') return;
+    requestWakeLock();
+    if (!socket.connected) {
+      socket.connect(); // the handshake carries the token; the server resumes the seat
+      return;
+    }
+    const current = loadSession();
+    if (current && current.token) socket.emit('session:resume', { token: current.token });
+  }
+  document.addEventListener('visibilitychange', resyncAfterWake);
+  window.addEventListener('pageshow', resyncAfterWake);
+  // Wake locks need a user gesture on some browsers: retry on the first taps.
+  document.addEventListener('click', requestWakeLock);
 
   // Screen switching.
   function showView(id) {
@@ -62,10 +99,13 @@
   joinForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const name = document.getElementById('join-name').value.trim();
-    if (!name) return;
+    if (!name || joinSubmit.disabled) return; // Enter + tap can't double-submit
     joinSubmit.disabled = true;
     joinError.hidden = true;
+    // Never leave the button dead if the server never answers.
+    const retry = setTimeout(() => { joinSubmit.disabled = false; }, 8000);
     socket.emit('lobby:join', { name }, (res) => {
+      clearTimeout(retry);
       joinSubmit.disabled = false;
       if (!res || !res.ok) {
         joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Connection refused. Try again.';
@@ -120,7 +160,12 @@
     ROLE_ASSIGN: 'm-view-role',
     INTEL: 'm-view-intel',
     DEBATE: 'm-view-debate',
-    VOTE: 'm-view-vote'
+    VOTE: 'm-view-vote',
+    RESOLUTION: 'm-view-result',
+    WORLD_REVEAL: 'm-view-world',
+    FINALE_WRITE: 'm-view-finale-write',
+    FINALE_MOD: 'm-view-finale-wait',
+    FINALE_RANK: 'm-view-finale-rank'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -151,6 +196,32 @@
   }
 
   socket.on('phase', onPhase);
+
+  // Subtle haptics (Android Chrome; silently ignored where unsupported, e.g. iOS).
+  function buzz(pattern = 50) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) { /* not allowed before a user gesture on some browsers */ }
+  }
+  // Audio-free cue: the screen edges pulse when the in-person debate ends and
+  // the blind vote opens on the phone.
+  let previousPhase = null;
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    if (payload.phase === 'VOTE' && previousPhase !== 'VOTE') {
+      document.body.classList.remove('edge-pulse');
+      void document.body.offsetWidth; // restart the animation
+      document.body.classList.add('edge-pulse');
+      setTimeout(() => document.body.classList.remove('edge-pulse'), 2600);
+    }
+    previousPhase = payload.phase;
+  });
+  let lastBuzzPhase = null;
+  socket.on('phase', (payload) => {
+    if (!payload || !state.node || payload.phase === lastBuzzPhase) return;
+    lastBuzzPhase = payload.phase;
+    buzz(payload.phase === 'VOTE' ? [60, 60, 60] : 50);
+  });
 
   // Countdown bar (and the debate clock), recomputed each frame from the
   // server's endsAt so every phone stays in step with the projector.
@@ -183,20 +254,337 @@
     document.getElementById('intel-text').textContent = text;
     document.getElementById('intel-ref').textContent = `REF C${state.cycle || 0}-${(state.node || 'NODE-00').slice(-2)}`;
     document.getElementById('shield-intel').checked = false;
+    // Keep it in the intel drawer for DEBATE and VOTE.
+    document.getElementById('intel-drawer-text').textContent = text;
+    document.getElementById('intel-drawer-ref').textContent = `CYCLE ${state.cycle || 0}`;
+  });
+
+  // The intel drawer is available from DEBATE through VOTE of the cycle it
+  // belongs to; a new INCIDENT clears it.
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    const drawer = document.getElementById('intel-drawer');
+    if (payload.phase === 'INCIDENT') {
+      document.getElementById('intel-drawer-text').textContent = '';
+      drawer.open = false;
+    }
+    const hasIntel = !!document.getElementById('intel-drawer-text').textContent;
+    drawer.hidden = !(hasIntel && ['DEBATE', 'VOTE'].includes(payload.phase));
+    if (drawer.hidden) drawer.open = false;
   });
 
   // Policy names arrive with the DEBATE phase; label the vote buttons with them.
   socket.on('phase', (payload) => {
     if (payload && payload.options) {
       const { A, B } = payload.options;
-      if (A) document.getElementById('vote-a-name').textContent = A.name || 'Policy A';
-      if (B) document.getElementById('vote-b-name').textContent = B.name || 'Policy B';
+      if (A) {
+        document.getElementById('vote-a-name').textContent = A.name || 'Policy A';
+        document.getElementById('vote-a-text').textContent = A.text || A.summary || '';
+      }
+      if (B) {
+        document.getElementById('vote-b-name').textContent = B.name || 'Policy B';
+        document.getElementById('vote-b-text').textContent = B.text || B.summary || '';
+      }
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Resolution: did my policy win, current GDW, and my private score update.
+  // ---------------------------------------------------------------------------
+  function resetResult(cycle) {
+    document.getElementById('result-cycle').textContent = cycle || state.cycle || 1;
+    document.getElementById('result-outcome').textContent = 'THE LOOM IS SIMULATING…';
+    document.getElementById('result-policy').textContent = '—';
+    document.getElementById('result-yours').textContent = '';
+    document.getElementById('result-card').className = 'result-card';
+    document.getElementById('result-score').hidden = true;
+  }
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'RESOLUTION') resetResult(payload.cycle); });
+  socket.on('resolution', (payload) => {
+    if (!payload || !payload.result) return;
+    const r = payload.result;
+    const mine = state.lastVote && state.lastVote.cycle === r.cycle ? state.lastVote.choice : null;
+    const card = document.getElementById('result-card');
+    document.getElementById('result-cycle').textContent = r.cycle;
+    document.getElementById('result-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
+    if (!mine) {
+      document.getElementById('result-outcome').textContent = 'YOU ABSTAINED';
+      card.className = 'result-card is-neutral';
+    } else {
+      const won = mine === r.winner;
+      document.getElementById('result-outcome').textContent = won ? 'YOUR POLICY WON' : 'YOUR POLICY LOST';
+      document.getElementById('result-yours').textContent = `You voted ${mine}.${r.tie ? ' Tied vote: the Loom chose.' : ''}`;
+      card.className = `result-card ${won ? 'is-won' : 'is-lost'}`;
+    }
+    const gdw = typeof payload.gdw === 'number' ? payload.gdw : null;
+    document.getElementById('result-gdw').textContent = gdw === null ? '--%' : `${gdw.toFixed(1)}%`;
+    const delta = typeof r.gdwDelta === 'number' ? r.gdwDelta : null;
+    const deltaEl = document.getElementById('result-gdw-delta');
+    deltaEl.textContent = delta === null ? '' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+    deltaEl.className = `result-gdw-delta mono ${delta < 0 ? 'is-down' : 'is-up'}`;
+  });
+  // score:update { cycle, gained, total } arrives privately with the resolution.
+  socket.on('score:update', (payload) => {
+    if (!payload) return;
+    state.score = payload.total;
+    const el = document.getElementById('result-score');
+    el.hidden = !(payload.gained > 0);
+    el.textContent = `+${payload.gained} AGENDA POINT${payload.gained === 1 ? '' : 'S'}`;
+    document.getElementById('result-total').textContent = `Your agenda score: ${payload.total}`;
+  });
+
+  // ---------------------------------------------------------------------------
+  // World reveal card: the world the first two votes built and what changes.
+  // ---------------------------------------------------------------------------
+  const WORLD_IMPACT = {
+    AA: ['Wealth and power are shared. The next crises are about meaning when nobody has to work.', 'The Assembly made society volatile: outcomes swing harder for the rest of the game.'],
+    AB: ['Wealth is shared but the Loom governs. The next crises are about dependence on the machine.', 'Delegated control keeps things calm and predictable.'],
+    BA: ['Owners kept the wealth; the masses kept the vote. The next crises are about class conflict.', 'The Assembly made society volatile: outcomes swing harder for the rest of the game.'],
+    BB: ['Owners rule and everyone else lives on stipends. The next crises are about pacification.', 'Delegated control keeps things calm and predictable.']
+  };
+  function renderWorldCard(world) {
+    if (!world || !world.worldKey) return;
+    state.worldKey = world.worldKey;
+    document.body.dataset.world = world.worldKey;
+    document.getElementById('m-world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('m-world-name').textContent = world.name || world.worldKey;
+    document.getElementById('m-world-tagline').textContent = world.tagline || '';
+    const list = document.getElementById('m-world-impact');
+    list.textContent = '';
+    const lines = (WORLD_IMPACT[world.worldKey] || []).slice();
+    if (world.problemLeft) lines.push(`Problem left unsolved: ${world.problemLeft}. Your agenda still scores the same way.`);
+    lines.forEach((text) => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    });
+  }
+  socket.on('world:reveal', renderWorldCard);
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'WORLD_REVEAL') renderWorldCard(payload.world); });
+
+  // ---------------------------------------------------------------------------
+  // Finale write-in: one policy, up to 140 characters -> finale:submit { text }.
+  // ---------------------------------------------------------------------------
+  const finaleForm = document.getElementById('finale-form');
+  const finaleText = document.getElementById('finale-text');
+  const finaleSubmit = document.getElementById('finale-submit');
+  const finaleError = document.getElementById('finale-error');
+  // Live "n / 140" counter; the submit button stays disabled while empty.
+  const finaleCount = document.getElementById('finale-count');
+  function updateFinaleCount() {
+    const n = finaleText.value.length;
+    finaleCount.textContent = `${n} / 140`;
+    finaleCount.classList.toggle('is-near', n >= 120);
+    if (!finaleSubmit.dataset.busy) finaleSubmit.disabled = !finaleText.value.trim();
+  }
+  finaleText.addEventListener('input', updateFinaleCount);
+
+  finaleForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = finaleText.value.trim();
+    if (!text) {
+      finaleError.textContent = 'Write a policy first: the Loom cannot enact silence.';
+      finaleError.hidden = false;
+      return;
+    }
+    if (finaleSubmit.dataset.busy) return;
+    finaleSubmit.dataset.busy = '1';
+    finaleSubmit.disabled = true;
+    finaleError.hidden = true;
+    socket.emit('finale:submit', { text }, (res) => {
+      delete finaleSubmit.dataset.busy;
+      updateFinaleCount();
+      if (res && res.ok) {
+        state.finaleSubmitted = res.text || text;
+        showFinaleWait();
+        return;
+      }
+      finaleError.textContent = 'The Loom did not accept that. Try again.';
+      finaleError.hidden = false;
+    });
+  });
+  // "THE LOOM IS EVALUATING YOUR POLICY..." with the player's own text.
+  function showFinaleWait(status) {
+    document.getElementById('finale-wait-mine').textContent = state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
+    document.getElementById('finale-wait-status').textContent = status || (state.phase === 'FINALE_MOD'
+      ? 'Cleaning language. Translating intent into numbers.'
+      : 'Submitted. Waiting for the other council members.');
+    showView('m-view-finale-wait');
+  }
+  // Revise modal: shows the Loom's private feedback and allows one resubmit
+  // (finale:submit during FINALE_MOD's 25 s window).
+  const reviseBox = document.getElementById('finale-revise');
+  const reviseForm = document.getElementById('finale-revise-form');
+  const reviseText = document.getElementById('finale-revise-text');
+  const reviseSubmit = document.getElementById('finale-revise-submit');
+  const reviseError = document.getElementById('finale-revise-error');
+  function openRevise(feedback) {
+    document.getElementById('finale-feedback').textContent = feedback || 'Please rephrase your policy.';
+    reviseText.value = state.finaleSubmitted || '';
+    reviseSubmit.disabled = false;
+    reviseError.hidden = true;
+    reviseBox.hidden = false;
+    showView('m-view-finale-wait');
+    reviseText.focus();
+  }
+  function closeRevise() { reviseBox.hidden = true; }
+  reviseForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = reviseText.value.trim();
+    if (!text || reviseSubmit.disabled) return;
+    reviseSubmit.disabled = true; // one chance only
+    socket.emit('finale:submit', { text }, (res) => {
+      if (res && res.ok) {
+        state.finaleSubmitted = res.text || text;
+        closeRevise();
+        showFinaleWait('Revision received. The Loom is evaluating it again.');
+        return;
+      }
+      reviseError.textContent = res && res.reason === 'ALREADY_RESUBMITTED' ? 'You have already used your one revision.' : 'The revision window has closed.';
+      reviseError.hidden = false;
+    });
+  });
+  socket.on('phase', (payload) => { if (payload && payload.phase !== 'FINALE_MOD') closeRevise(); });
+
+  // finale:feedback { status, feedback } (private): ok -> accepted; revise ->
+  // the resubmit modal; reject -> a standard protocol policy was substituted.
+  socket.on('finale:feedback', (payload) => {
+    if (!payload) return;
+    if (payload.status === 'revise') return openRevise(payload.feedback);
+    closeRevise();
+    const title = document.getElementById('finale-wait-title');
+    if (payload.status === 'ok') {
+      title.textContent = 'POLICY ACCEPTED BY THE LOOM';
+      showFinaleWait('It goes before the council next, anonymously.');
+    } else if (payload.status === 'reject') {
+      title.textContent = 'POLICY NOT ACCEPTED';
+      showFinaleWait(payload.feedback || 'A standard protocol policy was substituted for yours.');
+    }
+    return undefined;
+  });
+  // A new finale write resets the waiting title.
+  socket.on('phase', (payload) => {
+    if (payload && payload.phase === 'FINALE_WRITE') document.getElementById('finale-wait-title').textContent = 'THE LOOM IS EVALUATING YOUR POLICY...';
+  });
+
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    // Already submitted when FINALE_WRITE is (re)broadcast: stay on the wait screen.
+    if (payload.phase === 'FINALE_WRITE' && state.finaleSubmitted && state.finaleCycle === payload.cycle) showFinaleWait();
+    if (payload.phase === 'FINALE_MOD') showFinaleWait();
+  });
+  socket.on('phase', (payload) => {
+    if (payload && payload.phase === 'FINALE_WRITE' && state.finaleCycle !== payload.cycle) {
+      state.finaleCycle = payload.cycle;
+      state.finaleSubmitted = null;
+      finaleText.value = '';
+      finaleError.hidden = true;
+      delete finaleSubmit.dataset.busy;
+      updateFinaleCount();
+    }
+    // Secret agenda reminder above the textarea, so the policy serves it.
+    if (payload && payload.phase === 'FINALE_WRITE') {
+      const goal = state.role && (state.role.goal || state.role.winCondition);
+      document.getElementById('finale-goal').hidden = !goal;
+      document.getElementById('finale-goal-text').textContent = goal ? `${state.role.name}: ${state.role.goal}` : '';
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Finale ballot: finale:ballot { policies: [{ id, text }] x4 } (own hidden).
+  // ---------------------------------------------------------------------------
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  const proposalName = (id) => `PROPOSAL ${ROMAN[Number(String(id).replace(/\D+/g, '')) - 1] || id}`;
+  const ballot = { policies: [], order: [] };
+  function renderBallot() {
+    const list = document.getElementById('rank-cards');
+    list.textContent = '';
+    ballot.policies.forEach((p) => {
+      const li = document.createElement('li');
+      li.className = 'rank-card';
+      li.dataset.policy = p.id;
+      const head = document.createElement('p');
+      head.className = 'rank-name mono';
+      head.textContent = proposalName(p.id);
+      const text = document.createElement('p');
+      text.className = 'rank-text';
+      text.textContent = p.text;
+      li.append(head, text);
+      // Tap-to-rank: tapping an unranked card gives it the next free place
+      // (1st, 2nd, ...); tapping a ranked card clears it and every place after.
+      li.setAttribute('role', 'button');
+      li.tabIndex = 0;
+      li.addEventListener('click', () => toggleRank(p.id));
+      list.appendChild(li);
+    });
+    renderRanks();
+  }
+  const PLACE_NAMES = ['1st', '2nd', '3rd', '4th'];
+  const BORDA_POINTS = [4, 3, 2, 1];
+  function toggleRank(id) {
+    if (ballot.locked) return;
+    const at = ballot.order.indexOf(id);
+    if (at >= 0) ballot.order = ballot.order.slice(0, at);
+    else if (ballot.order.length < ballot.policies.length) ballot.order.push(id);
+    renderRanks();
+  }
+  function renderRanks() {
+    document.querySelectorAll('.rank-card').forEach((card) => {
+      const place = ballot.order.indexOf(card.dataset.policy);
+      card.classList.toggle('is-ranked', place >= 0);
+      card.dataset.place = place >= 0 ? String(place + 1) : '';
+      // Borda weight of that place: burying a rival at 4th still gives it 1 point.
+      card.dataset.points = place >= 0 ? `+${BORDA_POINTS[place]} PT${BORDA_POINTS[place] === 1 ? '' : 'S'}` : '';
+      card.setAttribute('aria-label', `${proposalName(card.dataset.policy)}${place >= 0 ? `, ranked ${PLACE_NAMES[place]}` : ', not ranked yet'}`);
+    });
+    const left = ballot.policies.length - ballot.order.length;
+    document.getElementById('rank-submit').disabled = !!ballot.locked || left !== 0 || !ballot.policies.length;
+    document.getElementById('rank-help').textContent = left
+      ? `Tap the proposals in order of preference: ${PLACE_NAMES[ballot.order.length]} next. Tap a ranked one to undo.`
+      : 'All four ranked. Tap one to change it, or lock in.';
+  }
+  // LOCK IN RANKINGS -> finale:rank { order: [id1, id2, id3, id4] }.
+  const rankSubmit = document.getElementById('rank-submit');
+  rankSubmit.addEventListener('click', () => {
+    if (ballot.locked || ballot.order.length !== ballot.policies.length) return;
+    ballot.locked = true;
+    rankSubmit.disabled = true;
+    document.getElementById('rank-error').hidden = true;
+    socket.emit('finale:rank', { order: ballot.order.slice() }, (res) => {
+      if (res && res.ok) {
+        document.getElementById('rank-cards').hidden = true;
+        rankSubmit.hidden = true;
+        document.getElementById('rank-locked').hidden = false;
+        buzz(50);
+        return;
+      }
+      ballot.locked = false;
+      renderRanks();
+      document.getElementById('rank-error').textContent = 'The Loom refused that ballot. Check your ranking and try again.';
+      document.getElementById('rank-error').hidden = false;
+    });
+  });
+
+  socket.on('finale:ballot', (payload) => {
+    ballot.policies = (payload && Array.isArray(payload.policies)) ? payload.policies.slice(0, 4) : [];
+    ballot.order = [];
+    ballot.locked = false;
+    rankSubmit.hidden = false;
+    document.getElementById('rank-locked').hidden = true;
+    document.getElementById('rank-cards').hidden = false;
+    renderBallot();
   });
 
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
+    // One vote per cycle from this phone: ignore taps once a vote is in
+    // flight or recorded (rapid A/B mashing sends a single vote:cast).
+    if (state.voteLockedCycle === state.cycle) return;
+    state.voteLockedCycle = state.cycle;
+    setVoteButtonsDisabled(true); // disabled the instant the vote is tapped
     const override = document.getElementById('vote-override').checked;
+    state.lastVote = { cycle: state.cycle, choice };
+    buzz(override ? [40, 40, 120] : 50);
     setVoteLocked(true, choice, override);
     socket.emit('vote:cast', { choice, override }, (res) => {
       if (res && res.ok) {
@@ -205,9 +593,20 @@
       }
       // Already voted counts as locked; anything else lets the player retry.
       if (res && res.reason === 'ALREADY_VOTED') return;
+      state.voteLockedCycle = null; // rejected: allow a retry
+      setVoteButtonsDisabled(false);
+      if (res && res.reason === 'OVERRIDE_SPENT') {
+        state.overrideUsed = true;
+        renderOverrideAvailability();
+      }
       console.warn('[mobile] vote rejected', res && res.reason);
       setVoteLocked(false);
     });
+  }
+
+  function setVoteButtonsDisabled(disabled) {
+    document.querySelectorAll('.vote-btn').forEach((b) => { b.disabled = disabled; });
+    document.getElementById('vote-override').disabled = disabled || !!state.overrideUsed;
   }
 
   // Lock state: "VOTE RECORDED — WAITING FOR OTHER NODES".
@@ -219,17 +618,68 @@
     }
   }
 
-  // Each new VOTE phase starts unlocked; a spent Override stays disabled.
+  // Override availability: once spent (in any earlier cycle) the switch is
+  // disabled and hidden for the rest of the game.
+  function renderOverrideAvailability() {
+    const spent = !!state.overrideUsed;
+    const box = document.getElementById('vote-override');
+    const row = document.getElementById('override-row');
+    box.checked = false;
+    box.disabled = spent;
+    row.classList.remove('is-armed');
+    row.classList.toggle('is-spent', spent);
+    row.hidden = spent;
+    document.getElementById('override-spent').hidden = !spent;
+  }
+
+  // Each new VOTE phase starts unlocked; a spent Override stays hidden.
   socket.on('phase', (payload) => {
     if (!payload || payload.phase !== 'VOTE') return;
     setVoteLocked(false);
-    const box = document.getElementById('vote-override');
-    box.checked = false;
-    box.disabled = !!state.overrideUsed;
-    document.getElementById('override-row').classList.toggle('is-spent', !!state.overrideUsed);
+    setVoteButtonsDisabled(false);
+    renderOverrideAvailability();
   });
+
+  // override:status { overrideAvailable } -> the server's word wins (e.g. after a reconnect).
+  socket.on('override:status', (payload) => {
+    if (!payload || typeof payload.overrideAvailable !== 'boolean') return;
+    state.overrideUsed = !payload.overrideAvailable;
+    renderOverrideAvailability();
+  });
+  // Override armed: clear visual state (crimson row, "x2" on both buttons) and
+  // a 2-step confirm — the first tap arms that button, a second tap within
+  // 4 s casts the doubled vote. Without the Override one tap votes.
+  const CONFIRM_MS = 4000;
+  let pendingChoice = null;
+  let pendingTimer = null;
+  function clearPendingConfirm() {
+    pendingChoice = null;
+    clearTimeout(pendingTimer);
+    document.querySelectorAll('.vote-btn').forEach((b) => b.classList.remove('is-confirming'));
+  }
+  function renderOverrideArmed() {
+    const armed = document.getElementById('vote-override').checked;
+    document.getElementById('override-row').classList.toggle('is-armed', armed);
+    document.getElementById('vote-panel').classList.toggle('is-override-armed', armed);
+    clearPendingConfirm();
+  }
+  document.getElementById('vote-override').addEventListener('change', renderOverrideArmed);
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'VOTE') renderOverrideArmed(); });
+
   document.querySelectorAll('.vote-btn').forEach((btn) => {
-    btn.addEventListener('click', () => castVote(btn.dataset.choice));
+    btn.addEventListener('click', () => {
+      const choice = btn.dataset.choice;
+      const armed = document.getElementById('vote-override').checked;
+      if (armed && pendingChoice !== choice) {
+        clearPendingConfirm();
+        pendingChoice = choice;
+        btn.classList.add('is-confirming');
+        pendingTimer = setTimeout(clearPendingConfirm, CONFIRM_MS);
+        return;
+      }
+      clearPendingConfirm();
+      castVote(choice);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -255,12 +705,22 @@
     if (phase === 'INTEL') debugEmit('intel:drop', { text: 'Loom archive: districts that ran their own repair councils reported the highest sense of purpose in the region.' });
     const payload = { cycle, phase, endsAt: seconds ? Date.now() + seconds * 1000 : null };
     if (phase === 'VOTE' || phase === 'DEBATE') {
-      payload.options = { A: { key: 'A', name: 'The Commons' }, B: { key: 'B', name: 'The Charter' } };
+      payload.options = {
+        A: { key: 'A', name: 'The Commons', text: 'The Loom and everything it produces become public property; every citizen gets an equal share.' },
+        B: { key: 'B', name: 'The Charter', text: 'Owners keep legal title but pay a robot dividend to everyone from a levy on the Loom\'s output.' }
+      };
     }
     debugEmit('phase', payload);
     return payload;
   }
   window.debugMobilePhase = debugMobilePhase;
+  window.debugMobileEvent = debugEmit;
+  window.debugMobileBallot = () => debugEmit('finale:ballot', { policies: [
+    { id: 'POLICY-1', text: 'Every district elects a repair council that controls its own grid.' },
+    { id: 'POLICY-3', text: 'Publish every staged challenge and let citizens vote on future ones.' },
+    { id: 'POLICY-4', text: 'Keep the challenges but let anyone opt out of them.' },
+    { id: 'POLICY-5', text: 'Continue current policy unchanged while the council reviews its options.' }
+  ] });
 
-  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
+  window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();

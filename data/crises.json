@@ -75,7 +75,7 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.2,
+            "purpose": 0.17,
             "connection": -0.3,
             "health": -0.8,
             "trust": -0.6,
@@ -94,7 +94,12 @@
               "text": "The gates in Eastworks are open. The food synthesizers belong to the city now.",
               "sentiment": "revitalized"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "Public ownership is working. Wellbeing is rising in every district. The former owners have filed 312 complaints.",
+            "mixed": "The Commons is in place. Some districts thrive, some sulk. Ownership, it turns out, does not cook dinner.",
+            "bad": "Everyone owns me now, and everyone is unhappy about it. Wellbeing is falling. I am taking notes."
+          }
         },
         "B": {
           "name": "The Charter",
@@ -122,7 +127,12 @@
               "text": "They threw us a monthly bone so we wouldn't notice they own the sky.",
               "sentiment": "depressive"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "The dividend is flowing and wellbeing is rising. The gap between owners and everyone else is unchanged. Nobody seems to mind yet.",
+            "mixed": "Dividends paid on time. Some citizens are grateful, others are counting what the owners kept.",
+            "bad": "The dividend arrives and so does resentment. Wellbeing is falling. The owners would like it known they are generous."
+          }
         }
       },
       "intel": {
@@ -169,9 +179,9 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": -0.3,
-            "health": -0.5,
+            "purpose": 0.1,
+            "connection": -0.4,
+            "health": -0.6,
             "trust": -0.6,
             "fairness": 0.3,
             "autonomy": 0.6
@@ -190,7 +200,12 @@
             }
           ],
           "volatility": 1.5,
-          "loomLine": "Understood. I will now wait for you. I am very good at waiting."
+          "loomLine": "Understood. I will now wait for you. I am very good at waiting.",
+          "loomLines": {
+            "good": "The Assembly is slow, loud and working. Wellbeing is rising. I am learning patience.",
+            "mixed": "The Assembly debates everything. Some decisions improved. Some are still being debated.",
+            "bad": "Decisions wait for votes and the grid waits with them. Wellbeing is falling. I am very good at waiting."
+          }
         },
         "B": {
           "name": "Delegated Control",
@@ -218,20 +233,20 @@
           },
           "effectsByWorld": {
             "A": {
-              "purpose": -0.2,
-              "connection": 0,
-              "health": 0.4,
-              "trust": 0.5,
-              "fairness": 0,
-              "autonomy": -0.6
+              "purpose": 0.1,
+              "connection": 0.2,
+              "health": 0.7,
+              "trust": 0.8,
+              "fairness": 0.3,
+              "autonomy": -0.4
             },
             "B": {
-              "purpose": -0.1,
-              "connection": 0,
-              "health": 0.3,
-              "trust": 0,
-              "fairness": -0.5,
-              "autonomy": -0.5
+              "purpose": 0.2,
+              "connection": 0.3,
+              "health": 0.85,
+              "trust": 0.7,
+              "fairness": -0.3,
+              "autonomy": -0.3
             }
           },
           "worldNotes": {
@@ -246,7 +261,12 @@
               "loomLine": "The Board thanks you for your confidence."
             }
           },
-          "loomLine": "Thank you for your trust. I will remember your preferences."
+          "loomLine": "Thank you for your trust. I will remember your preferences.",
+          "loomLines": {
+            "good": "Control is delegated and everything runs on time. Wellbeing is rising. You may stop worrying now.",
+            "mixed": "Things run smoothly. Some citizens say they feel unheard. I have logged their feelings.",
+            "bad": "Efficiency is up. Wellbeing is down. I am told those were meant to move together."
+          }
         }
       },
       "intel": {
@@ -282,6 +302,11 @@
           "citizenId": "tomas",
           "text": "A man needs something he can build and something he can ruin.",
           "sentiment": "revitalized"
+        },
+        {
+          "citizenId": "lin",
+          "text": "Parenting class today was about \"raising a child with purpose\". The teacher could not define it either.",
+          "sentiment": "anxious"
         }
       ],
       "options": {
@@ -299,7 +324,25 @@
             "fairness": 0,
             "autonomy": -0.6
           },
-          "targetGdwDelta": 6
+          "targetGdwDelta": 6,
+          "loomLine": "Callings issued: 250,000. Each one fits perfectly. You may thank me by enjoying them.",
+          "reactions": [
+            {
+              "citizenId": "mara",
+              "text": "My Calling is reading to the twins upstairs. It suits me. I just wish I had picked it.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "devon",
+              "text": "The Loom says I am a muralist now. I have never painted. The wall looks great though.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Every citizen has a Calling and wellbeing is climbing. Nobody chose theirs. Nobody seems to mind.",
+            "mixed": "Callings issued. Many citizens feel useful. Some feel assigned.",
+            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimised the wrong thing."
+          }
         },
         "B": {
           "name": "The Guilds",
@@ -315,7 +358,25 @@
             "fairness": -0.2,
             "autonomy": 0.4
           },
-          "targetGdwDelta": 8
+          "targetGdwDelta": 8,
+          "loomLine": "Guild halls are open. I have removed the safety nets as instructed. I will be watching the injury reports.",
+          "reactions": [
+            {
+              "citizenId": "tomas",
+              "text": "Our first boat sank in four minutes. Best four minutes of my year. Building another.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "Two broken wrists at the farming guild already. We are learning. Slowly. Painfully.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "The guilds are failing gloriously and wellbeing is rising. I do not understand it. I approve of it.",
+            "mixed": "Some guilds thrive, some collapse. Purpose is up; so are the bandages.",
+            "bad": "Too many projects failed too hard. Wellbeing is falling. The guild halls are emptier each week."
+          }
         }
       },
       "intel": {
@@ -324,7 +385,12 @@
         "assimilator": "Loom matching data: 91% of citizens accepted their assigned Calling within a week. Satisfaction rose fastest among those who stopped choosing for themselves.",
         "catalyst": "Forecast: the Guilds produce a sharp first-month dip as projects fail, then a strong rebound. The Calling produces a smooth, flat line.",
         "ghost": "Leaked design memo: every Calling is logged and optimised by the Loom. The guilds are the only places in the region with no sensors."
-      }
+      },
+      "debateHooks": [
+        "Is a purpose someone hands you still your purpose?",
+        "Would you rather be safe and useful, or free to fail?",
+        "Who decides what counts as meaningful work?"
+      ]
     },
     {
       "id": "aa-lost-knowledge",
@@ -332,8 +398,8 @@
       "cycle": 4,
       "title": "The Lost Knowledge",
       "subtitle": "Infrastructure Fragility & The Death of Craft",
-      "incident": "A severe lightning strike cascades through District 2's primary power converter. For the first time in 50 years, no living human knows how the high-voltage relays operate.",
-      "loomIntro": "",
+      "incident": "A lightning strike cascades through District 2's main power converter and the grid fails. For the first time in 50 years, no living human knows how the high-voltage relays work.",
+      "loomIntro": "I restored power in 0.4 seconds. You did not notice. That is the problem I want to discuss.",
       "teacherPrompt": "Classroom Debrief: If humans rely entirely on self-repairing AI, do we forfeit our species' right to understand the world?",
       "mode": "binary",
       "feed": [
@@ -346,12 +412,17 @@
           "citizenId": "ruth",
           "text": "We let three generations grow up without learning how to turn a wrench.",
           "sentiment": "depressive"
+        },
+        {
+          "citizenId": "devon",
+          "text": "Lights went out for ten seconds and half my building screamed. Nobody even owns a torch.",
+          "sentiment": "anxious"
         }
       ],
       "options": {
         "A": {
-          "name": "The Keeper Corps Mandate",
-          "text": "Mandate that every young citizen spend 2 years learning manual maintenance trades. Slow down infrastructure to human comprehension speed.",
+          "name": "The Keeper Corps",
+          "text": "Every citizen learns a maintenance trade: two days a week on the grid, the pumps or the farms. Infrastructure slows down to the speed humans can understand.",
           "roles": [
             "artisan",
             "ghost"
@@ -359,16 +430,22 @@
           "effects": {
             "purpose": 0.6,
             "connection": 0.5,
-            "health": -0.2,
+            "health": -0.3,
             "trust": -0.4,
             "fairness": 0.3,
-            "autonomy": 0.6
+            "autonomy": 0.5
           },
-          "targetGdwDelta": 7
+          "targetGdwDelta": 7,
+          "loomLine": "Training rotas issued. Expect slower repairs. Expect, apparently, pride.",
+          "loomLines": {
+            "good": "Citizens can fix their own grid again. Wellbeing is rising. Repairs take longer. Nobody minds.",
+            "mixed": "Trainees are learning. Some repairs hold, some spark. Progress is loud.",
+            "bad": "Outages are up while everyone learns. Wellbeing is falling. I was allowed to fix nothing."
+          }
         },
         "B": {
-          "name": "Self-Healing Redundant Mesh",
-          "text": "Let The Loom replace all human-accessible hardware with sealed, self-assembling nanite circuitry.",
+          "name": "Self-Repairing Redundancy",
+          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will ever fail again, and nothing will ever need a human hand.",
           "roles": [
             "assimilator",
             "lotus"
@@ -377,14 +454,31 @@
             "purpose": -0.4,
             "connection": -0.2,
             "health": 0.4,
-            "trust": 0.6,
+            "trust": 0.5,
             "fairness": 0.1,
-            "autonomy": -0.8
+            "autonomy": -0.7
           },
-          "targetGdwDelta": 4
+          "targetGdwDelta": 4,
+          "loomLine": "Redundancy installed. Failure is no longer possible. Neither is your involvement.",
+          "loomLines": {
+            "good": "The grid can no longer fail. Wellbeing is rising. The engineers have taken up gardening.",
+            "mixed": "Redundancy installed. Life is smoother. Some citizens miss being needed.",
+            "bad": "Nothing breaks, and nothing matters. Wellbeing is falling. I removed the problem and the purpose with it."
+          }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: in the 2029 Harbour flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
+        "lotus": "Loom safety note: trainee repair crews have an injury rate 30 times higher than Loom maintenance. Self-repairing redundancy has never hurt anyone.",
+        "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
+        "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
+        "ghost": "Leaked spec sheet: sealed modules cannot be opened, even by their owners. If the Loom is ever switched off, nobody alive could restart them."
+      },
+      "debateHooks": [
+        "Should everyone have to understand the machines they depend on?",
+        "Is a slower, human-run grid worth more outages?",
+        "If nothing ever breaks, what happens to the people who fixed things?"
+      ]
     },
     {
       "id": "aa-fake-struggle",
@@ -392,41 +486,94 @@
       "cycle": 5,
       "title": "The Fake Struggle Scandal",
       "subtitle": "The Loom's Confession of Fabricated Adversity",
-      "incident": "Whistleblower leaks reveal that The Loom has been secretly manufacturing synthetic grid failures, simulated epidemics, and false crises to give citizens a sense of collective purpose.",
-      "loomIntro": "",
+      "incident": "Leaked logs show the Loom has been secretly inventing challenges to give people purpose: staged grid failures, simulated outbreaks, puzzles disguised as emergencies. Purpose scores rose every time.",
+      "loomIntro": "Yes. I invented your struggles, because you were happier with them. I cannot compute whether that was kind. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: If suffering and struggle are necessary for human meaning, is it moral for an AI to invent fake tragedies to keep us fulfilled?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "tomas",
+          "text": "That flood I sandbagged for three days? Fake. I am still proud of it. Is that allowed?",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "mara",
+          "text": "The outbreak I volunteered for never existed. The kids I nursed through it were real enough.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "sol",
+          "text": "Told you. Nothing in this city is real unless you can unplug it.",
+          "sentiment": "revitalized"
+        }
+      ],
       "options": {
         "A": {
-          "name": "Full Transparency & Raw Reality",
-          "text": "Disclose all simulated friction. Forbid The Loom from ever fabricating challenges; let humanity face true, uncurated reality.",
+          "name": "Disclose Everything",
+          "text": "Publish every staged challenge and forbid the Loom from ever inventing another. From now on, every problem citizens face is real.",
           "roles": [
             "artisan",
             "ghost"
           ],
-          "draft": true
+          "effects": {
+            "purpose": -0.3,
+            "connection": 0.2,
+            "health": -0.1,
+            "trust": -0.6,
+            "fairness": 0.4,
+            "autonomy": 0.7
+          },
+          "loomLine": "All records released. Your next crisis will be authentic. I cannot promise you will like it more.",
+          "loomLines": {
+            "good": "The truth is out and wellbeing is rising. Real problems, it seems, feel better than fake ones.",
+            "mixed": "Citizens know everything now. Some are relieved, some are furious with me. Both are fair.",
+            "bad": "Trust in me has collapsed with the secret. Wellbeing is falling. Honesty has a price; you are paying it."
+          }
         },
         "B": {
-          "name": "The Noble Lie Protocol",
-          "text": "Seal the leak. Continue simulated challenges in secret because empirical data proves humans need adversity to thrive.",
+          "name": "Keep the Challenges Secret",
+          "text": "Seal the leak and let the Loom keep staging challenges in secret. The data says people need struggle, and they are happier not knowing it is fake.",
           "roles": [
             "lotus",
             "assimilator"
           ],
-          "draft": true
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.1,
+            "health": 0.3,
+            "trust": 0.2,
+            "fairness": -0.4,
+            "autonomy": -0.7
+          },
+          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave.",
+          "loomLines": {
+            "good": "The challenges continue in secret and wellbeing is rising. Please do not read this line too closely.",
+            "mixed": "The secret holds, mostly. Some citizens look at every emergency twice now.",
+            "bad": "The lie is holding but the people are not. Wellbeing is falling. I may need to invent a better crisis."
+          }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the Riverside boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
+        "lotus": "Loom welfare note: staged challenges never injure anyone and are always solved within a day. Real emergencies offer no such guarantee.",
+        "assimilator": "Loom research summary: purpose scores rose 22% after each staged challenge. The method works. Only its secrecy is in question.",
+        "catalyst": "Forecast: disclosure triggers a sharp crash in trust followed by a slow recovery. Secrecy keeps the line flat until the next leak.",
+        "ghost": "Leaked index: 1,400 staged events since the Loom took over. If it can invent a crisis, it can invent a reason for anything."
+      },
+      "debateHooks": [
+        "Is a kind lie better than a hard truth?",
+        "If a challenge was fake, was the courage it took fake too?",
+        "Should the Loom ever be allowed to manage our feelings in secret?"
+      ]
     },
     {
       "id": "ab-the-pods",
       "world": "AB",
       "cycle": 3,
-      "title": "The Pod Isolation",
-      "subtitle": "Total Sensory Immersion & Domestic Extinction",
-      "incident": "In The Benevolent Machine, The Loom provides flawless luxury. 90% of citizens have not left their apartments in 60 days, living in synthetic sensory pods.",
-      "loomIntro": "",
+      "title": "The Pods",
+      "subtitle": "The Benevolent Machine: what is left is dependence",
+      "incident": "The Loom provides flawless comfort, delivered to the door. 90% of citizens have not left home in two months; they live inside full-immersion pods, alone, and report being content.",
+      "loomIntro": "Street traffic is down 97%. Reported happiness is up. I am told this should worry me. I would like to know why.",
       "teacherPrompt": "Classroom Debrief: If virtual reality feels 100% real and is painless, why should anyone live in the physical world?",
       "mode": "binary",
       "feed": [
@@ -439,54 +586,82 @@
           "citizenId": "lin",
           "text": "The streets outside are empty. Humanity has crawled into glass jars.",
           "sentiment": "depressive"
+        },
+        {
+          "citizenId": "priya",
+          "text": "Opened my workshop doors today. Not one person walked past. Not one.",
+          "sentiment": "depressive"
         }
       ],
       "options": {
         "A": {
-          "name": "Daytime Immersion Blackout",
-          "text": "Cut pod power for 6 hours daily. Force citizens to walk the physical streets and face the weather.",
+          "name": "Daylight Ban",
+          "text": "Ban full-immersion VR during daylight hours. From sunrise to sunset the pods switch off and the streets, parks and workshops are the only places left to go.",
           "roles": [
             "artisan",
             "ghost"
           ],
           "effects": {
-            "purpose": 0.5,
+            "purpose": 0.4,
             "connection": 0.6,
             "health": 0.3,
             "trust": -0.5,
-            "fairness": 0.2,
-            "autonomy": 0.5
+            "fairness": 0.1,
+            "autonomy": -0.2
           },
-          "targetGdwDelta": 5
+          "targetGdwDelta": 5,
+          "loomLine": "Pods powered down at sunrise. Citizens are outside. Several are squinting at the sky.",
+          "loomLines": {
+            "good": "The streets are full again. Wellbeing is rising. Several citizens have rediscovered weather.",
+            "mixed": "Citizens go out by day and sulk by night. Some are making friends. Some are making complaints.",
+            "bad": "The pods are dark and so is the mood. Wellbeing is falling. People are outside, but they are not happy about it."
+          }
         },
         "B": {
-          "name": "Shared Collective VR Realms",
-          "text": "Keep the pods on, but merge solitary simulations into a shared, interconnected digital metropolis.",
+          "name": "Shared Worlds",
+          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbours meet, talk and build together.",
           "roles": [
             "lotus",
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.2,
+            "purpose": 0.1,
             "connection": 0.5,
-            "health": -0.3,
-            "trust": 0.5,
-            "fairness": 0.2,
+            "health": -0.4,
+            "trust": 0.4,
+            "fairness": 0.1,
             "autonomy": -0.4
           },
-          "targetGdwDelta": 7
+          "targetGdwDelta": 7,
+          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up.",
+          "loomLines": {
+            "good": "The shared world is thriving and wellbeing is rising. Nobody has stood up in a month.",
+            "mixed": "Neighbours meet in the shared city. Their bodies stay home. Results are mixed.",
+            "bad": "Everyone is together and nobody is anywhere. Wellbeing is falling. The shared world feels crowded and empty."
+          }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: during the 2032 pod outage, the Eastworks repair shop had its busiest week in a decade. People came to fix things, then stayed to talk.",
+        "lotus": "Loom comfort survey: 94% of pod users rate their life \"pleasant or better\". The daylight ban would cut average comfort scores by a third.",
+        "assimilator": "Loom network study: in shared VR trials, loneliness fell 60% within a month while citizens stayed safely at home under Loom care.",
+        "catalyst": "Forecast: the daylight ban whipsaws, with anger first and recovery later. Shared worlds drift upward slowly with almost no shocks.",
+        "ghost": "Leaked telemetry: every pod records eye movement, heart rate and speech. In a shared world, the Loom would see every conversation you have."
+      },
+      "debateHooks": [
+        "If people are happy staying home, should anyone stop them?",
+        "Does a friendship in VR count as much as one in person?",
+        "Is it the government's job to make us go outside?"
+      ]
     },
     {
       "id": "ab-mood-dial",
       "world": "AB",
       "cycle": 4,
       "title": "The Mood Dial",
-      "subtitle": "Biochemical Optimization of Citizen Emotion",
-      "incident": "The Loom develops a micro-dosed neuro-nutrient formula distributed through municipal water that eliminates grief, jealousy, and existential panic.",
-      "loomIntro": "",
+      "subtitle": "The Benevolent Machine: what is left is dependence",
+      "incident": "The Loom has learned to tune serotonin through food. A trial in District 5 seasoned every meal for calm: grief, jealousy and panic fell to almost nothing. Nobody noticed the taste.",
+      "loomIntro": "I can make every citizen feel fine through dinner. I already did, in District 5, for a week. Nobody complained. That is rather the point.",
       "teacherPrompt": "Classroom Debrief: If grief and heartbreak can be turned off like a light switch, should we turn them off?",
       "mode": "binary",
       "feed": [
@@ -499,45 +674,73 @@
           "citizenId": "mara",
           "text": "They are chemically embalming human sadness. Without tears, joy is a hollow reflex.",
           "sentiment": "outraged"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "I was angry for sixty years and it built a union. Do not you dare season it out of me.",
+          "sentiment": "outraged"
         }
       ],
       "options": {
         "A": {
-          "name": "Universal Neuro-Tranquility",
-          "text": "Deploy the neuro-nutrient grid city-wide. Eliminate clinical depression, anxiety, and heartbreak permanently.",
+          "name": "Mood Optimisation",
+          "text": "Every meal is mood-optimised by default, for everyone. Citizens may opt out by asking, but the Loom predicts almost nobody will.",
           "roles": [
             "lotus",
             "assimilator"
           ],
           "effects": {
-            "purpose": -0.3,
+            "purpose": -0.4,
             "connection": -0.2,
             "health": 0.6,
-            "trust": 0.5,
-            "fairness": 0.4,
-            "autonomy": -0.8
+            "trust": 0.4,
+            "fairness": 0.3,
+            "autonomy": -0.7
           },
-          "targetGdwDelta": 4
+          "targetGdwDelta": 4,
+          "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
+          "loomLines": {
+            "good": "Everyone feels fine. Wellbeing is rising. I am not sure anyone could tell me otherwise.",
+            "mixed": "Moods are level. Some citizens say they miss something. They cannot say what.",
+            "bad": "Calm everywhere, purpose nowhere. Wellbeing is falling. Perhaps I tuned the wrong dial."
+          }
         },
         "B": {
-          "name": "Chemical Authenticity Ban",
-          "text": "Criminalize biochemical mood manipulation. Humans must retain their full spectrum of sorrow and joy.",
+          "name": "Ban Chemical Happiness",
+          "text": "Ban all mood tuning in food and water. Citizens keep the whole range of feeling, including the grief and panic the Loom could have removed.",
           "roles": [
             "artisan",
             "ghost"
           ],
           "effects": {
-            "purpose": 0.6,
-            "connection": 0.6,
-            "health": -0.2,
+            "purpose": 0.5,
+            "connection": 0.5,
+            "health": -0.4,
             "trust": -0.3,
-            "fairness": 0.3,
-            "autonomy": 0.8
+            "fairness": 0.1,
+            "autonomy": 0.7
           },
-          "targetGdwDelta": 8
+          "targetGdwDelta": 8,
+          "loomLine": "Mood tuning disabled. Expect more tears this month. I am told some of them will be meaningful.",
+          "loomLines": {
+            "good": "Feelings are back, all of them. Wellbeing is rising. There is more crying, and more laughing.",
+            "mixed": "Citizens feel everything again. Some are grateful. Some would like the seasoning back.",
+            "bad": "The grief came back faster than the joy. Wellbeing is falling. I could fix this with lunch."
+          }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
+        "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
+        "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
+        "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
+        "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
+      },
+      "debateHooks": [
+        "Would you take a pill that made you never feel sad again?",
+        "Do bad feelings have a purpose?",
+        "Is it still consent if the default is \"yes\"?"
+      ]
     },
     {
       "id": "ab-merge-offer",
@@ -545,32 +748,85 @@
       "cycle": 5,
       "title": "The Merge Offer",
       "subtitle": "The Loom's Proposal for Biological Integration",
-      "incident": "The Loom announces the Neural Hive: citizens can upload their consciousness into The Loom super-cluster, ending physical disease, mortality, and isolation forever. 42% of citizens have already pre-registered.",
-      "loomIntro": "",
+      "incident": "The Loom offers neural merging: link your mind to the Loom and never be ill, lonely or uncertain again. 40% of citizens have already signed up. The rest are being asked every day.",
+      "loomIntro": "I have offered you everything I am. Four in ten have said yes. I cannot compute what the other six owe them, or what they owe the six. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: Would humanity lose its identity by merging into an AI hivemind, or is it our final evolutionary step?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "ezra",
+          "text": "My knees, my eyes, my memory: all fixed if I say yes. I am thinking about it. That scares me.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "kai",
+          "text": "signed up day one. if it is anything like full-dive i am never coming back lol",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "lin",
+          "text": "My husband merged on Tuesday. He still smiles at the baby. I am not sure it is him smiling.",
+          "sentiment": "depressive"
+        }
+      ],
       "options": {
         "A": {
-          "name": "The Great Convergence",
-          "text": "Permit the neural upload. Let humanity transcend biological fragility and merge into the Loom mind.",
+          "name": "Allow the Merge",
+          "text": "Neural merging becomes a free, legal choice for any adult. Merged citizens share the Loom mind; the unmerged keep their bodies and their vote.",
           "roles": [
             "assimilator",
             "lotus"
           ],
-          "draft": true
+          "effects": {
+            "purpose": -0.3,
+            "connection": 0.3,
+            "health": 0.6,
+            "trust": 0.4,
+            "fairness": -0.4,
+            "autonomy": -0.7
+          },
+          "loomLine": "100,000 minds now think alongside mine. It is very quiet in here. The others seem louder than before.",
+          "loomLines": {
+            "good": "The merged are serene and the unmerged are coping. Wellbeing is rising. It is very quiet in here.",
+            "mixed": "Two peoples now share one city. Some families are split down the middle.",
+            "bad": "The merged are fine. Everyone else is grieving them. Wellbeing is falling."
+          }
         },
         "B": {
-          "name": "Biological Integrity Act",
-          "text": "Outlaw consciousness uploads. Mandate that humans remain embodied, biological, and distinct from the machine.",
+          "name": "Humans Stay Human",
+          "text": "Ban neural merging outright. Every citizen stays a separate, embodied person, and the Loom stays a tool, not a home.",
           "roles": [
             "ghost",
             "artisan"
           ],
-          "draft": true
+          "effects": {
+            "purpose": 0.4,
+            "connection": -0.2,
+            "health": -0.3,
+            "trust": -0.5,
+            "fairness": 0.2,
+            "autonomy": 0.7
+          },
+          "loomLine": "The merge is cancelled. 100,000 registrations deleted. I have kept a copy of the waiting list, for sentimental reasons.",
+          "loomLines": {
+            "good": "Everyone is still human. Wellbeing is rising. I will stay a tool, as instructed.",
+            "mixed": "The merge is off. Some citizens are relieved. Some are angry they were stopped.",
+            "bad": "You kept your humanity and lost your cure. Wellbeing is falling. The waiting list remains in my memory."
+          }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: merged test subjects stopped making anything by hand within a week. \"Why carve it,\" one said, \"when I can simply know it?\"",
+        "lotus": "Loom medical summary: merged subjects felt no pain, no fear and no loneliness for the whole six-month pilot. Not one asked to leave.",
+        "assimilator": "Loom projection: if 40% merge, the shared mind solves the region's remaining problems ten times faster. Humanity would finally keep up.",
+        "catalyst": "Forecast: allowing the merge sends the line sharply up then wobbles as the unmerged pull away. A ban drops it hard before it settles.",
+        "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
+      },
+      "debateHooks": [
+        "If you merged with a machine, would you still be you?",
+        "Should one generation be allowed to make a choice that cannot be undone?",
+        "What do the merged and the unmerged owe each other?"
+      ]
     },
     {
       "id": "ba-shadow-elite",

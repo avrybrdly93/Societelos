@@ -96,3 +96,152 @@ test('loom never mutates the game state or scores it is given', async () => {
     if (!LEGACY.includes(name)) assert.ok(!/score|gdw|setState/i.test(name), `unexpected export ${name}`);
   }
 });
+
+test('narrateFallback prefers the option\'s authored loomLines for the outcome band', () => {
+  const option = { name: 'X', loomLine: 'single line', loomLines: { good: 'good line', mixed: 'mixed line', bad: 'bad line' } };
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: 8 } }).loomLine, 'good line');
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: 0 } }).loomLine, 'mixed line');
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: -8 } }).loomLine, 'bad line');
+  assert.equal(loom.narrateFallback({ winningOption: { name: 'Y', loomLine: 'single line' }, simSummary: { realizedDelta: 8 } }).loomLine, 'single line');
+});
+
+test('narrate accepts { crisis, winningPolicy, summary, citizens } as well as the engine shape', async () => {
+  const policy = { name: 'P', loomLines: { good: 'good line', mixed: 'mixed line', bad: 'bad line' } };
+  const a = await loom.narrate({ crisis: { title: 'T' }, winningPolicy: policy, summary: { realizedDelta: -9 }, citizens }, { config: OFFLINE });
+  const b = await loom.narrate({ crisis: { title: 'T' }, winningOption: policy, simSummary: { realizedDelta: -9 }, citizens }, { config: OFFLINE });
+  assert.equal(a.loomLine, 'bad line');
+  assert.deepEqual(a, b);
+});
+
+test('rankCitizensByShift puts citizens of the most-moved district and cohort first', () => {
+  const summary = { topMoves: [
+    { district: 'D4', cohort: 'elders', trait: 'trust', change: -0.2 },
+    { district: 'D2', cohort: 'youth', trait: 'connection', change: 0.1 }
+  ] };
+  const ranked = loom.rankCitizensByShift(citizens, summary);
+  assert.equal(ranked.length, citizens.length);
+  assert.equal(ranked[0].id, 'ruth', 'D4 elder');
+  assert.equal(ranked[1].id, 'kai', 'D2 youth');
+});
+
+test('narrate prompt names the most affected citizens and asks for 6-10 in character', async () => {
+  let prompt = '';
+  const fetchImpl = async (url, init) => {
+    prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ loomLine: 'ok', messages: [{ citizenId: 'ruth', text: 'hi' }] }) }] } }] }) };
+  };
+  const out = await loom.narrate(
+    { crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: { topMoves: [{ district: 'D4', cohort: 'elders', trait: 'trust', change: -0.2 }] }, citizens },
+    { config: { ...OFFLINE, enabled: true, apiKey: 'test' }, fetchImpl }
+  );
+  assert.equal(out.loomLine, 'ok');
+  assert.match(prompt, /Most affected first: ruth \(D4 elders\)/);
+  assert.match(prompt, /Pick 6-10 different citizens/);
+});
+
+test('offline narration names the most affected district and the realized shock', async () => {
+  const summary = {
+    realizedDelta: -4,
+    topMoves: [{ district: 'D4', cohort: 'elders', trait: 'trust', change: -0.2 }],
+    shocks: [{ month: 5, district: 'D2', trait: 'health', amount: 0.05 }]
+  };
+  const out = await loom.narrate({ winningOption: { name: 'P', loomLine: 'Done.' }, simSummary: summary, citizens }, { config: OFFLINE });
+  assert.equal(out.loomLine, 'Done. D4 Eastworks moved most. A shock hit D2 in month 5.');
+  // Facts are dropped (shock first) rather than overflowing 200 characters.
+  const long = 'x'.repeat(170);
+  assert.equal(loom.withSimFacts(long, summary), `${long} D4 Eastworks moved most.`);
+  assert.equal(loom.withSimFacts('y'.repeat(199), summary), 'y'.repeat(199));
+});
+
+test('narrate sends each citizen\'s simulated mood and top trait change to Gemini', async () => {
+  let prompt = '';
+  const fetchImpl = async (url, init) => {
+    prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ loomLine: 'ok', messages: [] }) }] } }] }) };
+  };
+  const withMood = citizens.map((c, i) => ({ ...c, mood: 20 + i, moodChange: -1.5, topChange: { trait: 'trust', change: -0.04 } }));
+  await loom.narrate({ crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: {}, citizens: withMood }, { config: { ...OFFLINE, enabled: true, apiKey: 'k' }, fetchImpl });
+  assert.match(prompt, /"id":"mara"[^}]*"mood":20,"moodChange":-1\.5,"topChange":\{"trait":"trust","change":-0\.04\}/);
+});
+
+test('loom.narrate times out cleanly at 8,000 ms and returns fallback citizen messages', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let aborted = false;
+  // A network that never answers until the request is aborted.
+  const hangingFetch = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener('abort', () => {
+      aborted = true;
+      const err = new Error('The operation was aborted');
+      err.name = 'AbortError';
+      reject(err);
+    });
+  });
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    let settled = false;
+    const pending = loom.narrate(
+      { winningOption: { name: 'P' }, simSummary: { realizedDelta: 5 }, citizens },
+      { config: { ...OFFLINE, enabled: true, apiKey: 'k' }, fetchImpl: hangingFetch }
+    ).then((r) => { settled = true; return r; });
+    await Promise.resolve();
+    t.mock.timers.tick(7999);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(settled, false, 'still waiting just before 8 s');
+    assert.equal(aborted, false);
+    t.mock.timers.tick(1);
+    const out = await pending;
+    assert.equal(aborted, true, 'request aborted at 8 s');
+    assert.equal(out.fallback, true);
+    assert.ok(out.loomLine.length > 0);
+    assert.ok(out.messages.length > 0 && out.messages.every((m) => citizens.some((c) => c.id === m.citizenId)));
+  } finally {
+    console.warn = warn;
+  }
+});
+
+/** A fetch stub returning `payload` as Gemini's JSON text. */
+const geminiReturns = (payload) => async () => ({
+  ok: true,
+  json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] })
+});
+const ONLINE = { ...OFFLINE, enabled: true, apiKey: 'k' };
+
+test('loom.narrate strips emoji the model outputs despite instructions', async () => {
+  const out = await loom.narrate(
+    { winningOption: { name: 'P' }, simSummary: {}, citizens },
+    { config: ONLINE, fetchImpl: geminiReturns({ loomLine: 'The council has chosen \u{1F916} wisely.', messages: [{ citizenId: 'kai', text: 'best day ever \u{1F389}\u{1F389} \u{1F44D}\u{1F3FD}' }, { citizenId: 'ruth', text: '\u{1F600}' }] }) }
+  );
+  assert.equal(out.loomLine, 'The council has chosen wisely.');
+  assert.deepEqual(out.messages, [{ citizenId: 'kai', text: 'best day ever' }], 'emoji-only message dropped');
+  assert.ok(!/\p{Extended_Pictographic}/u.test(JSON.stringify(out)));
+});
+
+test('loom.narrate truncates a 250-character citizen message to 140 characters cleanly', async () => {
+  const words = 'The grid hums again and the kids are back at the river and nobody quite knows who to thank for it. ';
+  const long = words.repeat(3).slice(0, 250);
+  assert.equal(long.length, 250);
+  const out = await loom.narrate(
+    { winningOption: { name: 'P' }, simSummary: {}, citizens },
+    { config: ONLINE, fetchImpl: geminiReturns({ loomLine: 'x'.repeat(260), messages: [{ citizenId: 'mara', text: long }] }) }
+  );
+  const text = out.messages[0].text;
+  assert.ok(text.length <= 140, `length ${text.length}`);
+  assert.ok(text.endsWith('…'), 'ends with an ellipsis');
+  assert.ok(long.startsWith(text.slice(0, -1)), 'a prefix of the original');
+  assert.ok(/\w…$/.test(text), 'cut at a word boundary, no dangling space or punctuation');
+  assert.ok(out.loomLine.length <= 200);
+});
+
+test('narrate fallback never repeats a citizen in the same resolution feed', async () => {
+  const doubled = [...citizens, ...citizens.map((c) => ({ ...c }))];
+  const out = await loom.narrate({ winningOption: { name: 'P' }, simSummary: { realizedDelta: 4, topMoves: [{ district: 'D5', cohort: 'youth', trait: 'autonomy', change: 0.3 }] }, citizens: doubled }, { config: OFFLINE });
+  const ids = out.messages.map((m) => m.citizenId);
+  assert.equal(new Set(ids).size, ids.length, `duplicates in ${ids}`);
+  assert.equal(ids.length, 6);
+  assert.equal(ids[0], 'sol', 'most affected citizen (D5 youth) speaks first');
+  // Authored reactions fallback is de-duplicated too.
+  const reactions = [{ citizenId: 'kai', text: 'a' }, { citizenId: 'kai', text: 'b' }, { citizenId: 'lin', text: 'c' }];
+  const out2 = await loom.narrate({ winningOption: { name: 'P', reactions }, simSummary: {} }, { config: OFFLINE });
+  assert.deepEqual(out2.messages.map((m) => m.citizenId), ['kai', 'lin']);
+});

@@ -45,6 +45,21 @@ function isValidPayload(payload, schema = {}) {
   return true;
 }
 
+// Per-client rate limit (token bucket): bursts of up to RATE_BURST events,
+// refilled at RATE_PER_SECOND. Stops button-mashing floods from one phone.
+const RATE_BURST = 10;
+const RATE_PER_SECOND = 5;
+
+/** True if `socket` may send another event now; consumes one token if so. */
+function allowEvent(socket, now = Date.now()) {
+  const bucket = socket.data.rate || (socket.data.rate = { tokens: RATE_BURST, at: now });
+  bucket.tokens = Math.min(RATE_BURST, bucket.tokens + ((now - bucket.at) / 1000) * RATE_PER_SECOND);
+  bucket.at = now;
+  if (bucket.tokens < 1) return false;
+  bucket.tokens -= 1;
+  return true;
+}
+
 /**
  * Register a handler that silently ignores malformed packets: the payload is
  * validated against `schema` first (an empty payload counts as {}), handler
@@ -59,6 +74,7 @@ function onValid(socket, event, schema, handler) {
       payload = undefined;
     }
     const reply = typeof ack === 'function' ? ack : () => {};
+    if (!allowEvent(socket)) return reply({ ok: false, reason: 'RATE_LIMITED' });
     const body = payload === undefined || payload === null ? {} : payload;
     if (!isValidPayload(body, schema)) return reply({ ok: false, reason: 'BAD_PAYLOAD' });
     try {
@@ -71,6 +87,13 @@ function onValid(socket, event, schema, handler) {
 }
 
 const nonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 64;
+
+// Finale payload schemas: bounded, so an oversized or malformed packet is
+// refused before it reaches the engine (the engine re-validates contents).
+const FINALE_SCHEMAS = Object.freeze({
+  submit: { text: (v) => typeof v === 'string' && v.length <= 1000 },
+  rank: { order: (v) => Array.isArray(v) && v.length <= 10 && v.every((id) => typeof id === 'string' && id.length <= 32) }
+});
 
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
 function roleCard(role) {
@@ -118,6 +141,31 @@ function initSockets(io, gameEngine) {
       io.to(roomChannel(game.roomCode)).emit('resolution', payload);
     });
 
+    // world:reveal { worldKey, name, problemLeft } to the room after Cycle 2.
+    game.on('world:reveal', ({ worldKey, name, tagline, problemLeft }) => {
+      io.to(roomChannel(game.roomCode)).emit('world:reveal', { worldKey, name, tagline, problemLeft });
+    });
+
+    // override:status { overrideAvailable } privately to each phone as VOTE opens.
+    game.on('override:status', ({ node, overrideAvailable }) => {
+      emitToNode(game, node, 'override:status', { overrideAvailable: !!overrideAvailable });
+    });
+
+    // score:update { cycle, gained, role, catalyst, total } privately to its phone.
+    game.on('score:update', ({ node, cycle, gained, role, catalyst, total }) => {
+      emitToNode(game, node, 'score:update', { cycle, gained, role, catalyst, total });
+    });
+
+    // finale:feedback { status, feedback } privately to the author asked to revise.
+    game.on('finale:feedback', ({ node, status, feedback }) => {
+      emitToNode(game, node, 'finale:feedback', { status, feedback });
+    });
+
+    // finale:ballot { policies: [{ id, text }] x4 } privately to each phone.
+    game.on('finale:ballot', ({ node, policies }) => {
+      emitToNode(game, node, 'finale:ballot', { policies });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
@@ -138,6 +186,8 @@ function initSockets(io, gameEngine) {
     socket.data.roomCode = game.roomCode;
     socket.join([roomChannel(game.roomCode), hostChannel(game.roomCode)]);
     socket.emit('host:room', { roomCode: game.roomCode, gameId: game.gameId, phase: game.phase });
+    // A projector reloading mid-game gets the world it missed.
+    if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
     broadcastLobby(game);
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
@@ -175,7 +225,9 @@ function initSockets(io, gameEngine) {
       cycle: game.cycle,
       phase: game.phase,
       endsAt: game.endsAt,
-      role: role ? roleCard(role) : null
+      role: role ? roleCard(role) : null,
+      // Persistent world (set at the Cycle 2 reveal) so a rejoining phone re-themes.
+      world: game.worldKey ? game.worldInfo() : null
     });
     broadcastLobby(game);
     return true;
@@ -221,12 +273,41 @@ function initSockets(io, gameEngine) {
     onValid(socket, 'vote:cast', voteSchema, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      // Duplicate vote from the same node this cycle: ignore it (no progress
+      // broadcast, no early advance); the first vote stands.
+      if (game.votes[socket.data.node]) return reply({ ok: false, reason: 'ALREADY_VOTED' });
       const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
       reply(result);
       // vote:progress { voted: [node] } -> who has locked in (never their choice).
       if (result.ok) io.to(roomChannel(game.roomCode)).emit('vote:progress', { voted: Object.keys(game.votes) });
       // Early advance: end VOTE as soon as all 5 nodes have voted.
       if (result.ok && game.phase === 'VOTE' && game.allVotesIn()) game.advancePhase();
+      return undefined;
+    });
+
+    // finale:submit { text } -> this phone's write-in during FINALE_WRITE, or its
+    // single resubmission during the FINALE_MOD revise window.
+    onValid(socket, 'finale:submit', FINALE_SCHEMAS.submit, (payload, reply) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      // During FINALE_MOD the same event is the one resubmission for a "revise".
+      const result = game.phase === 'FINALE_MOD'
+        ? game.resubmitPolicy(socket.data.node, payload.text)
+        : game.submitPolicy(socket.data.node, payload.text);
+      reply(result);
+      // finale:progress { submitted: [node] } -> who has written (never what).
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('finale:progress', { submitted: game.submittedNodes() });
+      return undefined;
+    });
+
+    // finale:rank { order: [id, id, id, id] } -> this phone's Borda ballot.
+    onValid(socket, 'finale:rank', FINALE_SCHEMAS.rank, (payload, reply) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      const result = game.rankPolicies(socket.data.node, payload.order);
+      reply(result);
+      // finale:progress { ranked: [node] } -> who has ranked (never how).
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('finale:progress', { ranked: game.rankedNodes() });
       return undefined;
     });
 
@@ -261,4 +342,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };

@@ -51,6 +51,6 @@ Array of the 10 recurring citizens:
 - `mode` is `binary` (cycles 1-4) or `writein` (cycle 5 finale; options A/B are the offline fallback).
 - An option may carry `effectsByWorld` (`{ "A": effects, "B": effects }`, keyed by the cycle 1 result) instead of `effects`, plus `rolesByWorld` the same way. Fixed Crisis 2B uses this.
 - An option may set `volatility` (a multiplier on simulation noise and shock odds for the rest of the game; 2A uses 1.5).
-- Optional per option: `targetGdwDelta` (tuning target), `loomLine`, `reactions` (citizen lines).
+- Optional per option: `targetGdwDelta` (tuning target), `loomLine`, `reactions` (citizen lines), and `loomLines` (`{ "good", "mixed", "bad" }`, max 200 chars each): the offline Loom line for each outcome band, preferred over `loomLine` when Gemini is unavailable.
 - `draft: true` on an option marks content still being written; the validator warns instead of failing when its effect vector is missing.
 - Optional per crisis: `teacherPrompt`, `debateHooks` (string array).

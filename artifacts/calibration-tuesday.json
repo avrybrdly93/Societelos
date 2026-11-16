@@ -1,0 +1,75 @@
+{
+  "runs": 500,
+  "seed": 20261119,
+  "options": [
+    {
+      "option": "1A",
+      "name": "The Commons",
+      "target": -5,
+      "median": -4.898603569999999,
+      "realized": -3.493748843999999
+    },
+    {
+      "option": "1B",
+      "name": "The Charter",
+      "target": 10,
+      "median": 10.225532764999997,
+      "realized": 11.582599324
+    },
+    {
+      "option": "2A",
+      "name": "The Assembly",
+      "target": -5,
+      "median": -4.763004123000002,
+      "realized": -3.3159213459999997
+    },
+    {
+      "option": "2B (after 1A)",
+      "name": "Delegated Control",
+      "target": 5,
+      "median": 5.176163916,
+      "realized": 6.5418317429999995
+    },
+    {
+      "option": "2B (after 1B)",
+      "name": "Delegated Control",
+      "target": 5,
+      "median": 4.775064063999999,
+      "realized": 6.139018487000001
+    }
+  ],
+  "paths": [
+    {
+      "path": "AA",
+      "gdw": [
+        25,
+        20.10139643,
+        17.556709599
+      ]
+    },
+    {
+      "path": "AB",
+      "gdw": [
+        25,
+        20.10139643,
+        26.5532668465
+      ]
+    },
+    {
+      "path": "BA",
+      "gdw": [
+        25,
+        35.225532765,
+        31.9143770765
+      ]
+    },
+    {
+      "path": "BB",
+      "gdw": [
+        25,
+        35.225532765,
+        41.2891913345
+      ]
+    }
+  ]
+}

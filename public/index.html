@@ -10,6 +10,13 @@
   <!-- Host projector screen, designed for a 1920x1080 classroom projector. -->
   <header id="host-topbar" class="topbar" aria-label="Session status">
     <div class="topbar-brand mono">SOCIETELOS <span class="muted">// THE LOOM</span></div>
+    <ol id="phase-crumbs" class="phase-crumbs mono" aria-label="Cycle progress">
+      <li data-phase="INCIDENT">Incident</li>
+      <li data-phase="INTEL">Intel</li>
+      <li data-phase="DEBATE">Debate</li>
+      <li data-phase="VOTE">Vote</li>
+      <li data-phase="RESOLUTION">Resolution</li>
+    </ol>
     <div class="topbar-item">
       <span class="label">Room</span>
       <span id="room-code" class="topbar-value mono">----</span>
@@ -83,6 +90,19 @@
     <section id="view-chamber" class="view" aria-label="Council chamber">
       <div class="chamber-grid">
         <aside class="chamber-col chamber-map" aria-label="Region map">
+          <div id="gdw-meter" class="gdw-meter" role="meter" aria-label="Gross Domestic Well-Being" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+            <div class="gdw-meter-head">
+              <span class="label">Gross Domestic Well-Being</span>
+              <span id="gdw-status" class="gdw-status mono">UNSTABLE</span>
+            </div>
+            <div id="gdw-readout" class="gdw-readout mono">25.0%</div>
+            <div class="gdw-track" aria-hidden="true">
+              <div id="gdw-fill" class="gdw-fill"></div>
+              <span class="gdw-tick" style="left: 15%"></span>
+              <span class="gdw-tick" style="left: 60%"></span>
+            </div>
+            <div class="gdw-scale mono" aria-hidden="true"><span>0%</span><span>100%</span></div>
+          </div>
           <p class="label">Region <span id="citizens-online" class="mono accent">250,000 CITIZENS</span></p>
           <div id="map-container" class="map-container">
             <svg id="region-map" class="region-map" viewBox="0 0 400 500" role="img" aria-label="Region map of five districts">
@@ -144,20 +164,72 @@
               <blockquote id="incident-loom" class="loom-line"></blockquote>
             </div>
           </div>
+          <div id="debate-panel" class="debate-panel" hidden>
+            <div class="debate-hook">
+              <p class="label accent">Debate // argue for your agenda</p>
+              <p id="debate-hook" class="debate-hook-text"></p>
+            </div>
+            <div class="debate-side">
+              <div id="debate-clock" class="debate-clock mono" aria-live="off">1:30</div>
+              <p id="debate-nudge" class="debate-nudge mono"></p>
+            </div>
+          </div>
           <div id="policy-panel" class="policy-panel" hidden>
             <article class="policy-card" data-option="A">
               <span class="policy-letter mono">A</span>
               <h3 id="policy-a-name" class="policy-name"></h3>
               <p id="policy-a-text" class="policy-text"></p>
+              <p id="policy-a-forecast" class="policy-forecast mono" hidden></p>
             </article>
             <div class="policy-vs mono" aria-hidden="true">VS</div>
             <article class="policy-card" data-option="B">
               <span class="policy-letter mono">B</span>
               <h3 id="policy-b-name" class="policy-name"></h3>
               <p id="policy-b-text" class="policy-text"></p>
+              <p id="policy-b-forecast" class="policy-forecast mono" hidden></p>
             </article>
           </div>
+          <div id="finale-callout" class="finale-callout" hidden>
+            <p class="finale-callout-title mono">THE LOOM CANNOT COMPUTE AN ANSWER.</p>
+            <p class="finale-callout-sub mono">WRITE YOUR POLICY.</p>
+            <p class="finale-callout-note muted">No options this time. Each council member writes one policy on their phone; the top three will be enacted.</p>
+          </div>
+          <div id="finale-progress" class="vote-status finale-progress" hidden>
+            <p class="label"><span id="finale-progress-label">Policies submitted</span> <span id="finale-progress-count" class="mono accent">0/5</span></p>
+            <ol class="vote-pips">
+              <li class="vote-pip finale-pip" data-node="NODE-01"><span class="mono">01</span></li>
+              <li class="vote-pip finale-pip" data-node="NODE-02"><span class="mono">02</span></li>
+              <li class="vote-pip finale-pip" data-node="NODE-03"><span class="mono">03</span></li>
+              <li class="vote-pip finale-pip" data-node="NODE-04"><span class="mono">04</span></li>
+              <li class="vote-pip finale-pip" data-node="NODE-05"><span class="mono">05</span></li>
+            </ol>
+          </div>
+          <div id="finale-status" class="finale-status" hidden>
+            <div class="finale-spinner" aria-hidden="true"></div>
+            <p id="finale-status-text" class="finale-status-text mono">THE LOOM IS INTERPRETING COUNCIL PROPOSALS...</p>
+            <p id="finale-status-sub" class="finale-status-sub muted"></p>
+          </div>
+          <div id="resolution-panel" class="resolution-panel" hidden>
+            <p class="label">Resolution // <span id="resolution-policy" class="accent">—</span></p>
+            <div class="resolution-badges">
+              <span id="badge-tie" class="res-badge res-badge-tie mono" hidden>TIE // LOOM CHOSE HIGHER FORECAST</span>
+              <span id="badge-override" class="res-badge res-badge-override mono" hidden>&#9888; OVERRIDE DETECTED IN TALLY</span>
+            </div>
+            <p id="governance-line" class="governance-line" hidden></p>
+            <blockquote id="resolution-loom" class="loom-line resolution-loom">The Loom is simulating 12 months…</blockquote>
+            <p id="forecast-banner" class="forecast-banner mono">LOOM FORECAST: --% CHANCE OF STABILITY | P(UNREST): --%</p>
+            <div id="chart-wrap" class="chart-wrap">
+              <canvas id="forecast-chart" class="forecast-chart" aria-label="Forecast fan and realized GDW"></canvas>
+            </div>
+          </div>
           <div id="vote-status" class="vote-status" hidden>
+            <div class="override-armed" role="note">
+              <span class="override-armed-icon" aria-hidden="true">!</span>
+              <div>
+                <p class="override-armed-title mono">OVERRIDE PROTOCOL ARMED</p>
+                <p class="override-armed-text">Any node may spend its one Override: that vote counts double. The Loom will not say who.</p>
+              </div>
+            </div>
             <p class="label">Blind vote — nodes locked in <span id="vote-count" class="mono accent">0/5</span></p>
             <ol class="vote-pips">
               <li class="vote-pip" data-node="NODE-01"><span class="mono">01</span></li>
@@ -175,11 +247,49 @@
         </aside>
       </div>
     </section>
+    <section id="view-world" class="view view-world" aria-label="World reveal">
+      <div class="world-reveal">
+        <p class="label world-kicker">Two votes. One world. // The Loom</p>
+        <p id="world-key" class="world-key mono">--</p>
+        <h1 id="world-name" class="world-name">The world you built</h1>
+        <p id="world-tagline" class="world-tagline"></p>
+        <p class="world-problem">Problem left unsolved: <span id="world-problem" class="mono"></span></p>
+      </div>
+    </section>
+    <section id="view-finale" class="view view-finale" aria-label="Council proposals">
+      <header class="finale-head">
+        <div>
+          <p class="label accent">Finale // council proposals, anonymous</p>
+          <h2 id="finale-title" class="finale-title">Five proposals. Three will be enacted.</h2>
+          <p id="finale-instruction" class="finale-instruction muted">Debate them. Nobody knows who wrote which.</p>
+        </div>
+        <div id="finale-clock" class="debate-clock mono finale-clock">1:00</div>
+      </header>
+      <ol id="proposal-cards" class="proposal-cards"></ol>
+      <div id="rank-progress" class="rank-progress" hidden>
+        <p class="label">Ballots locked in <span id="rank-progress-count" class="mono accent">0/5</span></p>
+        <ol class="vote-pips">
+          <li class="vote-pip rank-pip" data-node="NODE-01"><span class="mono">01</span></li>
+          <li class="vote-pip rank-pip" data-node="NODE-02"><span class="mono">02</span></li>
+          <li class="vote-pip rank-pip" data-node="NODE-03"><span class="mono">03</span></li>
+          <li class="vote-pip rank-pip" data-node="NODE-04"><span class="mono">04</span></li>
+          <li class="vote-pip rank-pip" data-node="NODE-05"><span class="mono">05</span></li>
+        </ol>
+      </div>
+    </section>
+    <section id="view-enact" class="view view-enact" aria-label="Finale enactment">
+      <p class="label accent">Finale // the council has ranked</p>
+      <h2 class="enact-title">The Council Package</h2>
+      <div id="borda-bars" class="borda-bars" aria-label="Borda points"></div>
+      <ol id="enact-cards" class="enact-cards"></ol>
+      <p id="enact-wait" class="enact-wait mono">THE LOOM IS COUNTING BALLOTS...</p>
+    </section>
     <section id="view-end" class="view" aria-label="End of session"></section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/map.js"></script>
+  <script src="/js/charts.js"></script>
   <script src="/js/host.js"></script>
 </body>
 </html>

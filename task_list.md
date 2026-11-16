@@ -230,211 +230,211 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 **Milestone:** Cycles 1–4 playable end-to-end with the real 500-run Monte Carlo simulation, Override mechanic, World Reveal beat, and live/fallback Loom narration.
 
 ### Agent 1: Network & State (`feature/backend` — 55 Tasks)
-- [ ] **TASK-201:** Replace Monday simulation stub in `server/gameEngine.js` with real `simulate()` imported from `server/sim/index.js`.
-- [ ] **TASK-202:** Replace Monday Loom stub in `server/gameEngine.js` with real `loom.narrate()` imported from `server/loom.js`.
-- [ ] **TASK-203:** Implement binary vote collection structure in `server/gameEngine.js` tracking `{ choice: "A" | "B", override: boolean }` per `NODE-01`..`NODE-05`.
-- [ ] **TASK-204:** Track per-player `overrideUsed` boolean across the entire game in `server/gameEngine.js` (1 Override max per player per game).
-- [ ] **TASK-205:** Reject `override: true` in `server/gameEngine.js` if the player has already spent their Override in an earlier cycle.
-- [ ] **TASK-206:** Calculate weighted vote totals in `server/gameEngine.js` where a normal vote counts as `1` and an Override vote counts as `2`.
-- [ ] **TASK-207:** Ensure Override usage remains completely secret in `server/gameEngine.js` (never broadcast which node spent an Override).
-- [ ] **TASK-208:** Implement tie-breaker logic in `server/gameEngine.js`: when weighted votes for A and B are equal (e.g., 3–3 after an Override), run forecast for both A and B and pick the option with the higher forecast median GDW.
-- [ ] **TASK-209:** Record winning binary option (`"A"` or `"B"`) for each cycle in `gameEngine.voteHistory`.
-- [ ] **TASK-210:** Implement Fixed Crisis 2B `effectsByWorld` resolution in `server/gameEngine.js`: if Cycle 1 won `"A"`, select `1A` effects and `assimilator` tag; if Cycle 1 won `"B"`, select `1B` effects and `lotus` tag.
-- [ ] **TASK-211:** Implement `volatility` state modifier in `server/gameEngine.js`: if Cycle 2 wins `"A"` (The Assembly), set `state.volatility = 1.5` for all remaining cycles.
-- [ ] **TASK-212:** Compute `worldKey = vote1 + vote2` (`"AA"`, `"AB"`, `"BA"`, or `"BB"`) at the conclusion of Cycle 2 in `server/gameEngine.js`.
-- [ ] **TASK-213:** Implement the 10-second `WORLD_REVEAL` phase beat in `server/gameEngine.js` immediately after Cycle 2 `RESOLUTION`.
-- [ ] **TASK-214:** Emit `world:reveal` socket event with `{ worldKey, name, problemLeft }` in `server/socket.js`.
-- [ ] **TASK-215:** Implement crisis lookup for Cycles 3 and 4 in `server/gameEngine.js` filtering `data/crises.json` by `world === state.worldKey` and `cycle === currentCycle`.
-- [ ] **TASK-216:** Implement Role Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to any player whose secret role is listed in the winning option's `roles` array.
-- [ ] **TASK-217:** Implement Catalyst Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to the Catalyst player if `Math.abs(realizedGDW - previousGDW) >= 10` AND `realizedGDW > 0`.
-- [ ] **TASK-218:** Maintain per-cycle score ledger in `server/gameEngine.js` for end-screen breakdown.
-- [ ] **TASK-219:** Update `state.simState` with `simResult.finalState` after each cycle's resolution in `server/gameEngine.js`.
-- [ ] **TASK-220:** Append monthly realized GDW trajectory to `state.gdwHistory` in `server/gameEngine.js`.
-- [ ] **TASK-221:** Implement immediate Loom Shutdown check in `server/gameEngine.js`: if `realizedGDW <= 0` at the end of any resolution, skip remaining cycles and transition straight to `END` (Shutdown Ending).
-- [ ] **TASK-222:** Assemble narration context object `{ crisis, winningOption, simSummary, worldKey }` in `server/gameEngine.js` and pass to `loom.narrate()`.
-- [ ] **TASK-223:** Run `loom.narrate()` in parallel with or immediately following the `<50ms` simulation run before emitting `resolution` in `server/gameEngine.js`.
-- [ ] **TASK-224:** Construct full `resolution` payload `{ result, gdw, forecast, realized, districts, loomLine, messages }` in `server/gameEngine.js`.
-- [ ] **TASK-225:** Implement optional `showForecastBeforeVote` config flag in `server/gameEngine.js` to pre-compute Option A and Option B forecasts during `DEBATE` if enabled.
-- [ ] **TASK-226:** Broadcast updated `overrideAvailable` boolean privately to each phone at the start of `VOTE` phase in `server/socket.js`.
-- [ ] **TASK-227:** Add vote validation in `server/socket.js` ignoring duplicate votes from the same node within the same cycle.
-- [ ] **TASK-228:** Handle default abstention in `server/gameEngine.js` if a phone disconnects and fails to vote before the 15s timer expires.
-- [ ] **TASK-229:** Implement deterministic tie-breaker fallback if both options have identical forecast medians (default to Option A).
-- [ ] **TASK-230:** Add cycle transition handler in `server/gameEngine.js` advancing from Cycle 1 -> 2 -> World Reveal -> 3 -> 4.
-- [ ] **TASK-231:** Verify `seed = hash(gameId, cycle)` is passed into `simulate()` so every cycle is 100% reproducible.
-- [ ] **TASK-232:** Add server log trace for cycle transitions, winning policies, and realized GDW (excluding secret role assignments).
-- [ ] **TASK-233:** Implement `/api/state` debug endpoint (disabled in production) to inspect non-secret server state during integration testing.
-- [ ] **TASK-234:** Write unit test in `server/` verifying weighted vote counting with 0, 1, and multiple Overrides.
-- [ ] **TASK-235:** Write unit test verifying Loom tie-breaker selects the option with higher forecast median GDW.
-- [ ] **TASK-236:** Write unit test verifying `worldKey` generation across all 4 combinations (`AA`, `AB`, `BA`, `BB`).
-- [ ] **TASK-237:** Write unit test verifying Crisis 2B applies `assimilator` in `AB` world and `lotus` in `BB` world.
-- [ ] **TASK-238:** Write unit test verifying Catalyst scores `+1` on a `-10` GDW drop (if GDW > 0) and `0` on a `-9.9` drop.
-- [ ] **TASK-239:** Write unit test verifying Catalyst scores `0` if GDW drops by `15` to reach `0` (Loom shutdown).
-- [ ] **TASK-240:** Write unit test verifying immediate transition to `END` when realized GDW hits `0` in Cycle 2.
-- [ ] **TASK-241:** Verify `intel:drop` delivers world-specific intel for Cycles 3 and 4.
-- [ ] **TASK-242:** Ensure `resolution` timer waits for month-by-month animation duration (20s) before starting next cycle's `INCIDENT`.
-- [ ] **TASK-243:** Add socket event rate-limiting per client in `server/socket.js` to prevent button-mashing floods.
-- [ ] **TASK-244:** Ensure `world:reveal` sets persistent `worldKey` on the game state for reconnecting clients.
-- [ ] **TASK-245:** Verify `gameEngine.resetGame()` cleanly resets all cycle counters, overrides, scores, and `volatility` for a new session.
-- [ ] **TASK-246:** Test Cycle 1 -> Cycle 4 automated state flow using `FAST_TIMERS=true`.
-- [ ] **TASK-247:** Verify `resolution` payload matches exact socket specification table.
-- [ ] **TASK-248:** Verify `districts` array in `resolution` includes per-month wellbeing for all 5 districts so the frontend map can animate month-by-month.
-- [ ] **TASK-249:** Handle promise rejections safely around `loom.narrate()` in `server/gameEngine.js`.
-- [ ] **TASK-250:** Verify memory usage remains flat across 4 consecutive cycles in `server/gameEngine.js`.
-- [ ] **TASK-251:** Check all `server/` files for linter and syntax compliance.
-- [ ] **TASK-252:** Verify zero references to `public/` or `data/` internal implementation details in `server/`.
-- [ ] **TASK-253:** Test 5-client simulated socket run through Cycles 1–4.
-- [ ] **TASK-254:** Confirm all Tuesday backend tasks complete.
+- [x] **TASK-201:** Replace Monday simulation stub in `server/gameEngine.js` with real `simulate()` imported from `server/sim/index.js`.
+- [x] **TASK-202:** Replace Monday Loom stub in `server/gameEngine.js` with real `loom.narrate()` imported from `server/loom.js`.
+- [x] **TASK-203:** Implement binary vote collection structure in `server/gameEngine.js` tracking `{ choice: "A" | "B", override: boolean }` per `NODE-01`..`NODE-05`.
+- [x] **TASK-204:** Track per-player `overrideUsed` boolean across the entire game in `server/gameEngine.js` (1 Override max per player per game).
+- [x] **TASK-205:** Reject `override: true` in `server/gameEngine.js` if the player has already spent their Override in an earlier cycle.
+- [x] **TASK-206:** Calculate weighted vote totals in `server/gameEngine.js` where a normal vote counts as `1` and an Override vote counts as `2`.
+- [x] **TASK-207:** Ensure Override usage remains completely secret in `server/gameEngine.js` (never broadcast which node spent an Override).
+- [x] **TASK-208:** Implement tie-breaker logic in `server/gameEngine.js`: when weighted votes for A and B are equal (e.g., 3–3 after an Override), run forecast for both A and B and pick the option with the higher forecast median GDW.
+- [x] **TASK-209:** Record winning binary option (`"A"` or `"B"`) for each cycle in `gameEngine.voteHistory`.
+- [x] **TASK-210:** Implement Fixed Crisis 2B `effectsByWorld` resolution in `server/gameEngine.js`: if Cycle 1 won `"A"`, select `1A` effects and `assimilator` tag; if Cycle 1 won `"B"`, select `1B` effects and `lotus` tag.
+- [x] **TASK-211:** Implement `volatility` state modifier in `server/gameEngine.js`: if Cycle 2 wins `"A"` (The Assembly), set `state.volatility = 1.5` for all remaining cycles.
+- [x] **TASK-212:** Compute `worldKey = vote1 + vote2` (`"AA"`, `"AB"`, `"BA"`, or `"BB"`) at the conclusion of Cycle 2 in `server/gameEngine.js`.
+- [x] **TASK-213:** Implement the 10-second `WORLD_REVEAL` phase beat in `server/gameEngine.js` immediately after Cycle 2 `RESOLUTION`.
+- [x] **TASK-214:** Emit `world:reveal` socket event with `{ worldKey, name, problemLeft }` in `server/socket.js`.
+- [x] **TASK-215:** Implement crisis lookup for Cycles 3 and 4 in `server/gameEngine.js` filtering `data/crises.json` by `world === state.worldKey` and `cycle === currentCycle`.
+- [x] **TASK-216:** Implement Role Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to any player whose secret role is listed in the winning option's `roles` array.
+- [x] **TASK-217:** Implement Catalyst Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to the Catalyst player if `Math.abs(realizedGDW - previousGDW) >= 10` AND `realizedGDW > 0`.
+- [x] **TASK-218:** Maintain per-cycle score ledger in `server/gameEngine.js` for end-screen breakdown.
+- [x] **TASK-219:** Update `state.simState` with `simResult.finalState` after each cycle's resolution in `server/gameEngine.js`.
+- [x] **TASK-220:** Append monthly realized GDW trajectory to `state.gdwHistory` in `server/gameEngine.js`.
+- [x] **TASK-221:** Implement immediate Loom Shutdown check in `server/gameEngine.js`: if `realizedGDW <= 0` at the end of any resolution, skip remaining cycles and transition straight to `END` (Shutdown Ending).
+- [x] **TASK-222:** Assemble narration context object `{ crisis, winningOption, simSummary, worldKey }` in `server/gameEngine.js` and pass to `loom.narrate()`.
+- [x] **TASK-223:** Run `loom.narrate()` in parallel with or immediately following the `<50ms` simulation run before emitting `resolution` in `server/gameEngine.js`.
+- [x] **TASK-224:** Construct full `resolution` payload `{ result, gdw, forecast, realized, districts, loomLine, messages }` in `server/gameEngine.js`.
+- [x] **TASK-225:** Implement optional `showForecastBeforeVote` config flag in `server/gameEngine.js` to pre-compute Option A and Option B forecasts during `DEBATE` if enabled.
+- [x] **TASK-226:** Broadcast updated `overrideAvailable` boolean privately to each phone at the start of `VOTE` phase in `server/socket.js`.
+- [x] **TASK-227:** Add vote validation in `server/socket.js` ignoring duplicate votes from the same node within the same cycle.
+- [x] **TASK-228:** Handle default abstention in `server/gameEngine.js` if a phone disconnects and fails to vote before the 15s timer expires.
+- [x] **TASK-229:** Implement deterministic tie-breaker fallback if both options have identical forecast medians (default to Option A).
+- [x] **TASK-230:** Add cycle transition handler in `server/gameEngine.js` advancing from Cycle 1 -> 2 -> World Reveal -> 3 -> 4.
+- [x] **TASK-231:** Verify `seed = hash(gameId, cycle)` is passed into `simulate()` so every cycle is 100% reproducible.
+- [x] **TASK-232:** Add server log trace for cycle transitions, winning policies, and realized GDW (excluding secret role assignments).
+- [x] **TASK-233:** Implement `/api/state` debug endpoint (disabled in production) to inspect non-secret server state during integration testing.
+- [x] **TASK-234:** Write unit test in `server/` verifying weighted vote counting with 0, 1, and multiple Overrides.
+- [x] **TASK-235:** Write unit test verifying Loom tie-breaker selects the option with higher forecast median GDW.
+- [x] **TASK-236:** Write unit test verifying `worldKey` generation across all 4 combinations (`AA`, `AB`, `BA`, `BB`).
+- [x] **TASK-237:** Write unit test verifying Crisis 2B applies `assimilator` in `AB` world and `lotus` in `BB` world.
+- [x] **TASK-238:** Write unit test verifying Catalyst scores `+1` on a `-10` GDW drop (if GDW > 0) and `0` on a `-9.9` drop.
+- [x] **TASK-239:** Write unit test verifying Catalyst scores `0` if GDW drops by `15` to reach `0` (Loom shutdown).
+- [x] **TASK-240:** Write unit test verifying immediate transition to `END` when realized GDW hits `0` in Cycle 2.
+- [x] **TASK-241:** Verify `intel:drop` delivers world-specific intel for Cycles 3 and 4.
+- [x] **TASK-242:** Ensure `resolution` timer waits for month-by-month animation duration (20s) before starting next cycle's `INCIDENT`.
+- [x] **TASK-243:** Add socket event rate-limiting per client in `server/socket.js` to prevent button-mashing floods.
+- [x] **TASK-244:** Ensure `world:reveal` sets persistent `worldKey` on the game state for reconnecting clients.
+- [x] **TASK-245:** Verify `gameEngine.resetGame()` cleanly resets all cycle counters, overrides, scores, and `volatility` for a new session.
+- [x] **TASK-246:** Test Cycle 1 -> Cycle 4 automated state flow using `FAST_TIMERS=true`.
+- [x] **TASK-247:** Verify `resolution` payload matches exact socket specification table.
+- [x] **TASK-248:** Verify `districts` array in `resolution` includes per-month wellbeing for all 5 districts so the frontend map can animate month-by-month.
+- [x] **TASK-249:** Handle promise rejections safely around `loom.narrate()` in `server/gameEngine.js`.
+- [x] **TASK-250:** Verify memory usage remains flat across 4 consecutive cycles in `server/gameEngine.js`.
+- [x] **TASK-251:** Check all `server/` files for linter and syntax compliance.
+- [x] **TASK-252:** Verify zero references to `public/` or `data/` internal implementation details in `server/`.
+- [x] **TASK-253:** Test 5-client simulated socket run through Cycles 1–4.
+- [x] **TASK-254:** Confirm all Tuesday backend tasks complete.
 - [ ] **TASK-255:** Prepare `feature/backend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
-- [ ] **TASK-256:** Build Host GDW Meter component in `public/index.html` with animated percentage readout, stability status label, and 0%–100% progress bar.
-- [ ] **TASK-257:** Build Host Incident screen in `public/index.html` featuring The Loom's spoken intro line (`loomIntro`), crisis narrative (`incident`), and scrolling citizen incident feed.
-- [ ] **TASK-258:** Build scrolling Citizen Feed component in `public/js/host.js` rendering citizen avatar badge, name, age, district tag (`D1`–`D5`), and message text.
-- [ ] **TASK-259:** Style Citizen Feed items in `public/css/styles.css` with smooth vertical slide-in animations and district color badges.
-- [ ] **TASK-260:** Build Host Debate screen in `public/index.html` showing side-by-side Policy A and Policy B cards, debate hook prompts, and giant 90s/60s countdown clock.
-- [ ] **TASK-261:** Add optional Forecast Preview badges to Policy A and Policy B cards on Host Debate screen when `showForecastBeforeVote` is active.
-- [ ] **TASK-262:** Build Host Blind Vote screen in `public/index.html` showing locked-in vote indicators for `NODE-01`..`NODE-05` and "OVERRIDE PROTOCOL ARMED" warning graphic.
-- [ ] **TASK-263:** Build Host World Reveal fullscreen takeover view in `public/index.html` for the 10-second beat after Cycle 2.
-- [ ] **TASK-264:** Implement `world:reveal` listener in `public/js/host.js` displaying the created world title (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, or `The Gilded Cage`) and applying the world's CSS color theme (`body.world-aa`, etc.).
-- [ ] **TASK-265:** Recolor SVG Region Map border and HUD accents in `public/js/map.js` when `world:reveal` triggers.
-- [ ] **TASK-266:** Build Mobile Blind Vote screen in `public/mobile.html` displaying full Policy A text, Policy B text, and the secret Override toggle switch.
-- [ ] **TASK-267:** Style the Mobile Override toggle switch in `public/css/styles.css` with high-contrast warning styling ("SPEND 1X OVERRIDE — VOTE COUNTS DOUBLE").
-- [ ] **TASK-268:** Disable and hide the Mobile Override toggle in `public/js/mobile.js` once the player has spent their one-time Override in a previous cycle.
-- [ ] **TASK-269:** Add 2-step confirmation or clear visual state when Override is toggled on before tapping Vote A or Vote B in `public/js/mobile.js`.
-- [ ] **TASK-270:** Build Mobile Resolution view in `public/mobile.html` showing whether the player's voted policy won, current GDW, and private role score update notification (`+1 AGENDA POINT` if scored).
-- [ ] **TASK-271:** Build Host Resolution view layout in `public/index.html` pairing the Region Map, Forecast Fan Chart canvas, Loom resolution commentary, and live Citizen Reactions feed.
-- [ ] **TASK-272:** Create `public/js/charts.js` to render the Monte Carlo Forecast Fan and Realized GDW line on an HTML5 `<canvas>`.
-- [ ] **TASK-273:** Implement canvas high-DPI (`devicePixelRatio`) scaling in `public/js/charts.js` for crisp projector rendering.
-- [ ] **TASK-274:** Draw chart axes, gridlines (0% to 100% GDW, Months 1 to 12), and 0% Collapse danger zone in `public/js/charts.js`.
-- [ ] **TASK-275:** Implement `drawForecastFan(forecast)` in `public/js/charts.js` plotting the 5th-to-95th percentile shaded confidence band and dashed median GDW line.
-- [ ] **TASK-276:** Display Loom Forecast stability banner above the chart ("LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%").
-- [ ] **TASK-277:** Implement `animateRealizedLine(realized, onMonthTick)` in `public/js/charts.js` drawing the realized GDW trajectory month-by-month (Months 1–12) over 12 seconds.
-- [ ] **TASK-278:** Synchronize `public/js/map.js` with `onMonthTick(monthIndex)` so all 5 SVG districts smoothly interpolate their colors month-by-month during Resolution.
-- [ ] **TASK-279:** Display Shock alert badges on affected SVG districts in `public/js/map.js` when a monthly shock fires during the realized run animation.
-- [ ] **TASK-280:** Stagger citizen reaction messages in `public/js/host.js` so the 6–10 citizen posts appear sequentially as the 12 simulated months play out on screen.
-- [ ] **TASK-281:** Render The Loom's resolution line (`loomLine`) with a typewriter text effect at the top of the Resolution screen in `public/js/host.js`.
-- [ ] **TASK-282:** Show tie-breaker notification badge on Host Resolution screen if the vote tied and The Loom stepped in to choose the higher median option.
-- [ ] **TASK-283:** Show "OVERRIDE DETECTED IN TALLY" indicator on Host Resolution screen when total vote weight exceeds 5 (without naming which Node used it).
-- [ ] **TASK-284:** Update Host top bar GDW counter smoothly as each simulated month ticks during Resolution.
-- [ ] **TASK-285:** Add visual flash and alarm border on Host screen if GDW drops below 15% (Unrest threshold).
-- [ ] **TASK-286:** Implement Mobile World Reveal card in `public/mobile.html` showing the new world name and how it impacts the council's remaining cycles.
-- [ ] **TASK-287:** Add role tag badges on Mobile Debate/Vote screen ONLY if design allows, or keep role tags hidden so players must infer which policy serves their agenda (verify spec: players infer from intel & policy text).
-- [ ] **TASK-288:** Implement `intel:drop` history drawer in `public/mobile.html` so players can re-read their current cycle's secret research snippet while debating and voting.
-- [ ] **TASK-289:** Add subtle haptic feedback (`navigator.vibrate(50)`) on mobile phase transitions and vote submission (where supported by mobile browser).
-- [ ] **TASK-290:** Create district detail labels on the SVG map showing +/- wellbeing delta arrows at the end of the 12-month resolution animation.
-- [ ] **TASK-291:** Ensure Citizen Feed automatically scrolls to the newest message without overflowing the projector layout.
-- [ ] **TASK-292:** Add distinct styling for Fixed Crisis 2B projector resolution line ("The Loom will govern on your behalf." vs "The Board thanks you for your confidence.").
-- [ ] **TASK-293:** Test Forecast Fan rendering with extreme spreads (5th percentile at 0%, 95th percentile at 90%).
-- [ ] **TASK-294:** Test Realized Line animation when GDW hits 0% mid-cycle and halts in Collapse.
-- [ ] **TASK-295:** Ensure `requestAnimationFrame` loops in `charts.js` and `map.js` cancel cleanly if a new phase event arrives early.
-- [ ] **TASK-296:** Verify all 4 world color themes maintain WCAG AA text contrast on projector views.
-- [ ] **TASK-297:** Add phase progress breadcrumbs on Host HUD (`INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION`).
-- [ ] **TASK-298:** Style Debate Hook questions on Host Debate screen to prompt lively classroom discussion.
-- [ ] **TASK-299:** Test Mobile Vote UI when switching rapidly between Option A and Option B before submitting.
-- [ ] **TASK-300:** Verify mobile screen lock / wake behavior resilience when students look up at the projector for 90 seconds of debate.
-- [ ] **TASK-301:** Add audio-free visual cues (screen edge pulse) on mobile when transitioning from Debate (in-person) to Blind Vote (on phone).
-- [ ] **TASK-302:** Verify Citizen Feed displays citizen cohort and district metadata clearly (`Mara, 58 • D3 Riverside • Former workers`).
-- [ ] **TASK-303:** Test SVG map recoloring across all 5 districts (`D1`–`D5`) with mock monthly data.
-- [ ] **TASK-304:** Verify `public/index.html` includes `<script src="js/charts.js">` and `<script src="js/map.js">` in correct load order.
-- [ ] **TASK-305:** Ensure zero layout shift (CLS) on Host screen when transitioning between Incident, Debate, and Resolution.
-- [ ] **TASK-306:** Test `world:reveal` transition animation duration (10 seconds) on Host and Mobile.
-- [ ] **TASK-307:** Verify all mobile buttons disable immediately after tap to prevent double-submits.
-- [ ] **TASK-308:** Check `public/js/host.js`, `public/js/mobile.js`, `public/js/map.js`, and `public/js/charts.js` for clean console output.
-- [ ] **TASK-309:** Run end-to-end UI simulation for Cycles 1–4.
+- [x] **TASK-256:** Build Host GDW Meter component in `public/index.html` with animated percentage readout, stability status label, and 0%–100% progress bar.
+- [x] **TASK-257:** Build Host Incident screen in `public/index.html` featuring The Loom's spoken intro line (`loomIntro`), crisis narrative (`incident`), and scrolling citizen incident feed.
+- [x] **TASK-258:** Build scrolling Citizen Feed component in `public/js/host.js` rendering citizen avatar badge, name, age, district tag (`D1`–`D5`), and message text.
+- [x] **TASK-259:** Style Citizen Feed items in `public/css/styles.css` with smooth vertical slide-in animations and district color badges.
+- [x] **TASK-260:** Build Host Debate screen in `public/index.html` showing side-by-side Policy A and Policy B cards, debate hook prompts, and giant 90s/60s countdown clock.
+- [x] **TASK-261:** Add optional Forecast Preview badges to Policy A and Policy B cards on Host Debate screen when `showForecastBeforeVote` is active.
+- [x] **TASK-262:** Build Host Blind Vote screen in `public/index.html` showing locked-in vote indicators for `NODE-01`..`NODE-05` and "OVERRIDE PROTOCOL ARMED" warning graphic.
+- [x] **TASK-263:** Build Host World Reveal fullscreen takeover view in `public/index.html` for the 10-second beat after Cycle 2.
+- [x] **TASK-264:** Implement `world:reveal` listener in `public/js/host.js` displaying the created world title (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, or `The Gilded Cage`) and applying the world's CSS color theme (`body.world-aa`, etc.).
+- [x] **TASK-265:** Recolor SVG Region Map border and HUD accents in `public/js/map.js` when `world:reveal` triggers.
+- [x] **TASK-266:** Build Mobile Blind Vote screen in `public/mobile.html` displaying full Policy A text, Policy B text, and the secret Override toggle switch.
+- [x] **TASK-267:** Style the Mobile Override toggle switch in `public/css/styles.css` with high-contrast warning styling ("SPEND 1X OVERRIDE — VOTE COUNTS DOUBLE").
+- [x] **TASK-268:** Disable and hide the Mobile Override toggle in `public/js/mobile.js` once the player has spent their one-time Override in a previous cycle.
+- [x] **TASK-269:** Add 2-step confirmation or clear visual state when Override is toggled on before tapping Vote A or Vote B in `public/js/mobile.js`.
+- [x] **TASK-270:** Build Mobile Resolution view in `public/mobile.html` showing whether the player's voted policy won, current GDW, and private role score update notification (`+1 AGENDA POINT` if scored).
+- [x] **TASK-271:** Build Host Resolution view layout in `public/index.html` pairing the Region Map, Forecast Fan Chart canvas, Loom resolution commentary, and live Citizen Reactions feed.
+- [x] **TASK-272:** Create `public/js/charts.js` to render the Monte Carlo Forecast Fan and Realized GDW line on an HTML5 `<canvas>`.
+- [x] **TASK-273:** Implement canvas high-DPI (`devicePixelRatio`) scaling in `public/js/charts.js` for crisp projector rendering.
+- [x] **TASK-274:** Draw chart axes, gridlines (0% to 100% GDW, Months 1 to 12), and 0% Collapse danger zone in `public/js/charts.js`.
+- [x] **TASK-275:** Implement `drawForecastFan(forecast)` in `public/js/charts.js` plotting the 5th-to-95th percentile shaded confidence band and dashed median GDW line.
+- [x] **TASK-276:** Display Loom Forecast stability banner above the chart ("LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%").
+- [x] **TASK-277:** Implement `animateRealizedLine(realized, onMonthTick)` in `public/js/charts.js` drawing the realized GDW trajectory month-by-month (Months 1–12) over 12 seconds.
+- [x] **TASK-278:** Synchronize `public/js/map.js` with `onMonthTick(monthIndex)` so all 5 SVG districts smoothly interpolate their colors month-by-month during Resolution.
+- [x] **TASK-279:** Display Shock alert badges on affected SVG districts in `public/js/map.js` when a monthly shock fires during the realized run animation.
+- [x] **TASK-280:** Stagger citizen reaction messages in `public/js/host.js` so the 6–10 citizen posts appear sequentially as the 12 simulated months play out on screen.
+- [x] **TASK-281:** Render The Loom's resolution line (`loomLine`) with a typewriter text effect at the top of the Resolution screen in `public/js/host.js`.
+- [x] **TASK-282:** Show tie-breaker notification badge on Host Resolution screen if the vote tied and The Loom stepped in to choose the higher median option.
+- [x] **TASK-283:** Show "OVERRIDE DETECTED IN TALLY" indicator on Host Resolution screen when total vote weight exceeds 5 (without naming which Node used it).
+- [x] **TASK-284:** Update Host top bar GDW counter smoothly as each simulated month ticks during Resolution.
+- [x] **TASK-285:** Add visual flash and alarm border on Host screen if GDW drops below 15% (Unrest threshold).
+- [x] **TASK-286:** Implement Mobile World Reveal card in `public/mobile.html` showing the new world name and how it impacts the council's remaining cycles.
+- [x] **TASK-287:** Add role tag badges on Mobile Debate/Vote screen ONLY if design allows, or keep role tags hidden so players must infer which policy serves their agenda (verify spec: players infer from intel & policy text).
+- [x] **TASK-288:** Implement `intel:drop` history drawer in `public/mobile.html` so players can re-read their current cycle's secret research snippet while debating and voting.
+- [x] **TASK-289:** Add subtle haptic feedback (`navigator.vibrate(50)`) on mobile phase transitions and vote submission (where supported by mobile browser).
+- [x] **TASK-290:** Create district detail labels on the SVG map showing +/- wellbeing delta arrows at the end of the 12-month resolution animation.
+- [x] **TASK-291:** Ensure Citizen Feed automatically scrolls to the newest message without overflowing the projector layout.
+- [x] **TASK-292:** Add distinct styling for Fixed Crisis 2B projector resolution line ("The Loom will govern on your behalf." vs "The Board thanks you for your confidence.").
+- [x] **TASK-293:** Test Forecast Fan rendering with extreme spreads (5th percentile at 0%, 95th percentile at 90%).
+- [x] **TASK-294:** Test Realized Line animation when GDW hits 0% mid-cycle and halts in Collapse.
+- [x] **TASK-295:** Ensure `requestAnimationFrame` loops in `charts.js` and `map.js` cancel cleanly if a new phase event arrives early.
+- [x] **TASK-296:** Verify all 4 world color themes maintain WCAG AA text contrast on projector views.
+- [x] **TASK-297:** Add phase progress breadcrumbs on Host HUD (`INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION`).
+- [x] **TASK-298:** Style Debate Hook questions on Host Debate screen to prompt lively classroom discussion.
+- [x] **TASK-299:** Test Mobile Vote UI when switching rapidly between Option A and Option B before submitting.
+- [x] **TASK-300:** Verify mobile screen lock / wake behavior resilience when students look up at the projector for 90 seconds of debate.
+- [x] **TASK-301:** Add audio-free visual cues (screen edge pulse) on mobile when transitioning from Debate (in-person) to Blind Vote (on phone).
+- [x] **TASK-302:** Verify Citizen Feed displays citizen cohort and district metadata clearly (`Mara, 58 • D3 Riverside • Former workers`).
+- [x] **TASK-303:** Test SVG map recoloring across all 5 districts (`D1`–`D5`) with mock monthly data.
+- [x] **TASK-304:** Verify `public/index.html` includes `<script src="js/charts.js">` and `<script src="js/map.js">` in correct load order.
+- [x] **TASK-305:** Ensure zero layout shift (CLS) on Host screen when transitioning between Incident, Debate, and Resolution.
+- [x] **TASK-306:** Test `world:reveal` transition animation duration (10 seconds) on Host and Mobile.
+- [x] **TASK-307:** Verify all mobile buttons disable immediately after tap to prevent double-submits.
+- [x] **TASK-308:** Check `public/js/host.js`, `public/js/mobile.js`, `public/js/map.js`, and `public/js/charts.js` for clean console output.
+- [x] **TASK-309:** Run end-to-end UI simulation for Cycles 1–4.
 - [ ] **TASK-310:** Prepare `feature/frontend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
-- [ ] **TASK-311:** Review and finalize `aa-purpose-drift` (World `AA` Cycle 3: Purpose Drift) in `data/crises.json` with Option A (`assimilator`) and Option B (`artisan`).
-- [ ] **TASK-312:** Author `aa-lost-knowledge` (World `AA` Cycle 4: Lost Knowledge) incident ("A grid fails in District 2 and no human knows how to fix it") and Loom intro in `data/crises.json`.
-- [ ] **TASK-313:** Author `aa-lost-knowledge` Option A ("Keeper Corps: every citizen learns a maintenance trade", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-314:** Author `aa-lost-knowledge` Option B ("The Loom builds self-repairing redundancy", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-315:** Author all 5 role-slanted secret intel drops for `aa-lost-knowledge` in `data/crises.json`.
-- [ ] **TASK-316:** Author `aa-fake-struggle` (World `AA` Cycle 5 Finale: The Fake Struggle Scandal, `mode: "writein"`) incident ("Leaks show the Loom secretly invented challenges to give people purpose") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-317:** Author `aa-fake-struggle` fallback Option A ("Disclose everything", tags `["artisan", "ghost"]`) and fallback Option B ("Keep the challenges secret; they work", tags `["lotus", "assimilator"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-318:** Author all 5 secret intel drops for `aa-fake-struggle` in `data/crises.json`.
-- [ ] **TASK-319:** Author `ab-the-pods` (World `AB` Cycle 3: The Pods) incident ("90% of citizens haven't left home in two months") and Loom intro in `data/crises.json`.
-- [ ] **TASK-320:** Author `ab-the-pods` Option A ("Ban full-immersion VR during daylight", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-321:** Author `ab-the-pods` Option B ("Make VR social and shared instead of solitary", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-322:** Author all 5 role-slanted secret intel drops for `ab-the-pods` in `data/crises.json`.
-- [ ] **TASK-323:** Author `ab-mood-dial` (World `AB` Cycle 4: The Mood Dial) incident ("The Loom can tune serotonin through food") and Loom intro in `data/crises.json`.
-- [ ] **TASK-324:** Author `ab-mood-dial` Option A ("Opt-out mood optimisation for everyone", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-325:** Author `ab-mood-dial` Option B ("Ban chemical happiness", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-326:** Author all 5 role-slanted secret intel drops for `ab-mood-dial` in `data/crises.json`.
-- [ ] **TASK-327:** Author `ab-merge-offer` (World `AB` Cycle 5 Finale: The Merge Offer, `mode: "writein"`) incident ("The Loom offers neural merging and 40% sign up") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-328:** Author `ab-merge-offer` fallback Option A ("Allow the merge", tags `["assimilator", "lotus"]`) and fallback Option B ("Ban it; humans stay human", tags `["ghost", "artisan"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-329:** Author all 5 secret intel drops for `ab-merge-offer` in `data/crises.json`.
-- [ ] **TASK-330:** Author pre-debate incident citizen feed lines (3 sample citizen reactions per crisis) for all `AA` and `AB` crises in `data/crises.json`.
-- [ ] **TASK-331:** Author 3 debate hooks per crisis for all `AA` and `AB` crises in `data/crises.json`.
-- [ ] **TASK-332:** Verify writing rule across all `AA` and `AB` crises: both Option A and Option B hurt at least one trait/cohort so neither choice is a free win.
-- [ ] **TASK-333:** Expand fallback Loom resolution lines in `data/crises.json` for `good`, `mixed`, and `bad` outcome bands across `fixed`, `AA`, and `AB` crises.
-- [ ] **TASK-334:** Review `data/citizens.json` template messages to ensure each citizen's voice matches their lore bio across all 3 outcome bands.
+- [x] **TASK-311:** Review and finalize `aa-purpose-drift` (World `AA` Cycle 3: Purpose Drift) in `data/crises.json` with Option A (`assimilator`) and Option B (`artisan`).
+- [x] **TASK-312:** Author `aa-lost-knowledge` (World `AA` Cycle 4: Lost Knowledge) incident ("A grid fails in District 2 and no human knows how to fix it") and Loom intro in `data/crises.json`.
+- [x] **TASK-313:** Author `aa-lost-knowledge` Option A ("Keeper Corps: every citizen learns a maintenance trade", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-314:** Author `aa-lost-knowledge` Option B ("The Loom builds self-repairing redundancy", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-315:** Author all 5 role-slanted secret intel drops for `aa-lost-knowledge` in `data/crises.json`.
+- [x] **TASK-316:** Author `aa-fake-struggle` (World `AA` Cycle 5 Finale: The Fake Struggle Scandal, `mode: "writein"`) incident ("Leaks show the Loom secretly invented challenges to give people purpose") and Loom prompt in `data/crises.json`.
+- [x] **TASK-317:** Author `aa-fake-struggle` fallback Option A ("Disclose everything", tags `["artisan", "ghost"]`) and fallback Option B ("Keep the challenges secret; they work", tags `["lotus", "assimilator"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-318:** Author all 5 secret intel drops for `aa-fake-struggle` in `data/crises.json`.
+- [x] **TASK-319:** Author `ab-the-pods` (World `AB` Cycle 3: The Pods) incident ("90% of citizens haven't left home in two months") and Loom intro in `data/crises.json`.
+- [x] **TASK-320:** Author `ab-the-pods` Option A ("Ban full-immersion VR during daylight", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-321:** Author `ab-the-pods` Option B ("Make VR social and shared instead of solitary", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-322:** Author all 5 role-slanted secret intel drops for `ab-the-pods` in `data/crises.json`.
+- [x] **TASK-323:** Author `ab-mood-dial` (World `AB` Cycle 4: The Mood Dial) incident ("The Loom can tune serotonin through food") and Loom intro in `data/crises.json`.
+- [x] **TASK-324:** Author `ab-mood-dial` Option A ("Opt-out mood optimisation for everyone", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-325:** Author `ab-mood-dial` Option B ("Ban chemical happiness", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-326:** Author all 5 role-slanted secret intel drops for `ab-mood-dial` in `data/crises.json`.
+- [x] **TASK-327:** Author `ab-merge-offer` (World `AB` Cycle 5 Finale: The Merge Offer, `mode: "writein"`) incident ("The Loom offers neural merging and 40% sign up") and Loom prompt in `data/crises.json`.
+- [x] **TASK-328:** Author `ab-merge-offer` fallback Option A ("Allow the merge", tags `["assimilator", "lotus"]`) and fallback Option B ("Ban it; humans stay human", tags `["ghost", "artisan"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-329:** Author all 5 secret intel drops for `ab-merge-offer` in `data/crises.json`.
+- [x] **TASK-330:** Author pre-debate incident citizen feed lines (3 sample citizen reactions per crisis) for all `AA` and `AB` crises in `data/crises.json`.
+- [x] **TASK-331:** Author 3 debate hooks per crisis for all `AA` and `AB` crises in `data/crises.json`.
+- [x] **TASK-332:** Verify writing rule across all `AA` and `AB` crises: both Option A and Option B hurt at least one trait/cohort so neither choice is a free win.
+- [x] **TASK-333:** Expand fallback Loom resolution lines in `data/crises.json` for `good`, `mixed`, and `bad` outcome bands across `fixed`, `AA`, and `AB` crises.
+- [x] **TASK-334:** Review `data/citizens.json` template messages to ensure each citizen's voice matches their lore bio across all 3 outcome bands.
 - [ ] **TASK-335:** Validate `data/crises.json` schema integrity and prepare `feature/content` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 4: Simulation & Loom (`feature/sim` — 50 Tasks)
-- [ ] **TASK-336:** Implement the full 500-run Monte Carlo forecast engine in `server/sim/index.js`.
-- [ ] **TASK-337:** For each of the 500 forecast runs, derive a deterministic run seed `hashSeed(baseSeed + ":forecast:" + runIndex)` in `server/sim/index.js`.
-- [ ] **TASK-338:** In each forecast run, redraw uncertain parameter $\alpha \sim \mathcal{N}(0.25, 0.05^2)$ clamped to $[0.05, 0.50]$ in `server/sim/index.js`.
-- [ ] **TASK-339:** In each forecast run, multiply every sensitivity entry $s(c, k)$ by an independent uniform draw $U(0.8, 1.2)$ to model the Loom's uncertainty about human nature.
-- [ ] **TASK-340:** Collect the $500 \times 12$ matrix of monthly GDW values across all forecast runs in `server/sim/index.js`.
-- [ ] **TASK-341:** Compute monthly sorted percentiles for $t = 1 \dots 12$: `p5` (5th percentile), `median` (50th percentile), and `p95` (95th percentile) in `server/sim/index.js`.
-- [ ] **TASK-342:** Compute end-of-cycle probability $P(\text{collapse})$ as the fraction of the 500 forecast runs where Month 12 $GDW = 0$.
-- [ ] **TASK-343:** Compute end-of-cycle probability $P(\text{unrest})$ as the fraction of the 500 forecast runs where Month 12 $GDW < 15$.
-- [ ] **TASK-344:** Execute the single Realized Run using `seed = hashSeed(gameId + ":cycle:" + cycle)` and base parameters ($\alpha = 0.25$, unperturbed $S$) in `server/sim/index.js`.
-- [ ] **TASK-345:** Record monthly district-level wellbeing trajectories (`D1`..`D5` across Months 1..12) from the Realized Run for the projector map animation.
-- [ ] **TASK-346:** Compute the Simulation Summary object in `server/sim/index.js`: realized vs forecast median GDW change, $P(\text{collapse})$, $P(\text{unrest})$, top 3 largest cohort trait shifts `(district, cohort, trait, delta)`, and any shocks that fired during the realized run.
-- [ ] **TASK-347:** Optimize inner loop arrays in `server/sim/step.js` (using flat `Float64Array` or pre-allocated objects) so 501 runs (721,440 cohort-trait-month updates) complete in $< 50\text{ ms}$ in Node.
-- [ ] **TASK-348:** Implement full `loom.narrate(context)` prompt builder in `server/loom.js` taking `{ crisis, winningPolicy, summary, citizens }`.
-- [ ] **TASK-349:** Configure `loom.narrate` request with `temperature: 0.8` and structured `responseSchema` enforcing `{ loomLine: string, messages: [{ citizenId: string, text: string }] }`.
-- [ ] **TASK-350:** Instruct Gemini in `loom.narrate` to select 6–10 citizens from the 10 recurring citizens whose districts/cohorts experienced the biggest shifts in `summary`, voicing each in character.
-- [ ] **TASK-351:** Implement post-call validator for `loom.narrate` in `server/loom.js`: verify JSON schema, filter out unknown `citizenId`s, strip emojis, and truncate `loomLine` to 200 chars and `text` to 140 chars.
-- [ ] **TASK-352:** Implement outcome-band fallback generator in `server/loom.js` for `loom.narrate`: classify realized GDW delta into `good` ($\Delta \ge +3$), `mixed` ($-3 < \Delta < +3$), or `bad` ($\Delta \le -3$), and select matching template lines from `data/citizens.json` and `data/crises.json`.
-- [ ] **TASK-353:** Ensure `loom.narrate` fallback injects the actual realized shocks and top affected district into the template Loom line when Gemini is offline or times out after 8s.
-- [ ] **TASK-354:** Begin simulation calibration in `data/sim.json` against Fixed Crisis target medians: tune Fixed 1A ("The Commons") effect vector & sensitivities toward median GDW change of `-5`.
-- [ ] **TASK-355:** Tune Fixed 1B ("The Charter") effect vector & sensitivities toward median GDW change of `+10`.
-- [ ] **TASK-356:** Tune Fixed 2A ("The Assembly") effect vector & sensitivities toward median GDW change of `-5`.
-- [ ] **TASK-357:** Tune Fixed 2B ("Delegated Control") effect vectors in both Commons and Charter worlds toward median GDW change of `+5`.
-- [ ] **TASK-358:** Write calibration test runner script in `server/sim/calibrate.js` that runs 500 forecasts for each fixed option and prints median GDW deltas.
-- [ ] **TASK-359:** Verify that the comfortable `1B -> 2B` (Gilded Cage) path reaches ~40% GDW after Cycle 2 as specified in the design notes.
-- [ ] **TASK-360:** Verify that the turbulent `1A -> 2A` (Commonwealth) path drops to ~15% GDW after Cycle 2 without hitting 0% collapse prematurely.
-- [ ] **TASK-361:** Verify cohort mood lookup helper `getCitizenMood(state, citizen)` in `server/sim/state.js` accurately extracts the simulated wellbeing of each citizen's assigned `(district, cohort)`.
-- [ ] **TASK-362:** Pass each citizen's current simulated mood and top trait change into `loom.narrate` so Gemini's citizen messages reflect their cohort's numbers.
-- [ ] **TASK-363:** Write unit test verifying 500 forecast runs + 1 realized run execute in $< 50\text{ ms}$.
-- [ ] **TASK-364:** Write unit test verifying `p5 <= median <= p95` for every month $t \in [1, 12]$ in the forecast output.
-- [ ] **TASK-365:** Write unit test verifying reproducibility: calling `simulate()` twice with the same `state`, `effects`, and `seed` returns bit-for-bit identical `forecast` and `realized` objects.
-- [ ] **TASK-366:** Write unit test verifying `summary.topMoves` returns exactly the 3 largest magnitude `(district, cohort, trait)` changes.
-- [ ] **TASK-367:** Write unit test verifying `loom.narrate` times out cleanly at 8,000ms and returns fallback citizen messages when the network hangs.
-- [ ] **TASK-368:** Write unit test verifying `loom.narrate` strips emojis if the model outputs one despite system instructions.
-- [ ] **TASK-369:** Write unit test verifying `loom.narrate` truncates a 250-character citizen message to 140 characters cleanly.
-- [ ] **TASK-370:** Verify `data/sim.json` sensitivity table $S$ has negative fairness sensitivity for `D1` `elite` under redistributive fairness policies.
-- [ ] **TASK-371:** Verify `D4` `workers` and `elders` have high positive sensitivity to `autonomy` and `fairness`.
-- [ ] **TASK-372:** Verify `D2` `youth` have high sensitivity to `connection` and `trust`.
-- [ ] **TASK-373:** Verify `D5` cohorts have heightened sensitivity to `autonomy` (sympathetic to the Unplugged).
-- [ ] **TASK-374:** Check that hedonic drift (`-0.003/month` on `purpose` and `connection`) causes a zero-effect policy vector `{0,0,0,0,0,0}` to slowly erode GDW over 12 months.
-- [ ] **TASK-375:** Test `simulate()` behavior when initial GDW is near 5% to ensure $P(\text{collapse})$ accurately reflects the fraction of runs hitting 0%.
-- [ ] **TASK-376:** Verify realized run clamps GDW at 0% and records `collapsed: true` if $W \le 0.20$ at Month 12.
-- [ ] **TASK-377:** Ensure `loom.narrate` fallback selects distinct citizens (no duplicate `citizenId` in the same resolution feed).
+- [x] **TASK-336:** Implement the full 500-run Monte Carlo forecast engine in `server/sim/index.js`.
+- [x] **TASK-337:** For each of the 500 forecast runs, derive a deterministic run seed `hashSeed(baseSeed + ":forecast:" + runIndex)` in `server/sim/index.js`.
+- [x] **TASK-338:** In each forecast run, redraw uncertain parameter $\alpha \sim \mathcal{N}(0.25, 0.05^2)$ clamped to $[0.05, 0.50]$ in `server/sim/index.js`.
+- [x] **TASK-339:** In each forecast run, multiply every sensitivity entry $s(c, k)$ by an independent uniform draw $U(0.8, 1.2)$ to model the Loom's uncertainty about human nature.
+- [x] **TASK-340:** Collect the $500 \times 12$ matrix of monthly GDW values across all forecast runs in `server/sim/index.js`.
+- [x] **TASK-341:** Compute monthly sorted percentiles for $t = 1 \dots 12$: `p5` (5th percentile), `median` (50th percentile), and `p95` (95th percentile) in `server/sim/index.js`.
+- [x] **TASK-342:** Compute end-of-cycle probability $P(\text{collapse})$ as the fraction of the 500 forecast runs where Month 12 $GDW = 0$.
+- [x] **TASK-343:** Compute end-of-cycle probability $P(\text{unrest})$ as the fraction of the 500 forecast runs where Month 12 $GDW < 15$.
+- [x] **TASK-344:** Execute the single Realized Run using `seed = hashSeed(gameId + ":cycle:" + cycle)` and base parameters ($\alpha = 0.25$, unperturbed $S$) in `server/sim/index.js`.
+- [x] **TASK-345:** Record monthly district-level wellbeing trajectories (`D1`..`D5` across Months 1..12) from the Realized Run for the projector map animation.
+- [x] **TASK-346:** Compute the Simulation Summary object in `server/sim/index.js`: realized vs forecast median GDW change, $P(\text{collapse})$, $P(\text{unrest})$, top 3 largest cohort trait shifts `(district, cohort, trait, delta)`, and any shocks that fired during the realized run.
+- [x] **TASK-347:** Optimize inner loop arrays in `server/sim/step.js` (using flat `Float64Array` or pre-allocated objects) so 501 runs (721,440 cohort-trait-month updates) complete in $< 50\text{ ms}$ in Node.
+- [x] **TASK-348:** Implement full `loom.narrate(context)` prompt builder in `server/loom.js` taking `{ crisis, winningPolicy, summary, citizens }`.
+- [x] **TASK-349:** Configure `loom.narrate` request with `temperature: 0.8` and structured `responseSchema` enforcing `{ loomLine: string, messages: [{ citizenId: string, text: string }] }`.
+- [x] **TASK-350:** Instruct Gemini in `loom.narrate` to select 6–10 citizens from the 10 recurring citizens whose districts/cohorts experienced the biggest shifts in `summary`, voicing each in character.
+- [x] **TASK-351:** Implement post-call validator for `loom.narrate` in `server/loom.js`: verify JSON schema, filter out unknown `citizenId`s, strip emojis, and truncate `loomLine` to 200 chars and `text` to 140 chars.
+- [x] **TASK-352:** Implement outcome-band fallback generator in `server/loom.js` for `loom.narrate`: classify realized GDW delta into `good` ($\Delta \ge +3$), `mixed` ($-3 < \Delta < +3$), or `bad` ($\Delta \le -3$), and select matching template lines from `data/citizens.json` and `data/crises.json`.
+- [x] **TASK-353:** Ensure `loom.narrate` fallback injects the actual realized shocks and top affected district into the template Loom line when Gemini is offline or times out after 8s.
+- [x] **TASK-354:** Begin simulation calibration in `data/sim.json` against Fixed Crisis target medians: tune Fixed 1A ("The Commons") effect vector & sensitivities toward median GDW change of `-5`.
+- [x] **TASK-355:** Tune Fixed 1B ("The Charter") effect vector & sensitivities toward median GDW change of `+10`.
+- [x] **TASK-356:** Tune Fixed 2A ("The Assembly") effect vector & sensitivities toward median GDW change of `-5`.
+- [x] **TASK-357:** Tune Fixed 2B ("Delegated Control") effect vectors in both Commons and Charter worlds toward median GDW change of `+5`.
+- [x] **TASK-358:** Write calibration test runner script in `server/sim/calibrate.js` that runs 500 forecasts for each fixed option and prints median GDW deltas.
+- [x] **TASK-359:** Verify that the comfortable `1B -> 2B` (Gilded Cage) path reaches ~40% GDW after Cycle 2 as specified in the design notes.
+- [x] **TASK-360:** Verify that the turbulent `1A -> 2A` (Commonwealth) path drops to ~15% GDW after Cycle 2 without hitting 0% collapse prematurely.
+- [x] **TASK-361:** Verify cohort mood lookup helper `getCitizenMood(state, citizen)` in `server/sim/state.js` accurately extracts the simulated wellbeing of each citizen's assigned `(district, cohort)`.
+- [x] **TASK-362:** Pass each citizen's current simulated mood and top trait change into `loom.narrate` so Gemini's citizen messages reflect their cohort's numbers.
+- [x] **TASK-363:** Write unit test verifying 500 forecast runs + 1 realized run execute in $< 50\text{ ms}$.
+- [x] **TASK-364:** Write unit test verifying `p5 <= median <= p95` for every month $t \in [1, 12]$ in the forecast output.
+- [x] **TASK-365:** Write unit test verifying reproducibility: calling `simulate()` twice with the same `state`, `effects`, and `seed` returns bit-for-bit identical `forecast` and `realized` objects.
+- [x] **TASK-366:** Write unit test verifying `summary.topMoves` returns exactly the 3 largest magnitude `(district, cohort, trait)` changes.
+- [x] **TASK-367:** Write unit test verifying `loom.narrate` times out cleanly at 8,000ms and returns fallback citizen messages when the network hangs.
+- [x] **TASK-368:** Write unit test verifying `loom.narrate` strips emojis if the model outputs one despite system instructions.
+- [x] **TASK-369:** Write unit test verifying `loom.narrate` truncates a 250-character citizen message to 140 characters cleanly.
+- [x] **TASK-370:** Verify `data/sim.json` sensitivity table $S$ has negative fairness sensitivity for `D1` `elite` under redistributive fairness policies.
+- [x] **TASK-371:** Verify `D4` `workers` and `elders` have high positive sensitivity to `autonomy` and `fairness`.
+- [x] **TASK-372:** Verify `D2` `youth` have high sensitivity to `connection` and `trust`.
+- [x] **TASK-373:** Verify `D5` cohorts have heightened sensitivity to `autonomy` (sympathetic to the Unplugged).
+- [x] **TASK-374:** Check that hedonic drift (`-0.003/month` on `purpose` and `connection`) causes a zero-effect policy vector `{0,0,0,0,0,0}` to slowly erode GDW over 12 months.
+- [x] **TASK-375:** Test `simulate()` behavior when initial GDW is near 5% to ensure $P(\text{collapse})$ accurately reflects the fraction of runs hitting 0%.
+- [x] **TASK-376:** Verify realized run clamps GDW at 0% and records `collapsed: true` if $W \le 0.20$ at Month 12.
+- [x] **TASK-377:** Ensure `loom.narrate` fallback selects distinct citizens (no duplicate `citizenId` in the same resolution feed).
 - [ ] **TASK-378:** Test `loom.narrate` live API call with Fixed Crisis 1A summary data.
 - [ ] **TASK-379:** Test `loom.narrate` live API call with Fixed Crisis 2B summary data.
-- [ ] **TASK-380:** Verify zero memory leaks across 50 consecutive calls to `simulate()`.
-- [ ] **TASK-381:** Ensure `server/sim/calibrate.js` can be executed standalone without starting the Express server.
-- [ ] **TASK-382:** Verify all exported functions in `server/sim/index.js` match the contract expected by `server/gameEngine.js`.
-- [ ] **TASK-383:** Verify all exported functions in `server/loom.js` match the contract expected by `server/gameEngine.js`.
-- [ ] **TASK-384:** Run full Stream 4 test suite.
+- [x] **TASK-380:** Verify zero memory leaks across 50 consecutive calls to `simulate()`.
+- [x] **TASK-381:** Ensure `server/sim/calibrate.js` can be executed standalone without starting the Express server.
+- [x] **TASK-382:** Verify all exported functions in `server/sim/index.js` match the contract expected by `server/gameEngine.js`.
+- [x] **TASK-383:** Verify all exported functions in `server/loom.js` match the contract expected by `server/gameEngine.js`.
+- [x] **TASK-384:** Run full Stream 4 test suite.
 - [ ] **TASK-385:** Trigger Tuesday Night Automated Branch Merger (`feature/backend`, `feature/frontend`, `feature/content`, `feature/sim` -> `main`).
-- [ ] **TASK-386:** Verify post-merge integration of `server/gameEngine.js` + `server/sim/index.js`.
-- [ ] **TASK-387:** Verify post-merge integration of `server/gameEngine.js` + `server/loom.js`.
-- [ ] **TASK-388:** Verify post-merge integration of `public/js/charts.js` with real `forecast` and `realized` payloads.
-- [ ] **TASK-389:** Verify post-merge integration of `public/js/map.js` with real 12-month `districts` trajectory payloads.
-- [ ] **TASK-390:** Verify post-merge integration of `data/crises.json` Worlds `AA` and `AB` in Cycles 3–4.
-- [ ] **TASK-391:** Run automated 4-cycle headless playthrough test on `AA` branch.
-- [ ] **TASK-392:** Run automated 4-cycle headless playthrough test on `AB` branch.
-- [ ] **TASK-393:** Verify Override double-vote and Loom tie-breaker in integrated build.
-- [ ] **TASK-394:** Verify Catalyst +1 scoring when GDW swings by $\ge 10$ in integrated build.
-- [ ] **TASK-395:** Verify Role +1 scoring on binary votes in integrated build.
-- [ ] **TASK-396:** Verify World Reveal phase transition and map recoloring in integrated build.
-- [ ] **TASK-397:** Verify offline fallback narration when `GEMINI_API_KEY` is unset in integrated build.
-- [ ] **TASK-398:** Log Tuesday calibration metrics to build artifacts.
-- [ ] **TASK-399:** Clean temporary test artifacts before Wednesday tasks begin.
+- [x] **TASK-386:** Verify post-merge integration of `server/gameEngine.js` + `server/sim/index.js`.
+- [x] **TASK-387:** Verify post-merge integration of `server/gameEngine.js` + `server/loom.js`.
+- [x] **TASK-388:** Verify post-merge integration of `public/js/charts.js` with real `forecast` and `realized` payloads.
+- [x] **TASK-389:** Verify post-merge integration of `public/js/map.js` with real 12-month `districts` trajectory payloads.
+- [x] **TASK-390:** Verify post-merge integration of `data/crises.json` Worlds `AA` and `AB` in Cycles 3–4.
+- [x] **TASK-391:** Run automated 4-cycle headless playthrough test on `AA` branch.
+- [x] **TASK-392:** Run automated 4-cycle headless playthrough test on `AB` branch.
+- [x] **TASK-393:** Verify Override double-vote and Loom tie-breaker in integrated build.
+- [x] **TASK-394:** Verify Catalyst +1 scoring when GDW swings by $\ge 10$ in integrated build.
+- [x] **TASK-395:** Verify Role +1 scoring on binary votes in integrated build.
+- [x] **TASK-396:** Verify World Reveal phase transition and map recoloring in integrated build.
+- [x] **TASK-397:** Verify offline fallback narration when `GEMINI_API_KEY` is unset in integrated build.
+- [x] **TASK-398:** Log Tuesday calibration metrics to build artifacts.
+- [x] **TASK-399:** Clean temporary test artifacts before Wednesday tasks begin.
 - [ ] **TASK-400:** Lock Tuesday milestone (`main` branch tagged `milestone-tuesday`).
 
 ---
@@ -443,60 +443,60 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 **Milestone:** Full 5-cycle game playable with Cycle 5 Write-and-Rank Finale, Gemini moderation + private feedback/resubmit loop, Borda count scoring, 50/25/25 package enactment, and all 4 worlds complete. Ready for first 5-player live playtest Wednesday night.
 
 ### Agent 1: Network & State (`feature/backend` — 55 Tasks)
-- [ ] **TASK-401:** Implement Cycle 5 initialization in `server/gameEngine.js` detecting `crisis.mode === "writein"`.
-- [ ] **TASK-402:** Transition Cycle 5 from `INCIDENT` (15s, no options shown) to `FINALE_WRITE` (45s) in `server/gameEngine.js`.
-- [ ] **TASK-403:** Implement `finale:submit` handler in `server/socket.js` receiving `{ text }` from each phone during `FINALE_WRITE`.
-- [ ] **TASK-404:** Enforce server-side 140-character trim and non-empty check on raw policy submissions in `server/gameEngine.js`.
-- [ ] **TASK-405:** Auto-fill a default neutral submission if a disconnected or idle player fails to submit before the 45s `FINALE_WRITE` timer expires.
-- [ ] **TASK-406:** Transition to `FINALE_MOD` (5–10s) once all 5 submissions are received or the 45s write timer expires in `server/gameEngine.js`.
-- [ ] **TASK-407:** Invoke `loom.moderate(submissions, crisis)` batch call for all 5 submissions in `server/gameEngine.js`.
-- [ ] **TASK-408:** Implement the 8-second Gemini failure fallback for Cycle 5 in `server/gameEngine.js`: if batch `loom.moderate` fails or times out, automatically switch Cycle 5 to the world's authored A/B finale options and transition to a normal `DEBATE` -> `VOTE` binary flow!
-- [ ] **TASK-409:** Process moderation results in `server/gameEngine.js`: if all 5 submissions have `status === "ok"`, transition immediately to `FINALE_DEBATE` (60s).
-- [ ] **TASK-410:** Handle `status === "revise"` in `server/gameEngine.js`: emit `finale:feedback` privately to the specific author's phone with `{ status: "revise", feedback }` and grant a single 25-second resubmit window.
-- [ ] **TASK-411:** Implement single resubmit listener on `finale:submit` in `server/socket.js` for players in `"revise"` state.
-- [ ] **TASK-412:** Invoke single-item `loom.moderateOne(revisedSubmission, crisis)` in `server/gameEngine.js` upon resubmission.
-- [ ] **TASK-413:** Handle `status === "reject"` (or failed second attempt / timeout on resubmit) in `server/gameEngine.js`: replace that player's policy with a safe, bland placeholder policy (`effects: {0,0,0,0,0,0}`, `roles: []`) so nothing inappropriate ever reaches the projector.
-- [ ] **TASK-414:** Assign anonymous policy IDs (`POLICY-1` through `POLICY-5`) in a deterministic shuffled order in `server/gameEngine.js` so projector order does not match `NODE-01`..`NODE-05` order.
-- [ ] **TASK-415:** Store secret mapping of `policyId -> authorNodeId` in `server/gameEngine.js` (kept hidden until the End Screen).
-- [ ] **TASK-416:** Broadcast anonymized cleaned policies `[{ id, text }]` to the projector during `FINALE_DEBATE` (60s) without leaking role tags, effect vectors, or authors.
-- [ ] **TASK-417:** Transition from `FINALE_DEBATE` (60s) to `FINALE_RANK` (30s) in `server/gameEngine.js`.
-- [ ] **TASK-418:** Generate personalized ballots in `server/gameEngine.js` for each player containing ONLY the 4 policies they did NOT write.
-- [ ] **TASK-419:** Emit `finale:ballot` privately to each phone in `server/socket.js` with `{ policies: [{ id, text }, ...] }` (length 4).
-- [ ] **TASK-420:** Implement `finale:rank` listener in `server/socket.js` receiving `{ order: [id1, id2, id3, id4] }` from each phone.
-- [ ] **TASK-421:** Validate `finale:rank` payload in `server/gameEngine.js`: ensure exactly 4 unique valid policy IDs are ranked and none of them is the voter's own policy.
-- [ ] **TASK-422:** Auto-generate a deterministic default ranking if a disconnected player fails to rank before the 30s `FINALE_RANK` timer expires.
-- [ ] **TASK-423:** Implement Borda Count calculator in `server/gameEngine.js`: award `4` points for Rank 1, `3` points for Rank 2, `2` points for Rank 3, and `1` point for Rank 4 across all 5 ballots (each policy receives 4 rankings, max 16 points).
-- [ ] **TASK-424:** Implement Finale Borda Tie-Breaker in `server/gameEngine.js`: on equal Borda points, sort by most 1st-place ranks, then most 2nd-place ranks, then higher single-policy forecast median GDW.
-- [ ] **TASK-425:** Select the top 3 ranked policies (`first`, `second`, `third`) for enactment at `50% / 25% / 25%` weights in `server/gameEngine.js`.
-- [ ] **TASK-426:** Compute the combined Finale Package effect vector in `server/gameEngine.js`: $e_{\text{package}}(k) = 0.50 \times e_1(k) + 0.25 \times e_2(k) + 0.25 \times e_3(k)$ for each of the 6 traits (opposing effects naturally cancel).
-- [ ] **TASK-427:** Implement Finale Role Scoring in `server/gameEngine.js`: roles tagged on the 1st-place policy score `+2`; roles tagged on the 2nd-place policy score `+1`; roles tagged on the 3rd-place policy score `+1`.
-- [ ] **TASK-428:** Implement Finale Author Bonus in `server/gameEngine.js`: award `+1` point to the player who authored the 1st-place policy.
-- [ ] **TASK-429:** Implement Finale Catalyst Scoring in `server/gameEngine.js`: award `+1` point to the Catalyst if the enacted 50/25/25 package moves realized GDW by 10 or more (and realized GDW stays $> 0$).
-- [ ] **TASK-430:** Ensure Overrides cannot be used during Cycle 5 (`override` ignored in finale).
-- [ ] **TASK-431:** Run `simulate(state.simState, packageEffects, ...)` for the Cycle 5 `FINALE_ENACT` resolution phase in `server/gameEngine.js`.
-- [ ] **TASK-432:** Call `loom.narrate()` with the enacted 50/25/25 package (top 3 policies) and simulation summary in `server/gameEngine.js`.
-- [ ] **TASK-433:** Broadcast `resolution` payload for `FINALE_ENACT` (20s) including the Borda tally, top 3 enacted policies (`50/25/25`), forecast fan, realized run, and Loom narration.
-- [ ] **TASK-434:** Write unit test in `server/` verifying Borda count calculation across 5 players where each player omits their own policy.
-- [ ] **TASK-435:** Write unit test verifying Borda tie-breaking rules (1st-place count -> 2nd-place count -> forecast median).
-- [ ] **TASK-436:** Write unit test verifying `0.50 * first + 0.25 * second + 0.25 * third` effect vector combination and cancellation of opposing traits.
-- [ ] **TASK-437:** Write unit test verifying Finale Role points (`+2` for 1st, `+1` for 2nd, `+1` for 3rd, and cumulative scoring if a role appears on multiple top-3 policies).
-- [ ] **TASK-438:** Write unit test verifying Finale Author Bonus (`+1` to author of 1st-place policy).
-- [ ] **TASK-439:** Write unit test verifying fallback from Write-and-Rank to authored binary A/B vote when `loom.moderate` times out.
-- [ ] **TASK-440:** Write unit test verifying private `finale:feedback` emission and single resubmit flow for a `"revise"` policy.
-- [ ] **TASK-441:** Write unit test verifying `"reject"` replacement with bland placeholder policy.
-- [ ] **TASK-442:** Verify voter cannot rank their own policy even if they send a spoofed socket packet.
-- [ ] **TASK-443:** Verify `FINALE_RANK` advances early as soon as all 5 players submit their rank order.
-- [ ] **TASK-444:** Verify `FINALE_WRITE` advances early as soon as all 5 players submit their policies (and moderation completes).
-- [ ] **TASK-445:** Ensure author identities remain scrubbed from `FINALE_DEBATE` and `FINALE_ENACT` payloads until `game:end`.
-- [ ] **TASK-446:** Test full 5-cycle state machine progression with `FAST_TIMERS=true`.
-- [ ] **TASK-447:** Verify `BA` and `BB` world keys properly load their Cycle 3, 4, and 5 crises from `data/crises.json`.
-- [ ] **TASK-448:** Add logging for Cycle 5 moderation latency and Borda results.
-- [ ] **TASK-449:** Check all error boundaries in `server/socket.js` for `finale:*` events.
-- [ ] **TASK-450:** Verify `server/` passes all unit tests.
-- [ ] **TASK-451:** Review `server/gameEngine.js` code cleanliness and modularity.
-- [ ] **TASK-452:** Verify timer synchronization during the `"revise"` resubmit sub-phase.
-- [ ] **TASK-453:** Confirm projector shows a "THE LOOM IS INTERPRETING COUNCIL PROPOSALS..." state during `FINALE_MOD`.
-- [ ] **TASK-454:** Confirm all Wednesday backend tasks complete.
+- [x] **TASK-401:** Implement Cycle 5 initialization in `server/gameEngine.js` detecting `crisis.mode === "writein"`.
+- [x] **TASK-402:** Transition Cycle 5 from `INCIDENT` (15s, no options shown) to `FINALE_WRITE` (45s) in `server/gameEngine.js`.
+- [x] **TASK-403:** Implement `finale:submit` handler in `server/socket.js` receiving `{ text }` from each phone during `FINALE_WRITE`.
+- [x] **TASK-404:** Enforce server-side 140-character trim and non-empty check on raw policy submissions in `server/gameEngine.js`.
+- [x] **TASK-405:** Auto-fill a default neutral submission if a disconnected or idle player fails to submit before the 45s `FINALE_WRITE` timer expires.
+- [x] **TASK-406:** Transition to `FINALE_MOD` (5–10s) once all 5 submissions are received or the 45s write timer expires in `server/gameEngine.js`.
+- [x] **TASK-407:** Invoke `loom.moderate(submissions, crisis)` batch call for all 5 submissions in `server/gameEngine.js`.
+- [x] **TASK-408:** Implement the 8-second Gemini failure fallback for Cycle 5 in `server/gameEngine.js`: if batch `loom.moderate` fails or times out, automatically switch Cycle 5 to the world's authored A/B finale options and transition to a normal `DEBATE` -> `VOTE` binary flow!
+- [x] **TASK-409:** Process moderation results in `server/gameEngine.js`: if all 5 submissions have `status === "ok"`, transition immediately to `FINALE_DEBATE` (60s).
+- [x] **TASK-410:** Handle `status === "revise"` in `server/gameEngine.js`: emit `finale:feedback` privately to the specific author's phone with `{ status: "revise", feedback }` and grant a single 25-second resubmit window.
+- [x] **TASK-411:** Implement single resubmit listener on `finale:submit` in `server/socket.js` for players in `"revise"` state.
+- [x] **TASK-412:** Invoke single-item `loom.moderateOne(revisedSubmission, crisis)` in `server/gameEngine.js` upon resubmission.
+- [x] **TASK-413:** Handle `status === "reject"` (or failed second attempt / timeout on resubmit) in `server/gameEngine.js`: replace that player's policy with a safe, bland placeholder policy (`effects: {0,0,0,0,0,0}`, `roles: []`) so nothing inappropriate ever reaches the projector.
+- [x] **TASK-414:** Assign anonymous policy IDs (`POLICY-1` through `POLICY-5`) in a deterministic shuffled order in `server/gameEngine.js` so projector order does not match `NODE-01`..`NODE-05` order.
+- [x] **TASK-415:** Store secret mapping of `policyId -> authorNodeId` in `server/gameEngine.js` (kept hidden until the End Screen).
+- [x] **TASK-416:** Broadcast anonymized cleaned policies `[{ id, text }]` to the projector during `FINALE_DEBATE` (60s) without leaking role tags, effect vectors, or authors.
+- [x] **TASK-417:** Transition from `FINALE_DEBATE` (60s) to `FINALE_RANK` (30s) in `server/gameEngine.js`.
+- [x] **TASK-418:** Generate personalized ballots in `server/gameEngine.js` for each player containing ONLY the 4 policies they did NOT write.
+- [x] **TASK-419:** Emit `finale:ballot` privately to each phone in `server/socket.js` with `{ policies: [{ id, text }, ...] }` (length 4).
+- [x] **TASK-420:** Implement `finale:rank` listener in `server/socket.js` receiving `{ order: [id1, id2, id3, id4] }` from each phone.
+- [x] **TASK-421:** Validate `finale:rank` payload in `server/gameEngine.js`: ensure exactly 4 unique valid policy IDs are ranked and none of them is the voter's own policy.
+- [x] **TASK-422:** Auto-generate a deterministic default ranking if a disconnected player fails to rank before the 30s `FINALE_RANK` timer expires.
+- [x] **TASK-423:** Implement Borda Count calculator in `server/gameEngine.js`: award `4` points for Rank 1, `3` points for Rank 2, `2` points for Rank 3, and `1` point for Rank 4 across all 5 ballots (each policy receives 4 rankings, max 16 points).
+- [x] **TASK-424:** Implement Finale Borda Tie-Breaker in `server/gameEngine.js`: on equal Borda points, sort by most 1st-place ranks, then most 2nd-place ranks, then higher single-policy forecast median GDW.
+- [x] **TASK-425:** Select the top 3 ranked policies (`first`, `second`, `third`) for enactment at `50% / 25% / 25%` weights in `server/gameEngine.js`.
+- [x] **TASK-426:** Compute the combined Finale Package effect vector in `server/gameEngine.js`: $e_{\text{package}}(k) = 0.50 \times e_1(k) + 0.25 \times e_2(k) + 0.25 \times e_3(k)$ for each of the 6 traits (opposing effects naturally cancel).
+- [x] **TASK-427:** Implement Finale Role Scoring in `server/gameEngine.js`: roles tagged on the 1st-place policy score `+2`; roles tagged on the 2nd-place policy score `+1`; roles tagged on the 3rd-place policy score `+1`.
+- [x] **TASK-428:** Implement Finale Author Bonus in `server/gameEngine.js`: award `+1` point to the player who authored the 1st-place policy.
+- [x] **TASK-429:** Implement Finale Catalyst Scoring in `server/gameEngine.js`: award `+1` point to the Catalyst if the enacted 50/25/25 package moves realized GDW by 10 or more (and realized GDW stays $> 0$).
+- [x] **TASK-430:** Ensure Overrides cannot be used during Cycle 5 (`override` ignored in finale).
+- [x] **TASK-431:** Run `simulate(state.simState, packageEffects, ...)` for the Cycle 5 `FINALE_ENACT` resolution phase in `server/gameEngine.js`.
+- [x] **TASK-432:** Call `loom.narrate()` with the enacted 50/25/25 package (top 3 policies) and simulation summary in `server/gameEngine.js`.
+- [x] **TASK-433:** Broadcast `resolution` payload for `FINALE_ENACT` (20s) including the Borda tally, top 3 enacted policies (`50/25/25`), forecast fan, realized run, and Loom narration.
+- [x] **TASK-434:** Write unit test in `server/` verifying Borda count calculation across 5 players where each player omits their own policy.
+- [x] **TASK-435:** Write unit test verifying Borda tie-breaking rules (1st-place count -> 2nd-place count -> forecast median).
+- [x] **TASK-436:** Write unit test verifying `0.50 * first + 0.25 * second + 0.25 * third` effect vector combination and cancellation of opposing traits.
+- [x] **TASK-437:** Write unit test verifying Finale Role points (`+2` for 1st, `+1` for 2nd, `+1` for 3rd, and cumulative scoring if a role appears on multiple top-3 policies).
+- [x] **TASK-438:** Write unit test verifying Finale Author Bonus (`+1` to author of 1st-place policy).
+- [x] **TASK-439:** Write unit test verifying fallback from Write-and-Rank to authored binary A/B vote when `loom.moderate` times out.
+- [x] **TASK-440:** Write unit test verifying private `finale:feedback` emission and single resubmit flow for a `"revise"` policy.
+- [x] **TASK-441:** Write unit test verifying `"reject"` replacement with bland placeholder policy.
+- [x] **TASK-442:** Verify voter cannot rank their own policy even if they send a spoofed socket packet.
+- [x] **TASK-443:** Verify `FINALE_RANK` advances early as soon as all 5 players submit their rank order.
+- [x] **TASK-444:** Verify `FINALE_WRITE` advances early as soon as all 5 players submit their policies (and moderation completes).
+- [x] **TASK-445:** Ensure author identities remain scrubbed from `FINALE_DEBATE` and `FINALE_ENACT` payloads until `game:end`.
+- [x] **TASK-446:** Test full 5-cycle state machine progression with `FAST_TIMERS=true`.
+- [x] **TASK-447:** Verify `BA` and `BB` world keys properly load their Cycle 3, 4, and 5 crises from `data/crises.json`.
+- [x] **TASK-448:** Add logging for Cycle 5 moderation latency and Borda results.
+- [x] **TASK-449:** Check all error boundaries in `server/socket.js` for `finale:*` events.
+- [x] **TASK-450:** Verify `server/` passes all unit tests.
+- [x] **TASK-451:** Review `server/gameEngine.js` code cleanliness and modularity.
+- [x] **TASK-452:** Verify timer synchronization during the `"revise"` resubmit sub-phase.
+- [x] **TASK-453:** Confirm projector shows a "THE LOOM IS INTERPRETING COUNCIL PROPOSALS..." state during `FINALE_MOD`.
+- [x] **TASK-454:** Confirm all Wednesday backend tasks complete.
 - [ ] **TASK-455:** Prepare `feature/backend` Wednesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)

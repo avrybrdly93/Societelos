@@ -78,6 +78,15 @@ body[data-world="AA"] { --theme-current: var(--theme-aa); }
 body[data-world="AB"] { --theme-current: var(--theme-ab); }
 body[data-world="BA"] { --theme-current: var(--theme-ba); }
 body[data-world="BB"] { --theme-current: var(--theme-bb); }
+body.world-aa { --theme-current: var(--theme-aa); }
+body.world-ab { --theme-current: var(--theme-ab); }
+body.world-ba { --theme-current: var(--theme-ba); }
+body.world-bb { --theme-current: var(--theme-bb); }
+/* Once a world exists, the host chrome takes its colour. */
+body.host[data-world] .topbar-brand,
+body.host[data-world] .loom-line { color: var(--theme-current); }
+body.host[data-world] .topbar { border-bottom-color: var(--theme-current); }
+body.host[data-world] .chamber-col { border-color: color-mix(in srgb, var(--theme-current) 45%, var(--border)); }
 
 /* Projector typography: legible from the back row of a classroom.
    Body text never drops below 24px; headers start at 48px. */
@@ -251,7 +260,7 @@ body.host .label {
   stroke: var(--slate-950);
   stroke-width: 3;
   stroke-linejoin: round;
-  transition: fill 0.6s ease;
+  transition: fill var(--district-transition, 0.6s) linear;
   cursor: pointer;
 }
 .district:hover polygon, .district:focus polygon { stroke: var(--accent); }
@@ -472,3 +481,497 @@ body.host {
   left: 0;
 }
 body.host .view.is-active { height: 100%; }
+
+/* Host GDW meter: animated readout, stability label and 0-100% bar. */
+.gdw-meter { display: flex; flex-direction: column; gap: 6px; }
+.gdw-meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+body.host .gdw-meter .label { font-size: 20px; }
+.gdw-status { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--gdw-color, var(--amber)); }
+.gdw-readout { font-size: 64px; font-weight: 700; line-height: 1; color: var(--gdw-color, var(--amber)); }
+.gdw-track { position: relative; height: 18px; border-radius: 9px; background: var(--bg-sunken); border: 2px solid var(--border); overflow: hidden; }
+.gdw-fill { height: 100%; width: 25%; background: var(--gdw-color, var(--amber)); box-shadow: 0 0 16px var(--gdw-color, var(--amber)); transition: width 1.2s ease, background 0.6s; }
+.gdw-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--slate-600); }
+.gdw-scale { display: flex; justify-content: space-between; font-size: 18px; color: var(--text-muted); }
+.gdw-meter[data-band="critical"] { --gdw-color: var(--danger); }
+.gdw-meter[data-band="unstable"] { --gdw-color: var(--amber); }
+.gdw-meter[data-band="stable"] { --gdw-color: var(--accent); }
+.gdw-meter[data-band="thriving"] { --gdw-color: var(--teal); }
+.gdw-meter[data-band="critical"] .gdw-readout { animation: low-time-pulse 1.6s ease-in-out infinite; }
+
+/* Citizen feed cards: slide in from above, colour-coded by district. */
+:root {
+  --district-d1: #5b8def; /* Old Harbour */
+  --district-d2: #3fd8e6; /* The Grid */
+  --district-d3: #2bc4a0; /* Riverside */
+  --district-d4: #f0a430; /* Eastworks */
+  --district-d5: #c084fc; /* Highlands */
+}
+.feed-item {
+  --district-color: var(--slate-600);
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border-left: 4px solid var(--district-color);
+  animation: feed-slide-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.feed-item[data-district="D1"] { --district-color: var(--district-d1); }
+.feed-item[data-district="D2"] { --district-color: var(--district-d2); }
+.feed-item[data-district="D3"] { --district-color: var(--district-d3); }
+.feed-item[data-district="D4"] { --district-color: var(--district-d4); }
+.feed-item[data-district="D5"] { --district-color: var(--district-d5); }
+.feed-avatar {
+  flex: 0 0 auto; width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--district-color); color: var(--slate-950);
+  font-size: 20px; font-weight: 700;
+}
+.feed-body { min-width: 0; }
+body.host .feed-meta { margin: 0 0 2px; font-size: 22px; font-weight: 700; }
+.feed-district {
+  margin-left: 10px; padding: 1px 8px;
+  font-size: 18px; border-radius: 6px;
+  color: var(--district-color); border: 1px solid var(--district-color);
+}
+body.host .feed-text { margin: 0; font-size: 22px; line-height: 1.3; color: var(--slate-200); }
+@keyframes feed-slide-in {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Host debate: hook prompt and a giant countdown above the A/B cards. */
+.debate-panel { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; margin-top: 8px; }
+.debate-panel[hidden] { display: none; }
+body.host .debate-hook-text { font-size: 32px; line-height: 1.25; margin: 4px 0 0; }
+.debate-clock { font-size: 120px; font-weight: 700; line-height: 1; color: var(--accent); text-shadow: 0 0 32px var(--loom-glow); }
+.debate-clock.is-low { color: var(--danger); text-shadow: none; animation: low-time-pulse 0.8s ease-in-out infinite; }
+.incident-banner.is-compact .incident-text,
+.incident-banner.is-compact .loom-line,
+.incident-banner.is-compact .incident-subtitle { display: none; }
+body.host .incident-banner.is-compact .incident-title { font-size: 40px; }
+/* Compact A/B cards so authored policy text (~250 chars) fits the centre column. */
+.policy-panel { gap: 12px; }
+.policy-card { padding: 18px 20px; }
+.policy-letter { float: left; width: 44px; height: 44px; font-size: 26px; margin: 0 12px 4px 0; }
+body.host .policy-name { font-size: 30px; margin: 2px 0 10px; line-height: 1.1; min-height: 44px; }
+body.host .policy-text { font-size: 22px; line-height: 1.3; clear: left; }
+.policy-vs { font-size: 22px; }
+.debate-clock { font-size: 96px; }
+body.host .debate-hook-text { font-size: 28px; }
+
+/* Forecast preview badge on policy cards (showForecastBeforeVote). */
+body.host .policy-forecast[hidden] { display: none; }
+body.host .policy-forecast {
+  display: inline-block; margin: 12px 0 0; padding: 4px 10px;
+  font-size: 18px; letter-spacing: 0.06em;
+  border-radius: 6px; border: 1px solid var(--teal); color: var(--teal);
+}
+body.host .policy-forecast.is-down { border-color: var(--danger); color: var(--danger); }
+
+/* Host blind vote: Override warning graphic above the lock-in pips. */
+.override-armed {
+  display: flex; gap: 20px; align-items: center;
+  padding: 16px 20px; margin-bottom: 16px;
+  border: 2px solid var(--danger); border-radius: var(--radius);
+  background: repeating-linear-gradient(-45deg, rgba(229, 72, 77, 0.14) 0 14px, transparent 14px 28px);
+}
+.override-armed-icon {
+  flex: 0 0 auto; width: 64px; height: 56px;
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px;
+  background: var(--danger); color: var(--slate-950);
+  font-family: var(--font-mono); font-size: 34px; font-weight: 700;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  animation: low-time-pulse 1.4s ease-in-out infinite;
+}
+body.host .override-armed-title { margin: 0; font-size: 30px; font-weight: 700; color: var(--danger); letter-spacing: 0.14em; }
+body.host .override-armed-text { margin: 4px 0 0; font-size: 22px; color: var(--slate-200); }
+/* During VOTE the phones carry the full text; the projector keeps names only
+   so the Override warning and lock-in pips fit. */
+body.host[data-phase="VOTE"] .policy-text,
+body.host[data-phase="VOTE"] .policy-forecast { display: none; }
+body.host[data-phase="VOTE"] .policy-name { min-height: 0; margin-bottom: 0; }
+
+/* World reveal: fullscreen takeover in the new world's colour. */
+.view-world.is-active { display: flex; align-items: center; justify-content: center; }
+.world-reveal { text-align: center; max-width: 1500px; }
+body.host .world-kicker { font-size: 28px; color: var(--theme-current); }
+.world-key { font-size: 40px; letter-spacing: 0.4em; color: var(--text-muted); margin: 24px 0 0; }
+body.host .world-name {
+  font-size: 128px; line-height: 1; margin: 16px 0 24px;
+  color: var(--theme-current); text-shadow: 0 0 48px var(--theme-current);
+}
+body.host .world-tagline { font-size: 44px; margin: 0 0 40px; }
+body.host .world-problem { font-size: 32px; color: var(--text-muted); }
+.world-problem .mono { color: var(--danger); font-weight: 700; }
+.view-world.is-active .world-name { animation: world-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes world-in { from { opacity: 0; letter-spacing: 0.3em; filter: blur(8px); } to { opacity: 1; letter-spacing: normal; filter: none; } }
+
+/* Region map world recolour (map.js setWorld): border, links and HUD accents. */
+.region-map { --map-accent: var(--accent); border-radius: var(--radius); outline: 3px solid transparent; transition: outline-color 0.8s; }
+.region-map[data-world] { outline-color: var(--map-accent); }
+.region-map .map-link { stroke: var(--map-accent); }
+.district:hover polygon, .district:focus polygon { stroke: var(--map-accent, var(--accent)); }
+.region-map.is-recoloring { animation: map-recolor 1.6s ease-out; }
+@keyframes map-recolor { 0% { filter: drop-shadow(0 0 0 transparent); } 40% { filter: drop-shadow(0 0 24px var(--map-accent)); } 100% { filter: drop-shadow(0 0 0 transparent); } }
+body.host[data-world] #citizens-online { color: var(--theme-current); }
+
+/* Mobile vote: full policy text on each button; Override as a switch. */
+.vote-copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vote-name { font-size: 20px; font-weight: 700; }
+.vote-text { font-size: 15px; font-weight: 400; line-height: 1.4; color: var(--slate-200); letter-spacing: 0; }
+.vote-btn { align-items: flex-start; }
+.override-switch { align-items: center; cursor: pointer; }
+.override-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch-track {
+  flex: 0 0 auto; position: relative; width: 56px; height: 32px;
+  border-radius: 16px; background: var(--slate-700); border: 2px solid var(--slate-600);
+  transition: background 0.2s, border-color 0.2s;
+}
+.switch-thumb {
+  position: absolute; top: 2px; left: 2px; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--slate-200); transition: transform 0.2s;
+}
+.override-switch input:checked + .switch-track .switch-thumb { transform: translateX(24px); }
+.override-switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.override-copy { display: flex; flex-direction: column; gap: 2px; }
+.override-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; }
+.override-help { font-size: 14px; color: var(--text-muted); }
+
+/* Override switch: high-contrast warning styling; armed state turns crimson. */
+.override-switch {
+  border: 2px solid var(--amber); border-style: solid;
+  background: repeating-linear-gradient(-45deg, rgba(240, 164, 48, 0.12) 0 10px, transparent 10px 20px);
+}
+.override-switch .override-title { color: var(--amber); }
+.override-switch:has(input:checked) {
+  border-color: var(--danger);
+  background: repeating-linear-gradient(-45deg, rgba(229, 72, 77, 0.28) 0 10px, rgba(229, 72, 77, 0.08) 10px 20px);
+  box-shadow: 0 0 24px rgba(229, 72, 77, 0.45);
+}
+.override-switch:has(input:checked) .override-title { color: var(--slate-50); }
+.override-switch input:checked + .switch-track { background: var(--danger); border-color: var(--danger); }
+.override-switch input:checked + .switch-track .switch-thumb { background: var(--slate-50); }
+.override-switch.is-armed { border-color: var(--danger); }
+.override-switch:has(input:checked) .override-help,
+.override-switch.is-armed .override-help { color: var(--slate-200); }
+
+.override-row[hidden], .override-spent[hidden] { display: none; }
+.override-spent { margin: 0; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 8px; border: 1px dashed var(--slate-600); border-radius: var(--radius); }
+
+/* Override armed on the vote buttons: x2 badge, then a confirm step. */
+.vote-btn { position: relative; }
+.vote-panel.is-override-armed .vote-btn { border-color: var(--alert-crimson-dim); }
+.vote-panel.is-override-armed .vote-btn::after {
+  content: "\00D7 2"; position: absolute; bottom: 10px; right: 12px;
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px; background: var(--danger); color: var(--slate-50);
+}
+.vote-btn.is-confirming { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.35); }
+.vote-panel.is-override-armed .vote-btn.is-confirming::after { content: "TAP AGAIN TO CONFIRM \00D7 2"; }
+.vote-panel.is-override-armed .vote-btn { padding-bottom: 44px; }
+
+/* Mobile resolution */
+.result-card { margin-top: 12px; padding: 20px; border-radius: var(--radius-lg); border: 2px solid var(--border); background: var(--bg-raised); }
+.result-card.is-won { border-color: var(--teal); box-shadow: 0 0 24px rgba(43, 196, 160, 0.35); }
+.result-card.is-lost { border-color: var(--alert-crimson-dim); }
+.result-outcome { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.14em; color: var(--text-muted); }
+.result-card.is-won .result-outcome { color: var(--teal); }
+.result-card.is-lost .result-outcome { color: var(--danger); }
+.result-policy { font-size: 24px; margin: 8px 0 4px; }
+.result-yours { margin: 0; font-size: 15px; }
+.result-gdw { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 24px 0 8px; }
+.result-gdw .m-label { flex: 1 0 100%; }
+.result-gdw-value { font-size: 48px; font-weight: 700; color: var(--accent); }
+.result-gdw-delta { font-size: 22px; font-weight: 700; }
+.result-gdw-delta.is-up { color: var(--teal); }
+.result-gdw-delta.is-down { color: var(--danger); }
+.result-score[hidden] { display: none; }
+.result-score {
+  margin: 20px 0 8px; padding: 16px; text-align: center;
+  font-size: 22px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--slate-950); background: var(--amber); border-radius: var(--radius);
+  animation: score-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.result-total { font-size: 15px; text-align: center; margin: 0; }
+@keyframes score-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Host resolution: Loom commentary above the forecast chart. */
+.resolution-panel { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; margin-top: 8px; }
+.resolution-panel[hidden] { display: none; }
+body.host .resolution-loom { font-size: 28px; line-height: 1.35; min-height: 2.7em; }
+.chart-wrap { position: relative; flex: 1; min-height: 360px; border-radius: var(--radius); background: var(--bg-sunken); border: 2px solid var(--border); }
+.forecast-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* Loom forecast stability banner above the chart. */
+body.host .forecast-banner {
+  margin: 0; padding: 6px 12px; font-size: 18px; font-weight: 700; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-radius: var(--radius); border: 2px solid var(--border); color: var(--text-muted);
+}
+body.host .forecast-banner.is-ok { color: var(--teal); border-color: rgba(43, 196, 160, 0.5); }
+body.host .forecast-banner.is-warn { color: var(--amber); border-color: rgba(240, 164, 48, 0.5); }
+body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.1); }
+
+/* Shock alert badges on the region map (map.js showShock). */
+.shock-badge { pointer-events: none; }
+.shock-badge-inner { animation: shock-in 0.35s ease-out; transform-box: fill-box; transform-origin: center; }
+.shock-badge rect { fill: var(--danger); stroke: var(--slate-950); stroke-width: 2; }
+.shock-badge text { fill: var(--slate-50); font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }
+.district.is-shocked polygon { stroke: var(--danger); stroke-width: 5; }
+@keyframes shock-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; } }
+
+/* Typewriter caret on the Loom's resolution line. */
+.resolution-loom.is-typing::after { content: "\2588"; margin-left: 2px; animation: caret-blink 0.8s steps(1) infinite; }
+@keyframes caret-blink { 50% { opacity: 0; } }
+/* Reserve room for a full 200-character Loom line so typing never shifts the chart. */
+body.host .resolution-loom { font-size: 26px; min-height: calc(26px * 1.35 * 4); }
+
+/* Resolution badges: tie-breaker, Override detected. */
+.resolution-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.resolution-badges:not(:has(.res-badge:not([hidden]))) { display: none; }
+.res-badge[hidden] { display: none; }
+body.host .res-badge { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 6px; }
+.res-badge-tie { color: var(--slate-950); background: var(--theme-current, var(--accent)); }
+.res-badge-override { color: var(--slate-50); background: var(--danger); animation: low-time-pulse 1.4s ease-in-out 3; }
+.resolution-badges { flex-wrap: nowrap; flex-shrink: 0; }
+body.host .res-badge { font-size: 15px; letter-spacing: 0.04em; padding: 4px 10px; white-space: nowrap; }
+body.host .forecast-banner { flex-shrink: 0; }
+body.host .resolution-loom { min-height: calc(26px * 1.35 * 3); }
+.chart-wrap { min-height: 300px; }
+
+/* Unrest alarm (GDW < 15%): pulsing crimson frame plus a one-off flash. */
+body.host::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  border: 0 solid var(--danger); opacity: 0;
+}
+body.host.is-unrest::after { border-width: 10px; opacity: 1; animation: alarm-border 1.2s ease-in-out infinite; }
+body.host.alarm-flash::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 49;
+  background: rgba(229, 72, 77, 0.35);
+  animation: alarm-flash 0.9s ease-out 2 forwards;
+}
+@keyframes alarm-border { 0%, 100% { box-shadow: inset 0 0 0 transparent; opacity: 1; } 50% { box-shadow: inset 0 0 80px rgba(229, 72, 77, 0.55); opacity: 0.55; } }
+@keyframes alarm-flash { from { opacity: 1; } to { opacity: 0; } }
+
+/* Mobile world reveal card (themed by body[data-world]). */
+.world-card {
+  margin-top: 12px; padding: 24px 20px; border-radius: var(--radius-lg);
+  border: 2px solid var(--theme-current); background: var(--bg-raised);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--theme-current) 40%, transparent);
+}
+.world-card-key { margin: 0; font-size: 13px; letter-spacing: 0.3em; color: var(--text-muted); }
+.world-card-name { font-size: 34px; margin: 8px 0 4px; color: var(--theme-current); }
+.world-card-tagline { margin: 0 0 8px; font-size: 16px; }
+.world-card .role-heading { color: var(--theme-current); }
+.world-card-impact { margin: 8px 0 0; padding-left: 20px; font-size: 16px; }
+.world-card-impact li { margin: 0 0 8px; }
+
+/* Intel drawer: sits under the role drawer, memo-styled body. */
+.intel-drawer { top: 101px; }
+.intel-drawer .role-drawer-toggle { color: var(--amber); }
+.intel-drawer-text { font-family: var(--font-mono); font-size: 15px; line-height: 1.5; color: var(--slate-200); }
+
+/* End-of-resolution wellbeing deltas on the map. */
+.district-delta { font-family: var(--font-mono); font-size: 16px; font-weight: 800; text-anchor: middle; pointer-events: none; animation: incident-in 0.5s ease-out; }
+.district-delta.is-up { fill: #064d3b; }
+.district-delta.is-down { fill: #7a1418; }
+.district-delta.is-flat { fill: var(--slate-800); }
+
+/* Fixed Crisis 2B: the Loom governs (cold machine) vs the Owners' Board (gilded). */
+.governance-line[hidden] { display: none; }
+body.host .governance-line { margin: 0; padding: 10px 16px; font-size: 26px; border-radius: var(--radius); flex-shrink: 0; }
+body.host .governance-line.gov-loom {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--loom-cyan); background: rgba(63, 216, 230, 0.08); border: 2px solid var(--loom-cyan);
+  box-shadow: 0 0 24px var(--loom-glow);
+}
+body.host .governance-line.gov-loom::before { content: "\25C9  LOOM // "; opacity: 0.7; }
+body.host .governance-line.gov-board {
+  font-family: Georgia, "Times New Roman", serif; font-style: italic;
+  color: #f3d58a; background: linear-gradient(90deg, rgba(243, 213, 138, 0.16), transparent); border-left: 6px solid #c9a227;
+}
+body.host .governance-line.gov-board::before { content: "The Owners' Board \2014  "; font-style: normal; font-variant: small-caps; opacity: 0.8; }
+
+/* Host HUD breadcrumbs for the cycle's phases. */
+.topbar-brand { margin-right: 0; }
+.phase-crumbs { list-style: none; display: flex; align-items: center; gap: 4px; margin: 0 auto 0 24px; padding: 0; font-size: 17px; text-transform: uppercase; letter-spacing: 0.06em; }
+.phase-crumbs li { color: var(--slate-600); padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+.phase-crumbs li + li::before { content: "\203A"; margin-right: 8px; color: var(--slate-600); }
+.phase-crumbs li.is-done { color: var(--slate-400); }
+.phase-crumbs li.is-current { color: var(--slate-950); background: var(--theme-current, var(--accent)); font-weight: 700; }
+.phase-crumbs li.is-current::before { color: var(--slate-600); }
+.phase-crumbs.is-idle { visibility: hidden; }
+.topbar { gap: 36px; }
+body.host .phase-crumbs li { font-size: 20px; }
+.topbar-brand, .topbar-item, .topbar-value { white-space: nowrap; flex-shrink: 0; }
+
+/* Debate hook: a big speech-bubble question plus rotating nudges. */
+.debate-hook {
+  position: relative; padding: 16px 20px 18px;
+  border-radius: var(--radius-lg); border: 2px solid var(--theme-current, var(--accent));
+  background: linear-gradient(135deg, rgba(63, 216, 230, 0.10), transparent 70%);
+}
+.debate-hook::after {
+  content: ""; position: absolute; left: 36px; bottom: -14px; width: 24px; height: 24px;
+  background: var(--bg-raised); border-right: 2px solid var(--theme-current, var(--accent)); border-bottom: 2px solid var(--theme-current, var(--accent));
+  transform: rotate(45deg);
+}
+body.host .debate-hook-text { font-size: 32px; font-weight: 700; line-height: 1.2; }
+body.host .debate-hook-text::before { content: "\201C"; color: var(--theme-current, var(--accent)); margin-right: 4px; }
+body.host .debate-hook-text::after { content: "\201D"; color: var(--theme-current, var(--accent)); margin-left: 2px; }
+body.host .debate-nudge { margin: 10px 0 0; font-size: 22px; color: var(--amber); min-height: 1.3em; }
+.debate-nudge.is-in { animation: incident-in 0.5s ease-out; }
+/* Debate layout: hook bubble left; clock with rotating nudge right. */
+.debate-panel { align-items: start; grid-template-columns: minmax(0, 1fr) 260px; }
+.debate-side { display: flex; flex-direction: column; gap: 6px; }
+.debate-side .debate-clock { font-size: 88px; text-align: right; }
+body.host .debate-nudge { font-size: 19px; line-height: 1.3; margin: 0; text-align: right; }
+body.host .debate-hook .label { font-size: 18px; }
+body.host .debate-hook-text { font-size: 28px; }
+.incident-banner.is-compact > .label { display: none; }
+
+/* Mobile: screen-edge pulse when DEBATE hands over to the blind VOTE. */
+body.mobile.edge-pulse::after {
+  content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 48px var(--loom-glow);
+  animation: edge-pulse 0.8s ease-in-out 3;
+}
+@keyframes edge-pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+body.host .feed-detail { margin: 0 0 4px; font-size: 18px; color: var(--text-muted); }
+/* Room for the one-decimal GDW badge next to the phase breadcrumbs. */
+.topbar { gap: 28px; padding: 0 32px; }
+.topbar-value, .gdw-badge { font-size: 38px; }
+/* Zero layout shift: the meter header never wraps, whatever the band label. */
+.gdw-meter-head { flex-wrap: nowrap; }
+body.host .gdw-meter .label { font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
+.gdw-status { white-space: nowrap; }
+
+/* Finale moderation state on the projector. */
+.finale-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex: 1; text-align: center; }
+.finale-status[hidden] { display: none; }
+.finale-spinner {
+  width: 120px; height: 120px; border-radius: 50%;
+  border: 6px solid var(--slate-700); border-top-color: var(--theme-current, var(--accent));
+  animation: finale-spin 1.2s linear infinite;
+}
+body.host .finale-status-text { font-size: 34px; font-weight: 700; letter-spacing: 0.08em; color: var(--theme-current, var(--accent)); margin: 0; }
+body.host .finale-status-sub { font-size: 24px; margin: 0; }
+@keyframes finale-spin { to { transform: rotate(360deg); } }
+/* Long phase labels ("LOOM MODERATION") plus a one-decimal GDW must fit the top bar. */
+body.host #phase-name { font-size: 20px; letter-spacing: 0.08em; white-space: nowrap; }
+
+/* Finale incident: the Loom admits it cannot compute an answer. */
+.finale-callout { margin-top: auto; padding: 28px; text-align: center; border: 3px solid var(--theme-current, var(--accent)); border-radius: var(--radius-lg); background: rgba(63, 216, 230, 0.06); }
+.finale-callout[hidden] { display: none; }
+body.host .finale-callout-title { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 0.06em; color: var(--theme-current, var(--accent)); }
+body.host .finale-callout-sub { margin: 8px 0 12px; font-size: 48px; font-weight: 700; letter-spacing: 0.1em; }
+body.host .finale-callout-note { margin: 0; font-size: 24px; }
+
+/* Mobile finale write-in */
+.finale-text { resize: none; min-height: 132px; line-height: 1.4; -webkit-user-select: text; user-select: text; }
+.finale-goal { margin: 8px 0 4px; padding: 12px 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); }
+.finale-goal[hidden] { display: none; }
+.finale-goal .m-label { color: var(--amber); margin: 0; }
+.finale-goal-text { margin: 4px 0; font-size: 17px; }
+.finale-goal-hint { margin: 0; font-size: 13px; }
+.finale-count { margin: -4px 0 0; text-align: right; font-size: 14px; color: var(--text-muted); }
+.finale-count.is-near { color: var(--amber); }
+
+/* Mobile: the Loom evaluating a write-in */
+.finale-orb {
+  width: 96px; height: 96px; margin: 0 auto 16px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--accent), var(--loom-cyan-dim) 60%, transparent 70%);
+  box-shadow: 0 0 40px var(--loom-glow);
+  animation: orb-pulse 1.6s ease-in-out infinite;
+}
+@keyframes orb-pulse { 0%, 100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.05); opacity: 1; } }
+.finale-mine { font-size: 16px; font-style: italic; color: var(--slate-200); margin: 0 0 8px; }
+
+/* Mobile revise modal */
+.finale-revise[hidden] { display: none; }
+.finale-revise {
+  position: fixed; inset: 0; z-index: 50; overflow-y: auto;
+  padding: calc(56px + env(safe-area-inset-top)) 16px 24px;
+  background: rgba(8, 11, 16, 0.96);
+}
+.finale-revise .m-kicker { color: var(--amber); }
+.finale-feedback { padding: 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); font-size: 17px; margin: 8px 0 0; }
+
+/* Host finale progress pips sit under the callout / moderation status. */
+.finale-progress[hidden] { display: none; }
+.finale-progress { margin-top: 16px; }
+body.host[data-phase="FINALE_MOD"] .finale-spinner { box-shadow: 0 0 48px var(--loom-glow); animation: finale-spin 1.2s linear infinite, orb-pulse 1.6s ease-in-out infinite; }
+
+/* Host finale: five anonymous proposal cards, all on one 1080p screen. */
+.view-finale.is-active { display: flex; flex-direction: column; gap: 24px; }
+.finale-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; }
+body.host .finale-title { font-size: 52px; margin: 4px 0 6px; }
+body.host .finale-instruction { font-size: 26px; margin: 0; max-width: 1300px; }
+.finale-clock { font-size: 110px; line-height: 1; }
+.proposal-cards {
+  list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0;
+  display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 1fr; gap: 24px;
+}
+.proposal-card { grid-column: span 2; display: flex; flex-direction: column; gap: 12px; padding: 24px 28px; border-radius: var(--radius-lg); border: 2px solid var(--border); background: var(--bg-raised); overflow: hidden; }
+/* 3 on top, 2 centred below */
+.proposal-card:nth-child(4) { grid-column: 2 / span 2; }
+.proposal-card:nth-child(5) { grid-column: 4 / span 2; }
+body.host .proposal-label { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; color: var(--theme-current, var(--accent)); }
+body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
+
+/* Mobile finale ballot */
+.rank-help { margin: 0 0 12px; font-size: 15px; }
+.rank-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.rank-cards[hidden] { display: none; }
+.rank-card { position: relative; padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-raised); }
+.rank-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.rank-text { margin: 0; font-size: 16px; line-height: 1.4; }
+.rank-card { cursor: pointer; padding-right: 72px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 56px; }
+.rank-card.is-ranked { border-color: var(--accent); box-shadow: 0 0 16px var(--loom-glow); }
+.rank-card.is-ranked::after {
+  content: attr(data-place); position: absolute; top: 50%; right: 16px; transform: translateY(-50%);
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--accent); color: var(--slate-950);
+  font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+}
+.borda-legend { list-style: none; display: flex; gap: 6px; margin: 0 0 12px; padding: 0; font-size: 12px; }
+.borda-legend li { flex: 1; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--bg-raised); color: var(--text-muted); }
+.borda-legend span { display: block; color: var(--accent); font-weight: 700; font-size: 14px; }
+.rank-card.is-ranked::before {
+  content: attr(data-points); position: absolute; top: 8px; right: 70px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 6px; border-radius: 4px; background: var(--amber); color: var(--slate-950);
+}
+.rank-submit { margin-top: 16px; }
+.rank-submit[hidden] { display: none; }
+
+/* Host ranking progress under the proposals */
+.rank-progress[hidden] { display: none; }
+.rank-progress .vote-pips { margin-top: 4px; }
+body.host .rank-progress .vote-pip { padding: 8px 0; font-size: 24px; }
+body.host[data-phase="FINALE_RANK"] .proposal-card { padding: 16px 24px; gap: 8px; }
+
+/* Host finale enactment reveal */
+.view-enact.is-active { display: flex; flex-direction: column; gap: 20px; }
+body.host .enact-title { font-size: 64px; margin: 0; color: var(--theme-current, var(--accent)); }
+.enact-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 24px; flex: 1; min-height: 0; }
+.enact-card { display: flex; flex-direction: column; gap: 10px; padding: 24px 28px; border-radius: var(--radius-lg); border: 3px solid var(--border); background: var(--bg-raised); animation: incident-in 0.6s ease-out both; overflow: hidden; }
+.enact-card.is-first { border-color: var(--theme-current, var(--accent)); box-shadow: 0 0 40px var(--loom-glow); }
+.enact-card.is-second { animation-delay: 0.6s; }
+.enact-card.is-third { animation-delay: 1.2s; }
+body.host .enact-place { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.1em; color: var(--theme-current, var(--accent)); }
+body.host .enact-name { margin: 0; font-size: 22px; color: var(--text-muted); }
+body.host .enact-text { margin: 0; font-size: 30px; line-height: 1.3; }
+body.host .enact-card.is-first .enact-text { font-size: 38px; }
+body.host .enact-wait { font-size: 32px; text-align: center; color: var(--theme-current, var(--accent)); margin: auto 0; }
+.enact-wait[hidden] { display: none; }
+
+/* Animated Borda tally on the enactment screen */
+.borda-bars { display: flex; flex-direction: column; gap: 10px; }
+.borda-row { display: grid; grid-template-columns: 220px 1fr 64px; gap: 16px; align-items: center; }
+.borda-label { font-size: 22px; color: var(--text-muted); }
+.borda-row.is-enacted .borda-label { color: var(--text); font-weight: 700; }
+.borda-track { height: 22px; border-radius: 11px; background: var(--bg-sunken); border: 2px solid var(--border); overflow: hidden; }
+.borda-fill { height: 100%; width: 0; background: var(--slate-600); transition: width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.borda-row.is-enacted .borda-fill { background: var(--theme-current, var(--accent)); box-shadow: 0 0 16px var(--loom-glow); }
+.borda-points { font-size: 26px; font-weight: 700; text-align: right; }

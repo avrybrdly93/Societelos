@@ -54,5 +54,136 @@
     });
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, setDistrictColor, renderDistricts, wellbeingToColor };
+  // Month-by-month playback during Resolution. `districtsByMonth` is the
+  // resolution payload's districts array: [{ D1: W, ... D5: W }, ...] for
+  // months 0-12. Fills transition smoothly (CSS) over one month's duration.
+  let playback = null;
+
+  // Shock alert badges: a crimson tag over a district for a couple of
+  // seconds when a monthly shock fires there during playback.
+  const SHOCK_LABELS = {
+    purpose: 'PURPOSE', connection: 'CONNECTION', health: 'HEALTH',
+    trust: 'TRUST', fairness: 'FAIRNESS', autonomy: 'AUTONOMY'
+  };
+  const SHOCK_BADGE_MS = 2600;
+  function districtCenter(group) {
+    const label = group.querySelector('.district-label');
+    if (label) return { x: Number(label.getAttribute('x')), y: Number(label.getAttribute('y')) };
+    const box = group.getBBox();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  }
+  function showShock(shock) {
+    const group = districtGroup(shock.district);
+    if (!group) return;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const { x, y } = districtCenter(group);
+    // Outer group positions (SVG transform attribute); the inner group runs
+    // the CSS pop-in animation, so the two transforms never fight.
+    const badge = document.createElementNS(svgNS, 'g');
+    badge.setAttribute('class', 'shock-badge');
+    badge.setAttribute('transform', `translate(${x}, ${y - 46})`);
+    const inner = document.createElementNS(svgNS, 'g');
+    inner.setAttribute('class', 'shock-badge-inner');
+    const text = `\u26A0 SHOCK: ${SHOCK_LABELS[shock.trait] || String(shock.trait || '').toUpperCase()}`;
+    const width = 14 + text.length * 8.2;
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('x', String(-width / 2));
+    rect.setAttribute('y', '-14');
+    rect.setAttribute('width', String(width));
+    rect.setAttribute('height', '24');
+    rect.setAttribute('rx', '6');
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('y', '3');
+    label.textContent = text;
+    inner.append(rect, label);
+    badge.appendChild(inner);
+    group.parentNode.appendChild(badge); // above every district
+    group.classList.add('is-shocked');
+    setTimeout(() => {
+      badge.remove();
+      group.classList.remove('is-shocked');
+    }, SHOCK_BADGE_MS);
+  }
+  function clearShocks() {
+    document.querySelectorAll('#region-map .shock-badge').forEach((b) => b.remove());
+    document.querySelectorAll('#region-map .is-shocked').forEach((g) => g.classList.remove('is-shocked'));
+  }
+
+  /** Start a playback at month 0; later months come from onMonthTick. */
+  function startPlayback(districtsByMonth, msPerMonth = 1000, shocks = []) {
+    clearShocks();
+    clearDeltas();
+    playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth, shocks: Array.isArray(shocks) ? shocks : [] };
+    const svg = document.getElementById('region-map');
+    if (svg) svg.style.setProperty('--district-transition', `${Math.max(200, msPerMonth * 0.9)}ms`);
+    showMonth(0);
+  }
+
+  /** onMonthTick(monthIndex): colour all 5 districts for that month. */
+  function showMonth(monthIndex) {
+    if (!playback) return;
+    const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
+    if (values) renderDistricts(values);
+    playback.shocks.filter((sh) => sh.month === monthIndex).forEach(showShock);
+    if (monthIndex >= playback.months.length - 1) showDeltas(playback.months[0], values);
+  }
+
+  // End-of-cycle labels: each district's wellbeing change (in points of W x 100)
+  // with an up/down arrow, under its name.
+  const DELTA_EPSILON = 0.05;
+  function clearDeltas() {
+    document.querySelectorAll('#region-map .district-delta').forEach((t) => t.remove());
+  }
+  function showDeltas(start, end) {
+    clearDeltas();
+    if (!start || !end) return;
+    DISTRICT_IDS.forEach((id) => {
+      const group = districtGroup(id);
+      if (!group || typeof start[id] !== 'number' || typeof end[id] !== 'number') return;
+      const delta = (end[id] - start[id]) * 100;
+      const pop = group.querySelector('.district-pop');
+      const x = pop ? Number(pop.getAttribute('x')) : districtCenter(group).x;
+      const y = pop ? Number(pop.getAttribute('y')) + 20 : districtCenter(group).y + 20;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      const dir = delta > DELTA_EPSILON ? 'up' : delta < -DELTA_EPSILON ? 'down' : 'flat';
+      text.setAttribute('class', `district-delta is-${dir}`);
+      text.setAttribute('x', String(x));
+      text.setAttribute('y', String(y));
+      const arrow = dir === 'up' ? '\u25B2' : dir === 'down' ? '\u25BC' : '\u25C6';
+      text.textContent = `${arrow} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+      group.appendChild(text);
+    });
+  }
+
+  /** Stop playback (colours stay where they are). */
+  function stopPlayback() {
+    playback = null;
+  }
+
+  // World accent colours (match the --theme-* tokens in styles.css).
+  const WORLD_COLORS = { AA: '#2bc4a0', AB: '#3fd8e6', BA: '#f0a430', BB: '#c084fc' };
+
+  /**
+   * Recolour the map border, spillover links and HUD accents for the world
+   * revealed after Cycle 2. Pass null to restore the default Loom cyan.
+   */
+  function setWorld(worldKey) {
+    const svg = document.getElementById('region-map');
+    if (!svg) return;
+    const color = WORLD_COLORS[worldKey] || null;
+    if (color) {
+      svg.style.setProperty('--map-accent', color);
+      svg.dataset.world = worldKey;
+    } else {
+      svg.style.removeProperty('--map-accent');
+      delete svg.dataset.world;
+    }
+    svg.classList.remove('is-recoloring');
+    // Restart the pulse animation so the change is noticed.
+    void svg.getBoundingClientRect();
+    if (color) svg.classList.add('is-recoloring');
+  }
+
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas };
 })();

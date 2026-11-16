@@ -139,6 +139,28 @@ function outcomeBand(summary = {}) {
   return 'mixed';
 }
 
+const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+
+/**
+ * Append the realized facts to an offline Loom line: the district that moved
+ * most (from topMoves) and the first shock that fired, dropping whatever does
+ * not fit in 200 characters (shock first, then the district).
+ */
+function withSimFacts(base, summary = {}) {
+  const top = Array.isArray(summary.topMoves) && summary.topMoves[0];
+  const shock = Array.isArray(summary.shocks) && summary.shocks[0];
+  const district = top && top.district ? `${top.district} ${DISTRICT_NAMES[top.district] || ''}`.trim() : '';
+  const facts = [];
+  if (district) facts.push(`${district} moved most.`);
+  if (shock && shock.district) facts.push(`A shock hit ${shock.district} in month ${shock.month}.`);
+  while (facts.length) {
+    const line = `${base} ${facts.join(' ')}`;
+    if (line.length <= 200) return line;
+    facts.pop();
+  }
+  return truncate(base, 200);
+}
+
 /**
  * Offline fallback: the option's authored Loom line (or a band template) and
  * each citizen's authored line for this outcome band.
@@ -147,45 +169,94 @@ function narrateFallback(context = {}) {
   const band = outcomeBand(context.simSummary || context.summary);
   const option = context.winningOption || {};
   const citizens = Array.isArray(context.citizens) ? context.citizens : [];
-  let messages = citizens
-    .map((c) => {
-      const lines = (c.lines && c.lines[band]) || [];
-      return lines.length ? { citizenId: c.id, text: truncate(lines[0], 140) } : null;
-    })
-    .filter(Boolean)
-    .slice(0, 6);
-  if (!messages.length) {
-    messages = (option.reactions || []).map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
+  // Most affected citizens first, each at most once in the feed.
+  const byId = new Map();
+  for (const c of citizens) if (c && c.id && !byId.has(c.id)) byId.set(c.id, c);
+  const order = rankCitizensByShift([...byId.values()], context.simSummary || context.summary || {});
+  const seen = new Set();
+  let messages = [];
+  for (const { id } of order) {
+    const lines = (byId.get(id).lines && byId.get(id).lines[band]) || [];
+    if (!lines.length || seen.has(id)) continue;
+    seen.add(id);
+    messages.push({ citizenId: id, text: truncate(lines[0], 140) });
+    if (messages.length === 6) break;
   }
-  return { loomLine: truncate(option.loomLine || BAND_LOOM_LINES[band], 200), messages, band, fallback: true };
+  if (!messages.length) {
+    messages = (option.reactions || [])
+      .filter((r) => r && r.citizenId && !seen.has(r.citizenId) && seen.add(r.citizenId))
+      .map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
+  }
+  // Authored line for this outcome band, then the option's single line, then a template.
+  const bandLine = option.loomLines && option.loomLines[band];
+  const base = String(bandLine || option.loomLine || BAND_LOOM_LINES[band]).trim();
+  return { loomLine: withSimFacts(base, context.simSummary || context.summary), messages, band, fallback: true };
+}
+
+/**
+ * Normalise a narration context: accepts { winningPolicy, summary } (task
+ * contract) as well as { winningOption, simSummary } (engine).
+ */
+function narrationContext(context = {}) {
+  return {
+    ...context,
+    winningOption: context.winningOption || context.winningPolicy || {},
+    simSummary: context.simSummary || context.summary || {}
+  };
+}
+
+/**
+ * Order citizens by how much their (district, cohort) moved this cycle, using
+ * the summary's topMoves (district/cohort matches first, then district-only).
+ * Returns [{ id, district, cohort, shift }] with the most affected first.
+ */
+function rankCitizensByShift(citizens = [], summary = {}) {
+  const moves = Array.isArray(summary.topMoves) ? summary.topMoves : [];
+  const scored = citizens.map((c, order) => {
+    let shift = 0;
+    for (const m of moves) {
+      const change = Math.abs(Number(m.change) || 0);
+      if (m.district === c.district && m.cohort === c.cohort) shift += change * 2;
+      else if (m.district === c.district || m.cohort === c.cohort) shift += change * 0.5;
+    }
+    return { id: c.id, district: c.district, cohort: c.cohort, shift, order };
+  });
+  scored.sort((a, b) => b.shift - a.shift || a.order - b.order);
+  return scored.map(({ order, ...rest }) => rest);
 }
 
 /**
  * Narrate a resolution: one Loom line plus citizen messages.
- * @param {object} context { crisis, winningOption, simSummary, worldKey, citizens? }
+ * @param {object} context { crisis, winningPolicy | winningOption, summary | simSummary, worldKey, citizens? }
  * @returns {Promise<{ loomLine: string, messages: { citizenId: string, text: string }[], fallback?: boolean }>}
  */
-async function narrate(context = {}, opts = {}) {
+async function narrate(rawContext = {}, opts = {}) {
+  const context = narrationContext(rawContext);
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) return narrateFallback(context);
   try {
-    const citizens = (context.citizens || []).map((c) => ({ id: c.id, name: c.name, age: c.age, district: c.district, cohort: c.cohort, voice: c.voice }));
+    // mood: the citizen's cohort wellbeing (0-100) after the cycle; topChange:
+    // the trait that moved most for that cohort (from the engine, if known).
+    const citizens = (context.citizens || []).map((c) => {
+      const out = { id: c.id, name: c.name, age: c.age, district: c.district, cohort: c.cohort, voice: c.voice };
+      if (typeof c.mood === 'number') out.mood = c.mood;
+      if (typeof c.moodChange === 'number') out.moodChange = c.moodChange;
+      if (c.topChange) out.topChange = c.topChange;
+      return out;
+    });
     const option = context.winningOption || {};
     const prompt = [
       `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
       `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
-      `Simulation summary: ${JSON.stringify(context.simSummary || context.summary || {})}`,
+      `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
+      `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
+      'Pick 6-10 different citizens, favouring those whose district and cohort moved most in the summary.',
+      'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
     const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
-    const known = new Set(citizens.map((c) => c.id));
-    const messages = (Array.isArray(result.messages) ? result.messages : [])
-      .filter((m) => m && (!known.size || known.has(m.citizenId)))
-      .map((m) => ({ citizenId: String(m.citizenId), text: truncate(m.text, 140) }))
-      .slice(0, 10);
-    if (!result.loomLine) throw new Error('narration: missing loomLine');
-    return { loomLine: truncate(result.loomLine, 200), messages };
+    return validateNarration(result, citizens.map((c) => c.id));
   } catch (err) {
     console.warn(`[loom] narrate fell back: ${err.message}`);
     return narrateFallback(context);
@@ -204,6 +275,46 @@ const truncate = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 const clamp = (v) => (Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
 
 const NODE_ID = /^NODE-0[1-5]$/;
+
+/** Remove emoji (and the joiners/variation selectors around them), tidy spaces. */
+const EMOJI_RE = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]/gu;
+function stripEmoji(text) {
+  return String(text == null ? '' : text).replace(EMOJI_RE, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+/** Truncate to `max` characters, cutting at a word boundary with an ellipsis when possible. */
+function clip(text, max) {
+  const t = String(text == null ? '' : text).trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s.,;:!?-]+$/, '')}\u2026`;
+}
+
+/**
+ * Post-call validator for narrate(): checks the JSON shape, keeps only known
+ * citizen ids (once each), strips emoji, and clips loomLine to 200 and each
+ * message to 140 characters. Throws when no usable Loom line remains.
+ */
+function validateNarration(result, knownIds = []) {
+  if (!result || typeof result !== 'object') throw new Error('narration: not an object');
+  const loomLine = clip(stripEmoji(result.loomLine), 200);
+  if (!loomLine) throw new Error('narration: missing loomLine');
+  const known = new Set(knownIds);
+  const seen = new Set();
+  const messages = [];
+  for (const m of Array.isArray(result.messages) ? result.messages : []) {
+    if (!m || typeof m !== 'object') continue;
+    const id = String(m.citizenId || '');
+    if ((known.size && !known.has(id)) || seen.has(id)) continue;
+    const text = clip(stripEmoji(m.text), 140);
+    if (!text) continue;
+    seen.add(id);
+    messages.push({ citizenId: id, text });
+    if (messages.length === 10) break;
+  }
+  return { loomLine, messages };
+}
 
 /**
  * Privacy: replace any known player name in free text with a neutral phrase,
@@ -323,6 +434,22 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   }
 }
 
+/**
+ * Moderate one revised finale submission (the single resubmit after
+ * "revise"). Any failure here means the bland placeholder: it resolves with
+ * status "reject" and fallback: true rather than letting unmoderated text through.
+ * @param {{ node: string, text: string }} submission
+ * @returns {Promise<{ node, status, cleaned, feedback, roles, effects, fallback? }>}
+ */
+async function moderateOne(submission = {}, crisis = {}, opts = {}) {
+  const node = safeNode(submission.node);
+  const reject = { node, status: 'reject', cleaned: '', feedback: '', roles: [], effects: zeroEffects(), fallback: true };
+  const cfg = opts.config || getConfig();
+  if (!node || !cfg.enabled) return reject;
+  const [result] = await moderate([{ node, text: submission.text }], crisis, opts);
+  return result && !result.fallback ? result : reject;
+}
+
 // ---------------------------------------------------------------------------
 // testConnection(): one tiny structured call to prove key, model and JSON
 // schema output all work. Run: npm run loom:test
@@ -367,4 +494,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

@@ -59,3 +59,26 @@ test('trait names in server/sim match the data/crises.json effect schema', () =>
     }
   }
 });
+
+test('getCitizenMood reads the wellbeing and traits of the citizen\'s own (district, cohort)', () => {
+  const simConfig = require('../../../data/sim.json');
+  const citizens = require('../../../data/citizens.json');
+  const { createInitialState, getCitizenMood, cohortWellbeingAt, cohortTraits } = require('../state');
+  const state = createInitialState(simConfig);
+  // Push one cohort (D4 elders, Ruth's) up so the lookup must find exactly it.
+  const K = state.traitNames.length;
+  const i = state.cohorts.findIndex((c) => c.key === 'D4:elders');
+  for (let k = 0; k < K; k++) state.traits[i * K + k] = 0.9;
+  for (const citizen of citizens) {
+    const mood = getCitizenMood(state, citizen);
+    const j = state.cohorts.findIndex((c) => c.district === citizen.district && c.cohort === citizen.cohort);
+    assert.ok(mood, citizen.id);
+    assert.equal(mood.key, `${citizen.district}:${citizen.cohort}`);
+    assert.equal(mood.wellbeing, cohortWellbeingAt(state, j));
+    assert.deepEqual(mood.traits, cohortTraits(state, j));
+  }
+  const ruth = getCitizenMood(state, citizens.find((c) => c.id === 'ruth'));
+  const mara = getCitizenMood(state, citizens.find((c) => c.id === 'mara'));
+  assert.ok(ruth.wellbeing > mara.wellbeing && ruth.gdw > mara.gdw);
+  assert.equal(getCitizenMood(state, { district: 'D9', cohort: 'youth' }), null);
+});
