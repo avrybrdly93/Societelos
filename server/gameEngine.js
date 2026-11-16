@@ -818,6 +818,13 @@ class GameState extends EventEmitter {
         finale.moderationMs = Date.now() - started;
         for (const r of results || []) if (r && r.node) finale.moderation[r.node] = r;
         finale.moderationDone = true;
+        // Trace: latency and outcome counts only (never the texts or authors).
+        const counts = { ok: 0, revise: 0, reject: 0, fallback: 0 };
+        for (const r of results || []) {
+          if (r && r.fallback) counts.fallback++;
+          else if (r && counts[r.status] !== undefined) counts[r.status]++;
+        }
+        console.log(`[game ${this.roomCode}] finale moderation ${finale.moderationMs} ms: ${counts.ok} ok, ${counts.revise} revise, ${counts.reject} reject, ${counts.fallback} fallback`);
         this.onFinaleModeration(results || []);
         return results;
       });
@@ -972,6 +979,7 @@ class GameState extends EventEmitter {
     finale.tally = bordaCount(finale.ranks, finale.policies.map((p) => p.id));
     finale.rows = rankBorda(finale.tally, (id) => this.finaleMedianOf(id));
     finale.enacted = selectEnacted(finale.rows);
+    console.log(`[game ${this.roomCode}] finale Borda: ${finale.rows.map((r) => `${r.id} ${r.points} [${r.places.join('/')}]`).join(', ')}${finale.rankDefaulted.length ? `; ${finale.rankDefaulted.length} default ballot(s)` : ''}`);
     finale.packageEffects = packageEffects(finale.enacted, (id) => byId[id] && byId[id].effects);
 
     const previousGdw = this.gdw;
