@@ -671,3 +671,40 @@ test('only a node in "revise" may resubmit, once, during the FINALE_MOD window',
     restore();
   }
 });
+
+test('a resubmission is moderated with loom.moderateOne, then the finale moves on', async () => {
+  const loom = require('../loom');
+  const restore = stubModerate(async (subs) => subs.map((s) => ({ node: s.node, status: s.node === 'NODE-02' ? 'revise' : 'ok', cleaned: s.text, feedback: 'Rephrase.', roles: [], effects: { purpose: 0.1 } })));
+  const originalOne = loom.moderateOne;
+  const oneCalls = [];
+  loom.moderateOne = async (sub, crisis) => {
+    oneCalls.push({ sub, crisis: crisis.id });
+    return { node: sub.node, status: 'ok', cleaned: 'Every district elects a repair council.', feedback: '', roles: ['artisan'], effects: { purpose: 0.3 } };
+  };
+  try {
+    const game = finaleGame();
+    const phases = [];
+    game.on('phase', (p) => phases.push(p.phase));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.resubmitPolicy('NODE-02', 'every district picks repair crew');
+    await game.finale.pending;
+    game.stop();
+    assert.deepEqual(oneCalls, [{ sub: { node: 'NODE-02', text: 'every district picks repair crew' }, crisis: 'aa-fake-struggle' }]);
+    assert.equal(phases[phases.length - 1], 'FINALE_DEBATE');
+    const p2 = game.finale.policies.find((p) => p.node === 'NODE-02');
+    assert.equal(p2.text, 'Every district elects a repair council.');
+    assert.deepEqual(p2.roles, ['artisan']);
+  } finally {
+    loom.moderateOne = originalOne;
+    restore();
+  }
+});
+
+test('loom.moderateOne rejects (bland placeholder) when the Loom is unavailable', async () => {
+  const loom = require('../loom');
+  const r = await loom.moderateOne({ node: 'NODE-03', text: 'x' }, {}, { config: { enabled: false } });
+  assert.equal(r.status, 'reject');
+  assert.equal(r.fallback, true);
+});

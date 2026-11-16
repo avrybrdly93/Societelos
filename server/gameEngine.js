@@ -811,7 +811,30 @@ class GameState extends EventEmitter {
     if (!clean) return { ok: false, reason: 'EMPTY' };
     finale.revise[node] = 'resubmitted';
     finale.submissions[node] = clean;
+    finale.pending = this.moderateResubmission(node, clean);
     return { ok: true, text: clean };
+  }
+
+  /**
+   * loom.moderateOne on a resubmission; when every revision is settled the
+   * finale moves on to FINALE_DEBATE without waiting out the window.
+   */
+  moderateResubmission(node, text) {
+    const finale = this.finale;
+    const loom = resolveLoom();
+    const call = typeof loom.moderateOne === 'function'
+      ? () => loom.moderateOne({ node, text }, this.crisis || {}, { playerNames: Object.values(this.players).map((p) => p.name) })
+      : () => Promise.resolve({ node, status: 'reject', fallback: true });
+    return Promise.resolve()
+      .then(call)
+      .catch(() => ({ node, status: 'reject', fallback: true }))
+      .then((result) => {
+        if (finale.closed || this.finale !== finale) return result;
+        finale.moderation[node] = { ...result, node };
+        finale.revise[node] = 'done';
+        if (Object.values(finale.revise).every((v) => v === 'done')) this.finishFinaleModeration();
+        return result;
+      });
   }
 
   /** Nodes that have submitted a finale policy (never the text). */

@@ -434,6 +434,22 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   }
 }
 
+/**
+ * Moderate one revised finale submission (the single resubmit after
+ * "revise"). Any failure here means the bland placeholder: it resolves with
+ * status "reject" and fallback: true rather than letting unmoderated text through.
+ * @param {{ node: string, text: string }} submission
+ * @returns {Promise<{ node, status, cleaned, feedback, roles, effects, fallback? }>}
+ */
+async function moderateOne(submission = {}, crisis = {}, opts = {}) {
+  const node = safeNode(submission.node);
+  const reject = { node, status: 'reject', cleaned: '', feedback: '', roles: [], effects: zeroEffects(), fallback: true };
+  const cfg = opts.config || getConfig();
+  if (!node || !cfg.enabled) return reject;
+  const [result] = await moderate([{ node, text: submission.text }], crisis, opts);
+  return result && !result.fallback ? result : reject;
+}
+
 // ---------------------------------------------------------------------------
 // testConnection(): one tiny structured call to prove key, model and JSON
 // schema output all work. Run: npm run loom:test
@@ -478,4 +494,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
