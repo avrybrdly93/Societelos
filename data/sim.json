@@ -328,7 +328,28 @@
       "autonomy": 1.32
     }
   },
-  "constants": {},
+  "constants": {
+    "alpha": 0.25,
+    "alphaSD": 0.05,
+    "alphaMin": 0.05,
+    "alphaMax": 0.5,
+    "sensitivityJitterMin": 0.8,
+    "sensitivityJitterMax": 1.2,
+    "adoptionTau": 3,
+    "hedonicDrift": 0.003,
+    "driftTraits": [
+      "purpose",
+      "connection"
+    ],
+    "noiseSD": 0.01,
+    "shockChance": 0.05,
+    "shockMin": 0.02,
+    "shockMax": 0.06,
+    "spilloverRate": 0.1,
+    "forecastRuns": 500,
+    "monthsPerCycle": 12,
+    "unrestGdw": 15
+  },
   "_baselineNote": "baseline is set so the population-weighted wellbeing W of the starting state is exactly 0.40 (GDW 25%) given the offsets.",
   "_sensitivityNote": "S(c,k): how strongly cohort c (key \"district:cohort\") feels an effect on trait k. Negative = the cohort loses when the trait improves for others (e.g. Former elite on fairness)."
 }
