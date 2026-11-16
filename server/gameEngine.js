@@ -319,6 +319,7 @@ function sanitizeForBroadcast(value, allow = []) {
   const allowed = new Set(allow);
   const walk = (v) => {
     if (Array.isArray(v)) return v.map(walk);
+    if (ArrayBuffer.isView(v)) return Array.from(v); // Float64Array etc. -> plain JSON array
     if (!v || typeof v !== 'object') return v;
     const out = {};
     for (const [k, inner] of Object.entries(v)) {
