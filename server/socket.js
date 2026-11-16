@@ -61,6 +61,11 @@ function initSockets(io, gameEngine) {
       emitToNode(game, node, 'role:assigned', { role: roleCard(role) });
     });
 
+    // resolution { result, gdw, forecast, realized, districts, loomLine, messages } to the room.
+    game.on('resolution', (payload) => {
+      io.to(roomChannel(game.roomCode)).emit('resolution', payload);
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
