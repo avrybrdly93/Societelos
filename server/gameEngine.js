@@ -111,6 +111,27 @@ class GameState {
     return { ok: true, node };
   }
 
+  /**
+   * Set (or toggle, when `ready` is omitted) a player's ready flag.
+   * Returns the new value, or null for an unknown node.
+   */
+  setReady(node, ready) {
+    const player = this.players[node];
+    if (!player) return null;
+    player.ready = typeof ready === 'boolean' ? ready : !player.ready;
+    return player.ready;
+  }
+
+  /** Number of seated players currently marked ready. */
+  readyCount() {
+    return Object.values(this.players).filter((p) => p.ready).length;
+  }
+
+  /** True once all 5 slots are filled and all 5 players are ready. */
+  allReady() {
+    return Object.keys(this.players).length === MAX_PLAYERS && this.readyCount() === MAX_PLAYERS;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);
