@@ -205,3 +205,30 @@ test('realized GDW hitting 0 in Cycle 2 transitions straight to END', async () =
   assert.deepEqual(phases, ['RESOLUTION', 'END'], 'no WORLD_REVEAL or further cycles');
   assert.equal(game.phase, 'END');
 });
+
+test('intel:drop delivers world-specific intel for Cycles 3 and 4', () => {
+  const crises = engine.loadGameData().crises.crises;
+  for (const world of ['AA', 'AB', 'BA', 'BB']) {
+    for (const cycle of [3, 4]) {
+      const raw = crises.find((c) => c.world === world && c.cycle === cycle);
+      assert.ok(raw, `no crisis for ${world} cycle ${cycle}`);
+      const game = votingGame();
+      game.assignRoles(game.data.roles);
+      game.cycle = cycle;
+      game.worldKey = world;
+      const drops = {};
+      game.on('intel:drop', ({ node, text }) => { drops[node] = text; });
+      game.startIncidentPhase();
+      assert.equal(game.crisis.id, raw.id);
+      game.startIntelDropPhase();
+      game.clearPhaseTimer();
+      assert.equal(Object.keys(drops).length, 5);
+      for (const [node, role] of Object.entries(game.roleAssignment)) {
+        const authored = raw.intel && raw.intel[role.key];
+        // Authored world intel when present; otherwise the generic fallback (content pending).
+        if (authored) assert.equal(drops[node], authored, `${raw.id} ${role.key}`);
+        else assert.ok(drops[node].length > 0);
+      }
+    }
+  }
+});
