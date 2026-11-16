@@ -22,3 +22,10 @@ test('D4 workers and elders are highly sensitive to autonomy and fairness', () =
     }
   }
 });
+
+test('D2 youth are highly sensitive to connection and trust', () => {
+  for (const trait of ['connection', 'trust']) {
+    assert.ok(S['D2:youth'][trait] >= 1.3, `D2:youth ${trait} ${S['D2:youth'][trait]}`);
+    assert.ok(S['D2:youth'][trait] > mean(trait), `above the regional mean ${mean(trait).toFixed(2)}`);
+  }
+});
