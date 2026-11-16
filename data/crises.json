@@ -412,7 +412,13 @@
           "loomLine": "Redundancy installed. Failure is no longer possible. Neither is your involvement."
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: in the 2029 Harbour flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
+        "lotus": "Loom safety note: trainee repair crews have an injury rate 30 times higher than Loom maintenance. Self-repairing redundancy has never hurt anyone.",
+        "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
+        "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
+        "ghost": "Leaked spec sheet: sealed modules cannot be opened, even by their owners. If the Loom is ever switched off, nobody alive could restart them."
+      }
     },
     {
       "id": "aa-fake-struggle",
