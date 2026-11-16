@@ -840,6 +840,19 @@ class GameState extends EventEmitter {
     }
   }
 
+  /** Record a node's ranking { order: [id x4] } during FINALE_RANK. */
+  rankPolicies(node, order) {
+    if (this.phase !== PHASES.FINALE_RANK || !this.finale || !this.finale.rankingOpen) return { ok: false, reason: 'RANKING_CLOSED' };
+    if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
+    this.finale.ranks[node] = order.slice();
+    return { ok: true };
+  }
+
+  /** Nodes that have ranked (never their order). */
+  rankedNodes() {
+    return this.finale ? Object.keys(this.finale.ranks) : [];
+  }
+
   /** Author of a finale policy (server-side only; null if unknown). */
   finaleAuthor(policyId) {
     return (this.finale && this.finale.authors[policyId]) || null;

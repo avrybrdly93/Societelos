@@ -293,6 +293,17 @@ function initSockets(io, gameEngine) {
       return undefined;
     });
 
+    // finale:rank { order: [id, id, id, id] } -> this phone's Borda ballot.
+    onValid(socket, 'finale:rank', { order: 'array' }, (payload, reply) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      const result = game.rankPolicies(socket.data.node, payload.order);
+      reply(result);
+      // finale:progress { ranked: [node] } -> who has ranked (never how).
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('finale:progress', { ranked: game.rankedNodes() });
+      return undefined;
+    });
+
     // Disconnect: keep the seat and all game state; just flag it offline.
     socket.on('disconnect', () => {
       const game = gameEngine.getRoom(socket.data.roomCode);

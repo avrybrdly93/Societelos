@@ -861,3 +861,14 @@ test('finale:ballot is emitted privately per node with { policies: [{ id, text }
     assert.deepEqual(ballots[node].map((p) => p.id), game.finale.ballots[node]);
   }
 });
+
+test('rankPolicies records a ranking during FINALE_RANK only', async () => {
+  const { game } = await rankingFinale();
+  game.stop();
+  const order = game.finale.ballots['NODE-01'];
+  assert.equal(game.rankPolicies('NODE-01', order).ok, true);
+  assert.deepEqual(game.finale.ranks['NODE-01'], order);
+  assert.deepEqual(game.rankedNodes(), ['NODE-01']);
+  game.phase = 'FINALE_ENACT';
+  assert.equal(game.rankPolicies('NODE-02', game.finale.ballots['NODE-02']).reason, 'RANKING_CLOSED');
+});
