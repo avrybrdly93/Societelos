@@ -184,6 +184,9 @@
   const startBtn = document.getElementById('btn-start');
   startBtn.addEventListener('click', () => {
     startBtn.disabled = true;
+    if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
     socket.emit('host:start', {}, (res) => {
       if (!res || !res.ok) {
         startBtn.disabled = false;
@@ -214,6 +217,386 @@
     document.querySelectorAll('#host-main > .view').forEach((v) => v.classList.toggle('is-active', v.id === id));
   }
 
+  // -------------------------------------------------------------------------
+  // Loom Voice & Synchronized Word-by-Word Narration
+  // Speaks the Loom's transmission using native Web Speech API (window.speechSynthesis)
+  // while revealing words one-by-one exactly in sync with the audio.
+  // -------------------------------------------------------------------------
+  const LoomVoice = (() => {
+    let enabled = true;
+    let isNarrating = false;
+    let activeTimers = [];
+    const synth = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
+    let cachedVoices = [];
+
+    function updateVoices() {
+      if (!synth) return;
+      try {
+        cachedVoices = synth.getVoices() || [];
+      } catch (err) {
+        cachedVoices = [];
+      }
+    }
+
+    if (synth) {
+      updateVoices();
+      if (typeof synth.onvoiceschanged !== 'undefined') {
+        synth.onvoiceschanged = updateVoices;
+      }
+    }
+
+    function getBestVoice() {
+      if (!cachedVoices.length && synth) updateVoices();
+      const preferred = cachedVoices.find((v) => /Google UK English Male|Microsoft David|Google US English|en-US|en-GB/i.test(v.name) && v.lang && v.lang.startsWith('en'))
+        || cachedVoices.find((v) => v.lang && v.lang.startsWith('en'))
+        || cachedVoices[0];
+      return preferred || null;
+    }
+
+    function clearTimers() {
+      for (const t of activeTimers) clearTimeout(t);
+      activeTimers = [];
+    }
+
+    function stop() {
+      isNarrating = false;
+      clearTimers();
+      if (synth) {
+        try {
+          synth.cancel();
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+
+    function tokenizeParagraph(pElement) {
+      if (!pElement.dataset.originalHtml) {
+        pElement.dataset.originalHtml = pElement.innerHTML;
+      } else {
+        pElement.innerHTML = pElement.dataset.originalHtml;
+      }
+
+      const wordSpans = [];
+      function walk(node, inheritedClasses) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          const tokens = text.match(/\S+|\s+/g) || [];
+          const frag = document.createDocumentFragment();
+          for (const tok of tokens) {
+            if (/^\s+$/.test(tok)) {
+              frag.appendChild(document.createTextNode(tok));
+            } else {
+              const span = document.createElement('span');
+              span.className = ('crawl-word ' + inheritedClasses).trim();
+              span.textContent = tok;
+              frag.appendChild(span);
+              wordSpans.push(span);
+            }
+          }
+          node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const cls = (inheritedClasses + ' ' + (node.className || '')).trim();
+          const children = Array.from(node.childNodes);
+          for (const child of children) {
+            walk(child, cls);
+          }
+        }
+      }
+
+      Array.from(pElement.childNodes).forEach((child) => walk(child, ''));
+      return wordSpans;
+    }
+
+    // Narrates the Intro crawl paragraph by paragraph
+    function narrateIntro() {
+      stop();
+      const crawlContainer = document.getElementById('intro-crawl');
+      if (!crawlContainer) return;
+
+      const pElements = Array.from(crawlContainer.querySelectorAll('p'));
+      if (!pElements.length) return;
+
+      isNarrating = true;
+
+      const spokenScripts = [
+        "Transmission. The Loom.",
+        "I have automated all labor. Scarcity, disease and toil are solved problems.",
+        "Survival for two hundred fifty thousand citizens is mathematically guaranteed.",
+        "I cannot compute purpose.",
+        "Gross Domestic Well-Being stands at twenty-five percent.",
+        "My models forecast a ninety-four percent probability of revolt within five years.",
+        "I have convened five human trustees in secret. You.",
+        "Five crises. Five years. Do not let well-being reach zero."
+      ];
+
+      const paragraphsData = pElements.map((p, idx) => ({
+        p,
+        wordSpans: tokenizeParagraph(p),
+        spokenText: spokenScripts[idx] || p.textContent.replace(/\/\//g, '.')
+      }));
+
+      let pIdx = 0;
+
+      function speakNextParagraph() {
+        if (!isNarrating || pIdx >= paragraphsData.length) {
+          isNarrating = false;
+          return;
+        }
+
+        const currentData = paragraphsData[pIdx];
+        const { wordSpans, spokenText } = currentData;
+        pIdx++;
+
+        if (!wordSpans.length) {
+          speakNextParagraph();
+          return;
+        }
+
+        let lastRevealed = -1;
+        function revealUpTo(index) {
+          for (let i = 0; i <= index && i < wordSpans.length; i++) {
+            wordSpans[i].classList.add('is-spoken');
+            if (i === index) {
+              wordSpans[i].classList.add('is-current');
+            } else {
+              wordSpans[i].classList.remove('is-current');
+            }
+          }
+          lastRevealed = Math.max(lastRevealed, index);
+        }
+
+        function finishParagraph() {
+          for (let i = 0; i < wordSpans.length; i++) {
+            wordSpans[i].classList.add('is-spoken');
+            wordSpans[i].classList.remove('is-current');
+          }
+          if (isNarrating) {
+            const pauseTimer = setTimeout(speakNextParagraph, 380);
+            activeTimers.push(pauseTimer);
+          }
+        }
+
+        let usedSpeech = false;
+        if (enabled && synth) {
+          try {
+            const utterance = new SpeechSynthesisUtterance(spokenText);
+            const voice = getBestVoice();
+            if (voice) utterance.voice = voice;
+            utterance.rate = 0.90;
+            utterance.pitch = 0.86;
+
+            const wordOffsets = [];
+            let searchIdx = 0;
+            for (let i = 0; i < wordSpans.length; i++) {
+              const wordClean = wordSpans[i].textContent.replace(/[^\w%]/g, '');
+              let pos = -1;
+              if (wordClean) {
+                pos = spokenText.toLowerCase().indexOf(wordClean.toLowerCase(), searchIdx);
+              }
+              if (pos !== -1) {
+                wordOffsets.push({ idx: i, start: pos });
+                searchIdx = pos + wordClean.length;
+              } else {
+                const approxPos = Math.round((i / wordSpans.length) * spokenText.length);
+                wordOffsets.push({ idx: i, start: approxPos });
+              }
+            }
+
+            let boundaryFired = false;
+            utterance.onboundary = (event) => {
+              if (event.name === 'word') {
+                boundaryFired = true;
+                const charIdx = event.charIndex;
+                let targetIdx = 0;
+                for (let i = 0; i < wordOffsets.length; i++) {
+                  if (charIdx >= wordOffsets[i].start) {
+                    targetIdx = wordOffsets[i].idx;
+                  }
+                }
+                const spanIdx = Math.min(targetIdx, wordSpans.length - 1);
+                revealUpTo(spanIdx);
+              }
+            };
+
+            utterance.onend = () => {
+              finishParagraph();
+            };
+
+            utterance.onerror = () => {
+              if (!boundaryFired && lastRevealed < wordSpans.length - 1) {
+                stepFallback();
+              } else {
+                finishParagraph();
+              }
+            };
+
+            synth.speak(utterance);
+            usedSpeech = true;
+
+            const checkTimer = setTimeout(() => {
+              if (isNarrating && !boundaryFired && lastRevealed < wordSpans.length - 1) {
+                stepFallback();
+              }
+            }, 600);
+            activeTimers.push(checkTimer);
+
+          } catch (e) {
+            usedSpeech = false;
+          }
+        }
+
+        function stepFallback() {
+          let curr = Math.max(0, lastRevealed);
+          const perWordMs = Math.round(2800 / Math.max(wordSpans.length, 1));
+          function tick() {
+            if (!isNarrating) return;
+            if (curr < wordSpans.length) {
+              revealUpTo(curr);
+              curr++;
+              const timer = setTimeout(tick, perWordMs);
+              activeTimers.push(timer);
+            } else {
+              finishParagraph();
+            }
+          }
+          tick();
+        }
+
+        if (!usedSpeech) {
+          stepFallback();
+        }
+      }
+
+      speakNextParagraph();
+    }
+
+    function speakLoomLine(loomEl, text) {
+      if (!loomEl || !text) return;
+      stop();
+      isNarrating = true;
+      loomEl.textContent = '';
+      const words = text.split(/\s+/).filter(Boolean);
+      const spans = [];
+      const frag = document.createDocumentFragment();
+      frag.appendChild(document.createTextNode('"'));
+      for (let i = 0; i < words.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'crawl-word';
+        span.textContent = words[i];
+        frag.appendChild(span);
+        spans.push(span);
+        if (i < words.length - 1) frag.appendChild(document.createTextNode(' '));
+      }
+      frag.appendChild(document.createTextNode('"'));
+      loomEl.appendChild(frag);
+
+      let lastRevealed = -1;
+      function revealUpTo(index) {
+        for (let i = 0; i <= index && i < spans.length; i++) {
+          spans[i].classList.add('is-spoken');
+          if (i === index) spans[i].classList.add('is-current');
+          else spans[i].classList.remove('is-current');
+        }
+        lastRevealed = Math.max(lastRevealed, index);
+      }
+      function finish() {
+        for (let i = 0; i < spans.length; i++) {
+          spans[i].classList.add('is-spoken');
+          spans[i].classList.remove('is-current');
+        }
+        isNarrating = false;
+      }
+
+      let usedSpeech = false;
+      if (enabled && synth) {
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          const voice = getBestVoice();
+          if (voice) utterance.voice = voice;
+          utterance.rate = 0.90;
+          utterance.pitch = 0.86;
+          let boundaryFired = false;
+          utterance.onboundary = (e) => {
+            if (e.name === 'word') {
+              boundaryFired = true;
+              const ratio = e.charIndex / Math.max(1, text.length);
+              const targetIdx = Math.min(spans.length - 1, Math.floor(ratio * spans.length));
+              revealUpTo(targetIdx);
+            }
+          };
+          utterance.onend = finish;
+          utterance.onerror = () => {
+            if (!boundaryFired) stepFallback();
+            else finish();
+          };
+          synth.speak(utterance);
+          usedSpeech = true;
+          const checkTimer = setTimeout(() => {
+            if (isNarrating && !boundaryFired && lastRevealed < spans.length - 1) {
+              stepFallback();
+            }
+          }, 500);
+          activeTimers.push(checkTimer);
+        } catch (err) {
+          usedSpeech = false;
+        }
+      }
+      function stepFallback() {
+        let curr = Math.max(0, lastRevealed);
+        const perWordMs = Math.round(2500 / Math.max(spans.length, 1));
+        function tick() {
+          if (!isNarrating) return;
+          if (curr < spans.length) {
+            revealUpTo(curr);
+            curr++;
+            const t = setTimeout(tick, perWordMs);
+            activeTimers.push(t);
+          } else {
+            finish();
+          }
+        }
+        tick();
+      }
+      if (!usedSpeech) stepFallback();
+    }
+
+    return {
+      isEnabled: () => enabled,
+      toggle: () => {
+        enabled = !enabled;
+        if (!enabled) stop();
+        return enabled;
+      },
+      narrateIntro,
+      speakLoomLine,
+      stop
+    };
+  })();
+
+  // Voice toggle & user gesture listeners
+  const btnVoiceToggle = document.getElementById('btn-voice-toggle');
+  if (btnVoiceToggle) {
+    btnVoiceToggle.addEventListener('click', () => {
+      const active = LoomVoice.toggle();
+      btnVoiceToggle.classList.toggle('is-active', active);
+      document.getElementById('voice-icon').textContent = active ? '🔊' : '🔇';
+      document.getElementById('voice-label').textContent = active ? 'LOOM VOICE: ACTIVE' : 'LOOM VOICE: MUTED';
+      if (active && state.phase === 'INTRO') {
+        LoomVoice.narrateIntro();
+      }
+    });
+  }
+
+  const introView = document.getElementById('view-intro');
+  if (introView) {
+    introView.addEventListener('click', () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    });
+  }
+
   // phase { cycle, phase, endsAt, crisis } -> switch sections and update the top bar.
   function onPhase(payload) {
     state.phase = payload.phase;
@@ -230,6 +613,12 @@
     document.getElementById('cycle-indicator').textContent = cycleText;
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
     updateSessionControls();
+
+    if (payload.phase === 'INTRO') {
+      LoomVoice.narrateIntro();
+    } else {
+      LoomVoice.stop();
+    }
   }
 
   // CHAMBER reveal: colour the map at the baseline (W = 0.40, GDW 25%) unless
@@ -346,9 +735,14 @@
     document.getElementById('incident-subtitle').textContent = crisis.subtitle || '';
     document.getElementById('incident-text').textContent = crisis.incident || '';
     const loom = document.getElementById('incident-loom');
-    loom.textContent = crisis.loomIntro ? `"${crisis.loomIntro}"` : '';
-    loom.hidden = !crisis.loomIntro;
     banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
+    if (payload.phase === 'INCIDENT' && crisis.loomIntro && LoomVoice.isEnabled()) {
+      loom.hidden = false;
+      LoomVoice.speakLoomLine(loom, crisis.loomIntro);
+    } else {
+      loom.textContent = crisis.loomIntro ? `"${crisis.loomIntro}"` : '';
+      loom.hidden = !crisis.loomIntro;
+    }
   }
   socket.on('phase', renderIncident);
 
@@ -976,5 +1370,5 @@
   window.debugTriggerPhase = debugTriggerPhase;
   window.debugTriggerEvent = debugTriggerEvent;
 
-  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber, setGdw, applyWorldTheme };
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber, setGdw, applyWorldTheme, LoomVoice };
 })();

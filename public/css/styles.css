@@ -93,6 +93,14 @@ body.host[data-world] .chamber-col { border-color: color-mix(in srgb, var(--them
 body.host {
   font-size: 24px;
   overflow: hidden;
+  background-color: var(--slate-950);
+  background-image:
+    radial-gradient(ellipse at 50% 35%, rgba(8, 11, 16, 0.74) 0%, rgba(8, 11, 16, 0.92) 100%),
+    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 body.host h1 { font-size: 72px; line-height: 1.05; margin: 0 0 0.3em; letter-spacing: -0.01em; }
 body.host h2 { font-size: 56px; line-height: 1.1; margin: 0 0 0.3em; }
@@ -114,7 +122,9 @@ body.host .label {
   gap: 48px;
   height: 96px;
   padding: 0 40px;
-  background: var(--bg-sunken);
+  background: rgba(8, 11, 16, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--border);
 }
 .topbar-brand { font-size: 28px; font-weight: 700; color: var(--accent); margin-right: auto; }
@@ -223,20 +233,88 @@ body.host .label {
 .btn-primary:not(:disabled):hover { box-shadow: 0 0 24px var(--loom-glow); }
 .btn-start { margin-top: 32px; width: 100%; font-size: 32px; padding: 24px; }
 
-/* Intro: 30-second text crawl (animation restarts when the view activates). */
+/* Intro: Loom transmission with synchronized word-by-word reveal. */
 .crawl-window {
   height: 100%;
   overflow: hidden;
   position: relative;
-  -webkit-mask-image: linear-gradient(transparent 0%, #000 18%, #000 82%, transparent 100%);
-          mask-image: linear-gradient(transparent 0%, #000 18%, #000 82%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px 20px;
+  -webkit-mask-image: linear-gradient(transparent 0%, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(transparent 0%, #000 6%, #000 94%, transparent 100%);
 }
-.crawl { max-width: 1200px; margin: 0 auto; text-align: center; transform: translateY(100%); }
-.crawl p { font-size: 44px; margin: 0 0 1.1em; }
-.view.is-active .crawl { animation: crawl-up 30s linear forwards; }
-@keyframes crawl-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(-110%); }
+.crawl {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.crawl p {
+  font-size: 38px;
+  line-height: 1.35;
+  margin: 0;
+}
+.crawl p.label {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+.crawl-word {
+  display: inline;
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(3px);
+  transition: opacity 0.22s ease-out, filter 0.22s ease-out, transform 0.22s ease-out, color 0.22s ease-out, text-shadow 0.22s ease-out;
+}
+.crawl-word.is-spoken {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+.crawl-word.is-current {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(-2px);
+  color: var(--accent);
+  text-shadow: 0 0 18px var(--loom-cyan), 0 0 32px var(--loom-glow);
+}
+.crawl-word.danger.is-current {
+  color: var(--danger);
+  text-shadow: 0 0 18px var(--alert-crimson), 0 0 32px rgba(229, 72, 77, 0.45);
+}
+.intro-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 40px;
+  z-index: 10;
+}
+.btn-voice-toggle {
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid var(--slate-700);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.btn-voice-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--bg-raised);
+}
+.btn-voice-toggle.is-active {
+  border-color: var(--loom-cyan-dim);
+  color: var(--accent);
 }
 
 /* Role assignment: encryption locks per node; role names are never shown here. */
