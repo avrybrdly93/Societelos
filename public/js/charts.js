@@ -198,14 +198,17 @@
    * `durationMs` (12 s) on top of the active forecast fan. `onMonthTick(m, gdw)`
    * fires as the line reaches each month m = 1..12. Returns { cancel }.
    */
-  function animateRealizedLine(realized, onMonthTick, { durationMs = 12000, canvas } = {}) {
+  function animateRealizedLine(realized, onMonthTick, { durationMs = 12000, canvas, onCollapse } = {}) {
     cancelAnimation();
     const values = Array.from((realized && (realized.gdw || realized)) || []);
+    // Collapse: if GDW reaches 0 mid-cycle the line halts there (month c).
+    const collapseAt = values.findIndex((v, m) => m > 0 && v <= 0);
     if (canvas || !active) drawForecastFan(active ? active.forecast : null, canvas || (active && active.canvas));
     if (!active || values.length < 2) return { cancel: cancelAnimation };
     const chart = active;
     const months = values.length - 1;
     const msPerMonth = durationMs / months;
+    const endMonth = collapseAt > 0 ? collapseAt : months;
     let lastMonth = 0;
     const start = performance.now();
     const state = { frame: null };
@@ -244,16 +247,43 @@
       ctx.restore();
     }
 
+    function drawCollapse() {
+      const current = active || chart;
+      const { ctx, g } = current;
+      ctx.save();
+      ctx.strokeStyle = COLORS.danger;
+      ctx.lineWidth = 3;
+      const x = g.x(endMonth);
+      const y = g.y(0);
+      ctx.beginPath();
+      ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12);
+      ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
+      ctx.stroke();
+      ctx.fillStyle = COLORS.danger;
+      ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
+      ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
+      ctx.restore();
+    }
+
     function frame(now) {
       if (animation !== state) return;
-      const t = Math.min(months, (now - start) / msPerMonth);
+      const t = Math.min(endMonth, (now - start) / msPerMonth);
       drawUpTo(t);
       while (lastMonth < Math.floor(t)) {
         lastMonth += 1;
         if (typeof onMonthTick === 'function') onMonthTick(lastMonth, values[lastMonth]);
       }
-      if (t < months) state.frame = requestAnimationFrame(frame);
-      else animation = null;
+      if (t < endMonth) {
+        state.frame = requestAnimationFrame(frame);
+        return;
+      }
+      animation = null;
+      if (collapseAt > 0) {
+        drawCollapse();
+        if (typeof onCollapse === 'function') onCollapse(endMonth);
+      }
     }
     state.frame = requestAnimationFrame(frame);
     return { cancel: () => { if (animation === state) cancelAnimation(); } };

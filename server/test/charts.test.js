@@ -88,3 +88,30 @@ test('forecast fan renders extreme spreads (p5 at 0%, p95 at 90%) inside the plo
   assert.equal(g.y(-20), bottom);
   assert.equal(g.y(140), top);
 });
+
+test('realized line halts in Collapse when GDW hits 0 mid-cycle', () => {
+  const { charts, advance } = loadCharts();
+  const canvas = mockCanvas();
+  charts.drawForecastFan({ median: months(() => 20), p5: months(() => 10), p95: months(() => 30) }, canvas);
+  // GDW falls to 0 in month 7 and (hypothetically) bounces back afterwards.
+  const gdw = [12, 10, 8, 6, 5, 3, 1, 0, 2, 4, 6, 8, 10];
+  const ticks = [];
+  let collapsedAt = null;
+  charts.animateRealizedLine({ gdw }, (m, v) => ticks.push([m, v]), { durationMs: 12000, onCollapse: (m) => { collapsedAt = m; } });
+  for (let i = 0; i < 40; i++) advance(500); // 20 s of frames
+  assert.deepEqual(ticks.map(([m]) => m), [1, 2, 3, 4, 5, 6, 7], 'no months after the collapse');
+  assert.deepEqual(ticks[ticks.length - 1], [7, 0]);
+  assert.equal(collapsedAt, 7);
+});
+
+test('realized line plays all 12 months when GDW stays above 0', () => {
+  const { charts, advance } = loadCharts();
+  const canvas = mockCanvas();
+  charts.drawForecastFan({ median: months(() => 30), p5: months(() => 20), p95: months(() => 40) }, canvas);
+  const ticks = [];
+  let collapsed = false;
+  charts.animateRealizedLine({ gdw: months((m) => 25 + m) }, (m) => ticks.push(m), { onCollapse: () => { collapsed = true; } });
+  for (let i = 0; i < 40; i++) advance(500);
+  assert.deepEqual(ticks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  assert.equal(collapsed, false);
+});
