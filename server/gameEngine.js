@@ -87,7 +87,8 @@ const PHASE_STARTERS = {
   CHAMBER: 'startCouncilChamberPhase',
   INCIDENT: 'startIncidentPhase',
   INTEL: 'startIntelDropPhase',
-  DEBATE: 'startDebatePhase'
+  DEBATE: 'startDebatePhase',
+  VOTE: 'startBlindVotePhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -539,6 +540,32 @@ class GameState extends EventEmitter {
   /** DEBATE: broadcast options A and B with the countdown's endsAt. */
   startDebatePhase() {
     this.enterPhase(PHASES.DEBATE, { options: this.publicOptions() });
+  }
+
+  /** VOTE: open blind vote collection for the vote timer (15 s). */
+  startBlindVotePhase() {
+    this.votes = {};
+    this.votingOpen = true;
+    this.enterPhase(PHASES.VOTE);
+  }
+
+  /**
+   * Record a blind vote while voting is open. One vote per node per cycle.
+   * Returns { ok: true } or { ok: false, reason }.
+   */
+  castVote(node, choice, override = false) {
+    if (!this.votingOpen || this.phase !== PHASES.VOTE) return { ok: false, reason: 'VOTING_CLOSED' };
+    if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
+    if (choice !== 'A' && choice !== 'B') return { ok: false, reason: 'BAD_CHOICE' };
+    if (this.votes[node]) return { ok: false, reason: 'ALREADY_VOTED' };
+    this.votes[node] = { choice, override: !!override };
+    return { ok: true };
+  }
+
+  /** True once every seated player has voted this cycle. */
+  allVotesIn() {
+    const seated = Object.keys(this.players);
+    return seated.length > 0 && seated.every((node) => this.votes[node]);
   }
 
   /**
