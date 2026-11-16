@@ -779,7 +779,10 @@ class GameState extends EventEmitter {
     const finale = this.finale;
     if (finale.closed) return;
     finale.closed = true;
-    finale.policies = Object.keys(this.players).map((node, i) => {
+    // Anonymous ids: POLICY-1..5 follow a shuffle seeded by the game id, so
+    // projector order never mirrors NODE-01..NODE-05.
+    const order = seededShuffle(Object.keys(this.players), hashSeed(this.gameId, 'finale-policies'));
+    finale.policies = order.map((node, i) => {
       const m = finale.moderation[node] || {};
       // "reject", a second "revise", or a resubmit that never came / timed
       // out: a safe, bland placeholder so nothing unmoderated is shown.

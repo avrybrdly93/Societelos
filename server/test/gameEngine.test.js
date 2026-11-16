@@ -743,3 +743,25 @@ test('"reject", a failed second attempt or a missed resubmit becomes a bland pla
     restore();
   }
 });
+
+test('finale policy ids POLICY-1..5 follow a deterministic shuffle, not node order', async () => {
+  const restore = stubModerate(okModeration());
+  try {
+    const orders = [];
+    for (const gameId of ['shuffle-a', 'shuffle-a', 'shuffle-b', 'shuffle-c']) {
+      const game = finaleGame();
+      game.gameId = gameId;
+      quiet(() => game.startFinaleWritePhase());
+      NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+      for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+      game.stop();
+      assert.deepEqual(game.finale.policies.map((p) => p.id), ['POLICY-1', 'POLICY-2', 'POLICY-3', 'POLICY-4', 'POLICY-5']);
+      orders.push(game.finale.policies.map((p) => p.node).join());
+    }
+    assert.equal(orders[0], orders[1], 'same game id, same order');
+    assert.ok(new Set(orders).size > 1, 'different games shuffle differently');
+    assert.ok(orders.some((o) => o !== NODE_IDS.join()), 'not simply node order');
+  } finally {
+    restore();
+  }
+});
