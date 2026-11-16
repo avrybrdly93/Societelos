@@ -127,24 +127,24 @@
       "cycle": 2,
       "title": "Who Holds the Off-Switch?",
       "subtitle": "Power",
-      "incident": "Last week, The Loom closed the Riverside transit line overnight to redirect energy to District 2's computing grid. The decision was mathematically optimal, but zero humans were consulted. A petition demanding binding human control over the Loom has reached 80,000 signatures.",
-      "loomIntro": "",
+      "incident": "Last week the Loom closed the Riverside transit line overnight to save energy for D2's servers. The decision was mathematically optimal, and nobody was asked. A citizens' petition demanding binding power over the Loom has reached 80,000 signatures, nearly a third of the region.",
+      "loomIntro": "I made 41,000 decisions about your lives yesterday. You may now decide whether you wish to make some of them yourselves.",
       "teacherPrompt": "Classroom Debrief: If an AI makes demonstrably better, safer decisions than human voters, is democracy still worth preserving?",
       "mode": "binary",
       "feed": [
         {
           "citizenId": "ruth",
-          "text": "We used to strike when bosses stopped listening. Who do you strike against when the boss is a server?",
-          "sentiment": "depressive"
+          "text": "We used to strike when they stopped listening. Who do you strike against when the boss is a server?",
+          "sentiment": "outraged"
         },
         {
           "citizenId": "hollis",
-          "text": "Let 250,000 amateurs vote on transit grids? The Loom has never made a mistake. People make nothing else.",
+          "text": "Let 250,000 amateurs vote on infrastructure? The Loom has never made a mistake. People make nothing but.",
           "sentiment": "complacent"
         },
         {
           "citizenId": "kai",
-          "text": "Honestly didn't notice the train closed. Does anyone still go outside?",
+          "text": "honestly i didn't notice the train closed. does anyone still go outside",
           "sentiment": "complacent"
         }
       ],
