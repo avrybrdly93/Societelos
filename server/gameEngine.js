@@ -664,7 +664,10 @@ class GameState extends EventEmitter {
       totals[choice] += override ? 2 : 1;
     }
     const winner = totals.B > totals.A ? 'B' : 'A';
-    return { totals, winner, tie: totals.A === totals.B };
+    // A seated node with no vote when the timer expires (e.g. a disconnected
+    // phone) abstains: it adds nothing to either side.
+    const abstained = Object.keys(this.players).filter((node) => !this.votes[node]).length;
+    return { totals, winner, tie: totals.A === totals.B, abstained };
   }
 
   /** Option `key` of the current crisis, or an empty placeholder. */
@@ -776,7 +779,7 @@ class GameState extends EventEmitter {
    */
   startResolutionPhase() {
     this.votingOpen = false;
-    const { totals, tie, winner: provisional } = this.tallyVotes();
+    const { totals, tie, abstained, winner: provisional } = this.tallyVotes();
     let winner = provisional;
     const previousGdw = this.gdw;
 
@@ -816,7 +819,7 @@ class GameState extends EventEmitter {
 
     this.enterPhase(PHASES.RESOLUTION);
 
-    const result = { cycle: this.cycle, winner, totals, tie, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    const result = { cycle: this.cycle, winner, totals, tie, abstained, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens: this.data.citizens };
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
