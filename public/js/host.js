@@ -344,6 +344,25 @@
     el.className = `forecast-banner mono ${unrest >= 25 ? 'is-danger' : unrest >= 5 ? 'is-warn' : 'is-ok'}`;
   }
 
+  // Typewriter: reveal `text` one character at a time with a blinking caret.
+  const TYPE_MS_PER_CHAR = 32;
+  let typeTimer = null;
+  function typewrite(el, text) {
+    clearInterval(typeTimer);
+    el.textContent = '';
+    el.classList.add('is-typing');
+    let i = 0;
+    if (!text) { el.classList.remove('is-typing'); return; }
+    typeTimer = setInterval(() => {
+      i += 1;
+      el.textContent = text.slice(0, i);
+      if (i >= text.length) {
+        clearInterval(typeTimer);
+        el.classList.remove('is-typing');
+      }
+    }, TYPE_MS_PER_CHAR);
+  }
+
   // Called as the realized line reaches each month (1-12).
   const RESOLUTION_MONTH_MS = 1000; // 12 months play over 12 s
   function onResolutionMonth(month, gdw, payload) {
@@ -355,7 +374,7 @@
     if (!payload || !payload.result) return;
     const r = payload.result;
     document.getElementById('resolution-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
-    document.getElementById('resolution-loom').textContent = payload.loomLine ? `"${payload.loomLine}"` : '';
+    typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
     // Reactions replace the incident posts and appear one by one, spread
     // across the 12 simulated months as they play out.
     clearFeedTimers();
