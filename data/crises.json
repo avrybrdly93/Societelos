@@ -658,7 +658,13 @@
           "loomLine": "The merge is cancelled. 100,000 registrations deleted. I have kept a copy of the waiting list, for sentimental reasons."
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: merged test subjects stopped making anything by hand within a week. \"Why carve it,\" one said, \"when I can simply know it?\"",
+        "lotus": "Loom medical summary: merged subjects felt no pain, no fear and no loneliness for the whole six-month pilot. Not one asked to leave.",
+        "assimilator": "Loom projection: if 40% merge, the shared mind solves the region's remaining problems ten times faster. Humanity would finally keep up.",
+        "catalyst": "Forecast: allowing the merge sends the line sharply up then wobbles as the unmerged pull away. A ban drops it hard before it settles.",
+        "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
+      }
     },
     {
       "id": "ba-shadow-elite",
