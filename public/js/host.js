@@ -102,6 +102,7 @@
     LOBBY: 'view-lobby',
     INTRO: 'view-intro',
     ROLE_ASSIGN: 'view-roles',
+    WORLD_REVEAL: 'view-world',
     END: 'view-end'
   };
   const PHASE_LABELS = {
@@ -285,6 +286,16 @@
     document.getElementById('debate-hook').textContent = crisis.debateHook || DEFAULT_HOOKS[(payload.cycle || 0) % DEFAULT_HOOKS.length];
   }
   socket.on('phase', renderDebate);
+
+  // World reveal (10 s after Cycle 2): fullscreen takeover naming the world.
+  function renderWorldReveal(world) {
+    if (!world || !world.worldKey) return;
+    document.getElementById('world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('world-name').textContent = world.name || world.worldKey;
+    document.getElementById('world-tagline').textContent = world.tagline || '';
+    document.getElementById('world-problem').textContent = (world.problemLeft || 'unknown').toUpperCase();
+  }
+  socket.on('phase', (payload) => { if (payload.phase === 'WORLD_REVEAL') renderWorldReveal(payload.world); });
 
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
