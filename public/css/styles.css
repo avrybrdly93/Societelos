@@ -724,3 +724,10 @@ body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(-
 @keyframes caret-blink { 50% { opacity: 0; } }
 /* Reserve room for a full 200-character Loom line so typing never shifts the chart. */
 body.host .resolution-loom { font-size: 26px; min-height: calc(26px * 1.35 * 4); }
+
+/* Resolution badges: tie-breaker, Override detected. */
+.resolution-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.resolution-badges:not(:has(.res-badge:not([hidden]))) { display: none; }
+.res-badge[hidden] { display: none; }
+body.host .res-badge { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 6px; }
+.res-badge-tie { color: var(--slate-950); background: var(--theme-current, var(--accent)); }

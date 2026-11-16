@@ -322,6 +322,7 @@
     const resolving = payload.phase === 'RESOLUTION';
     document.getElementById('resolution-panel').hidden = !resolving;
     if (resolving) {
+      document.querySelectorAll('.res-badge').forEach((b) => { b.hidden = true; });
       document.getElementById('resolution-policy').textContent = 'The Loom is simulating 12 months';
       document.getElementById('resolution-loom').textContent = '…';
     }
@@ -373,6 +374,8 @@
   function renderResolution(payload) {
     if (!payload || !payload.result) return;
     const r = payload.result;
+    // Tied vote: the Loom stepped in and picked the higher forecast median.
+    document.getElementById('badge-tie').hidden = !r.tie;
     document.getElementById('resolution-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
     typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
     // Reactions replace the incident posts and appear one by one, spread
