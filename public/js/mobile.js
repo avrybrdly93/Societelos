@@ -163,7 +163,8 @@
     VOTE: 'm-view-vote',
     RESOLUTION: 'm-view-result',
     WORLD_REVEAL: 'm-view-world',
-    FINALE_WRITE: 'm-view-finale-write'
+    FINALE_WRITE: 'm-view-finale-write',
+    FINALE_MOD: 'm-view-finale-wait'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -394,11 +395,26 @@
       updateFinaleCount();
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
+        showFinaleWait();
         return;
       }
       finaleError.textContent = 'The Loom did not accept that. Try again.';
       finaleError.hidden = false;
     });
+  });
+  // "THE LOOM IS EVALUATING YOUR POLICY..." with the player's own text.
+  function showFinaleWait(status) {
+    document.getElementById('finale-wait-mine').textContent = state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
+    document.getElementById('finale-wait-status').textContent = status || (state.phase === 'FINALE_MOD'
+      ? 'Cleaning language. Translating intent into numbers.'
+      : 'Submitted. Waiting for the other council members.');
+    showView('m-view-finale-wait');
+  }
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    // Already submitted when FINALE_WRITE is (re)broadcast: stay on the wait screen.
+    if (payload.phase === 'FINALE_WRITE' && state.finaleSubmitted && state.finaleCycle === payload.cycle) showFinaleWait();
+    if (payload.phase === 'FINALE_MOD') showFinaleWait();
   });
   socket.on('phase', (payload) => {
     if (payload && payload.phase === 'FINALE_WRITE' && state.finaleCycle !== payload.cycle) {
