@@ -585,21 +585,22 @@
           "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset."
         },
         "B": {
-          "name": "Chemical Authenticity Ban",
-          "text": "Criminalize biochemical mood manipulation. Humans must retain their full spectrum of sorrow and joy.",
+          "name": "Ban Chemical Happiness",
+          "text": "Ban all mood tuning in food and water. Citizens keep the whole range of feeling, including the grief and panic the Loom could have removed.",
           "roles": [
             "artisan",
             "ghost"
           ],
           "effects": {
-            "purpose": 0.6,
-            "connection": 0.6,
-            "health": -0.2,
+            "purpose": 0.5,
+            "connection": 0.5,
+            "health": -0.4,
             "trust": -0.3,
-            "fairness": 0.3,
-            "autonomy": 0.8
+            "fairness": 0.1,
+            "autonomy": 0.7
           },
-          "targetGdwDelta": 8
+          "targetGdwDelta": 8,
+          "loomLine": "Mood tuning disabled. Expect more tears this month. I am told some of them will be meaningful."
         }
       },
       "intel": {}
