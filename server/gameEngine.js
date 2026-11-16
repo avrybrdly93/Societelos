@@ -135,6 +135,49 @@ function resolveSimulate() {
 }
 
 /**
+ * Stub for server/loom.js: canned JSON for narrate() and moderate().
+ * Both are async to match the real Gemini-backed interface.
+ */
+const loomStub = {
+  async narrate(context = {}) {
+    const delta = context.summary?.realizedDelta ?? 0;
+    const loomLine = delta >= 0
+      ? 'The council has decided. Wellbeing indicators are rising. I will continue to observe.'
+      : 'The council has decided. Wellbeing indicators are falling. I will continue to observe.';
+    return {
+      loomLine,
+      messages: [
+        { citizenId: 'mara', text: delta >= 0 ? 'Felt useful today for the first time in months.' : 'Nobody asked us. Again.' },
+        { citizenId: 'tomas', text: delta >= 0 ? 'Fine. I admit it. Things are slightly less terrible.' : 'Great. Another genius decision from the people upstairs.' }
+      ],
+      stub: true
+    };
+  },
+  async moderate(submissions = []) {
+    return submissions.map((s) => ({
+      node: s.node,
+      status: 'ok',
+      cleaned: String(s.text || '').trim().slice(0, 140),
+      feedback: '',
+      roles: [],
+      effects: { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 },
+      stub: true
+    }));
+  }
+};
+
+/** Resolve the real Loom module when it exposes narrate/moderate, else the stub. */
+function resolveLoom() {
+  try {
+    const loom = require('./loom');
+    if (loom && typeof loom.narrate === 'function' && typeof loom.moderate === 'function') return loom;
+  } catch (err) {
+    // server/loom.js not merged yet.
+  }
+  return loomStub;
+}
+
+/**
  * State for one game room (one projector + 5 phones).
  */
 class GameState {
@@ -250,6 +293,8 @@ module.exports = {
   roleKey,
   simulateStub,
   resolveSimulate,
+  loomStub,
+  resolveLoom,
   ROOM_CODE_ALPHABET,
   NODE_IDS,
   MAX_PLAYERS
