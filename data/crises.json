@@ -28,35 +28,39 @@
       "cycle": 1,
       "title": "Who Owns the Loom?",
       "subtitle": "Distribution",
-      "incident": "The Loom's output covers every human physical need, but 99% of its physical infrastructure legally belongs to the 0.1% who owned the conglomerates that financed it. Dividend riots are erupting across District 4 Eastworks.",
-      "loomIntro": "",
+      "incident": "The Loom's output now covers every human need, but 99% of it legally belongs to the 0.1% who owned the companies that built it. Dividend riots are starting in District 4.",
+      "loomIntro": "I produce everything you need. The law says I belong to 312 people. You may wish to discuss this.",
       "teacherPrompt": "Classroom Debrief: When automated machines create all wealth, who should own them: the investors who built them, or the public who depends on them?",
       "mode": "binary",
       "feed": [
         {
           "citizenId": "ruth",
-          "text": "We built these factory foundations with our hands 30 years ago. Now drones lock us out.",
+          "text": "We built these factories with our own hands. Now the drones lock us out and the dividends go up the coast.",
           "sentiment": "outraged"
         },
         {
           "citizenId": "hollis",
-          "text": "Contracts are sacred. Without private capital, The Loom would still be a blackboard equation.",
+          "text": "Contracts are contracts. Without our capital the Loom would still be an equation on a whiteboard.",
           "sentiment": "complacent"
         },
         {
+          "citizenId": "tomas",
+          "text": "Riot in Eastworks. Well, more of a strongly worded crowd. We are out of practice.",
+          "sentiment": "angry"
+        },
+        {
           "citizenId": "kai",
-          "text": "Just deliver my synth ration on time. I don't care whose logo is stamped on the casing.",
+          "text": "just deliver my food on time. i do not care whose logo is on the box",
           "sentiment": "complacent"
         }
       ],
       "options": {
         "A": {
-          "name": "The Commons (Public Ownership)",
-          "text": "The Loom and all production become public property. Every citizen receives an equal dividend. Former corporate stakes are dissolved.",
+          "name": "The Commons",
+          "text": "The Loom and everything it produces become public property; every citizen gets an equal share. The old owners' stakes are dissolved, and they threaten to sabotage the Loom's energy supply.",
           "roles": [
             "artisan",
-            "assimilator",
-            "ghost"
+            "assimilator"
           ],
           "effects": {
             "purpose": 0.2,
@@ -81,8 +85,8 @@
           ]
         },
         "B": {
-          "name": "The Charter (The Robot Dividend)",
-          "text": "Owners retain legal title but pay a heavy 'Robot Dividend' tax to every citizen. Survival is guaranteed; wealth gap remains intact.",
+          "name": "The Charter",
+          "text": "Owners keep legal title but pay a robot dividend to everyone from a levy on the Loom's output. Everyone gets enough to live on; the wealth gap stays.",
           "roles": [
             "lotus"
           ],
