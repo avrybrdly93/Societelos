@@ -1,9 +1,9 @@
-# Societelos: The Classroom Protocol
+# The Loom: The Classroom Protocol
 
 ![Hackathon Status](https://img.shields.io/badge/Status-Hackathon_Active-green)
 ![Version](https://img.shields.io/badge/Version-0.1.0-blue)
 
-**Societelos** is a 5-player local multiplayer (Jackbox-style) classroom simulation about steering the psychological survival of a post-labor civilization. 
+**The Loom** is a 5-player local multiplayer (Jackbox-style) classroom simulation about steering the psychological survival of a post-labor civilization. 
 
 ---
 
@@ -30,7 +30,7 @@ Each cycle follows a strict 5-step phase:
 
 ## 🏆 How to Win (Scoring Math)
 
-Societelos operates on a delicate balance between cooperative survival and competitive backstabbing.
+The Loom operates on a delicate balance between cooperative survival and competitive backstabbing.
 
 ### 1. Cooperative (The Grid)
 * The GDW starts at **25%**. The Council must raise it to prevent a systemic collapse. 
@@ -61,8 +61,8 @@ Societelos operates on a delicate balance between cooperative survival and compe
 
 1. **Clone the repository:**
    ```bash
-   git clone git@github.com:avrybrdly93/societelos.git
-   cd societelos
+   git clone git@github.com:avrybrdly93/The Loom.git
+   cd The Loom
    ```
 2. **Install dependencies:**
    ```bash
