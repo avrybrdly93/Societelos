@@ -63,6 +63,11 @@ const PHASES = Object.freeze({
   END: 'END'
 });
 
+const TOTAL_CYCLES = 5;
+
+// Phases with dedicated entry logic -> GameState method name.
+const PHASE_STARTERS = {};
+
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
@@ -313,6 +318,85 @@ class GameState extends EventEmitter {
     return this.endsAt;
   }
 
+  /**
+   * Which phase follows the current one. Encodes the game loop:
+   * setup -> cycles 1-4 (binary) -> world reveal after cycle 2 -> cycle 5 finale -> end.
+   */
+  nextPhase() {
+    const P = PHASES;
+    switch (this.phase) {
+      case P.LOBBY: return P.INTRO;
+      case P.INTRO: return P.ROLE_ASSIGN;
+      case P.ROLE_ASSIGN: return P.CHAMBER;
+      case P.CHAMBER: return P.INCIDENT;
+      case P.INCIDENT: return this.isFinaleWriteIn() ? P.FINALE_WRITE : P.INTEL;
+      case P.INTEL: return P.DEBATE;
+      case P.DEBATE: return P.VOTE;
+      case P.VOTE: return P.RESOLUTION;
+      case P.RESOLUTION:
+        if (this.gdw <= 0 || this.cycle >= TOTAL_CYCLES) return P.END;
+        return this.cycle === 2 ? P.WORLD_REVEAL : P.INCIDENT;
+      case P.WORLD_REVEAL: return P.INCIDENT;
+      case P.FINALE_WRITE: return P.FINALE_MOD;
+      case P.FINALE_MOD: return P.FINALE_DEBATE;
+      case P.FINALE_DEBATE: return P.FINALE_RANK;
+      case P.FINALE_RANK: return P.FINALE_ENACT;
+      case P.FINALE_ENACT: return P.END;
+      default: return P.END;
+    }
+  }
+
+  /** True when the current cycle is the write-and-rank finale. */
+  isFinaleWriteIn() {
+    return this.cycle === TOTAL_CYCLES && !this.finaleFallback;
+  }
+
+  /**
+   * Transition controller: move to the next phase and run its entry logic.
+   * Phase-specific starters (start*Phase) are looked up in PHASE_STARTERS;
+   * any phase without one just gets its timer and a broadcast.
+   */
+  advancePhase() {
+    const from = this.phase;
+    const to = this.nextPhase();
+    if (from === PHASES.END) return to;
+    // A cycle begins at each INCIDENT reached from setup, a resolution or the world reveal.
+    if (to === PHASES.INCIDENT && from !== PHASES.INCIDENT) {
+      this.startCycle(from === PHASES.CHAMBER ? 1 : this.cycle + 1);
+    }
+    const starter = PHASE_STARTERS[to];
+    if (starter && typeof this[starter] === 'function') {
+      this[starter]();
+    } else {
+      this.enterPhase(to);
+    }
+    return to;
+  }
+
+  /**
+   * Generic phase entry: set the phase, start its timer (expiry advances the
+   * machine) and broadcast { cycle, phase, endsAt, crisis }.
+   */
+  enterPhase(phase, extra = {}) {
+    this.phase = phase;
+    const endsAt = this.startPhaseTimer(this.durations[phase], () => this.advancePhase());
+    this.emit('phase', { cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra });
+    return endsAt;
+  }
+
+  /** Begin a cycle (stub until startCycle is fully implemented). */
+  startCycle(cycleNumber) {
+    this.cycle = cycleNumber;
+    this.votes = {};
+  }
+
+  /** Crisis fields safe to show everyone (no effects, roles or intel). */
+  publicCrisis() {
+    if (!this.crisis) return null;
+    const { id, title, subtitle, incident, loomIntro } = this.crisis;
+    return { id, title, subtitle, incident, loomIntro };
+  }
+
   /** Milliseconds left on the current phase timer (0 when none). */
   timeRemainingMs() {
     return this.endsAt ? Math.max(0, this.endsAt - Date.now()) : 0;
@@ -407,6 +491,8 @@ module.exports = {
   NODE_IDS,
   MAX_PLAYERS,
   PHASES,
+  TOTAL_CYCLES,
+  PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
   buildPhaseDurations
 };
