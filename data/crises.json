@@ -603,7 +603,13 @@
           "loomLine": "Mood tuning disabled. Expect more tears this month. I am told some of them will be meaningful."
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
+        "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
+        "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
+        "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
+        "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
+      }
     },
     {
       "id": "ab-merge-offer",
