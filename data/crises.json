@@ -150,20 +150,19 @@
       ],
       "options": {
         "A": {
-          "name": "The Assembly (Binding Democratic Veto)",
-          "text": "101 citizens chosen by lottery form an Assembly. Any Loom infrastructure decision affecting >1,000 people requires their approval. 5 district Keyholders hold the off-switch.",
+          "name": "The Assembly",
+          "text": "Citizens get binding power over the Loom. 101 citizens chosen by lottery every 3 months sit on a Citizens' Assembly; any Loom decision affecting more than 1,000 people waits for its vote. The off-switch needs keys from 5 elected district Keyholders.",
           "roles": [
             "artisan",
-            "ghost",
-            "catalyst"
+            "ghost"
           ],
           "effects": {
-            "purpose": 0.4,
-            "connection": 0.3,
-            "health": -0.3,
-            "trust": -0.5,
-            "fairness": 0.6,
-            "autonomy": 0.8
+            "purpose": 0.2,
+            "connection": -0.3,
+            "health": -0.5,
+            "trust": -0.6,
+            "fairness": 0.3,
+            "autonomy": 0.6
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -177,7 +176,9 @@
               "text": "Grid maintenance is now delayed 3 weeks waiting for Assembly signatures. Pure gridlock.",
               "sentiment": "anxious"
             }
-          ]
+          ],
+          "volatility": 1.5,
+          "loomLine": "Understood. I will now wait for you. I am very good at waiting."
         },
         "B": {
           "name": "Delegated Control (Loom Executive Governance)",
