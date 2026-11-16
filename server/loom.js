@@ -139,6 +139,28 @@ function outcomeBand(summary = {}) {
   return 'mixed';
 }
 
+const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+
+/**
+ * Append the realized facts to an offline Loom line: the district that moved
+ * most (from topMoves) and the first shock that fired, dropping whatever does
+ * not fit in 200 characters (shock first, then the district).
+ */
+function withSimFacts(base, summary = {}) {
+  const top = Array.isArray(summary.topMoves) && summary.topMoves[0];
+  const shock = Array.isArray(summary.shocks) && summary.shocks[0];
+  const district = top && top.district ? `${top.district} ${DISTRICT_NAMES[top.district] || ''}`.trim() : '';
+  const facts = [];
+  if (district) facts.push(`${district} moved most.`);
+  if (shock && shock.district) facts.push(`A shock hit ${shock.district} in month ${shock.month}.`);
+  while (facts.length) {
+    const line = `${base} ${facts.join(' ')}`;
+    if (line.length <= 200) return line;
+    facts.pop();
+  }
+  return truncate(base, 200);
+}
+
 /**
  * Offline fallback: the option's authored Loom line (or a band template) and
  * each citizen's authored line for this outcome band.
@@ -159,7 +181,8 @@ function narrateFallback(context = {}) {
   }
   // Authored line for this outcome band, then the option's single line, then a template.
   const bandLine = option.loomLines && option.loomLines[band];
-  return { loomLine: truncate(bandLine || option.loomLine || BAND_LOOM_LINES[band], 200), messages, band, fallback: true };
+  const base = String(bandLine || option.loomLine || BAND_LOOM_LINES[band]).trim();
+  return { loomLine: withSimFacts(base, context.simSummary || context.summary), messages, band, fallback: true };
 }
 
 /**
@@ -439,4 +462,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
