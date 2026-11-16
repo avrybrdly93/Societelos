@@ -193,6 +193,10 @@
     const list = document.getElementById('citizen-feed');
     list.prepend(feedItemElement(item));
     while (list.children.length > FEED_MAX) list.lastElementChild.remove();
+    // Newest stays on top; drop the oldest cards until the column no longer
+    // overflows, so no half-cut card ever hangs off the projector.
+    while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
+    list.scrollTop = 0;
   }
 
   // Incident banner: crisis title and the Loom's intro line.
