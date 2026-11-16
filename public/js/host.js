@@ -143,18 +143,54 @@
 
   socket.on('phase', onPhase);
 
+  // One feed card: avatar badge (initials), name, age, district tag, message.
+  function feedItemElement(item) {
+    const name = item.name || item.citizenId || 'Citizen';
+    const li = document.createElement('li');
+    li.className = 'feed-item';
+    if (item.district) li.dataset.district = item.district;
+    if (item.sentiment) li.dataset.sentiment = item.sentiment;
+    const avatar = document.createElement('span');
+    avatar.className = 'feed-avatar mono';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    const body = document.createElement('div');
+    body.className = 'feed-body';
+    const meta = document.createElement('p');
+    meta.className = 'feed-meta';
+    const who = document.createElement('span');
+    who.className = 'feed-name';
+    who.textContent = name;
+    meta.appendChild(who);
+    if (typeof item.age === 'number') {
+      const age = document.createElement('span');
+      age.className = 'feed-age muted';
+      age.textContent = `, ${item.age}`;
+      meta.appendChild(age);
+    }
+    if (item.district) {
+      const tag = document.createElement('span');
+      tag.className = 'feed-district mono';
+      tag.textContent = item.district;
+      meta.appendChild(tag);
+    }
+    const text = document.createElement('p');
+    text.className = 'feed-text';
+    text.textContent = item.text;
+    body.append(meta, text);
+    li.append(avatar, body);
+    return li;
+  }
+
   // Citizen feed (newest at the top, capped so the column never overflows).
-  const FEED_MAX = 8;
+  const FEED_MAX = 6;
   function resetFeed() {
     document.getElementById('citizen-feed').textContent = '';
   }
   function addFeedItem(item) {
     if (!item || !item.text) return;
     const list = document.getElementById('citizen-feed');
-    const li = document.createElement('li');
-    li.className = 'feed-item';
-    li.textContent = `${item.name || item.citizenId}: ${item.text}`;
-    list.prepend(li);
+    list.prepend(feedItemElement(item));
     while (list.children.length > FEED_MAX) list.lastElementChild.remove();
   }
 
