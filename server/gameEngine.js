@@ -5,6 +5,32 @@
 // phase timers. socket.js translates client events into calls on it.
 
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+const DATA_DIR = path.join(__dirname, '..', 'data');
+
+/** Read and parse one JSON file, returning `fallback` if missing or invalid. */
+function readJson(file, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+  } catch (err) {
+    console.error(`[gameEngine] could not load ${path.basename(file)}: ${err.message}`);
+    return fallback;
+  }
+}
+
+/**
+ * Load content on startup: crises, roles and citizens from /data.
+ * Never throws, so a broken content file can't take the server down.
+ */
+function loadGameData(dataDir = DATA_DIR) {
+  return {
+    crises: readJson(path.join(dataDir, 'crises.json'), { fixedCrises: [], worlds: {} }),
+    roles: readJson(path.join(dataDir, 'roles.json'), []),
+    citizens: readJson(path.join(dataDir, 'citizens.json'), [])
+  };
+}
 
 // Room codes: 4 uppercase letters, without the easily confused O and I
 // (digits are never used, so 0 and 1 cannot appear either).
@@ -285,6 +311,7 @@ class GameState {
 
 module.exports = {
   GameState,
+  loadGameData,
   generateRoomCode,
   generateGameId,
   hashSeed,
