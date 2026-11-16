@@ -112,3 +112,29 @@ test('narrate accepts { crisis, winningPolicy, summary, citizens } as well as th
   assert.equal(a.loomLine, 'bad line');
   assert.deepEqual(a, b);
 });
+
+test('rankCitizensByShift puts citizens of the most-moved district and cohort first', () => {
+  const summary = { topMoves: [
+    { district: 'D4', cohort: 'elders', trait: 'trust', change: -0.2 },
+    { district: 'D2', cohort: 'youth', trait: 'connection', change: 0.1 }
+  ] };
+  const ranked = loom.rankCitizensByShift(citizens, summary);
+  assert.equal(ranked.length, citizens.length);
+  assert.equal(ranked[0].id, 'ruth', 'D4 elder');
+  assert.equal(ranked[1].id, 'kai', 'D2 youth');
+});
+
+test('narrate prompt names the most affected citizens and asks for 6-10 in character', async () => {
+  let prompt = '';
+  const fetchImpl = async (url, init) => {
+    prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ loomLine: 'ok', messages: [{ citizenId: 'ruth', text: 'hi' }] }) }] } }] }) };
+  };
+  const out = await loom.narrate(
+    { crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: { topMoves: [{ district: 'D4', cohort: 'elders', trait: 'trust', change: -0.2 }] }, citizens },
+    { config: { ...OFFLINE, enabled: true, apiKey: 'test' }, fetchImpl }
+  );
+  assert.equal(out.loomLine, 'ok');
+  assert.match(prompt, /Most affected first: ruth \(D4 elders\)/);
+  assert.match(prompt, /Pick 6-10 different citizens/);
+});

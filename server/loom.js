@@ -175,6 +175,26 @@ function narrationContext(context = {}) {
 }
 
 /**
+ * Order citizens by how much their (district, cohort) moved this cycle, using
+ * the summary's topMoves (district/cohort matches first, then district-only).
+ * Returns [{ id, district, cohort, shift }] with the most affected first.
+ */
+function rankCitizensByShift(citizens = [], summary = {}) {
+  const moves = Array.isArray(summary.topMoves) ? summary.topMoves : [];
+  const scored = citizens.map((c, order) => {
+    let shift = 0;
+    for (const m of moves) {
+      const change = Math.abs(Number(m.change) || 0);
+      if (m.district === c.district && m.cohort === c.cohort) shift += change * 2;
+      else if (m.district === c.district || m.cohort === c.cohort) shift += change * 0.5;
+    }
+    return { id: c.id, district: c.district, cohort: c.cohort, shift, order };
+  });
+  scored.sort((a, b) => b.shift - a.shift || a.order - b.order);
+  return scored.map(({ order, ...rest }) => rest);
+}
+
+/**
  * Narrate a resolution: one Loom line plus citizen messages.
  * @param {object} context { crisis, winningPolicy | winningOption, summary | simSummary, worldKey, citizens? }
  * @returns {Promise<{ loomLine: string, messages: { citizenId: string, text: string }[], fallback?: boolean }>}
@@ -191,6 +211,9 @@ async function narrate(rawContext = {}, opts = {}) {
       `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
       `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
+      `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
+      'Pick 6-10 different citizens, favouring those whose district and cohort moved most in the summary.',
+      'Voice each one in character (see "voice"); their message must match how their own cohort fared.',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
     const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
@@ -382,4 +405,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
