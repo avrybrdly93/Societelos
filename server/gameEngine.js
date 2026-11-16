@@ -812,6 +812,13 @@ class GameState extends EventEmitter {
     });
     // Secret policyId -> author map, revealed only on the end screen.
     finale.authors = Object.fromEntries(finale.policies.map((p) => [p.id, p.node]));
+    // Tell each author privately how their policy came out: accepted, or
+    // replaced by the standard placeholder.
+    for (const p of finale.policies) {
+      this.emit('finale:feedback', p.placeholder
+        ? { node: p.node, status: 'reject', feedback: 'Your proposal could not be accepted. A standard protocol policy was substituted.' }
+        : { node: p.node, status: 'ok', feedback: '' });
+    }
     if (advance && this.phase === PHASES.FINALE_MOD) this.advancePhase();
   }
 

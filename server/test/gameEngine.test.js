@@ -1142,3 +1142,20 @@ test('FINALE_RANK advances to FINALE_ENACT as soon as all 5 players have ranked'
     console.log = log;
   }
 });
+
+test('when moderation settles each author is told privately: ok, or reject (placeholder)', async () => {
+  const restore = stubModerate(async (subs) => subs.map((s) => ({ node: s.node, status: s.node === 'NODE-04' ? 'reject' : 'ok', cleaned: s.text, roles: [], effects: {} })));
+  try {
+    const game = finaleGame();
+    const feedback = [];
+    game.on('finale:feedback', (f) => feedback.push(f));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.stop();
+    assert.equal(feedback.length, 5);
+    for (const f of feedback) assert.equal(f.status, f.node === 'NODE-04' ? 'reject' : 'ok', f.node);
+  } finally {
+    restore();
+  }
+});

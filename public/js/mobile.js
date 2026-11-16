@@ -445,6 +445,27 @@
   });
   socket.on('phase', (payload) => { if (payload && payload.phase !== 'FINALE_MOD') closeRevise(); });
 
+  // finale:feedback { status, feedback } (private): ok -> accepted; revise ->
+  // the resubmit modal; reject -> a standard protocol policy was substituted.
+  socket.on('finale:feedback', (payload) => {
+    if (!payload) return;
+    if (payload.status === 'revise') return openRevise(payload.feedback);
+    closeRevise();
+    const title = document.getElementById('finale-wait-title');
+    if (payload.status === 'ok') {
+      title.textContent = 'POLICY ACCEPTED BY THE LOOM';
+      showFinaleWait('It goes before the council next, anonymously.');
+    } else if (payload.status === 'reject') {
+      title.textContent = 'POLICY NOT ACCEPTED';
+      showFinaleWait(payload.feedback || 'A standard protocol policy was substituted for yours.');
+    }
+    return undefined;
+  });
+  // A new finale write resets the waiting title.
+  socket.on('phase', (payload) => {
+    if (payload && payload.phase === 'FINALE_WRITE') document.getElementById('finale-wait-title').textContent = 'THE LOOM IS EVALUATING YOUR POLICY...';
+  });
+
   socket.on('phase', (payload) => {
     if (!payload) return;
     // Already submitted when FINALE_WRITE is (re)broadcast: stay on the wait screen.
