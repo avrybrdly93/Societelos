@@ -83,7 +83,8 @@ const REGION = Object.freeze({
 const PHASE_STARTERS = {
   INTRO: 'startIntroPhase',
   ROLE_ASSIGN: 'startRoleAssignmentPhase',
-  CHAMBER: 'startCouncilChamberPhase'
+  CHAMBER: 'startCouncilChamberPhase',
+  INCIDENT: 'startIncidentPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -194,6 +195,84 @@ function roleKey(role) {
     if (label.includes(key)) return key;
   }
   return label.replace(/^the\s+/, '').replace(/[^a-z]+/g, '-');
+}
+
+// ---------------------------------------------------------------------------
+// Crisis selection. Accepts both the frozen spec schema (an array of entries
+// with world/cycle/options/intel) and the legacy one ({ fixedCrises, worlds })
+// and normalises to one shape:
+//   { id, world, cycle, title, subtitle, incident, loomIntro, mode, feed,
+//     options: { A, B }, intel: { roleKey: text } }
+// ---------------------------------------------------------------------------
+
+function normalizeOption(raw, key) {
+  if (!raw) return null;
+  return {
+    key,
+    text: raw.text || raw.summary || raw.name || '',
+    name: raw.name || raw.text || `Policy ${key}`,
+    summary: raw.summary || raw.text || '',
+    roles: Array.isArray(raw.roles) ? raw.roles : [],
+    effects: raw.effects || {},
+    effectsByWorld: raw.effectsByWorld || null,
+    volatility: typeof raw.volatility === 'number' ? raw.volatility : null,
+    loomLine: raw.loomLine || null,
+    reactions: raw.reactions || []
+  };
+}
+
+function normalizeIntel(raw, roles) {
+  const intel = {};
+  if (!raw) return intel;
+  for (const [k, v] of Object.entries(raw)) {
+    // Legacy intel is keyed by node id, whose role was fixed in roles.json.
+    const legacyRole = /^NODE-/.test(k) ? roles.find((r) => r.id === k) : null;
+    const key = legacyRole ? roleKey(legacyRole) : k;
+    intel[key] = typeof v === 'string' ? v : [v.concept, v.quote].filter(Boolean).join(': ');
+  }
+  return intel;
+}
+
+function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
+  if (!raw) return null;
+  const options = raw.options || {
+    A: raw.policyA || raw.fallbackPolicyA,
+    B: raw.policyB || raw.fallbackPolicyB
+  };
+  return {
+    id: raw.id,
+    world: raw.world || world,
+    cycle: raw.cycle || cycle,
+    title: raw.title,
+    subtitle: raw.subtitle || '',
+    incident: raw.incident || raw.description || '',
+    loomIntro: raw.loomIntro || '',
+    teacherPrompt: raw.teacherPrompt || '',
+    mode: raw.mode || mode,
+    feed: raw.feed || [],
+    options: { A: normalizeOption(options.A, 'A'), B: normalizeOption(options.B, 'B') },
+    intel: normalizeIntel(raw.intel || raw.intelDrops, roles)
+  };
+}
+
+/**
+ * Pick the crisis for a cycle: cycles 1-2 are fixed, 3-4 come from the
+ * world (vote1 + vote2), and 5 is the world's write-in finale.
+ */
+function selectCrisis(crises, cycle, worldKey, roles = []) {
+  const world = cycle <= 2 ? 'fixed' : worldKey;
+  const mode = cycle === TOTAL_CYCLES ? 'writein' : 'binary';
+  let raw = null;
+  if (Array.isArray(crises)) {
+    raw = crises.find((c) => c.world === world && c.cycle === cycle) || null;
+  } else if (crises) {
+    if (cycle <= 2) raw = (crises.fixedCrises || [])[cycle - 1];
+    else if (crises.worlds && crises.worlds[worldKey]) {
+      const w = crises.worlds[worldKey];
+      raw = cycle === TOTAL_CYCLES ? w.finale : (w.crises || [])[cycle - 3];
+    }
+  }
+  return normalizeCrisis(raw, { world, cycle, mode, roles });
 }
 
 // ---------------------------------------------------------------------------
@@ -420,6 +499,16 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * INCIDENT: pick this cycle's crisis (Fixed Crisis 1 in cycle 1) and show
+   * the incident on the projector.
+   */
+  startIncidentPhase() {
+    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles);
+    if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
+    this.enterPhase(PHASES.INCIDENT);
+  }
+
+  /**
    * LOBBY -> INTRO, triggered by the host. Returns false if the game has
    * already started.
    */
@@ -553,6 +642,8 @@ class GameState extends EventEmitter {
 module.exports = {
   GameState,
   loadGameData,
+  selectCrisis,
+  normalizeCrisis,
   generateRoomCode,
   generateGameId,
   hashSeed,
