@@ -70,3 +70,19 @@ test('summary.topMoves lists exactly the 3 largest-magnitude (district, cohort, 
   assert.ok(Math.abs(topMoves[0].change) >= Math.abs(topMoves[1].change) && Math.abs(topMoves[1].change) >= Math.abs(topMoves[2].change));
   assert.ok(Math.abs(all[3].change) <= Math.abs(topMoves[2].change) + 0.0006);
 });
+
+test('hedonic drift slowly erodes GDW under a zero-effect policy', () => {
+  const state = createInitialState(simConfig);
+  const zero = { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 };
+  const { forecast } = simulate(state, zero, { runs: 500, seed: 31 });
+  const start = forecast.median[0];
+  const end = forecast.median[12];
+  assert.ok(end < start, `median falls: ${start.toFixed(2)} -> ${end.toFixed(2)}`);
+  assert.ok(start - end > 1 && start - end < 5, `slow erosion, not a crash (${(start - end).toFixed(2)} points)`);
+  // The decline is steady: each quarter's median is below the previous one.
+  for (const m of [3, 6, 9, 12]) assert.ok(forecast.median[m] < forecast.median[m - 3], `month ${m}`);
+  // With drift switched off the line holds (noise and shocks aside).
+  const noDrift = { ...simConfig, constants: { ...simConfig.constants, hedonicDrift: 0, shockChance: 0 } };
+  const flat = simulate(createInitialState(noDrift), zero, { runs: 500, seed: 31 }).forecast.median;
+  assert.ok(Math.abs(flat[12] - flat[0]) < 0.5, `no drift: ${flat[0].toFixed(2)} -> ${flat[12].toFixed(2)}`);
+});
