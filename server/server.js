@@ -29,6 +29,9 @@ function sendPublicPage(res, candidates) {
 // Mobile controller for the 5 phones.
 app.get('/mobile', (req, res) => sendPublicPage(res, ['mobile.html', 'player.html']));
 
+// Host projector screen.
+app.get(['/', '/host'], (req, res) => sendPublicPage(res, ['index.html']));
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[server] Societelos listening on http://localhost:${PORT}`);
