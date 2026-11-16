@@ -29,7 +29,30 @@
   </header>
 
   <main id="host-main" class="host-main">
-    <section id="view-lobby" class="view is-active" aria-label="Lobby"></section>
+    <section id="view-lobby" class="view is-active" aria-label="Lobby">
+      <div class="lobby-grid">
+        <div class="lobby-join">
+          <h1>The Council Convenes</h1>
+          <p class="muted">Scan to join as one of five secret trustees.</p>
+          <div id="qr-container" class="qr-container" aria-label="Join QR code">
+            <img id="qr-image" alt="QR code to join the council" hidden>
+            <span id="qr-placeholder" class="mono muted">Generating link…</span>
+          </div>
+          <p class="join-url">Or open <span id="join-url" class="mono accent">http://…/mobile</span></p>
+          <p class="join-room">Room code <span id="lobby-room-code" class="mono accent">----</span></p>
+        </div>
+        <div class="lobby-nodes">
+          <p class="label">Council nodes <span id="lobby-count" class="mono">0/5</span></p>
+          <ol id="node-cards" class="node-cards">
+            <li class="node-card" data-node="NODE-01"><span class="node-id mono">NODE-01</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-02"><span class="node-id mono">NODE-02</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-03"><span class="node-id mono">NODE-03</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-04"><span class="node-id mono">NODE-04</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-05"><span class="node-id mono">NODE-05</span><span class="node-status">Offline</span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
     <section id="view-intro" class="view" aria-label="Intro"></section>
     <section id="view-roles" class="view" aria-label="Role assignment"></section>
     <section id="view-chamber" class="view" aria-label="Council chamber"></section>

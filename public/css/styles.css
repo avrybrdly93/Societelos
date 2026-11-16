@@ -122,3 +122,16 @@ body.host .label {
 }
 .gdw-badge.is-critical { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.12); }
 .host-main { height: calc(100vh - 96px); padding: 32px 40px; }
+
+/* Host lobby */
+.lobby-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; height: 100%; align-items: center; }
+.qr-container {
+  width: 360px; height: 360px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--slate-50);
+  border-radius: var(--radius-lg);
+  margin: 24px 0;
+}
+.qr-container img { width: 320px; height: 320px; image-rendering: pixelated; }
+.qr-container #qr-placeholder { color: var(--slate-600); }
+.node-cards { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; }
