@@ -696,6 +696,30 @@ class GameState extends EventEmitter {
   startFinaleModPhase() {
     this.closeFinaleWriting();
     this.enterPhase(PHASES.FINALE_MOD);
+    return this.runFinaleModeration();
+  }
+
+  /**
+   * One batch loom.moderate call for all five write-ins. Sends only node ids
+   * and text (player names are passed for redaction, never transmitted).
+   * Resolves with the results (also stored in finale.moderation).
+   */
+  runFinaleModeration() {
+    const finale = this.finale;
+    const submissions = Object.entries(finale.submissions).map(([node, text]) => ({ node, text }));
+    const playerNames = Object.values(this.players).map((p) => p.name);
+    const started = Date.now();
+    return Promise.resolve()
+      .then(() => resolveLoom().moderate(submissions, this.crisis || {}, { playerNames }))
+      .catch((err) => {
+        console.error(`[game ${this.roomCode}] moderation failed: ${err.message}`);
+        return submissions.map((sub) => ({ node: sub.node, status: 'ok', cleaned: sub.text, feedback: '', roles: [], effects: {}, fallback: true }));
+      })
+      .then((results) => {
+        finale.moderationMs = Date.now() - started;
+        for (const r of results || []) if (r && r.node) finale.moderation[r.node] = r;
+        return results;
+      });
   }
 
   /** Nodes that have submitted a finale policy (never the text). */

@@ -543,3 +543,29 @@ test('FINALE_WRITE advances to FINALE_MOD as soon as all 5 policies are in', asy
     console.log = log;
   }
 });
+
+test('FINALE_MOD calls loom.moderate once with all 5 submissions (node ids and text only)', async () => {
+  const loom = require('../loom');
+  const original = loom.moderate;
+  const calls = [];
+  loom.moderate = async (subs, crisis, opts) => {
+    calls.push({ subs, crisis, opts });
+    return subs.map((s) => ({ node: s.node, status: 'ok', cleaned: s.text, feedback: '', roles: ['artisan'], effects: { purpose: 0.1, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: -0.1 } }));
+  };
+  try {
+    const game = finaleGame();
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.slice(0, 3).forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    const results = await quiet(() => { game.clearPhaseTimer(); game.phase = 'FINALE_WRITE'; return game.startFinaleModPhase(); });
+    game.clearPhaseTimer();
+    assert.equal(calls.length, 1, 'one batch call');
+    assert.equal(calls[0].subs.length, 5);
+    for (const sub of calls[0].subs) assert.deepEqual(Object.keys(sub).sort(), ['node', 'text']);
+    assert.equal(calls[0].crisis.id, 'aa-fake-struggle');
+    assert.equal(results.length, 5);
+    assert.equal(Object.keys(game.finale.moderation).length, 5);
+    assert.ok(game.finale.moderationMs >= 0);
+  } finally {
+    loom.moderate = original;
+  }
+});
