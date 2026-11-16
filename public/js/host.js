@@ -72,5 +72,17 @@
 
   socket.on('lobby:update', (payload) => renderLobby((payload && payload.players) || []));
 
+  // START COUNCIL SESSION -> host:start
+  const startBtn = document.getElementById('btn-start');
+  startBtn.addEventListener('click', () => {
+    startBtn.disabled = true;
+    socket.emit('host:start', {}, (res) => {
+      if (!res || !res.ok) {
+        startBtn.disabled = false;
+        document.getElementById('start-hint').textContent = `Cannot start: ${(res && res.reason) || 'no response'}`;
+      }
+    });
+  });
+
   window.SocietelosHost = { socket, state, fetchQR, renderLobby };
 })();
