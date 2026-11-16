@@ -970,6 +970,7 @@ class GameState extends EventEmitter {
     finale.packageEffects = packageEffects(finale.enacted, (id) => byId[id] && byId[id].effects);
 
     const previousGdw = this.gdw;
+    const stateBefore = this.simState;
     const simResult = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, finale.packageEffects, {
       runs: 500, seed: hashSeed(this.gameId, this.cycle), volatility: this.volatility
     });
@@ -979,7 +980,25 @@ class GameState extends EventEmitter {
     finale.previousGdw = previousGdw;
     finale.simResult = simResult;
     finale.awards = this.scoreFinale(finale.enacted, previousGdw, this.gdw);
-    this.enterPhase(PHASES.FINALE_ENACT);
+
+    const enactMs = this.durations.FINALE_ENACT;
+    this.enterPhase(PHASES.FINALE_ENACT, {}, enactMs + LOOM_BUDGET_MS);
+    console.log(`[game ${this.roomCode}] finale enacted ${finale.enacted.map((e) => `${e.id} ${e.weight * 100}%`).join(', ')}; GDW ${previousGdw} -> ${this.gdw}`);
+    // The Loom narrates the whole package: the three enacted policies and their weights.
+    const option = {
+      name: 'The Council Package',
+      text: finale.enacted.map((e) => `${Math.round(e.weight * 100)}%: ${byId[e.id].text}`).join(' | '),
+      summary: 'Three council-written policies enacted together at 50/25/25.'
+    };
+    const result = { cycle: this.cycle, finale: true, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    const scoreUpdates = Object.keys(this.players).map((node) => {
+      const role = finale.awards.role[node] || 0;
+      const author = finale.awards.author[node] || 0;
+      const catalyst = finale.awards.catalyst[node] || 0;
+      return { node, cycle: this.cycle, gained: role + author + catalyst, role, author, catalyst, total: this.scores[node] || 0 };
+    });
+    finale.narrated = this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates });
+    return finale.narrated;
   }
 
   /**
@@ -1333,8 +1352,6 @@ class GameState extends EventEmitter {
     // stalled narration can never hold the game in RESOLUTION.
     const resolutionMs = this.durations.RESOLUTION;
     this.enterPhase(PHASES.RESOLUTION, {}, resolutionMs + LOOM_BUDGET_MS);
-    const cycleAtStart = this.cycle;
-    const gameIdAtStart = this.gameId;
 
     // Trace: winning policy and realized GDW (no roles, no per-node votes).
     console.log(`[game ${this.roomCode}] cycle ${this.cycle} resolved: ${winner} "${option.name}"${tie ? ' (tie-break)' : ''}; GDW ${previousGdw} -> ${this.gdw}`);
@@ -1345,6 +1362,18 @@ class GameState extends EventEmitter {
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
     const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    return this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates });
+  }
+
+  /**
+   * Shared end of a resolution (binary cycles and the finale): narrate with
+   * citizens carrying their cohort moods, broadcast the sanitized
+   * 'resolution' payload, restart the phase timer for the full animation,
+   * then send each phone its private score update. Never rejects.
+   */
+  narrateAndBroadcast({ phase, durationMs, result, option, simResult, stateBefore, scoreUpdates }) {
+    const cycleAtStart = this.cycle;
+    const gameIdAtStart = this.gameId;
     // Each citizen carries their cohort's simulated mood and biggest trait
     // change, so the Loom's messages match the numbers.
     const moods = new Map(sim.citizenMoods(stateBefore, this.simState, this.data.citizens).map((m) => [m.id, m]));
@@ -1378,8 +1407,8 @@ class GameState extends EventEmitter {
         }, ['name']);
         // The month-by-month animation starts when clients receive this
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
-        if (this.phase === PHASES.RESOLUTION && this.cycle === cycleAtStart) {
-          this.lastResolution.endsAt = this.startPhaseTimer(resolutionMs, () => this.advancePhase());
+        if (this.phase === phase && this.cycle === cycleAtStart) {
+          this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
         }
         this.emit('resolution', this.lastResolution);
         for (const update of scoreUpdates) this.emit('score:update', update);

@@ -1015,3 +1015,25 @@ test('FINALE_ENACT simulates the 50/25/25 package as cycle 5\'s realized run', a
   assert.equal(game.voteHistory[5], 'package');
   assert.ok(f.simResult.forecast.median.length === 13);
 });
+
+test('loom.narrate is called with the enacted 50/25/25 package and its simulation summary', async () => {
+  const loom = require('../loom');
+  const original = loom.narrate;
+  let ctx = null;
+  loom.narrate = async (c) => { ctx = c; return { loomLine: 'Package noted.', messages: [] }; };
+  try {
+    const game = await enactedFinale();
+    await game.finale.narrated;
+    game.stop();
+    assert.equal(ctx.winningOption.name, 'The Council Package');
+    for (const e of game.finale.enacted) {
+      const text = game.finale.policies.find((p) => p.id === e.id).text;
+      assert.ok(ctx.winningOption.text.includes(`${e.weight * 100}%: ${text}`));
+    }
+    assert.equal(ctx.simSummary, game.finale.simResult.summary);
+    assert.equal(ctx.citizens.length, 10);
+    assert.equal(typeof ctx.citizens[0].mood, 'number');
+  } finally {
+    loom.narrate = original;
+  }
+});
