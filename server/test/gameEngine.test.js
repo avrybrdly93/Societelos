@@ -241,3 +241,40 @@ test('RESOLUTION waits the full animation duration after the payload is sent', a
   assert.ok(typeof resolution.endsAt === 'number');
   assert.ok(resolution.endsAt - start >= full - 50, 'next INCIDENT not before the animation ends');
 });
+
+test('resetGame() clears cycle counters, Overrides, scores and volatility', async () => {
+  const game = votingGame({ cycle: 2, voteHistory: { 1: 'A' } });
+  game.assignRoles(game.data.roles);
+  game.castVote('NODE-01', 'A', true);
+  assert.equal(game.overrideAvailable('NODE-01'), false);
+  game.scores['NODE-02'] = 3;
+  await resolveWith(game, 'A');
+  assert.equal(game.volatility, 1.5);
+  assert.equal(game.worldKey, 'AA');
+  const oldId = game.gameId;
+
+  const log = console.log;
+  console.log = () => {};
+  try {
+    game.resetGame();
+  } finally {
+    console.log = log;
+  }
+  assert.equal(game.phase, 'LOBBY');
+  assert.equal(game.cycle, 0);
+  assert.notEqual(game.gameId, oldId);
+  assert.equal(game.volatility, 1);
+  assert.equal(game.worldKey, null);
+  assert.equal(game.ending, null);
+  assert.deepEqual(game.voteHistory, {});
+  assert.deepEqual(game.scoreLedger, []);
+  assert.deepEqual(game.gdwHistory, []);
+  assert.equal(game.gdw, engine.STARTING_GDW);
+  assert.equal(game.endsAt, null);
+  for (const node of NODE_IDS) {
+    assert.equal(game.scores[node], 0);
+    assert.equal(game.overrideAvailable(node), true);
+    assert.equal(game.players[node].ready, false);
+    assert.equal(game.players[node].role, null);
+  }
+});

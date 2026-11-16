@@ -941,6 +941,44 @@ class GameState extends EventEmitter {
     console.log(`[game ${this.roomCode}] cycle ${cycleNumber} begins (GDW ${this.gdw})`);
   }
 
+  /**
+   * Reset for a new session in the same room: back to LOBBY with a new game
+   * id (fresh seeds), all cycle counters, Overrides, scores, volatility and
+   * world cleared. Seated players keep their node and reconnect token but
+   * must ready up again. Broadcasts the LOBBY phase.
+   */
+  resetGame() {
+    this.clearPhaseTimer();
+    this.gameId = generateGameId();
+    this.phase = PHASES.LOBBY;
+    this.cycle = 0;
+    this.crisis = null;
+    this.votes = {};
+    this.votingOpen = false;
+    this.simCache = {};
+    this.lastResolution = null;
+    this.simState = null;
+    this.gdw = STARTING_GDW;
+    this.gdwHistory = [];
+    this.volatility = 1.0;
+    this.worldKey = null;
+    this.ending = null;
+    this.voteHistory = {};
+    this.scoreLedger = [];
+    this.roleAssignment = null;
+    this.finaleFallback = false;
+    this.startedAt = null;
+    for (const [node, player] of Object.entries(this.players)) {
+      player.ready = false;
+      player.role = null;
+      this.scores[node] = 0;
+      this.overridesUsed[node] = false;
+    }
+    console.log(`[game ${this.roomCode}] reset (gameId ${this.gameId})`);
+    this.emit('phase', { cycle: 0, phase: PHASES.LOBBY, endsAt: null, crisis: null });
+    return true;
+  }
+
   /** Crisis fields safe to show everyone (no effects, roles or intel). */
   publicCrisis() {
     if (!this.crisis) return null;
