@@ -7,7 +7,7 @@
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
     "start:legacy": "node server/index.js",
-    "test": "node --test server/sim/test/*.test.js",
+    "test": "node --test server/sim/test/*.test.js server/test/*.test.js",
     "check": "node -e \"const {execFileSync}=require('child_process');const fs=require('fs');const files=['server/server.js','server/socket.js','server/gameEngine.js','server/loom.js',...fs.readdirSync('server/sim').filter(f=>f.endsWith('.js')).map(f=>'server/sim/'+f),...fs.readdirSync('public/js').filter(f=>f.endsWith('.js')).map(f=>'public/js/'+f)];for(const f of files)execFileSync(process.execPath,['--check',f],{stdio:'inherit'});console.log('syntax ok: '+files.length+' files')\"",
     "check:json": "node -e \"const fs=require('fs');let bad=0;for(const f of fs.readdirSync('data').filter(f=>f.endsWith('.json'))){try{JSON.parse(fs.readFileSync('data/'+f,'utf8'));console.log('ok   data/'+f)}catch(e){bad++;console.error('FAIL data/'+f+': '+e.message)}}process.exit(bad?1:0)\"",
     "check:data": "node scripts/validate-data.js",
