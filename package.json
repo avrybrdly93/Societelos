@@ -9,7 +9,8 @@
     "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\"",
     "check": "node --check server/server.js && node --check server/socket.js && node --check server/gameEngine.js",
     "start:next": "node server/server.js",
-    "dev:next": "nodemon server/server.js"
+    "dev:next": "nodemon server/server.js",
+    "check:offline": "node -e \"const fs=require('fs'),p=require('path');const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p.join(d,e.name)):[p.join(d,e.name)]);const bad=walk('public').filter(f=>/(index|mobile)\\.html$|\\/(css|js)\\//.test(f)).filter(f=>/(src|href)=[\\x22\\x27]https?:|@import\\s+url\\([\\x22\\x27]?https?:|fonts\\.googleapis|cdn\\./.test(fs.readFileSync(f,'utf8')));if(bad.length){console.error('External dependencies in:',bad.join(', '));process.exit(1)}console.log('No external CDN dependencies in public/')\""
   },
   "dependencies": {
     "dotenv": "^18.0.10",
