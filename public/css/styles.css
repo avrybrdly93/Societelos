@@ -78,3 +78,22 @@ body[data-world="AA"] { --theme-current: var(--theme-aa); }
 body[data-world="AB"] { --theme-current: var(--theme-ab); }
 body[data-world="BA"] { --theme-current: var(--theme-ba); }
 body[data-world="BB"] { --theme-current: var(--theme-bb); }
+
+/* Projector typography: legible from the back row of a classroom.
+   Body text never drops below 24px; headers start at 48px. */
+body.host {
+  font-size: 24px;
+  overflow: hidden;
+}
+body.host h1 { font-size: 72px; line-height: 1.05; margin: 0 0 0.3em; letter-spacing: -0.01em; }
+body.host h2 { font-size: 56px; line-height: 1.1; margin: 0 0 0.3em; }
+body.host h3 { font-size: 48px; line-height: 1.15; margin: 0 0 0.3em; }
+body.host p, body.host li { font-size: 28px; }
+body.host small, body.host .caption { font-size: 24px; }
+body.host .label {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
