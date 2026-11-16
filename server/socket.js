@@ -136,7 +136,10 @@ function initSockets(io, gameEngine) {
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
       if (!payload || typeof payload !== 'object') return reply({ ok: false, reason: 'BAD_PAYLOAD' });
       const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
-      return reply(result);
+      reply(result);
+      // Early advance: end VOTE as soon as all 5 nodes have voted.
+      if (result.ok && game.phase === 'VOTE' && game.allVotesIn()) game.advancePhase();
+      return undefined;
     });
 
     // lobby:ready { ready? } -> set or toggle this phone's ready flag.
