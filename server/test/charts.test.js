@@ -115,3 +115,24 @@ test('realized line plays all 12 months when GDW stays above 0', () => {
   assert.deepEqual(ticks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
   assert.equal(collapsed, false);
 });
+
+test('cancelAnimation stops the realized-line rAF loop immediately', () => {
+  const { charts, advance } = loadCharts();
+  const canvas = mockCanvas();
+  charts.drawForecastFan({ median: months(() => 30) }, canvas);
+  const ticks = [];
+  const handle = charts.animateRealizedLine({ gdw: months((m) => 25 + m) }, (m) => ticks.push(m));
+  advance(2500); // months 1-2
+  handle.cancel();
+  for (let i = 0; i < 30; i++) advance(500);
+  assert.ok(ticks.length <= 2, `ticks after cancel: ${ticks}`);
+  // A new animation replaces (and cancels) a running one.
+  const first = [];
+  const second = [];
+  charts.animateRealizedLine({ gdw: months(() => 30) }, (m) => first.push(m));
+  advance(1500);
+  charts.animateRealizedLine({ gdw: months(() => 30) }, (m) => second.push(m));
+  for (let i = 0; i < 30; i++) advance(500);
+  assert.ok(first.length <= 1, 'replaced animation stopped');
+  assert.equal(second.length, 12);
+});

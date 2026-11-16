@@ -334,6 +334,23 @@
   }
   socket.on('phase', showResolutionPanel);
 
+  // Any phase other than RESOLUTION stops its animations at once: the chart
+  // rAF loop, the map playback, the typewriter and the staggered reactions.
+  function stopResolutionAnimations() {
+    if (window.SocietelosCharts) window.SocietelosCharts.cancelAnimation();
+    if (window.SocietelosMap) window.SocietelosMap.stopPlayback();
+    clearInterval(typeTimer);
+    document.getElementById('resolution-loom').classList.remove('is-typing');
+  }
+  let lastPhaseSeen = null;
+  socket.on('phase', (payload) => {
+    if (payload.phase !== 'RESOLUTION' && lastPhaseSeen === 'RESOLUTION') {
+      stopResolutionAnimations();
+      clearFeedTimers();
+    }
+    lastPhaseSeen = payload.phase;
+  });
+
   // "LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%": stability is
   // the share of the 500 forecast runs ending at or above the 15% unrest line.
   function renderForecastBanner(forecast) {
