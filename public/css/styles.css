@@ -488,3 +488,45 @@ body.host .gdw-meter .label { font-size: 20px; }
 .gdw-meter[data-band="stable"] { --gdw-color: var(--accent); }
 .gdw-meter[data-band="thriving"] { --gdw-color: var(--teal); }
 .gdw-meter[data-band="critical"] .gdw-readout { animation: low-time-pulse 1.6s ease-in-out infinite; }
+
+/* Citizen feed cards: slide in from above, colour-coded by district. */
+:root {
+  --district-d1: #5b8def; /* Old Harbour */
+  --district-d2: #3fd8e6; /* The Grid */
+  --district-d3: #2bc4a0; /* Riverside */
+  --district-d4: #f0a430; /* Eastworks */
+  --district-d5: #c084fc; /* Highlands */
+}
+.feed-item {
+  --district-color: var(--slate-600);
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border-left: 4px solid var(--district-color);
+  animation: feed-slide-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.feed-item[data-district="D1"] { --district-color: var(--district-d1); }
+.feed-item[data-district="D2"] { --district-color: var(--district-d2); }
+.feed-item[data-district="D3"] { --district-color: var(--district-d3); }
+.feed-item[data-district="D4"] { --district-color: var(--district-d4); }
+.feed-item[data-district="D5"] { --district-color: var(--district-d5); }
+.feed-avatar {
+  flex: 0 0 auto; width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--district-color); color: var(--slate-950);
+  font-size: 20px; font-weight: 700;
+}
+.feed-body { min-width: 0; }
+body.host .feed-meta { margin: 0 0 2px; font-size: 22px; font-weight: 700; }
+.feed-district {
+  margin-left: 10px; padding: 1px 8px;
+  font-size: 18px; border-radius: 6px;
+  color: var(--district-color); border: 1px solid var(--district-color);
+}
+body.host .feed-text { margin: 0; font-size: 22px; line-height: 1.3; color: var(--slate-200); }
+@keyframes feed-slide-in {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: none; }
+}
