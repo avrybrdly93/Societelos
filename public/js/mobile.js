@@ -520,6 +520,7 @@
     renderRanks();
   }
   const PLACE_NAMES = ['1st', '2nd', '3rd', '4th'];
+  const BORDA_POINTS = [4, 3, 2, 1];
   function toggleRank(id) {
     if (ballot.locked) return;
     const at = ballot.order.indexOf(id);
@@ -532,6 +533,8 @@
       const place = ballot.order.indexOf(card.dataset.policy);
       card.classList.toggle('is-ranked', place >= 0);
       card.dataset.place = place >= 0 ? String(place + 1) : '';
+      // Borda weight of that place: burying a rival at 4th still gives it 1 point.
+      card.dataset.points = place >= 0 ? `+${BORDA_POINTS[place]} PT${BORDA_POINTS[place] === 1 ? '' : 'S'}` : '';
       card.setAttribute('aria-label', `${proposalName(card.dataset.policy)}${place >= 0 ? `, ranked ${PLACE_NAMES[place]}` : ', not ranked yet'}`);
     });
     const left = ballot.policies.length - ballot.order.length;
