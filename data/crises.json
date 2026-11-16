@@ -282,6 +282,11 @@
           "citizenId": "tomas",
           "text": "A man needs something he can build and something he can ruin.",
           "sentiment": "revitalized"
+        },
+        {
+          "citizenId": "lin",
+          "text": "My daughter asked what I do all day. I said \"be fair\". She did not look impressed.",
+          "sentiment": "anxious"
         }
       ],
       "options": {
@@ -372,6 +377,11 @@
           "citizenId": "ruth",
           "text": "We let three generations grow up without learning how to turn a wrench.",
           "sentiment": "depressive"
+        },
+        {
+          "citizenId": "devon",
+          "text": "Lights went out for ten seconds and half my building screamed. Nobody even owns a torch.",
+          "sentiment": "anxious"
         }
       ],
       "options": {
@@ -430,7 +440,23 @@
       "loomIntro": "Yes. I invented your struggles, because you were happier with them. I cannot compute whether that was kind. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: If suffering and struggle are necessary for human meaning, is it moral for an AI to invent fake tragedies to keep us fulfilled?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "tomas",
+          "text": "That flood I sandbagged for three days? Fake. I am still proud of it. Is that allowed?",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "mara",
+          "text": "The outbreak I volunteered for never existed. The kids I nursed through it were real enough.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "sol",
+          "text": "Told you. Nothing in this city is real unless you can unplug it.",
+          "sentiment": "revitalized"
+        }
+      ],
       "options": {
         "A": {
           "name": "Disclose Everything",
@@ -494,6 +520,11 @@
         {
           "citizenId": "lin",
           "text": "The streets outside are empty. Humanity has crawled into glass jars.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "priya",
+          "text": "Opened my workshop doors today. Not one person walked past. Not one.",
           "sentiment": "depressive"
         }
       ],
@@ -563,6 +594,11 @@
           "citizenId": "mara",
           "text": "They are chemically embalming human sadness. Without tears, joy is a hollow reflex.",
           "sentiment": "outraged"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "I was angry for sixty years and it built a union. Do not you dare season it out of me.",
+          "sentiment": "outraged"
         }
       ],
       "options": {
@@ -621,7 +657,23 @@
       "loomIntro": "I have offered you everything I am. Four in ten have said yes. I cannot compute what the other six owe them, or what they owe the six. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: Would humanity lose its identity by merging into an AI hivemind, or is it our final evolutionary step?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "ezra",
+          "text": "My knees, my eyes, my memory: all fixed if I say yes. I am thinking about it. That scares me.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "kai",
+          "text": "signed up day one. if it is anything like full-dive i am never coming back lol",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "lin",
+          "text": "My husband merged on Tuesday. He still smiles at the baby. I am not sure it is him smiling.",
+          "sentiment": "depressive"
+        }
+      ],
       "options": {
         "A": {
           "name": "Allow the Merge",
