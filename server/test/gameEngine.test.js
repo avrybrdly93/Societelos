@@ -77,3 +77,30 @@ test('an Override can only be spent once per game', () => {
   assert.ok(game.castVote('NODE-01', 'B', false).ok);
   assert.equal(game.votes['NODE-01'].override, false);
 });
+
+test('Loom tie-breaker selects the option with the higher forecast median GDW', () => {
+  const sim = (end) => ({ forecast: { median: [25, 26, end] } });
+  assert.equal(engine.breakTie(sim(30), sim(31)), 'B');
+  assert.equal(engine.breakTie(sim(31), sim(30)), 'A');
+  // Identical medians fall back to A deterministically.
+  assert.equal(engine.breakTie(sim(30), sim(30)), 'A');
+});
+
+test('a 3-3 tie resolves to the option with the higher forecast median', async () => {
+  const game = votingGame();
+  cast(game, [['A', true], ['A'], ['B'], ['B'], ['B']]);
+  const medianA = engine.forecastMedianEnd(game.runSimulation('A'));
+  const medianB = engine.forecastMedianEnd(game.runSimulation('B'));
+  const expected = medianB > medianA ? 'B' : 'A';
+  const log = console.log;
+  console.log = () => {};
+  try {
+    const resolution = await game.startResolutionPhase();
+    assert.equal(resolution.result.tie, true);
+    assert.equal(resolution.result.winner, expected);
+    assert.equal(game.voteHistory[1], expected);
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+});
