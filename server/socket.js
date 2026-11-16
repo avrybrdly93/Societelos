@@ -45,6 +45,21 @@ function isValidPayload(payload, schema = {}) {
   return true;
 }
 
+// Per-client rate limit (token bucket): bursts of up to RATE_BURST events,
+// refilled at RATE_PER_SECOND. Stops button-mashing floods from one phone.
+const RATE_BURST = 10;
+const RATE_PER_SECOND = 5;
+
+/** True if `socket` may send another event now; consumes one token if so. */
+function allowEvent(socket, now = Date.now()) {
+  const bucket = socket.data.rate || (socket.data.rate = { tokens: RATE_BURST, at: now });
+  bucket.tokens = Math.min(RATE_BURST, bucket.tokens + ((now - bucket.at) / 1000) * RATE_PER_SECOND);
+  bucket.at = now;
+  if (bucket.tokens < 1) return false;
+  bucket.tokens -= 1;
+  return true;
+}
+
 /**
  * Register a handler that silently ignores malformed packets: the payload is
  * validated against `schema` first (an empty payload counts as {}), handler
@@ -59,6 +74,7 @@ function onValid(socket, event, schema, handler) {
       payload = undefined;
     }
     const reply = typeof ack === 'function' ? ack : () => {};
+    if (!allowEvent(socket)) return reply({ ok: false, reason: 'RATE_LIMITED' });
     const body = payload === undefined || payload === null ? {} : payload;
     if (!isValidPayload(body, schema)) return reply({ ok: false, reason: 'BAD_PAYLOAD' });
     try {
@@ -274,4 +290,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND };
