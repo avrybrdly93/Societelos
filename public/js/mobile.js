@@ -182,18 +182,70 @@
     END: 'Session complete. Look at the projector.'
   };
 
+  let debateReadyTimer = null;
+  function handleDebateReady(phase) {
+    const btn = document.getElementById('btn-debate-ready');
+    const status = document.getElementById('debate-ready-status');
+    if (debateReadyTimer) {
+      clearTimeout(debateReadyTimer);
+      debateReadyTimer = null;
+    }
+    if (btn) {
+      btn.hidden = true;
+      btn.disabled = false;
+      btn.classList.remove('is-ready');
+      btn.textContent = 'READY TO VOTE';
+    }
+    if (status) status.hidden = true;
+    if (phase !== 'DEBATE') return;
+
+    const isFast = (state.endsAt && (state.endsAt - Date.now()) < 5000);
+    const delay = isFast ? 20 : 5000;
+    debateReadyTimer = setTimeout(() => {
+      if (state.phase === 'DEBATE' && btn) {
+        btn.hidden = false;
+      }
+    }, delay);
+  }
+
   function onPhase(payload) {
     if (!payload || !payload.phase) return;
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
+    state.sessionEndsAt = payload.sessionEndsAt || null;
+    state.sessionTimerEnabled = !!payload.sessionTimerEnabled;
     document.body.dataset.phase = payload.phase;
+    handleDebateReady(payload.phase);
     if (!state.node) return showView('m-view-join');
     const screen = PHASE_SCREENS[payload.phase];
     if (screen) return showView(screen);
     document.getElementById('wait-status').textContent = WAIT_MESSAGES[payload.phase] || 'Stand by.';
     return showView('m-view-wait');
   }
+
+  const btnDebateReady = document.getElementById('btn-debate-ready');
+  if (btnDebateReady) {
+    btnDebateReady.addEventListener('click', () => {
+      btnDebateReady.disabled = true;
+      btnDebateReady.classList.add('is-ready');
+      btnDebateReady.textContent = '✓ READY TO VOTE';
+      const status = document.getElementById('debate-ready-status');
+      if (status) {
+        status.hidden = false;
+        status.textContent = 'Waiting for council to be ready…';
+      }
+      socket.emit('debate:ready', { ready: true });
+    });
+  }
+
+  socket.on('debate:progress', (payload) => {
+    const status = document.getElementById('debate-ready-status');
+    if (status && payload && typeof payload.count === 'number') {
+      status.hidden = false;
+      status.textContent = `Council readiness: ${payload.count}/${payload.total || 5} ready`;
+    }
+  });
 
   socket.on('phase', onPhase);
 
@@ -244,6 +296,19 @@
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
     countdownFill.classList.toggle('is-low', low);
     debateClock.classList.toggle('is-low', low);
+
+    const mSessionTimer = document.getElementById('m-session-timer');
+    if (mSessionTimer) {
+      if (state.sessionTimerEnabled && state.sessionEndsAt) {
+        mSessionTimer.hidden = false;
+        const sRem = Math.max(0, state.sessionEndsAt - Date.now());
+        const sSecs = Math.ceil(sRem / 1000);
+        mSessionTimer.textContent = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
+        mSessionTimer.classList.toggle('is-low', sRem > 0 && sRem < 30000);
+      } else {
+        mSessionTimer.hidden = true;
+      }
+    }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);

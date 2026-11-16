@@ -31,6 +31,14 @@
   socket.on('host:room', (info) => {
     state.roomCode = info.roomCode;
     state.gameId = info.gameId;
+    if (typeof info.botsEnabled === 'boolean') {
+      const toggle = document.getElementById('dev-bot-toggle');
+      if (toggle) toggle.checked = info.botsEnabled;
+    }
+    if (typeof info.sessionTimerEnabled === 'boolean') {
+      const sToggle = document.getElementById('session-mode-toggle');
+      if (sToggle) sToggle.checked = info.sessionTimerEnabled;
+    }
     try { sessionStorage.setItem('societelos.hostRoom', info.roomCode); } catch (e) { /* storage unavailable */ }
     document.getElementById('room-code').textContent = info.roomCode;
     document.getElementById('lobby-room-code').textContent = info.roomCode;
@@ -60,8 +68,67 @@
 
   const NODE_IDS = ['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05'];
 
-  // lobby:update { players: [{ node, ready, connected }] } -> light up node cards.
-  function renderLobby(players) {
+  const botToggle = document.getElementById('dev-bot-toggle');
+  if (botToggle) {
+    let savedBots = false;
+    try { savedBots = localStorage.getItem('societelos.devBots') === 'true'; } catch (e) {}
+    botToggle.checked = savedBots;
+    botToggle.addEventListener('change', () => {
+      const enabled = botToggle.checked;
+      try { localStorage.setItem('societelos.devBots', enabled ? 'true' : 'false'); } catch (e) {}
+      socket.emit('host:toggleBots', { enabled });
+    });
+    socket.on('connect', () => {
+      if (botToggle.checked) {
+        socket.emit('host:toggleBots', { enabled: true });
+      }
+    });
+  }
+
+  const sessionToggle = document.getElementById('session-mode-toggle');
+  if (sessionToggle) {
+    let savedSession = false;
+    try { savedSession = localStorage.getItem('societelos.blitzMode') === 'true'; } catch (e) {}
+    sessionToggle.checked = savedSession;
+    sessionToggle.addEventListener('change', () => {
+      const enabled = sessionToggle.checked;
+      try { localStorage.setItem('societelos.blitzMode', enabled ? 'true' : 'false'); } catch (e) {}
+      socket.emit('host:configureSession', { enabled, durationSec: 360 });
+    });
+    socket.on('connect', () => {
+      if (sessionToggle.checked) {
+        socket.emit('host:configureSession', { enabled: true, durationSec: 360 });
+      }
+    });
+  }
+
+  const callFinaleBtn = document.getElementById('btn-call-finale');
+  const sessionBadge = document.getElementById('session-timer-badge');
+  const sessionActions = document.getElementById('session-actions');
+
+  if (callFinaleBtn) {
+    callFinaleBtn.addEventListener('click', () => {
+      callFinaleBtn.disabled = true;
+      callFinaleBtn.textContent = 'Finale Queued…';
+      socket.emit('host:triggerFinale', {}, (res) => {
+        if (!res || !res.ok) {
+          callFinaleBtn.disabled = false;
+          callFinaleBtn.textContent = 'Call Finale';
+        }
+      });
+    });
+  }
+
+  function updateSessionControls() {
+    const inGame = state.phase !== 'LOBBY' && state.phase !== 'END';
+    const show = inGame && state.sessionTimerEnabled && state.sessionEndsAt;
+    if (sessionBadge) sessionBadge.hidden = !show;
+    if (sessionActions) sessionActions.hidden = !show || state.isFinale;
+    if (callFinaleBtn && state.isFinale) callFinaleBtn.disabled = true;
+  }
+
+  // lobby:update { players: [{ node, ready, connected, isBot }], botsEnabled } -> light up node cards.
+  function renderLobby(players, botsEnabled) {
     const byNode = {};
     players.forEach((p) => { byNode[p.node] = p; });
     NODE_IDS.forEach((node) => {
@@ -72,18 +139,46 @@
       card.classList.toggle('is-connected', !!(p && p.connected));
       card.classList.toggle('is-ready', !!(p && p.connected && p.ready));
       card.classList.toggle('is-disconnected', !!(p && !p.connected));
-      status.textContent = !p ? 'Offline' : !p.connected ? 'Signal lost' : p.ready ? 'Ready' : 'Connected';
+      card.classList.toggle('is-bot', !!(p && p.isBot));
+      if (!p) {
+        status.textContent = 'Offline';
+      } else if (p.isBot) {
+        status.textContent = 'Bot (Auto-vote)';
+      } else if (!p.connected) {
+        status.textContent = 'Signal lost';
+      } else if (p.ready) {
+        status.textContent = 'Ready';
+      } else {
+        status.textContent = 'Connected';
+      }
     });
     const joined = players.length;
+    const humanCount = players.filter((p) => !p.isBot).length;
     document.getElementById('lobby-count').textContent = `${joined}/5`;
     const startBtn = document.getElementById('btn-start');
-    startBtn.disabled = joined < NODE_IDS.length;
-    document.getElementById('start-hint').textContent = joined < NODE_IDS.length
-      ? `Waiting for ${NODE_IDS.length - joined} more node${NODE_IDS.length - joined === 1 ? '' : 's'}…`
-      : 'All five nodes synchronised.';
+    const isBotMode = typeof botsEnabled === 'boolean' ? botsEnabled : (botToggle && botToggle.checked);
+    if (botToggle && typeof botsEnabled === 'boolean') {
+      botToggle.checked = botsEnabled;
+    }
+    startBtn.disabled = joined < NODE_IDS.length || (isBotMode && humanCount < 1);
+    const hintEl = document.getElementById('start-hint');
+    if (isBotMode && humanCount < 1) {
+      hintEl.textContent = 'Dev Mode active: Connect 1 phone to start with 4 bots…';
+    } else if (joined < NODE_IDS.length) {
+      hintEl.textContent = `Waiting for ${NODE_IDS.length - joined} more node${NODE_IDS.length - joined === 1 ? '' : 's'}…`;
+    } else if (isBotMode) {
+      hintEl.textContent = 'Dev Mode: 1 human trustee + 4 voting bots ready.';
+    } else {
+      hintEl.textContent = 'All five nodes synchronised.';
+    }
   }
 
-  socket.on('lobby:update', (payload) => renderLobby((payload && payload.players) || []));
+  socket.on('lobby:update', (payload) => {
+    renderLobby((payload && payload.players) || [], payload && payload.botsEnabled);
+    if (sessionToggle && payload && typeof payload.sessionTimerEnabled === 'boolean') {
+      sessionToggle.checked = payload.sessionTimerEnabled;
+    }
+  });
 
   // START COUNCIL SESSION -> host:start
   const startBtn = document.getElementById('btn-start');
@@ -124,10 +219,17 @@
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
+    state.sessionEndsAt = payload.sessionEndsAt || null;
+    state.sessionTimerEnabled = !!payload.sessionTimerEnabled;
+    state.isFinale = !!payload.isFinale;
     showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
     document.body.dataset.phase = payload.phase;
-    document.getElementById('cycle-indicator').textContent = `CYCLE ${state.cycle}/5`;
+    const cycleText = state.sessionTimerEnabled
+      ? `POLICY ${state.cycle}${state.isFinale ? ' (FINALE)' : ''}`
+      : `CYCLE ${state.cycle}/5`;
+    document.getElementById('cycle-indicator').textContent = cycleText;
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
+    updateSessionControls();
   }
 
   // CHAMBER reveal: colour the map at the baseline (W = 0.40, GDW 25%) unless
@@ -343,7 +445,11 @@
   function renderDebate(payload) {
     const debating = payload.phase === 'DEBATE';
     document.getElementById('debate-panel').hidden = !debating;
-    if (!debating) clearInterval(nudgeTimer);
+    if (!debating) {
+      clearInterval(nudgeTimer);
+      const readyEl = document.getElementById('debate-ready-count');
+      if (readyEl) readyEl.hidden = true;
+    }
     else startNudges(payload.cycle, payload.crisis && payload.crisis.debateHooks);
     document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION', 'FINALE_ENACT'].includes(payload.phase));
     if (!debating) return;
@@ -351,6 +457,17 @@
     document.getElementById('debate-hook').textContent = crisis.debateHook || DEFAULT_HOOKS[(payload.cycle || 0) % DEFAULT_HOOKS.length];
   }
   socket.on('phase', renderDebate);
+
+  socket.on('debate:progress', (payload) => {
+    const el = document.getElementById('debate-ready-count');
+    if (!el) return;
+    if (payload && typeof payload.count === 'number' && payload.count > 0) {
+      el.hidden = false;
+      el.textContent = `Ready to vote: ${payload.count}/${payload.total || 5}`;
+    } else {
+      el.hidden = true;
+    }
+  });
 
   // World reveal (10 s after Cycle 2): fullscreen takeover naming the world.
   function renderWorldReveal(world) {
@@ -741,6 +858,14 @@
     document.getElementById('debate-clock').classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < 10000);
     state.remainingMs = remaining;
     timerEl.classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < LOW_TIME_MS);
+
+    // Update Session Blitz Clock
+    const sessionRemaining = state.sessionEndsAt ? Math.max(0, state.sessionEndsAt - Date.now()) : null;
+    const sessionTimerEl = document.getElementById('session-timer-display');
+    if (sessionTimerEl) {
+      sessionTimerEl.textContent = sessionRemaining === null ? '--:--' : formatClock(sessionRemaining);
+      sessionTimerEl.classList.toggle('is-low', sessionRemaining !== null && sessionRemaining > 0 && sessionRemaining < 30000);
+    }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);

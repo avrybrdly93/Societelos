@@ -303,21 +303,35 @@ function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
 }
 
 /**
- * Pick the crisis for a cycle: cycles 1-2 are fixed, 3-4 come from the
- * world (vote1 + vote2), and 5 is the world's write-in finale.
+ * Pick the crisis for a cycle: cycles 1-2 are fixed, 3+ come from the
+ * world (vote1 + vote2), and the finale is the world's write-in finale.
  */
-function selectCrisis(crises, cycle, worldKey, roles = []) {
+function selectCrisis(crises, cycle, worldKey, roles = [], isFinale = (cycle === TOTAL_CYCLES)) {
   const world = cycle <= 2 ? 'fixed' : worldKey;
-  const mode = cycle === TOTAL_CYCLES ? 'writein' : 'binary';
+  const mode = isFinale ? 'writein' : 'binary';
   let raw = null;
   const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : null;
-  if (list) {
-    raw = list.find((c) => c.world === world && c.cycle === cycle) || null;
+  if (isFinale) {
+    const finaleId = crises && crises.worlds && crises.worlds[worldKey] && crises.worlds[worldKey].finale;
+    raw = (list && list.find((c) => c.id === finaleId))
+       || (list && list.find((c) => c.world === world && c.mode === 'writein'))
+       || null;
+  } else if (list) {
+    raw = list.find((c) => c.world === world && c.cycle === cycle && c.mode === 'binary');
+    if (!raw && cycle > 2) {
+      const worldBinary = list.filter((c) => c.world === world && c.mode === 'binary');
+      if (worldBinary.length > 0) {
+        raw = worldBinary[(cycle - 3) % worldBinary.length];
+      }
+    }
+    if (!raw) {
+      raw = list.find((c) => c.world === world && c.cycle === cycle) || null;
+    }
   } else if (crises) {
     if (cycle <= 2) raw = (crises.fixedCrises || [])[cycle - 1];
     else if (crises.worlds && crises.worlds[worldKey]) {
       const w = crises.worlds[worldKey];
-      raw = cycle === TOTAL_CYCLES ? w.finale : (w.crises || [])[cycle - 3];
+      raw = isFinale ? w.finale : (w.crises || [])[cycle - 3];
     }
   }
   return normalizeCrisis(raw, { world, cycle, mode, roles });
@@ -473,6 +487,16 @@ class GameState extends EventEmitter {
 
     // Players keyed by node id ('NODE-01'..'NODE-05').
     this.players = {};
+    this.botsEnabled = false;
+
+    // Session Blitz Mode (dynamic cycles until session duration expires).
+    this.sessionTimerEnabled = String(process.env.SESSION_TIMER_ENABLED || 'false').toLowerCase() === 'true';
+    this.sessionDurationSec = Number(process.env.SESSION_DURATION_SEC) || 360;
+    this.sessionEndsAt = null;
+    this.manualFinaleTriggered = false;
+    this._designatedFinaleCycle = null;
+    this._designatedFinaleCycle = null;
+    this.totalCycles = TOTAL_CYCLES;
 
     // Phase state machine.
     this.durations = buildPhaseDurations(process.env, phaseSeconds);
@@ -543,9 +567,38 @@ class GameState extends EventEmitter {
     this.endsAt = null;
   }
 
+  /** Configure session blitz mode (dynamic cycles within durationSec). */
+  setSessionMode(enabled, durationSec = 360) {
+    this.sessionTimerEnabled = Boolean(enabled);
+    if (Number.isFinite(durationSec) && durationSec > 0) {
+      this.sessionDurationSec = durationSec;
+    }
+  }
+
+  /** Manually call the Write-In Finale at the conclusion of the current cycle. */
+  triggerFinale() {
+    this.manualFinaleTriggered = true;
+    return true;
+  }
+
+  /**
+   * Determine whether a given cycle is the final write-in round.
+   * In standard mode: cycle >= totalCycles (5).
+   * In blitz mode: cycle >= 3 (world established) and session time has expired or finale triggered.
+   */
+  isFinaleCycle(cycleNumber = this.cycle) {
+    if (!this.sessionTimerEnabled) {
+      return cycleNumber >= this.totalCycles;
+    }
+    if (this._designatedFinaleCycle !== null) {
+      return cycleNumber >= this._designatedFinaleCycle;
+    }
+    return false;
+  }
+
   /**
    * Which phase follows the current one. Encodes the game loop:
-   * setup -> cycles 1-4 (binary) -> world reveal after cycle 2 -> cycle 5 finale -> end.
+   * setup -> binary policies -> world reveal after cycle 2 -> write-in finale -> end.
    */
   nextPhase() {
     const P = PHASES;
@@ -559,9 +612,22 @@ class GameState extends EventEmitter {
       case P.DEBATE: return P.VOTE;
       case P.VOTE: return P.RESOLUTION;
       case P.RESOLUTION:
-        if (this.ending === 'shutdown' || this.gdw <= 0 || this.cycle >= TOTAL_CYCLES) return P.END;
+        if (this.ending === 'shutdown' || this.gdw <= 0) return P.END;
+        if (this.isFinaleCycle() && this.finaleFallback) return P.END;
+        if (!this.sessionTimerEnabled && this.cycle >= this.totalCycles) return P.END;
+        if (this.sessionTimerEnabled && this.cycle >= 2 && this._designatedFinaleCycle === null) {
+          if (this.manualFinaleTriggered || (this.sessionEndsAt && Date.now() >= this.sessionEndsAt)) {
+            this._designatedFinaleCycle = this.cycle + 1;
+          }
+        }
         return this.cycle === 2 ? P.WORLD_REVEAL : P.INCIDENT;
-      case P.WORLD_REVEAL: return P.INCIDENT;
+      case P.WORLD_REVEAL:
+        if (this.sessionTimerEnabled && this._designatedFinaleCycle === null) {
+          if (this.manualFinaleTriggered || (this.sessionEndsAt && Date.now() >= this.sessionEndsAt)) {
+            this._designatedFinaleCycle = this.cycle + 1;
+          }
+        }
+        return P.INCIDENT;
       case P.FINALE_WRITE: return P.FINALE_MOD;
       case P.FINALE_MOD:
         // Moderation never came back before the FINALE_MOD timer: authored A/B.
@@ -580,11 +646,11 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * True when the current cycle is the write-and-rank finale: cycle 5 with a
-   * crisis in mode "writein" that has not fallen back to its authored A/B.
+   * True when the current cycle is the write-and-rank finale:
+   * an isFinaleCycle with a crisis in mode "writein" that has not fallen back to its authored A/B.
    */
   isFinaleWriteIn() {
-    return this.cycle === TOTAL_CYCLES && !this.finaleFallback && !!this.crisis && this.crisis.mode === 'writein';
+    return this.isFinaleCycle() && !this.finaleFallback && !!this.crisis && this.crisis.mode === 'writein';
   }
 
   /**
@@ -621,7 +687,16 @@ class GameState extends EventEmitter {
     this.phase = phase;
     const endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
     // Option names are public, so 'name' is allowed; everything secret is stripped.
-    const payload = sanitizeForBroadcast({ cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra }, ['name']);
+    const payload = sanitizeForBroadcast({
+      cycle: this.cycle,
+      phase,
+      endsAt,
+      sessionEndsAt: this.sessionEndsAt,
+      sessionTimerEnabled: this.sessionTimerEnabled,
+      isFinale: this.isFinaleCycle(),
+      crisis: this.publicCrisis(),
+      ...extra
+    }, ['name']);
     this.emit('phase', payload);
     return endsAt;
   }
@@ -631,9 +706,13 @@ class GameState extends EventEmitter {
    * the incident on the projector.
    */
   startIncidentPhase() {
-    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles);
+    if (this.sessionTimerEnabled && !this.sessionEndsAt && this.cycle >= 1) {
+      this.sessionEndsAt = Date.now() + (this.sessionDurationSec * 1000);
+    }
+    const isFinale = this.isFinaleCycle();
+    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale);
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
-    if (this.cycle === TOTAL_CYCLES) this.initFinale();
+    if (isFinale) this.initFinale();
     this.enterPhase(PHASES.INCIDENT);
   }
 
@@ -1069,9 +1148,33 @@ class GameState extends EventEmitter {
 
   /** DEBATE: broadcast options A and B with the countdown's endsAt. */
   startDebatePhase() {
+    this.debateReady = new Set();
     const extra = { options: this.publicOptions() };
     if (this.showForecastBeforeVote && this.crisis) extra.forecasts = this.publicForecasts();
     this.enterPhase(PHASES.DEBATE, extra);
+  }
+
+  /**
+   * Record a player's readiness to skip the remainder of DEBATE and vote early.
+   * If all seated players are ready, allReady is true.
+   */
+  setDebateReady(node, ready = true) {
+    if (this.phase !== PHASES.DEBATE || !this.players[node]) return { ok: false, reason: 'NOT_IN_DEBATE' };
+    if (!this.debateReady) this.debateReady = new Set();
+    if (ready) {
+      this.debateReady.add(node);
+      if (this.botsEnabled) {
+        for (const [id, p] of Object.entries(this.players)) {
+          if (p.isBot) this.debateReady.add(id);
+        }
+      }
+    } else {
+      this.debateReady.delete(node);
+    }
+    const readyList = Array.from(this.debateReady);
+    const seated = Object.keys(this.players);
+    const allReady = seated.length > 0 && seated.every((n) => this.debateReady.has(n));
+    return { ok: true, ready: readyList, allReady, count: readyList.length, total: seated.length };
   }
 
   /** VOTE: open blind vote collection for the vote timer (15 s). */
@@ -1094,9 +1197,9 @@ class GameState extends EventEmitter {
     if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
     if (choice !== 'A' && choice !== 'B') return { ok: false, reason: 'BAD_CHOICE' };
     if (this.votes[node]) return { ok: false, reason: 'ALREADY_VOTED' };
-    // Overrides don't apply in the finale (cycle 5, including its A/B fallback):
+    // Overrides don't apply in the finale (including its A/B fallback):
     // the flag is ignored and the Override stays unspent.
-    const useOverride = override === true && this.cycle < TOTAL_CYCLES;
+    const useOverride = override === true && !this.isFinaleCycle();
     // Reject a second Override: the vote is not recorded, so the phone may recast.
     if (useOverride && this.overridesUsed[node]) return { ok: false, reason: 'OVERRIDE_SPENT' };
     this.votes[node] = { choice, override: useOverride };
@@ -1286,8 +1389,8 @@ class GameState extends EventEmitter {
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
     // Cycles 1 and 2 decide the world for cycles 3-5.
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
-    // Binary scoring in cycles 1-4, and in a cycle 5 that fell back to A/B.
-    const binaryScoring = this.cycle < TOTAL_CYCLES || this.finaleFallback;
+    // Binary scoring before the finale, and in a finale that fell back to A/B.
+    const binaryScoring = !this.isFinaleCycle() || this.finaleFallback;
     const roleAwards = binaryScoring ? this.awardRolePoints(winner) : {};
     const catalystAwards = binaryScoring ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
     this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
@@ -1469,6 +1572,9 @@ class GameState extends EventEmitter {
     this.roleAssignment = null;
     this.finaleFallback = false;
     this.startedAt = null;
+    this.sessionEndsAt = null;
+    this.manualFinaleTriggered = false;
+    this._designatedFinaleCycle = null;
     for (const [node, player] of Object.entries(this.players)) {
       player.ready = false;
       player.role = null;
@@ -1548,7 +1654,10 @@ class GameState extends EventEmitter {
    * Returns { ok: true, node } or { ok: false, reason }.
    */
   addPlayer(socketId, name) {
-    const node = NODE_IDS.find((id) => !this.players[id]);
+    let node = NODE_IDS.find((id) => !this.players[id]);
+    if (!node && this.botsEnabled) {
+      node = NODE_IDS.find((id) => this.players[id] && this.players[id].isBot);
+    }
     if (!node) return { ok: false, reason: 'ROOM_FULL' };
 
     const cleanName = String(name || '').trim().slice(0, 24) || node;
@@ -1556,8 +1665,9 @@ class GameState extends EventEmitter {
       node,
       socketId,
       name: cleanName,
-      ready: false,
+      ready: true,
       connected: true,
+      isBot: false,
       role: null,
       token: crypto.randomBytes(16).toString('hex'), // private reconnect token
       joinedAt: Date.now()
@@ -1565,7 +1675,61 @@ class GameState extends EventEmitter {
     this.scores[node] = 0;
     this.overridesUsed[node] = false;
     console.log(`[game ${this.roomCode}] ${node} joined`);
+    if (this.botsEnabled) {
+      this.fillBots();
+    }
     return { ok: true, node, token: this.players[node].token };
+  }
+
+  /**
+   * Enable or disable dev mode bots.
+   * When enabled in the lobby: fills all remaining non-human slots with bots (leaving NODE-01 open if no human yet).
+   */
+  enableBots(enabled = true) {
+    this.botsEnabled = !!enabled;
+    if (this.botsEnabled) {
+      this.fillBots();
+    } else {
+      this.removeBots();
+    }
+    return this.botsEnabled;
+  }
+
+  /** Fill empty player slots with autonomous bot trustees. */
+  fillBots() {
+    if (!this.botsEnabled || this.phase !== PHASES.LOBBY) return this.players;
+    const humanCount = Object.values(this.players).filter((p) => !p.isBot).length;
+    NODE_IDS.forEach((node) => {
+      if (humanCount === 0 && node === 'NODE-01') return;
+      if (!this.players[node]) {
+        this.players[node] = {
+          node,
+          socketId: null,
+          name: `Synth-${node.slice(-2)} [Bot]`,
+          ready: true,
+          connected: true,
+          isBot: true,
+          role: null,
+          token: crypto.randomBytes(16).toString('hex'),
+          joinedAt: Date.now()
+        };
+        this.scores[node] = 0;
+        this.overridesUsed[node] = false;
+      }
+    });
+    return this.players;
+  }
+
+  /** Remove all bot players from the room. */
+  removeBots() {
+    NODE_IDS.forEach((node) => {
+      if (this.players[node] && this.players[node].isBot) {
+        delete this.players[node];
+        delete this.scores[node];
+        delete this.overridesUsed[node];
+      }
+    });
+    return this.players;
   }
 
   /**

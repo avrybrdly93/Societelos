@@ -123,11 +123,11 @@ function checkCrises(data, citizenIds) {
     if (seen.has(c.id)) err(where, 'duplicate id');
     seen.add(c.id);
     if (!['fixed', ...WORLDS].includes(c.world)) err(where, 'bad world');
-    if (!Number.isInteger(c.cycle) || c.cycle < 1 || c.cycle > 5) err(where, 'cycle must be 1-5');
+    if (!Number.isInteger(c.cycle) || c.cycle < 1 || c.cycle > 12) err(where, 'cycle must be 1-12');
     if (c.world === 'fixed' && c.cycle > 2) err(where, 'fixed crises are cycles 1-2');
-    if (c.world !== 'fixed' && c.cycle < 3) err(where, 'world crises are cycles 3-5');
-    const expectedMode = c.cycle === 5 ? 'writein' : 'binary';
-    if (c.mode !== expectedMode) err(where, `mode must be "${expectedMode}"`);
+    if (c.world !== 'fixed' && c.cycle < 3) err(where, 'world crises are cycles 3+');
+    if (c.mode !== 'binary' && c.mode !== 'writein') err(where, 'mode must be "binary" or "writein"');
+    if (c.world === 'fixed' && c.mode !== 'binary') err(where, 'fixed crises must be binary');
     for (const f of ['title', 'incident']) if (!isStr(c[f])) err(where, `"${f}" required`);
     if (!c.options) err(where, 'options required');
     else for (const k of ['A', 'B']) checkOption(`${where}.options.${k}`, c.options[k], c);
@@ -137,8 +137,14 @@ function checkCrises(data, citizenIds) {
     if (c.intel) for (const k of Object.keys(c.intel)) if (!ROLE_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
   });
   for (const w of ['fixed', ...WORLDS]) {
-    const cycles = w === 'fixed' ? [1, 2] : [3, 4, 5];
+    const cycles = w === 'fixed' ? [1, 2] : [3, 4];
     for (const cy of cycles) if (!data.crises.some((c) => c.world === w && c.cycle === cy)) err('crises.json', `no crisis for ${w} cycle ${cy}`);
+    if (w !== 'fixed') {
+      const finaleId = worlds[w] && worlds[w].finale;
+      if (!finaleId || !data.crises.some((c) => c.id === finaleId && c.mode === 'writein')) {
+        err('crises.json', `missing writein finale for world ${w}`);
+      }
+    }
   }
   return undefined;
 }

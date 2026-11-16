@@ -29,6 +29,13 @@
       <span id="phase-name" class="label">Lobby</span>
       <span id="phase-timer" class="topbar-value mono timer">--:--</span>
     </div>
+    <div id="session-timer-badge" class="topbar-item session-timer-item" hidden>
+      <span class="label">Session Clock</span>
+      <span id="session-timer-display" class="topbar-value mono timer">--:--</span>
+    </div>
+    <div id="session-actions" class="topbar-item session-actions" hidden>
+      <button id="btn-call-finale" class="btn btn-sm btn-call-finale" type="button" title="Transition to the Write-In Finale at the end of this policy">Call Finale</button>
+    </div>
     <div class="topbar-item">
       <span class="label">GDW</span>
       <span id="gdw-badge" class="gdw-badge mono">25%</span>
@@ -57,6 +64,16 @@
             <li class="node-card" data-node="NODE-04"><span class="node-id mono">NODE-04</span><span class="node-status">Offline</span></li>
             <li class="node-card" data-node="NODE-05"><span class="node-id mono">NODE-05</span><span class="node-status">Offline</span></li>
           </ol>
+          <div class="dev-controls">
+            <label class="dev-toggle-label" for="dev-bot-toggle">
+              <input type="checkbox" id="dev-bot-toggle" class="dev-checkbox">
+              <span class="dev-toggle-text">Dev Mode: Auto-fill 4 Voting Bots (1 human needed)</span>
+            </label>
+            <label class="dev-toggle-label" for="session-mode-toggle">
+              <input type="checkbox" id="session-mode-toggle" class="dev-checkbox">
+              <span class="dev-toggle-text">⚡ Blitz Mode (6 Min Session — Dynamic Policies)</span>
+            </label>
+          </div>
           <button id="btn-start" class="btn btn-primary btn-start" type="button" disabled>START COUNCIL SESSION</button>
           <p id="start-hint" class="caption muted">Waiting for 5 nodes to connect…</p>
         </div>
@@ -172,6 +189,7 @@
             <div class="debate-side">
               <div id="debate-clock" class="debate-clock mono" aria-live="off">1:30</div>
               <p id="debate-nudge" class="debate-nudge mono"></p>
+              <p id="debate-ready-count" class="mono caption debate-ready-count" hidden>Ready to vote: 0/5</p>
             </div>
           </div>
           <div id="policy-panel" class="policy-panel" hidden>

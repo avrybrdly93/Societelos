@@ -4,6 +4,7 @@
 // Translates client events into gameEngine calls and relays engine events
 // back to the right sockets. Holds no game state of its own.
 
+const crypto = require('crypto');
 const CLIENT_TYPES = ['host', 'phone'];
 
 /** Socket.IO room names for a game. */
@@ -129,6 +130,22 @@ function initSockets(io, gameEngine) {
     // phase { cycle, phase, endsAt, crisis, ... } to everyone in the room.
     game.on('phase', (payload) => {
       io.to(roomChannel(game.roomCode)).emit('phase', payload);
+      if (payload.phase === 'DEBATE') {
+        io.to(roomChannel(game.roomCode)).emit('debate:progress', {
+          ready: [],
+          count: 0,
+          total: Object.keys(game.players).length
+        });
+      }
+      if (game.botsEnabled) {
+        if (payload.phase === 'VOTE') {
+          triggerBotVotes(game);
+        } else if (payload.phase === 'FINALE_WRITE') {
+          triggerBotSubmissions(game);
+        } else if (payload.phase === 'FINALE_RANK') {
+          triggerBotRankings(game);
+        }
+      }
     });
 
     // role:assigned { role } privately to the one phone that holds it.
@@ -159,6 +176,14 @@ function initSockets(io, gameEngine) {
     // finale:feedback { status, feedback } privately to the author asked to revise.
     game.on('finale:feedback', ({ node, status, feedback }) => {
       emitToNode(game, node, 'finale:feedback', { status, feedback });
+      if (status === 'revise' && game.players[node] && game.players[node].isBot) {
+        setTimeout(() => {
+          if (game.phase === 'FINALE_MOD' && game.finale && game.finale.revise[node] === 'pending') {
+            const current = game.finale.submissions[node];
+            game.resubmitPolicy(node, `Revised: ${current || 'Resource equilibrium policy'}`);
+          }
+        }, 500);
+      }
     });
 
     // finale:ballot { policies: [{ id, text }] x4 } privately to each phone.
@@ -172,11 +197,77 @@ function initSockets(io, gameEngine) {
     });
   }
 
-  // lobby:update { players: [{ node, ready, connected }] } to everyone in the room.
+  function triggerBotVotes(game) {
+    const isFast = game.durations && (game.durations.VOTE < 1000 || game.durations.DEBATE < 1000);
+    const bots = Object.values(game.players).filter((p) => p.isBot);
+    bots.forEach((bot, idx) => {
+      const delay = isFast ? 1 * (idx + 1) : (600 + idx * 450);
+      setTimeout(() => {
+        if (game.phase !== 'VOTE' || !game.votingOpen || game.votes[bot.node]) return;
+        const choice = crypto.randomInt(0, 2) === 0 ? 'A' : 'B';
+        const result = game.castVote(bot.node, choice, false);
+        if (result.ok) {
+          io.to(roomChannel(game.roomCode)).emit('vote:progress', { voted: Object.keys(game.votes) });
+          if (game.allVotesIn() && game.phase === 'VOTE') {
+            game.advancePhase();
+          }
+        }
+      }, delay);
+    });
+  }
+
+  function triggerBotSubmissions(game) {
+    const isFast = game.durations && game.durations.FINALE_WRITE < 1000;
+    const canned = [
+      'Autonomous surplus dividend for residential commons and microgrids.',
+      'Decentralize computational routing across regional open-access nodes.',
+      'Universal cultural sabbatical grants and creative work endowments.',
+      'Algorithmic resource equilibrium protocol for municipal trusts.'
+    ];
+    const bots = Object.values(game.players).filter((p) => p.isBot);
+    bots.forEach((bot, idx) => {
+      const delay = isFast ? 1 * (idx + 1) : (800 + idx * 400);
+      setTimeout(() => {
+        if (game.phase !== 'FINALE_WRITE' || !game.finale || !game.finale.writingOpen) return;
+        if (game.finale.submissions[bot.node]) return;
+        const text = canned[idx % canned.length];
+        game.submitPolicy(bot.node, text);
+      }, delay);
+    });
+  }
+
+  function triggerBotRankings(game) {
+    const isFast = game.durations && game.durations.FINALE_RANK < 1000;
+    const bots = Object.values(game.players).filter((p) => p.isBot);
+    bots.forEach((bot, idx) => {
+      const delay = isFast ? 1 * (idx + 1) : (800 + idx * 400);
+      setTimeout(() => {
+        if (game.phase !== 'FINALE_RANK' || !game.finale || !game.finale.rankingOpen) return;
+        if (game.finale.ranks[bot.node]) return;
+        const ballot = (game.finale.ballots && game.finale.ballots[bot.node]) || [];
+        if (ballot.length === 4) {
+          const order = ballot.slice().sort(() => (crypto.randomInt(0, 2) === 0 ? -1 : 1));
+          game.rankPolicies(bot.node, order);
+        }
+      }, delay);
+    });
+  }
+
+  // lobby:update { players: [{ node, ready, connected, isBot }], botsEnabled } to everyone in the room.
   // Names are deliberately left out: the projector shows node ids only.
   function broadcastLobby(game) {
-    const players = Object.values(game.players).map((p) => ({ node: p.node, ready: p.ready, connected: p.connected }));
-    io.to(roomChannel(game.roomCode)).emit('lobby:update', { players });
+    const players = Object.values(game.players).map((p) => ({
+      node: p.node,
+      ready: p.ready,
+      connected: p.connected,
+      isBot: !!p.isBot
+    }));
+    io.to(roomChannel(game.roomCode)).emit('lobby:update', {
+      players,
+      botsEnabled: !!game.botsEnabled,
+      sessionTimerEnabled: !!game.sessionTimerEnabled,
+      sessionDurationSec: game.sessionDurationSec
+    });
   }
 
   function handleHost(socket) {
@@ -185,18 +276,48 @@ function initSockets(io, gameEngine) {
     wireRoom(game);
     socket.data.roomCode = game.roomCode;
     socket.join([roomChannel(game.roomCode), hostChannel(game.roomCode)]);
-    socket.emit('host:room', { roomCode: game.roomCode, gameId: game.gameId, phase: game.phase });
+    socket.emit('host:room', {
+      roomCode: game.roomCode,
+      gameId: game.gameId,
+      phase: game.phase,
+      botsEnabled: !!game.botsEnabled,
+      sessionTimerEnabled: !!game.sessionTimerEnabled,
+      sessionDurationSec: game.sessionDurationSec
+    });
     // A projector reloading mid-game gets the world it missed.
     if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
     broadcastLobby(game);
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
+    // host:toggleBots { enabled: boolean } -> dev mode toggle to fill remaining slots with bots
+    onValid(socket, 'host:toggleBots', { enabled: 'boolean' }, (payload, reply) => {
+      game.enableBots(payload.enabled);
+      broadcastLobby(game);
+      reply({ ok: true, botsEnabled: game.botsEnabled });
+    });
+
+    // host:configureSession { enabled: boolean, durationSec: number? } -> configure blitz mode
+    onValid(socket, 'host:configureSession', { enabled: 'boolean', durationSec: 'number?' }, (payload, reply) => {
+      game.setSessionMode(payload.enabled, payload.durationSec);
+      broadcastLobby(game);
+      reply({ ok: true, sessionTimerEnabled: game.sessionTimerEnabled, sessionDurationSec: game.sessionDurationSec });
+    });
+
+    // host:triggerFinale {} -> transition to Write-In Finale after current cycle
+    onValid(socket, 'host:triggerFinale', {}, (payload, reply) => {
+      game.triggerFinale();
+      io.to(roomChannel(game.roomCode)).emit('session:finaleTriggered', { cycle: game.cycle });
+      reply({ ok: true });
+    });
+
     // host:start {} -> begin the phase flow once all 5 nodes have joined.
     onValid(socket, 'host:start', {}, (payload, reply) => {
       const joined = Object.keys(game.players).length;
-      if (joined < gameEngine.MAX_PLAYERS) {
-        socket.emit('host:error', { reason: 'NOT_ENOUGH_PLAYERS', joined });
-        return reply({ ok: false, reason: 'NOT_ENOUGH_PLAYERS', joined });
+      const humanCount = Object.values(game.players).filter((p) => !p.isBot).length;
+      if (joined < gameEngine.MAX_PLAYERS || (game.botsEnabled && humanCount < 1)) {
+        const reason = (game.botsEnabled && humanCount < 1) ? 'NEED_ONE_HUMAN' : 'NOT_ENOUGH_PLAYERS';
+        socket.emit('host:error', { reason, joined, humanCount });
+        return reply({ ok: false, reason, joined });
       }
       if (!game.startIntroPhase()) return reply({ ok: false, reason: 'ALREADY_STARTED' });
       return reply({ ok: true });
@@ -320,6 +441,24 @@ function initSockets(io, gameEngine) {
       if (!player || player.socketId !== socket.id) return;
       game.markDisconnected(socket.data.node);
       broadcastLobby(game);
+    });
+
+    // debate:ready { ready? } -> signal readiness to vote early and skip the remainder of DEBATE
+    onValid(socket, 'debate:ready', { ready: 'boolean?' }, (payload, reply) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      const result = game.setDebateReady(socket.data.node, payload.ready !== false);
+      reply(result);
+      if (result.ok) {
+        io.to(roomChannel(game.roomCode)).emit('debate:progress', {
+          ready: result.ready,
+          count: result.count,
+          total: result.total
+        });
+        if (result.allReady && game.phase === 'DEBATE') {
+          game.advancePhase();
+        }
+      }
     });
 
     // lobby:ready { ready? } -> set or toggle this phone's ready flag.

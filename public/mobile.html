@@ -13,6 +13,7 @@
   <header id="m-header" class="m-header" aria-label="Node status">
     <span class="m-brand mono">SOCIETELOS</span>
     <span id="m-node-label" class="m-node-label mono">NOT CONNECTED</span>
+    <span id="m-session-timer" class="m-session-timer mono" hidden>--:--</span>
     <div id="m-countdown" class="m-countdown" aria-hidden="true"><div id="m-countdown-fill" class="m-countdown-fill"></div></div>
   </header>
 
@@ -89,6 +90,10 @@
         <h2 class="m-title">Look at the projector</h2>
         <div id="debate-clock" class="m-clock mono">--:--</div>
         <p class="muted">Argue. Persuade. Mislead if you must. The vote is blind.</p>
+        <div class="debate-ready-container">
+          <button id="btn-debate-ready" class="btn btn-debate-ready" type="button" hidden>READY TO VOTE</button>
+          <p id="debate-ready-status" class="caption mono muted" hidden></p>
+        </div>
       </div>
     </section>
     <section id="m-view-vote" class="m-view" aria-label="Vote">

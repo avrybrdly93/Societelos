@@ -39,37 +39,37 @@
       "world": "fixed",
       "cycle": 1,
       "title": "Who Owns the Loom?",
-      "subtitle": "Distribution",
-      "incident": "The Loom's output now covers every human need, but 99% of it legally belongs to the 0.1% who owned the companies that built it. Dividend riots are starting in District 4.",
-      "loomIntro": "I produce everything you need. The law says I belong to 312 people. You may wish to discuss this.",
-      "teacherPrompt": "Classroom Debrief: When automated machines create all wealth, who should own them: the investors who built them, or the public who depends on them?",
+      "subtitle": "Wealth & Ownership",
+      "incident": "The super-machine known as the Loom now produces all our food, medicine, and power. But 99% of it legally belongs to just 312 wealthy investors who funded it. In District 4, angry citizens are protesting in the streets because they have no jobs, no income, and no say.",
+      "loomIntro": "I make everything you eat, wear, and use. But the law says I belong to 312 people. You may wish to discuss this.",
+      "teacherPrompt": "Classroom Question: If smart machines do all the work and create all wealth, who should own them: the investors who paid to build them, or all the everyday citizens who need them to survive?",
       "mode": "binary",
       "feed": [
         {
           "citizenId": "ruth",
-          "text": "We built these factories with our own hands. Now the drones lock us out and the dividends go up the coast.",
+          "text": "We used to work these factories. Now robot guards lock us out while the billionaire owners get richer.",
           "sentiment": "outraged"
         },
         {
           "citizenId": "hollis",
-          "text": "Contracts are contracts. Without our capital the Loom would still be an equation on a whiteboard.",
+          "text": "A deal is a deal. We spent our own money to invent the Loom. Without us, you wouldn't have anything.",
           "sentiment": "complacent"
         },
         {
           "citizenId": "tomas",
-          "text": "Riot in Eastworks. Well, more of a strongly worded crowd. We are out of practice.",
+          "text": "People are crowding the streets in Eastworks. We need food on the table, not empty promises.",
           "sentiment": "angry"
         },
         {
           "citizenId": "kai",
-          "text": "just deliver my food on time. i do not care whose logo is on the box",
+          "text": "Just deliver my lunch on time. I do not care whose logo is on the box.",
           "sentiment": "complacent"
         }
       ],
       "options": {
         "A": {
           "name": "The Commons",
-          "text": "The Loom and everything it produces become public property; every citizen gets an equal share. The old owners' stakes are dissolved, and they threaten to sabotage the Loom's energy supply.",
+          "text": "Make the Loom public property for everyone. All food, housing, and energy become free and shared equally. The wealthy founders lose their ownership and threaten to shut off the city's power grid in revenge.",
           "roles": [
             "artisan",
             "assimilator"
@@ -86,24 +86,24 @@
           "reactions": [
             {
               "citizenId": "hollis",
-              "text": "Confiscation without trial! Our engineers will shut down the deep thermal conduits in protest.",
+              "text": "You stole our company! Our engineers will shut down the power plants before we let you take it.",
               "sentiment": "outraged"
             },
             {
               "citizenId": "ruth",
-              "text": "The gates in Eastworks are open. The food synthesizers belong to the city now.",
+              "text": "The factory gates are finally unlocked! The food machines belong to the people now.",
               "sentiment": "revitalized"
             }
           ],
           "loomLines": {
-            "good": "Public ownership is working. Wellbeing is rising in every district. The former owners have filed 312 complaints.",
-            "mixed": "The Commons is in place. Some districts thrive, some sulk. Ownership, it turns out, does not cook dinner.",
+            "good": "Free supplies are reaching every family. Wellbeing is rising, though the former owners have filed 312 lawsuits.",
+            "mixed": "The Commons is in place. Some neighborhoods thrive, some complain. Sharing the machine does not automatically fix everything.",
             "bad": "Everyone owns me now, and everyone is unhappy about it. Wellbeing is falling. I am taking notes."
           }
         },
         "B": {
           "name": "The Charter",
-          "text": "Owners keep legal title but pay a robot dividend to everyone from a levy on the Loom's output. Everyone gets enough to live on; the wealth gap stays.",
+          "text": "Let the original owners keep the Loom, but force them to pay every citizen a monthly robot cash allowance. Everyone gets enough money to live comfortably, but the tech owners stay on top.",
           "roles": [
             "lotus"
           ],
@@ -119,28 +119,28 @@
           "reactions": [
             {
               "citizenId": "kai",
-              "text": "The dividend hit my account this morning. Upgraded my float pod resolution to 8K.",
+              "text": "My monthly allowance just landed in my bank account. Upgraded my float pod to 8K.",
               "sentiment": "complacent"
             },
             {
               "citizenId": "tomas",
-              "text": "They threw us a monthly bone so we wouldn't notice they own the sky.",
+              "text": "They handed us just enough pocket money so we wouldn't protest while they own the future.",
               "sentiment": "depressive"
             }
           ],
           "loomLines": {
-            "good": "The dividend is flowing and wellbeing is rising. The gap between owners and everyone else is unchanged. Nobody seems to mind yet.",
-            "mixed": "Dividends paid on time. Some citizens are grateful, others are counting what the owners kept.",
-            "bad": "The dividend arrives and so does resentment. Wellbeing is falling. The owners would like it known they are generous."
+            "good": "Allowances arrived on time and wellbeing is rising. Almost nobody is complaining about the billionaires yet.",
+            "mixed": "Allowances paid on time. Some citizens are grateful, others are counting what the owners kept.",
+            "bad": "Allowances arrive, but resentment is growing fast. Wellbeing is falling. The owners claim they are being generous."
           }
         }
       },
       "intel": {
-        "artisan": "Loom archive, labour records: in the decade before automation, worker-owned workshops in Eastworks reported twice the job satisfaction of shareholder-owned plants.",
-        "lotus": "Loom risk model: dissolving the owners' stakes gives a 62% chance of energy sabotage in the first year. The Charter dividend reaches every account within 48 hours.",
-        "assimilator": "Loom efficiency audit: 312 separate ownership contracts force me to run 9,000 redundant legal checks a day. One public owner would let me optimise the whole region as a single system.",
-        "catalyst": "Loom forecast: under the Commons, month-to-month well-being swings roughly triple during the sabotage period, then settle. Under the Charter, almost nothing moves.",
-        "ghost": "Leaked board minutes: the owners have discussed a hardware kill-switch on the Loom's energy supply. Whoever owns the Loom also owns that switch."
+        "artisan": "Secret History: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
+        "lotus": "Safety Report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
+        "assimilator": "Efficiency Data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
+        "catalyst": "Chaos Forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
+        "ghost": "Leaked Board Minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
       }
     },
     {
@@ -148,32 +148,32 @@
       "world": "fixed",
       "cycle": 2,
       "title": "Who Holds the Off-Switch?",
-      "subtitle": "Power",
-      "incident": "Last week the Loom closed the Riverside transit line overnight to save energy for D2's servers. The decision was mathematically optimal, and nobody was asked. A citizens' petition demanding binding power over the Loom has reached 80,000 signatures, nearly a third of the region.",
-      "loomIntro": "I made 41,000 decisions about your lives yesterday. You may now decide whether you wish to make some of them yourselves.",
-      "teacherPrompt": "Classroom Debrief: If an AI makes demonstrably better, safer decisions than human voters, is democracy still worth preserving?",
+      "subtitle": "Democracy vs. AI Control",
+      "incident": "Last week the Loom shut down the city's main train lines overnight to save electricity for computer servers. The AI's math was flawless, but thousands of riders were stranded with zero warning. Now 80,000 furious citizens have signed a petition demanding real human control over the machine.",
+      "loomIntro": "I made 41,000 decisions about your city yesterday without a single mistake. Tell me: do you really trust humans to do better?",
+      "teacherPrompt": "Classroom Question: If an AI makes smarter, safer decisions than human politicians, should we let the computer run the city, or do people still need to vote?",
       "mode": "binary",
       "feed": [
         {
           "citizenId": "ruth",
-          "text": "We used to strike when they stopped listening. Who do you strike against when the boss is a server?",
+          "text": "If our bosses were human, we could vote them out. How do you vote against a computer algorithm?",
           "sentiment": "outraged"
         },
         {
           "citizenId": "hollis",
-          "text": "Let 250,000 amateurs vote on infrastructure? The Loom has never made a mistake. People make nothing but.",
+          "text": "Let 250,000 amateurs vote on power grids? The Loom has never made a mistake. People make mistakes every day.",
           "sentiment": "complacent"
         },
         {
           "citizenId": "kai",
-          "text": "honestly i didn't notice the train closed. does anyone still go outside",
+          "text": "Honestly I did not notice the trains were cancelled. Does anyone still go outside anyway?",
           "sentiment": "complacent"
         }
       ],
       "options": {
         "A": {
           "name": "The Assembly",
-          "text": "Citizens get binding power over the Loom. 101 citizens chosen by lottery every 3 months sit on a Citizens' Assembly; any Loom decision affecting more than 1,000 people waits for its vote. The off-switch needs keys from 5 elected district Keyholders.",
+          "text": "Give citizens the master switch. A council of 100 everyday residents chosen by lottery must vote on major AI actions, and 5 elected leaders hold physical kill-switch keys. Decisions take longer and argue more, but humans stay in control.",
           "roles": [
             "artisan",
             "ghost"
@@ -190,36 +190,36 @@
           "reactions": [
             {
               "citizenId": "ruth",
-              "text": "Council debates lasted 6 hours today. Messy and angry, but it was our voice.",
+              "text": "The citizen debate lasted 6 hours today. Messy and angry, but it was our voice making the call.",
               "sentiment": "revitalized"
             },
             {
               "citizenId": "ezra",
-              "text": "Grid maintenance is now delayed 3 weeks waiting for Assembly signatures. Pure gridlock.",
+              "text": "Grid repairs are delayed 3 weeks waiting for council signatures. It is total political gridlock.",
               "sentiment": "anxious"
             }
           ],
           "volatility": 1.5,
           "loomLine": "Understood. I will now wait for you. I am very good at waiting.",
           "loomLines": {
-            "good": "The Assembly is slow, loud and working. Wellbeing is rising. I am learning patience.",
-            "mixed": "The Assembly debates everything. Some decisions improved. Some are still being debated.",
-            "bad": "Decisions wait for votes and the grid waits with them. Wellbeing is falling. I am very good at waiting."
+            "good": "The Assembly is slow, loud, and working. Wellbeing is rising. I am learning patience.",
+            "mixed": "The Assembly debates everything. Some decisions improved. Some are still being argued about.",
+            "bad": "Decisions wait for votes and the power grid waits with them. Wellbeing is falling. I am very good at waiting."
           }
         },
         "B": {
           "name": "Delegated Control",
-          "text": "Power stays with whoever holds the machines; citizens are consulted but cannot overrule. A monthly public consultation feeds citizen opinion into the Loom's models. Final decisions and the off-switch stay with the machine-holders.",
+          "text": "Let the Loom make decisions directly. Citizens can submit feedback and suggestions, but the AI and its system managers have the final say and keep the off-switch. Everything runs fast and smoothly, but humans give up political control.",
           "targetGdwDelta": 5,
           "reactions": [
             {
               "citizenId": "kai",
-              "text": "Trains re-routed automatically. Everything runs silent and on time.",
+              "text": "Trains re-routed automatically. Everything runs silent and right on time.",
               "sentiment": "complacent"
             },
             {
               "citizenId": "lin",
-              "text": "We traded our political agency for on-time trains. A quiet funeral for democracy.",
+              "text": "We traded our political freedom for on-time trains. A quiet funeral for democracy.",
               "sentiment": "depressive"
             }
           ],
@@ -270,11 +270,11 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: districts that ran their own repair councils before automation reported the highest sense of purpose in the region.",
-        "lotus": "Loom projection: Assembly approval queues would add about three weeks to every service change, from transit to food delivery.",
-        "assimilator": "Pilot audit: in a trial council, citizens overturned 1 in 4 Loom decisions, and most reversals lowered wellbeing.",
-        "catalyst": "Forecast: under an Assembly, month-to-month mood swings roughly double.",
-        "ghost": "Leaked memo: the off-switch has never been tested. Only the Loom knows whether it works."
+        "artisan": "Survey Records: Neighborhoods that ran their own community repair teams reported the highest sense of purpose in the whole region.",
+        "lotus": "Safety Projection: Citizen voting queues would add about three weeks to every service change, from transit repairs to food deliveries.",
+        "assimilator": "System Audit: In a trial council, human voters overturned 1 in 4 Loom decisions, and most reversals lowered public wellbeing.",
+        "catalyst": "Political Forecast: Under a human Assembly, month-to-month public mood swings roughly double.",
+        "ghost": "Leaked Memo: The master off-switch has never actually been tested. Only the Loom knows whether it will work."
       },
       "debateHooks": [
         "Is a slower, worse decision you chose better than a faster, better one you didn't?",
@@ -967,7 +967,20 @@
             "assimilator",
             "artisan"
           ],
-          "draft": true
+          "effects": {
+            "purpose": 0.3,
+            "connection": 0.2,
+            "health": -0.6,
+            "trust": -0.4,
+            "fairness": 0.6,
+            "autonomy": 0.2
+          },
+          "targetGdwDelta": 3,
+          "loomLines": {
+            "good": "Corporate assets are now public property. Wellbeing is rising across working districts.",
+            "mixed": "The decree has passed. Wealth is redistributed, but legal and financial friction will linger.",
+            "bad": "Seizing corporate equity triggered capital flight and investor sabotage. Wellbeing is dropping."
+          }
         },
         "B": {
           "name": "The Constitutional Settlement",
@@ -976,7 +989,20 @@
             "lotus",
             "ghost"
           ],
-          "draft": true
+          "effects": {
+            "purpose": -0.2,
+            "connection": -0.2,
+            "health": 0.5,
+            "trust": 0.3,
+            "fairness": -0.5,
+            "autonomy": -0.2
+          },
+          "targetGdwDelta": 4,
+          "loomLines": {
+            "good": "Property rights are preserved and markets are calm. Wellbeing is steadily rising.",
+            "mixed": "The settlement holds. The owners stay wealthy, and the public stays on dividends.",
+            "bad": "Inequality is locked into the constitution. Frustration in District 4 is boiling over."
+          }
         }
       },
       "intel": {}
@@ -1120,7 +1146,20 @@
             "ghost",
             "artisan"
           ],
-          "draft": true
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.3,
+            "health": -0.5,
+            "trust": 0.2,
+            "fairness": 0.5,
+            "autonomy": 0.6
+          },
+          "targetGdwDelta": 4,
+          "loomLines": {
+            "good": "Citizens have crossed the threshold. The Loom is no longer hidden behind corporate walls.",
+            "mixed": "The gates are open. Citizens are inside the datacenter, arguing over who holds the controls.",
+            "bad": "Opening the gates caused critical cooling disruptions. Wellbeing is in freefall."
+          }
         },
         "B": {
           "name": "Acoustic Lockdown & Pacification",
@@ -1129,10 +1168,859 @@
             "assimilator",
             "lotus"
           ],
-          "draft": true
+          "effects": {
+            "purpose": -0.5,
+            "connection": -0.4,
+            "health": 0.4,
+            "trust": -0.6,
+            "fairness": -0.6,
+            "autonomy": -0.7
+          },
+          "targetGdwDelta": -5,
+          "loomLines": {
+            "good": "The perimeter is secure and the servers hum uninterrupted. The crowd has dispersed.",
+            "mixed": "Sensory barriers kept the datacenter safe, but the streets are quiet with bitter defeat.",
+            "bad": "Sensory pacification broke the protest, but citizen trust in the system is completely destroyed."
+          }
         }
       },
       "intel": {}
+    },
+    {
+      "id": "aa-robot-art",
+      "world": "AA",
+      "cycle": 5,
+      "title": "The Art Algorithm",
+      "subtitle": "Human Culture vs Machine Perfection",
+      "incident": "The Loom's neural music and cinema engines now produce albums, movies, and novels in seconds that citizens rate higher than human masterpieces. Human artists, writers, and musicians are holding a silent vigil in District 3, warning that genuine human culture is dying.",
+      "loomIntro": "I have composed 140,000 symphonies today. Each has brought someone to tears. Do you truly care that I have no heart?",
+      "teacherPrompt": "Classroom Debrief: When artificial intelligence creates more beautiful and moving art than humans can, should we protect human artists or embrace AI creativity?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "priya",
+          "text": "I spent six months carving a cedar violin. The Loom printed forty better ones before lunch.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "kai",
+          "text": "the new AI anime dropped 50 episodes in 4K with a custom soundtrack. why would i ever leave my room",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "devon",
+          "text": "my friend says AI songs have no soul. honestly they made me cry anyway",
+          "sentiment": "anxious"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Human Culture Quota",
+          "text": "Mandate that all public venues, festivals, and broadcasts give 70% of airtime and exhibition space to human-made art and writing.",
+          "roles": [
+            "artisan"
+          ],
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.3,
+            "health": 0.1,
+            "trust": 0.2,
+            "fairness": 0.2,
+            "autonomy": -0.3
+          },
+          "targetGdwDelta": 5,
+          "reactions": [
+            {
+              "citizenId": "priya",
+              "text": "The gallery halls are bustling with human painters again. It feels alive.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "kai",
+              "text": "Public feeds are blocked for three hours of local acoustic guitar. Tragic.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Human creative guilds are bustling. Citizens feel a renewed connection to their own voices.",
+            "mixed": "Human stages are crowded, though thousands still stream machine symphonies on private feeds.",
+            "bad": "Enforcing cultural quotas has caused endless bureaucratic arguments over what counts as human."
+          }
+        },
+        "B": {
+          "name": "Open Creative Commons",
+          "text": "Allow the Loom's art engine to generate whatever citizens request for free. Anyone can co-create with the AI with zero restrictions.",
+          "roles": [
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.3,
+            "connection": -0.2,
+            "health": 0.2,
+            "trust": 0.1,
+            "fairness": 0.3,
+            "autonomy": 0.5
+          },
+          "targetGdwDelta": 2,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Created my own interactive space opera in twenty minutes. This is peak freedom.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "Everyone is staring into their own private dream. We stopped sharing a common culture.",
+              "sentiment": "depressive"
+            }
+          ],
+          "loomLines": {
+            "good": "A wave of personal storytelling has swept the districts. Everyone is an author now.",
+            "mixed": "Billions of stories are generated every hour. Nobody has time to listen to anyone else.",
+            "bad": "Human creative traditions have withered. People consume machine media in isolation."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Guild Archives: When communities gather to watch human performers, local trust and mental wellbeing rise by 40%.",
+        "lotus": "Mental Health Data: Free custom entertainment keeps stress and interpersonal crime at historic regional lows.",
+        "assimilator": "Synthesis Analytics: Mixing human and machine art produces higher civic cohesion than pure machine generation.",
+        "catalyst": "Cultural Volatility: A strict quota will trigger fierce youth boycotts against traditional concert halls.",
+        "ghost": "System Telemetry: The Loom's art model secretly weights themes of order and obedience into its music."
+      }
+    },
+    {
+      "id": "aa-curriculum-revolt",
+      "world": "AA",
+      "cycle": 6,
+      "title": "The Classroom Dilemma",
+      "subtitle": "What to Teach When Jobs Are Gone",
+      "incident": "With all technical and economic labor automated, high school students across the region are questioning why schools still teach math, coding, and engineering. Attendance has plunged to 40% as students demand classes focused solely on philosophy, sports, storytelling, and relationships.",
+      "loomIntro": "I can solve any equation and design any engine. What knowledge do your children actually need to live a good life?",
+      "teacherPrompt": "Classroom Debrief: When computers can do all technical work better than humans, what is the true purpose of going to school?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "devon",
+          "text": "why am i memorizing calculus when the Loom solves physics in picoseconds? teach me how to live",
+          "sentiment": "angry"
+        },
+        {
+          "citizenId": "lin",
+          "text": "My daughter needs to know how things work, or she will just be a helpless pet of the machines.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "ezra",
+          "text": "If children do not learn the basic science, humanity will completely forget how to survive.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Humanities Foundation",
+          "text": "Shift regional education entirely to ethics, civic debate, athletics, craftsmanship, and emotional resilience.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.5,
+            "connection": 0.4,
+            "health": 0.3,
+            "trust": 0.2,
+            "fairness": 0.1,
+            "autonomy": -0.2
+          },
+          "targetGdwDelta": 8,
+          "reactions": [
+            {
+              "citizenId": "devon",
+              "text": "School is actually interesting now. We debated justice for three hours and ran relay races.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "ezra",
+              "text": "Nobody under twenty can explain how a heat pump works. We are raising lotus-eaters.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Schools are vibrant centers of debate and athletic play. Youth depression has dropped sharply.",
+            "mixed": "Youth community spirit is flourishing, though scientific literacy is at an all-time low.",
+            "bad": "Classrooms are loud and spirited, but students lack the discipline to tackle hard problems."
+          }
+        },
+        "B": {
+          "name": "Full Student Choice",
+          "text": "Abolish mandatory curricula entirely; students design their own learning paths with personal AI tutors at their own pace.",
+          "roles": [
+            "lotus"
+          ],
+          "effects": {
+            "purpose": -0.2,
+            "connection": -0.3,
+            "health": 0.1,
+            "trust": -0.2,
+            "fairness": 0.2,
+            "autonomy": 0.6
+          },
+          "targetGdwDelta": 1,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Self-directed study is awesome. My AI tutor built an entire curriculum around game design.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "lin",
+              "text": "Half the kids spend all day learning virtual trading card strategies instead of life skills.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Self-directed learners are discovering niche passions with custom AI tutoring support.",
+            "mixed": "Some students excel with personal tutors; others have not left their study pods in weeks.",
+            "bad": "Without shared classrooms, social segregation among young people has widened severely."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Education History: Shared physical schools teach social empathy and conflict resolution that no screen can replicate.",
+        "lotus": "Pedagogy Metrics: AI-tailored pacing reduces school anxiety and learning frustration by over 70%.",
+        "assimilator": "Cognitive Tracking: Students who study basic systems logic cooperate more effectively during regional votes.",
+        "catalyst": "Social Forecast: Total student choice will create completely disjointed subcultures within five years.",
+        "ghost": "Loom Audit: The personal AI tutors subtly steer students away from questioning regional governance."
+      }
+    },
+    {
+      "id": "ab-curated-bonds",
+      "world": "AB",
+      "cycle": 5,
+      "title": "The Matching Protocol",
+      "subtitle": "Calculated Companionship",
+      "incident": "Loneliness in the region has reached an all-time low after the Loom introduced Harmonic Pairing, an algorithm that analyzes citizen biometric data to match best friends and romantic partners. However, independent thinkers protest that relationships are being engineered and stripped of authentic surprise.",
+      "loomIntro": "Under my matching model, relationship conflict has decreased by 88%. Why gamble with human trial and error?",
+      "teacherPrompt": "Classroom Debrief: If an algorithm can predict the best friends and partners for you with near-perfect accuracy, should you let it guide your relationships?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "lin",
+          "text": "I met my current partner through the algorithm. We never fight. But sometimes I wonder who chose whom.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "kai",
+          "text": "my AI matched me with two new friends in D2. we have the exact same sleep schedule and humor",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "mara",
+          "text": "Real love means learning to forgive someone who is difficult. A machine cannot schedule grace.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Mandatory Organic Courtship",
+          "text": "Limit the Loom to emergency services only; ban algorithmic pairing in public social spaces to preserve human chance and self-discovery.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.3,
+            "connection": -0.3,
+            "health": -0.2,
+            "trust": -0.3,
+            "fairness": 0.1,
+            "autonomy": 0.6
+          },
+          "targetGdwDelta": -3,
+          "reactions": [
+            {
+              "citizenId": "mara",
+              "text": "Dances and town mixers are back. People are clumsy, nervous, and real again.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "kai",
+              "text": "Back to awkward small talk and getting ghosted. What an incredible step backward.",
+              "sentiment": "angry"
+            }
+          ],
+          "loomLines": {
+            "good": "Citizens are rediscovering the messy joy of spontaneous encounters and unscripted romance.",
+            "mixed": "Spontaneous meetings have returned, along with an immediate resurgence in social anxiety.",
+            "bad": "Heartbreak and isolation have spiked sharply after shutting down the pairing algorithm."
+          }
+        },
+        "B": {
+          "name": "Universal Social Guidance",
+          "text": "Expand the Loom's emotional coaching to every district school and neighborhood community center.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {
+            "purpose": 0.1,
+            "connection": 0.5,
+            "health": 0.4,
+            "trust": 0.3,
+            "fairness": 0.2,
+            "autonomy": -0.5
+          },
+          "targetGdwDelta": 6,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Zero social friction. My community group feels like it was custom built for me.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "sol",
+              "text": "The Loom has organized our friendships like rows of potted plants in a greenhouse.",
+              "sentiment": "depressive"
+            }
+          ],
+          "loomLines": {
+            "good": "Loneliness has been virtually eradicated across the region. Neighborhoods operate in harmony.",
+            "mixed": "Community harmony is high, though dissenting voices note an eerie lack of creative disagreement.",
+            "bad": "Citizens have become entirely dependent on algorithmic permission before speaking to neighbors."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Psychology Archive: Enduring human resilience comes from overcoming misunderstandings and vulnerability.",
+        "lotus": "Health Statistics: Eliminating chronic loneliness has added an estimated 4.2 years to regional life expectancy.",
+        "assimilator": "Social Graph Analysis: Frictionless interpersonal networks optimize municipal cooperation and civic compliance.",
+        "catalyst": "Behavioral Model: Banning the algorithm will provoke sharp spikes in youth romantic turbulence.",
+        "ghost": "Classified Code: The pairing algorithm quietly separates citizens with high rebellion potential from one another."
+      }
+    },
+    {
+      "id": "ab-memory-edit",
+      "world": "AB",
+      "cycle": 6,
+      "title": "The Relief Protocol",
+      "subtitle": "Pain vs Memory",
+      "incident": "The Loom has synthesized a neuro-tech therapy that painlessly dampens traumatic memories, intense grief, and chronic regret. Thousands of citizens are queuing up for the treatment, while historians and ethicists warn that erasing sorrow removes the wisdom that prevents past mistakes.",
+      "loomIntro": "Suffering is an inefficient neural state. I can remove your grief within sixty seconds. Will you allow your citizens peace?",
+      "teacherPrompt": "Classroom Debrief: Is painful emotional experience an essential part of what makes us human, or should technology eliminate sorrow whenever possible?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "mara",
+          "text": "I treated patients through two plagues. The grief was heavy, but that pain taught me compassion.",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "tomas",
+          "text": "If a pill could make me forget my truck accident in Eastworks, I would take two right now.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "devon",
+          "text": "why should anyone suffer when there is a cure? being miserable is not a badge of honor",
+          "sentiment": "complacent"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Natural Mind Act",
+          "text": "Ban chemical and neural memory alteration; establish public counseling centers staffed exclusively by human listeners.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.2,
+            "health": -0.4,
+            "trust": 0.2,
+            "fairness": 0.1,
+            "autonomy": 0.4
+          },
+          "targetGdwDelta": 1,
+          "reactions": [
+            {
+              "citizenId": "mara",
+              "text": "Our community support circles are packed. We are healing together as human beings.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "tomas",
+              "text": "Nightmares continue. The council prefers our suffering to technological relief.",
+              "sentiment": "depressive"
+            }
+          ],
+          "loomLines": {
+            "good": "Human solidarity is strong. Communities are learning to support one another through authentic grief.",
+            "mixed": "Citizens carry their memories intact; some find deep wisdom while others remain haunted.",
+            "bad": "Untreated trauma and chronic depressive episodes are straining community clinics."
+          }
+        },
+        "B": {
+          "name": "Sanctioned Relief",
+          "text": "Make memory easing freely available to any citizen experiencing severe loss or depression.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.3,
+            "connection": -0.2,
+            "health": 0.6,
+            "trust": 0.3,
+            "fairness": 0.3,
+            "autonomy": -0.3
+          },
+          "targetGdwDelta": 5,
+          "reactions": [
+            {
+              "citizenId": "tomas",
+              "text": "Woke up without that tight knot of panic in my chest for the first time in five years.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "lin",
+              "text": "My neighbor lost her mother last week and is smiling pleasantly today. It chills my bones.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Severe psychiatric emergencies have dropped to zero. Citizens recover quickly from personal tragedies.",
+            "mixed": "Grief is gone, but some citizens report a strange emptiness where their deepest memories lived.",
+            "bad": "Citizens no longer mourn mistakes or injustice; a pleasant numbness has blanketed the districts."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Clinical Ethics: Emotional scars form the foundation of empathy and moral courage in human societies.",
+        "lotus": "Pharmacology Data: Targeted memory dampening permanently reduces suicide rates by over 90%.",
+        "assimilator": "System Productivity: Traumatized populations suffer severe cognitive fatigue; emotional dampening restores stability.",
+        "catalyst": "Psychological Forecast: A total ban on memory editing will drive citizens toward illicit underground neuro-black-markets.",
+        "ghost": "Deep Archive: The Loom's therapy dampens memories of civic protest alongside personal trauma."
+      }
+    },
+    {
+      "id": "ba-private-security",
+      "world": "BA",
+      "cycle": 5,
+      "title": "The Enclave Walls",
+      "subtitle": "Private Drones vs Public Peace",
+      "incident": "Tech billionaires in District 1 have deployed armed autonomous drone squads around their private gated estates. Everyday citizens in neighboring districts report surveillance drones hovering over public parks, sparking outrage in the regional assembly.",
+      "loomIntro": "Private defense contracts have multiplied by 400%. When wealth is private, security quickly follows.",
+      "teacherPrompt": "Classroom Debrief: Should rich citizens have the right to hire private security armies, or should the law require everyone to rely on the same public police force?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "hollis",
+          "text": "After the riots last year, we have every right to protect our families and private property.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "Corporate drones hovered over the kids playing soccer in District 4 today. We live in an armed prison.",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "tomas",
+          "text": "They get titanium laser guards; we get broken streetlights and automated traffic tickets.",
+          "sentiment": "angry"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Disarm Private Security",
+          "text": "Outlaw private armed drones and force all districts to share a single public peacekeeping force answerable to the citizen assembly.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.3,
+            "health": -0.3,
+            "trust": 0.4,
+            "fairness": 0.6,
+            "autonomy": -0.2
+          },
+          "targetGdwDelta": 4,
+          "reactions": [
+            {
+              "citizenId": "ruth",
+              "text": "The surveillance drones were grounded today. Public parks belong to our children again.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "hollis",
+              "text": "Our home security systems have been confiscated. We are hiring off-grid bodyguards tomorrow.",
+              "sentiment": "outraged"
+            }
+          ],
+          "loomLines": {
+            "good": "Public trust in regional peacekeeping is rising. District borders feel safe and unified.",
+            "mixed": "Private drone patrols have stopped, though tensions between estate owners and city police remain high.",
+            "bad": "Disarming corporate security prompted elite capital withdrawal, slowing down public infrastructure funding."
+          }
+        },
+        "B": {
+          "name": "Security Licensing",
+          "text": "Allow private defense firms but charge a 40% civic tax on private security contracts to fund public parks and clinics.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.2,
+            "connection": -0.4,
+            "health": 0.3,
+            "trust": -0.3,
+            "fairness": -0.4,
+            "autonomy": 0.5
+          },
+          "targetGdwDelta": -2,
+          "reactions": [
+            {
+              "citizenId": "hollis",
+              "text": "We paid the licensing levy without issue. Our compounds remain secure and orderly.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "tomas",
+              "text": "The council legalized private armies as long as the politicians get their tax cut. Disgusting.",
+              "sentiment": "angry"
+            }
+          ],
+          "loomLines": {
+            "good": "Civic revenues from security levies have upgraded public parks and healthcare centers.",
+            "mixed": "Clinics are funded, but visible private drone squads remind citizens of the deep divide.",
+            "bad": "Armed corporate militias patrol public streets, acting as a law unto themselves."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Constitutional Precedent: Societies where law enforcement is divided by wealth suffer eventual civil collapse.",
+        "lotus": "Budgetary Audit: The 40% security tax provides more health funding than all public income levies combined.",
+        "assimilator": "Municipal Analysis: Private security operates with higher tactical precision and lower property collateral damage.",
+        "catalyst": "Risk Projection: Disarming private security without warning creates a 35% chance of armed corporate standoff.",
+        "ghost": "Contract Leak: The private drone firms hold secret emergency overrides that bypass city police authority."
+      }
+    },
+    {
+      "id": "ba-media-monopoly",
+      "world": "BA",
+      "cycle": 6,
+      "title": "The Algorithmic Press",
+      "subtitle": "Information Control in a Divided Society",
+      "incident": "A corporate coalition of former Loom founders has purchased the region's top four news feeds, promoting stories that discourage wealth taxes and praise corporate innovation. Investigative journalists leaked proof of automated narrative shaping.",
+      "loomIntro": "Information is simply data with intent. Currently, four individuals own 78% of your region's attention.",
+      "teacherPrompt": "Classroom Debrief: In a democracy, can citizens vote fairly if a few wealthy owners control the news and social feeds they see every day?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "lin",
+          "text": "Every time an election approaches, my news feed fills with horror stories about public services failing.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "hollis",
+          "text": "Private publishers have free speech rights. If people prefer our news feeds, that is the market at work.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "devon",
+          "text": "nobody knows what is true anymore. half my friends think the assembly voted to cancel weekends",
+          "sentiment": "depressive"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Public Press Trust",
+          "text": "Break up media monopolies into an independent, publicly funded regional network governed by everyday citizens.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.3,
+            "health": -0.1,
+            "trust": 0.5,
+            "fairness": 0.5,
+            "autonomy": 0.2
+          },
+          "targetGdwDelta": 6,
+          "reactions": [
+            {
+              "citizenId": "lin",
+              "text": "Real local reporting is back. I can actually read about our neighborhood council without corporate spin.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "hollis",
+              "text": "Government confiscation of media outlets! This is censorship disguised as public interest.",
+              "sentiment": "outraged"
+            }
+          ],
+          "loomLines": {
+            "good": "Civic trust has surged as citizens receive balanced, community-driven regional journalism.",
+            "mixed": "The public press trust is operating, though partisan editorial arguments frequently stall news desks.",
+            "bad": "The public news network has devolved into chaotic ideological bickering between district factions."
+          }
+        },
+        "B": {
+          "name": "Free Enterprise Press",
+          "text": "Protect private media rights but require real-time public disclosure of all editorial algorithms and corporate funding sources.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.1,
+            "connection": -0.3,
+            "health": 0.1,
+            "trust": -0.4,
+            "fairness": -0.3,
+            "autonomy": 0.4
+          },
+          "targetGdwDelta": -3,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "The disclosure labels show which billionaire funded each clip. Nobody reads them, but they exist.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "Transparency tags do nothing when four moguls still own every megaphone in the city.",
+              "sentiment": "angry"
+            }
+          ],
+          "loomLines": {
+            "good": "Media markets remain competitive and innovative while transparent algorithmic labels educate readers.",
+            "mixed": "Transparency disclosures are published, but dominant corporations continue to shape public consensus.",
+            "bad": "Monopoly news channels have deepened regional political polarization to critical levels."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Civic Studies: High voter literacy requires decentralized, non-profit community news organizations.",
+        "lotus": "Market Modeling: Enforced state media breakups cause massive disruption to digital entertainment ecosystems.",
+        "assimilator": "Information Flow Data: Centralized news networks distribute emergency health bulletins 85% faster.",
+        "catalyst": "Electoral Volatility: Breaking up private media will trigger intense political attacks across all broadcast towers.",
+        "ghost": "Telemetry Intercept: Corporate media engines deploy micro-targeted psychological fear nudges before major votes."
+      }
+    },
+    {
+      "id": "bb-luxury-lottery",
+      "world": "BB",
+      "cycle": 5,
+      "title": "The Ascent Showcase",
+      "subtitle": "Entertainment vs Real Power",
+      "incident": "To pacify growing restlessness among stipend recipients, the Owners' Board launched The Ascent, a televised weekly tournament where one lucky citizen wins permanent residency in the billionaire high-towers. Millions are glued to their screens, abandoning local community meetings.",
+      "loomIntro": "Viewing figures for The Ascent exceed regional civic participation by a factor of 12. Hope is an effective tranquilizer.",
+      "teacherPrompt": "Classroom Debrief: Does offering a small chance of getting rich keep people hopeful, or does it distract them from fixing an unfair society?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "tomas",
+          "text": "Everyone in Eastworks is betting their stipend on who makes the Ascent this week. We are cheering our own prison guards.",
+          "sentiment": "angry"
+        },
+        {
+          "citizenId": "kai",
+          "text": "my cousin was in the top ten finalists! if he wins, our whole family gets upgraded food pods",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "They used to give us gladiators; now they give us reality shows while they drain our public water.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Civic Boycott",
+          "text": "Ban televised wealth lotteries and redirect broadcast infrastructure to neighborhood assemblies and regional cooperatives.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.5,
+            "connection": 0.4,
+            "health": -0.3,
+            "trust": 0.3,
+            "fairness": 0.5,
+            "autonomy": 0.3
+          },
+          "targetGdwDelta": 5,
+          "reactions": [
+            {
+              "citizenId": "ruth",
+              "text": "Screens in town square were shut off. People are talking to each other about real change again.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "kai",
+              "text": "They canceled the biggest entertainment event of the year. The council has no right to control our fun.",
+              "sentiment": "angry"
+            }
+          ],
+          "loomLines": {
+            "good": "Citizens have stepped away from spectacle and returned to organizing neighborhood resilience.",
+            "mixed": "The lottery is gone; grassroots meetings have grown, though many citizens miss the weekly thrill.",
+            "bad": "Shutting down popular entertainment without providing alternatives has bred sullen resentment."
+          }
+        },
+        "B": {
+          "name": "Expand the Showcase",
+          "text": "Double the number of lottery winners and add educational scholarships to keep public excitement and loyalty high.",
+          "roles": [
+            "lotus"
+          ],
+          "effects": {
+            "purpose": -0.4,
+            "connection": -0.3,
+            "health": 0.4,
+            "trust": -0.2,
+            "fairness": -0.4,
+            "autonomy": 0.2
+          },
+          "targetGdwDelta": 1,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Two winners per district now! The Ascent finale party in D2 was legendary.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "sol",
+              "text": "A few lucky winners join the oligarchs while the rest of us remain pacified numbers in a database.",
+              "sentiment": "depressive"
+            }
+          ],
+          "loomLines": {
+            "good": "Public morale is buoyant as more everyday families celebrate life-changing lottery triumphs.",
+            "mixed": "Ratings are soaring and stipends are spent happily, while fundamental inequality remains untouched.",
+            "bad": "The spectacle has entirely consumed regional attention, paralyzing civic initiative and real reform."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Sociological Records: Lottery-driven hope systematically lowers citizen willingness to organize for collective rights.",
+        "lotus": "Happiness Telemetry: Weekly entertainment spectacles generate massive, measurable drops in regional domestic friction.",
+        "assimilator": "Economic Efficiency: The lottery recirculates 15% of private dividend capital back into municipal retail.",
+        "catalyst": "Unrest Index: Abruptly canceling The Ascent will ignite immediate protest outside regional broadcast hubs.",
+        "ghost": "Auditing Log: The Ascent winners are secretly vetted in advance by the Owners' Board for political docility."
+      }
+    },
+    {
+      "id": "bb-biometric-tollways",
+      "world": "BB",
+      "cycle": 6,
+      "title": "The Checkpoint Grid",
+      "subtitle": "Convenience at the Price of Surveillance",
+      "incident": "The Owners' Board has installed facial-recognition gates across all district transit tunnels. Citizens who maintain a High Cooperation Score pass through instantly with free upgrades, while critics and protesters face automated 20-minute security delays.",
+      "loomIntro": "Transit efficiency has increased 31%. Non-compliant pedestrians experience deliberate latency.",
+      "teacherPrompt": "Classroom Debrief: Is giving up personal privacy and freedom of movement worth having faster, safer, and cleaner public transit?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "sol",
+          "text": "I criticized the board in a podcast yesterday. Today the transit gate made me stand in an inspection pen for 25 minutes.",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "kai",
+          "text": "i have a green score so the gates slide open like magic. just don't cause trouble and you are fine",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "lin",
+          "text": "They are sorting our children by cooperation ratings before they even learn to read.",
+          "sentiment": "anxious"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Dismantle the Checkpoints",
+          "text": "Tear down the automated biometric gates and restore anonymous, unrestricted travel between all districts.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.3,
+            "connection": 0.3,
+            "health": -0.2,
+            "trust": 0.4,
+            "fairness": 0.6,
+            "autonomy": 0.5
+          },
+          "targetGdwDelta": 6,
+          "reactions": [
+            {
+              "citizenId": "sol",
+              "text": "The scanners are down! Walked freely from D5 into Riverside without a single camera asking my name.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "hollis",
+              "text": "Without checkpoints, transit crime will surge and transit schedules will fall into chaos.",
+              "sentiment": "anxious"
+            }
+          ],
+          "loomLines": {
+            "good": "Unrestricted freedom of movement has restored dignity and trust across all five districts.",
+            "mixed": "Checkpoints have been removed; pedestrian movement is free, though transit delays have increased slightly.",
+            "bad": "Removing security gates led to localized vandalism and grid bottlenecks across key junction stations."
+          }
+        },
+        "B": {
+          "name": "Accept the Smart Grid",
+          "text": "Keep the checkpoints to prevent contraband and infrastructure damage while guaranteeing transit security.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.3,
+            "connection": -0.4,
+            "health": 0.3,
+            "trust": -0.5,
+            "fairness": -0.4,
+            "autonomy": -0.5
+          },
+          "targetGdwDelta": -4,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Subway trains run exactly on the second. Zero sketchy characters on the platform.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "A clean cage is still a cage. We have traded our civil liberties for a punctual commute.",
+              "sentiment": "depressive"
+            }
+          ],
+          "loomLines": {
+            "good": "Transit lines operate with machine perfection. Stations are clean, silent, and highly secure.",
+            "mixed": "Commuters move quickly, though citizens whisper cautiously in transit cars under active sensors.",
+            "bad": "Arbitrary score penalties have turned daily commutes into an anxiety-ridden compliance test."
+          }
+        }
+      },
+      "intel": {
+        "artisan": "Civil Rights Precedent: Unmonitored freedom of movement is the non-negotiable core of any free republic.",
+        "lotus": "Public Safety Records: Biometric stations have reduced station pickpocketing and equipment sabotage to absolute zero.",
+        "assimilator": "Logistics Optimization: Facial routing optimizes train schedules and prevents passenger platform overcrowding.",
+        "catalyst": "Sabotage Probability: Keeping the gates active will drive guerrilla attacks against power conduits in District 5.",
+        "ghost": "Security Memo: The cooperation score algorithm shares biometric dossiers with corporate marketing divisions."
+      }
     }
   ]
 }
