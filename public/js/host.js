@@ -84,5 +84,36 @@
     });
   });
 
-  window.SocietelosHost = { socket, state, fetchQR, renderLobby };
+  // Which screen section each server phase shows.
+  const PHASE_VIEWS = {
+    LOBBY: 'view-lobby',
+    INTRO: 'view-intro',
+    ROLE_ASSIGN: 'view-roles',
+    END: 'view-end'
+  };
+  const PHASE_LABELS = {
+    LOBBY: 'Lobby', INTRO: 'Transmission', ROLE_ASSIGN: 'Role assignment', CHAMBER: 'Council chamber',
+    INCIDENT: 'Incident', INTEL: 'Intel drop', DEBATE: 'Debate', VOTE: 'Blind vote', RESOLUTION: 'Resolution',
+    WORLD_REVEAL: 'World reveal', FINALE_WRITE: 'Write policy', FINALE_MOD: 'Loom moderation',
+    FINALE_DEBATE: 'Finale debate', FINALE_RANK: 'Ranking', FINALE_ENACT: 'Enactment', END: 'Session end'
+  };
+
+  function showView(id) {
+    document.querySelectorAll('#host-main > .view').forEach((v) => v.classList.toggle('is-active', v.id === id));
+  }
+
+  // phase { cycle, phase, endsAt, crisis } -> switch sections and update the top bar.
+  function onPhase(payload) {
+    state.phase = payload.phase;
+    state.cycle = payload.cycle || 0;
+    state.endsAt = payload.endsAt || null;
+    showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
+    document.body.dataset.phase = payload.phase;
+    document.getElementById('cycle-indicator').textContent = `CYCLE ${state.cycle}/5`;
+    document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
+  }
+
+  socket.on('phase', onPhase);
+
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView };
 })();
