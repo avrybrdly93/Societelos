@@ -367,14 +367,31 @@
   const finaleText = document.getElementById('finale-text');
   const finaleSubmit = document.getElementById('finale-submit');
   const finaleError = document.getElementById('finale-error');
+  // Live "n / 140" counter; the submit button stays disabled while empty.
+  const finaleCount = document.getElementById('finale-count');
+  function updateFinaleCount() {
+    const n = finaleText.value.length;
+    finaleCount.textContent = `${n} / 140`;
+    finaleCount.classList.toggle('is-near', n >= 120);
+    if (!finaleSubmit.dataset.busy) finaleSubmit.disabled = !finaleText.value.trim();
+  }
+  finaleText.addEventListener('input', updateFinaleCount);
+
   finaleForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const text = finaleText.value.trim();
-    if (!text || finaleSubmit.disabled) return;
+    if (!text) {
+      finaleError.textContent = 'Write a policy first: the Loom cannot enact silence.';
+      finaleError.hidden = false;
+      return;
+    }
+    if (finaleSubmit.dataset.busy) return;
+    finaleSubmit.dataset.busy = '1';
     finaleSubmit.disabled = true;
     finaleError.hidden = true;
     socket.emit('finale:submit', { text }, (res) => {
-      finaleSubmit.disabled = false;
+      delete finaleSubmit.dataset.busy;
+      updateFinaleCount();
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
         return;
@@ -389,7 +406,8 @@
       state.finaleSubmitted = null;
       finaleText.value = '';
       finaleError.hidden = true;
-      finaleSubmit.disabled = false;
+      delete finaleSubmit.dataset.busy;
+      updateFinaleCount();
     }
     // Secret agenda reminder above the textarea, so the policy serves it.
     if (payload && payload.phase === 'FINALE_WRITE') {
