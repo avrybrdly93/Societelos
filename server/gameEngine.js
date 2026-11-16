@@ -430,7 +430,7 @@ class GameState extends EventEmitter {
     this.gdwHistory = [];
     this.volatility = 1.0;
     this.worldKey = null;
-    this.choices = {}; // cycle number -> winning option ('A' | 'B')
+    this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
     // Current cycle.
     this.crisis = null;
@@ -678,7 +678,7 @@ class GameState extends EventEmitter {
     if (simResult.finalState) this.simState = simResult.finalState;
     this.gdw = roundGdw(simResult.realized.finalGdw);
     this.gdwHistory.push(this.gdw);
-    this.choices[this.cycle] = winner;
+    this.voteHistory[this.cycle] = winner;
 
     this.enterPhase(PHASES.RESOLUTION);
 
@@ -749,7 +749,7 @@ class GameState extends EventEmitter {
       this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
       this.gdwHistory = [this.gdw];
       this.volatility = 1.0;
-      this.choices = {};
+      this.voteHistory = {};
       this.worldKey = null;
     }
     console.log(`[game ${this.roomCode}] cycle ${cycleNumber} begins (GDW ${this.gdw})`);
