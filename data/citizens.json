@@ -26,9 +26,15 @@
     "cohort": "youth",
     "voice": "Has never needed a job; mostly bored",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "ok weirdly today was not boring. we built something at the guild and it almost worked"
+      ],
+      "mixed": [
+        "school says I can be anything. cool. what if I don't want to be anything"
+      ],
+      "bad": [
+        "day 400 of nothing happening. at least the snacks are free"
+      ]
     }
   },
   {
