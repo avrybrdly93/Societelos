@@ -1,7 +1,8 @@
 'use strict';
 
-// Memory check: run 4 consecutive cycles many times over and confirm the heap
-// stays flat (no per-cycle leak of sim states, caches or listeners).
+// Memory check: run 4 consecutive cycles many times over, then batches of 50
+// consecutive simulate() calls, and confirm the heap stays flat (no leak of
+// sim states, topology caches or listeners).
 // Run with: node --expose-gc scripts/check-memory.js   (npm run check:mem)
 
 const engine = require('../server/gameEngine');
@@ -50,6 +51,24 @@ async function main() {
     process.exit(1);
   }
   console.log(`PASS: heap flat across consecutive cycles (growth ${growth.toFixed(1)} MB)`);
+
+  // 50 consecutive simulate() calls (500 forecasts + 1 realized each), each
+  // chained from the previous final state as a real game does.
+  const sim = require('../server/sim');
+  let simState = sim.createInitialState(require('../data/sim.json'));
+  const effects = { purpose: 0.2, connection: -0.1, health: 0.1, trust: -0.2, fairness: 0.3, autonomy: 0 };
+  const simSamples = [];
+  for (let batch = 0; batch < 3; batch++) {
+    for (let i = 0; i < 50; i++) simState = sim.simulate(simState, effects, { runs: 500, seed: batch * 100 + i }).finalState;
+    simSamples.push(heapMb());
+  }
+  const simGrowth = simSamples[simSamples.length - 1] - simSamples[1];
+  console.log(`heap after each 50 simulate() calls (MB): ${simSamples.map((v) => v.toFixed(1)).join(', ')}`);
+  if (simGrowth > LIMIT_MB) {
+    console.error(`FAIL: simulate() heap grew ${simGrowth.toFixed(1)} MB over 150 calls (limit ${LIMIT_MB} MB)`);
+    process.exit(1);
+  }
+  console.log(`PASS: no leak across consecutive simulate() calls (growth ${simGrowth.toFixed(1)} MB)`);
 }
 
 main().catch((err) => {
