@@ -160,3 +160,20 @@ body.host .label {
   box-shadow: 0 0 24px var(--loom-glow);
 }
 .node-card.is-disconnected { border-style: solid; border-color: var(--alert-crimson-dim); color: var(--danger); }
+
+/* Buttons */
+.btn {
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 16px 28px;
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--slate-950); }
+.btn-primary:not(:disabled):hover { box-shadow: 0 0 24px var(--loom-glow); }
+.btn-start { margin-top: 32px; width: 100%; font-size: 32px; padding: 24px; }
