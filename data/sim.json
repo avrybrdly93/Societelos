@@ -105,7 +105,14 @@
       "elite": 0.05
     }
   },
-  "weights": {},
+  "weights": {
+    "purpose": 0.25,
+    "connection": 0.2,
+    "health": 0.15,
+    "fairness": 0.15,
+    "autonomy": 0.15,
+    "trust": 0.1
+  },
   "baseline": 0.4,
   "offsets": {},
   "sensitivity": {},
