@@ -407,6 +407,8 @@ function computeWorldKey(vote1, vote2) {
   return ok(vote1) && ok(vote2) ? vote1 + vote2 : null;
 }
 
+const TIE_EPSILON = 1e-9;
+
 /** Final-month forecast median GDW of a simulate() result (NaN if missing). */
 function forecastMedianEnd(simResult) {
   const median = simResult && simResult.forecast && simResult.forecast.median;
@@ -421,7 +423,11 @@ function forecastMedianEnd(simResult) {
 function breakTie(simA, simB) {
   const a = forecastMedianEnd(simA);
   const b = forecastMedianEnd(simB);
-  return b > a ? 'B' : 'A';
+  // Deterministic fallback: identical medians (compared at 1e-9, so float
+  // noise can't flip it) or a missing forecast default to Option A.
+  if (!Number.isFinite(b)) return 'A';
+  if (!Number.isFinite(a)) return 'B';
+  return b - a > TIE_EPSILON ? 'B' : 'A';
 }
 
 /**
