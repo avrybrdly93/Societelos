@@ -54,5 +54,29 @@
     });
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, setDistrictColor, renderDistricts, wellbeingToColor };
+  // World accent colours (match the --theme-* tokens in styles.css).
+  const WORLD_COLORS = { AA: '#2bc4a0', AB: '#3fd8e6', BA: '#f0a430', BB: '#c084fc' };
+
+  /**
+   * Recolour the map border, spillover links and HUD accents for the world
+   * revealed after Cycle 2. Pass null to restore the default Loom cyan.
+   */
+  function setWorld(worldKey) {
+    const svg = document.getElementById('region-map');
+    if (!svg) return;
+    const color = WORLD_COLORS[worldKey] || null;
+    if (color) {
+      svg.style.setProperty('--map-accent', color);
+      svg.dataset.world = worldKey;
+    } else {
+      svg.style.removeProperty('--map-accent');
+      delete svg.dataset.world;
+    }
+    svg.classList.remove('is-recoloring');
+    // Restart the pulse animation so the change is noticed.
+    void svg.getBoundingClientRect();
+    if (color) svg.classList.add('is-recoloring');
+  }
+
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld };
 })();
