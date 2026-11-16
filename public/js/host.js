@@ -643,8 +643,45 @@
   socket.on('phase', (payload) => {
     if (payload.phase === 'FINALE_ENACT') renderEnacted([]);
   });
+  // Borda tally: one bar per proposal (max 16 points), growing from zero.
+  const BORDA_MAX = 16;
+  function renderBordaBars(tally) {
+    const wrap = document.getElementById('borda-bars');
+    wrap.textContent = '';
+    (tally || []).forEach((t, i) => {
+      const row = document.createElement('div');
+      row.className = `borda-row${i < 3 ? ' is-enacted' : ''}`;
+      const label = document.createElement('span');
+      label.className = 'borda-label mono';
+      label.textContent = proposalLabel(t.id);
+      const track = document.createElement('div');
+      track.className = 'borda-track';
+      const fill = document.createElement('div');
+      fill.className = 'borda-fill';
+      fill.style.transitionDelay = `${i * 150}ms`;
+      track.appendChild(fill);
+      const pts = document.createElement('span');
+      pts.className = 'borda-points mono';
+      pts.textContent = '0';
+      row.append(label, track, pts);
+      wrap.appendChild(row);
+      // Next frame: grow the bar and count the points up.
+      requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${(t.points / BORDA_MAX) * 100}%`; }));
+      const started = performance.now() + i * 150;
+      const count = (now) => {
+        const k = Math.max(0, Math.min(1, (now - started) / 1200));
+        pts.textContent = String(Math.round(t.points * k));
+        if (k < 1) requestAnimationFrame(count);
+      };
+      requestAnimationFrame(count);
+    });
+  }
+  socket.on('phase', (payload) => { if (payload.phase === 'FINALE_ENACT') document.getElementById('borda-bars').textContent = ''; });
   socket.on('resolution', (payload) => {
-    if (payload && payload.result && payload.result.finale) renderEnacted(payload.result.enacted);
+    if (payload && payload.result && payload.result.finale) {
+      renderBordaBars(payload.result.tally);
+      renderEnacted(payload.result.enacted);
+    }
   });
 
   // Vote pips: which nodes have locked in, never what they chose.
