@@ -804,7 +804,9 @@ class GameState extends EventEmitter {
     this.gdw = roundGdw(simResult.realized.finalGdw);
     // Monthly trajectory: months 1..12 of the realized run (month 0 is the
     // previous cycle's last entry), so gdwHistory reads as one continuous line.
-    const monthly = Array.isArray(simResult.realized.gdw) ? simResult.realized.gdw.slice(1).map(roundGdw) : [];
+    // (realized.gdw may be a Float64Array, so copy it into a plain array.)
+    const trajectory = simResult.realized.gdw;
+    const monthly = trajectory && typeof trajectory.length === 'number' ? Array.from(trajectory).slice(1).map(roundGdw) : [];
     if (monthly.length) monthly[monthly.length - 1] = this.gdw;
     this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
     this.voteHistory[this.cycle] = winner;
