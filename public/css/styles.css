@@ -223,3 +223,22 @@ body.host .label {
   0%, 100% { box-shadow: 0 0 0 transparent; border-color: var(--border); }
   50% { box-shadow: 0 0 28px var(--loom-glow); border-color: var(--accent); }
 }
+
+/* Council chamber: map | crisis + policies | feed + forecast */
+.chamber-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 32px;
+  height: 100%;
+}
+.chamber-col {
+  min-height: 0;
+  display: flex; flex-direction: column; gap: 16px;
+  background: var(--bg-raised);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  overflow: hidden;
+}
+.map-container { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.citizen-feed { list-style: none; margin: 0; padding: 0; flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }

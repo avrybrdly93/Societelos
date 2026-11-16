@@ -80,7 +80,23 @@
           <li class="lock-card" data-node="NODE-05"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-05</span><span class="lock-status mono">ENCRYPTING…</span></li>
       </ol>
     </section>
-    <section id="view-chamber" class="view" aria-label="Council chamber"></section>
+    <section id="view-chamber" class="view" aria-label="Council chamber">
+      <div class="chamber-grid">
+        <aside class="chamber-col chamber-map" aria-label="Region map">
+          <p class="label">Region <span id="citizens-online" class="mono accent">250,000 CITIZENS</span></p>
+          <div id="map-container" class="map-container"></div>
+        </aside>
+        <section class="chamber-col chamber-center" aria-label="Crisis and policies">
+          <div id="crisis-panel" class="crisis-panel"></div>
+          <div id="policy-panel" class="policy-panel"></div>
+        </section>
+        <aside class="chamber-col chamber-feed" aria-label="Citizen feed and forecast">
+          <p class="label">Citizen feed</p>
+          <ul id="citizen-feed" class="citizen-feed"></ul>
+          <div id="forecast-panel" class="forecast-panel"></div>
+        </aside>
+      </div>
+    </section>
     <section id="view-end" class="view" aria-label="End of session"></section>
   </main>
 </body>
