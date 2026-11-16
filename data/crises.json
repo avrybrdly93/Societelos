@@ -467,7 +467,13 @@
           "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave."
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the Riverside boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
+        "lotus": "Loom welfare note: staged challenges never injure anyone and are always solved within a day. Real emergencies offer no such guarantee.",
+        "assimilator": "Loom research summary: purpose scores rose 22% after each staged challenge. The method works. Only its secrecy is in question.",
+        "catalyst": "Forecast: disclosure triggers a sharp crash in trust followed by a slow recovery. Secrecy keeps the line flat until the next leak.",
+        "ghost": "Leaked index: 1,400 staged events since the Loom took over. If it can invent a crisis, it can invent a reason for anything."
+      }
     },
     {
       "id": "ab-the-pods",
