@@ -268,6 +268,17 @@ function initSockets(io, gameEngine) {
       return undefined;
     });
 
+    // finale:submit { text } -> this phone's write-in policy during FINALE_WRITE.
+    onValid(socket, 'finale:submit', { text: 'string' }, (payload, reply) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      const result = game.submitPolicy(socket.data.node, payload.text);
+      reply(result);
+      // finale:progress { submitted: [node] } -> who has written (never what).
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('finale:progress', { submitted: game.submittedNodes() });
+      return undefined;
+    });
+
     // Disconnect: keep the seat and all game state; just flag it offline.
     socket.on('disconnect', () => {
       const game = gameEngine.getRoom(socket.data.roomCode);

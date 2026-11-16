@@ -652,6 +652,22 @@ class GameState extends EventEmitter {
     this.enterPhase(PHASES.FINALE_WRITE, { finale: { maxLength: FINALE_MAX_CHARS } });
   }
 
+  /**
+   * Record a phone's finale write-in during FINALE_WRITE (one per node; a
+   * later submit before the timer replaces it). Returns { ok } or { ok: false, reason }.
+   */
+  submitPolicy(node, text) {
+    if (this.phase !== PHASES.FINALE_WRITE || !this.finale || !this.finale.writingOpen) return { ok: false, reason: 'WRITING_CLOSED' };
+    if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
+    this.finale.submissions[node] = String(text);
+    return { ok: true };
+  }
+
+  /** Nodes that have submitted a finale policy (never the text). */
+  submittedNodes() {
+    return this.finale ? Object.keys(this.finale.submissions) : [];
+  }
+
   /** Public view of policy options A and B (no effect vectors or role tags). */
   publicOptions() {
     const opts = (this.crisis && this.crisis.options) || {};

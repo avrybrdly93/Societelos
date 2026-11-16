@@ -485,3 +485,13 @@ test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (45 s)', () =>
   assert.deepEqual(write.finale, { maxLength: 140 });
   assert.equal(game.finale.writingOpen, true);
 });
+
+test('submitPolicy records one write-in per node during FINALE_WRITE only', () => {
+  const game = finaleGame();
+  assert.deepEqual(game.submitPolicy('NODE-01', 'Too early'), { ok: false, reason: 'WRITING_CLOSED' });
+  quiet(() => game.startFinaleWritePhase());
+  game.clearPhaseTimer();
+  assert.deepEqual(game.submitPolicy('NODE-01', 'Every district elects a repair council.'), { ok: true });
+  assert.deepEqual(game.submitPolicy('NODE-09', 'x'), { ok: false, reason: 'UNKNOWN_NODE' });
+  assert.deepEqual(game.submittedNodes(), ['NODE-01']);
+});
