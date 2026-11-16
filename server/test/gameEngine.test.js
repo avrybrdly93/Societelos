@@ -965,3 +965,11 @@ test('finale role points: +2 for 1st, +1 for 2nd and 3rd', () => {
   assert.equal(game.scores['NODE-04'], 0, 'the Catalyst never scores on tags');
   assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the 4th policy');
 });
+
+test('finale author bonus: +1 to the author of the 1st-place policy only', () => {
+  const game = scoringFinale([[], [], [], [], []]);
+  const author = game.finale.authors['POLICY-1'];
+  assert.deepEqual(game.awardAuthorBonus(ENACT), { [author]: 1 });
+  assert.equal(game.scores[author], 1);
+  assert.equal(Object.values(game.scores).reduce((a, b) => a + b, 0), 1);
+});

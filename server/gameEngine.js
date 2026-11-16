@@ -972,6 +972,15 @@ class GameState extends EventEmitter {
     return awards;
   }
 
+  /** Finale author bonus: +1 to whoever wrote the 1st-place policy. Returns { node: 1 }. */
+  awardAuthorBonus(enacted) {
+    const first = enacted.find((e) => e.place === 'first');
+    const node = first && this.finaleAuthor(first.id);
+    if (!node || !this.players[node]) return {};
+    this.scores[node] = (this.scores[node] || 0) + 1;
+    return { [node]: 1 };
+  }
+
   /** Nodes that have ranked (never their order). */
   rankedNodes() {
     return this.finale ? Object.keys(this.finale.ranks) : [];
