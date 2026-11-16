@@ -1095,7 +1095,9 @@ class GameState extends EventEmitter {
     if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
     if (choice !== 'A' && choice !== 'B') return { ok: false, reason: 'BAD_CHOICE' };
     if (this.votes[node]) return { ok: false, reason: 'ALREADY_VOTED' };
-    const useOverride = override === true;
+    // Overrides don't apply in the finale (cycle 5, including its A/B fallback):
+    // the flag is ignored and the Override stays unspent.
+    const useOverride = override === true && this.cycle < TOTAL_CYCLES;
     // Reject a second Override: the vote is not recorded, so the phone may recast.
     if (useOverride && this.overridesUsed[node]) return { ok: false, reason: 'OVERRIDE_SPENT' };
     this.votes[node] = { choice, override: useOverride };

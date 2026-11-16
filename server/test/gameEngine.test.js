@@ -983,3 +983,13 @@ test('finale Catalyst scores +1 when the package moves realized GDW by >= 10 (an
     assert.equal(game.scoreLedger[game.scoreLedger.length - 1].cycle, 5);
   }
 });
+
+test('Overrides are ignored in Cycle 5 (counted as a normal vote, not spent)', () => {
+  const game = votingGame({ cycle: 5 });
+  assert.equal(game.castVote('NODE-01', 'A', true).ok, true);
+  assert.equal(game.votes['NODE-01'].override, false);
+  assert.equal(game.overrideAvailable('NODE-01'), true, 'not spent');
+  cast(game, []);
+  ['NODE-02', 'NODE-03'].forEach((n) => game.castVote(n, 'B', true));
+  assert.deepEqual(game.tallyVotes().totals, { A: 1, B: 2 });
+});
