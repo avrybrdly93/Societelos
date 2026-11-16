@@ -51,6 +51,11 @@ function initSockets(io, gameEngine) {
     if (wiredRooms.has(game)) return;
     wiredRooms.add(game);
 
+    // phase { cycle, phase, endsAt, crisis, ... } to everyone in the room.
+    game.on('phase', (payload) => {
+      io.to(roomChannel(game.roomCode)).emit('phase', payload);
+    });
+
     // role:assigned { role } privately to the one phone that holds it.
     game.on('role:assigned', ({ node, role }) => {
       emitToNode(game, node, 'role:assigned', { role: roleCard(role) });
