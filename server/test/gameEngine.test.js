@@ -850,3 +850,14 @@ test('each player gets a ballot of exactly the 4 policies they did not write', a
     assert.ok(!ballot.includes(Object.keys(game.finale.authors).find((id) => game.finale.authors[id] === node)), `${node} never ranks its own`);
   }
 });
+
+test('finale:ballot is emitted privately per node with { policies: [{ id, text }] } of length 4', async () => {
+  const { game, ballots } = await rankingFinale();
+  game.stop();
+  assert.deepEqual(Object.keys(ballots).sort(), [...NODE_IDS]);
+  for (const node of NODE_IDS) {
+    assert.equal(ballots[node].length, 4);
+    for (const p of ballots[node]) assert.deepEqual(Object.keys(p).sort(), ['id', 'text']);
+    assert.deepEqual(ballots[node].map((p) => p.id), game.finale.ballots[node]);
+  }
+});

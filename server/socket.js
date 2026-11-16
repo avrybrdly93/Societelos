@@ -154,6 +154,11 @@ function initSockets(io, gameEngine) {
       emitToNode(game, node, 'finale:feedback', { status, feedback });
     });
 
+    // finale:ballot { policies: [{ id, text }] x4 } privately to each phone.
+    game.on('finale:ballot', ({ node, policies }) => {
+      emitToNode(game, node, 'finale:ballot', { policies });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
