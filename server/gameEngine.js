@@ -448,7 +448,7 @@ class GameState extends EventEmitter {
 
     // Society.
     this.gdw = STARTING_GDW;
-    this.gdwHistory = [];
+    this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
     this.worldKey = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
@@ -766,7 +766,11 @@ class GameState extends EventEmitter {
     const option = this.optionFor(winner);
     if (simResult.finalState) this.simState = simResult.finalState;
     this.gdw = roundGdw(simResult.realized.finalGdw);
-    this.gdwHistory.push(this.gdw);
+    // Monthly trajectory: months 1..12 of the realized run (month 0 is the
+    // previous cycle's last entry), so gdwHistory reads as one continuous line.
+    const monthly = Array.isArray(simResult.realized.gdw) ? simResult.realized.gdw.slice(1).map(roundGdw) : [];
+    if (monthly.length) monthly[monthly.length - 1] = this.gdw;
+    this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
     this.voteHistory[this.cycle] = winner;
     // The Assembly (2A) makes society volatile for every remaining cycle.
     if (typeof option.volatility === 'number') this.volatility = option.volatility;
