@@ -260,7 +260,7 @@
     if (payload.phase === 'DEBATE') currentForecasts = payload.forecasts || null;
     if (payload.phase === 'INCIDENT' || payload.phase === 'CHAMBER') { currentOptions = null; currentForecasts = null; }
     const panel = document.getElementById('policy-panel');
-    const show = !!currentOptions && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
+    const show = !!currentOptions && ['DEBATE', 'VOTE'].includes(payload.phase);
     panel.hidden = !show;
     if (!show) return;
     for (const key of ['A', 'B']) {
@@ -314,6 +314,35 @@
   });
   // A new game (back in the lobby) drops the old world's theme.
   socket.on('phase', (payload) => { if (payload.phase === 'LOBBY' && state.worldKey) { state.worldKey = null; applyWorldTheme(null); } });
+
+  // ---------------------------------------------------------------------------
+  // Resolution: map | Loom commentary + forecast chart | citizen reactions.
+  // ---------------------------------------------------------------------------
+  function showResolutionPanel(payload) {
+    const resolving = payload.phase === 'RESOLUTION';
+    document.getElementById('resolution-panel').hidden = !resolving;
+    if (resolving) {
+      document.getElementById('resolution-policy').textContent = 'The Loom is simulating 12 months';
+      document.getElementById('resolution-loom').textContent = '…';
+    }
+  }
+  socket.on('phase', showResolutionPanel);
+
+  function renderResolution(payload) {
+    if (!payload || !payload.result) return;
+    const r = payload.result;
+    document.getElementById('resolution-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
+    document.getElementById('resolution-loom').textContent = payload.loomLine ? `"${payload.loomLine}"` : '';
+    // Reactions replace the incident posts in the feed column.
+    resetFeed();
+    (payload.messages || []).forEach((m) => addFeedItem(m));
+    // Final month's district wellbeing on the map (animated later by month).
+    const months = payload.districts || [];
+    const last = months[months.length - 1];
+    if (last && window.SocietelosMap) window.SocietelosMap.renderDistricts(last);
+    if (window.SocietelosCharts) window.SocietelosCharts.render(document.getElementById('forecast-chart'), payload);
+  }
+  socket.on('resolution', renderResolution);
 
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {

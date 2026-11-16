@@ -695,3 +695,10 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 }
 .result-total { font-size: 15px; text-align: center; margin: 0; }
 @keyframes score-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Host resolution: Loom commentary above the forecast chart. */
+.resolution-panel { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; margin-top: 8px; }
+.resolution-panel[hidden] { display: none; }
+body.host .resolution-loom { font-size: 28px; line-height: 1.35; min-height: 2.7em; }
+.chart-wrap { position: relative; flex: 1; min-height: 360px; border-radius: var(--radius); background: var(--bg-sunken); border: 2px solid var(--border); }
+.forecast-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
