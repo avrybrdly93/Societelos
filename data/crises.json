@@ -274,41 +274,45 @@
       ],
       "options": {
         "A": {
-          "name": "The Loom Calling Allocation",
-          "text": "The Loom computes a psychometric profile for each citizen and assigns them an optimal 'Personal Calling'.",
+          "name": "The Calling",
+          "text": "The Loom assigns each citizen a personal Calling: a daily role matched to their profile, from mentoring to mural painting.",
           "roles": [
-            "assimilator",
-            "lotus"
+            "assimilator"
           ],
           "effects": {
-            "purpose": 0.3,
-            "connection": -0.1,
-            "health": 0.2,
-            "trust": 0.4,
-            "fairness": 0.2,
-            "autonomy": -0.5
+            "purpose": 0.5,
+            "connection": 0.1,
+            "health": 0,
+            "trust": 0.3,
+            "fairness": 0,
+            "autonomy": -0.6
           },
           "targetGdwDelta": 6
         },
         "B": {
-          "name": "Autonomous Craft Guilds",
-          "text": "Charter voluntary artisan guilds where production is manual, standards are unforgiving, and failure is real.",
+          "name": "The Guilds",
+          "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside the guild hall.",
           "roles": [
-            "artisan",
-            "ghost"
+            "artisan"
           ],
           "effects": {
-            "purpose": 0.7,
-            "connection": 0.6,
+            "purpose": 0.6,
+            "connection": 0.4,
             "health": -0.2,
-            "trust": -0.3,
-            "fairness": 0.2,
-            "autonomy": 0.7
+            "trust": -0.2,
+            "fairness": -0.2,
+            "autonomy": 0.4
           },
           "targetGdwDelta": 8
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: guild members in a 2031 pilot reported purpose scores 40% higher than citizens given assigned roles, even though half their projects failed.",
+        "lotus": "Loom welfare note: guild injuries rose 18% in the pilot. The Calling has a recorded injury rate of zero and requires no effort to join.",
+        "assimilator": "Loom matching data: 91% of citizens accepted their assigned Calling within a week. Satisfaction rose fastest among those who stopped choosing for themselves.",
+        "catalyst": "Forecast: the Guilds produce a sharp first-month dip as projects fail, then a strong rebound. The Calling produces a smooth, flat line.",
+        "ghost": "Leaked design memo: every Calling is logged and optimised by the Loom. The guilds are the only places in the region with no sensors."
+      }
     },
     {
       "id": "aa-lost-knowledge",
