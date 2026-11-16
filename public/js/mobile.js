@@ -121,7 +121,8 @@
     INTEL: 'm-view-intel',
     DEBATE: 'm-view-debate',
     VOTE: 'm-view-vote',
-    RESOLUTION: 'm-view-result'
+    RESOLUTION: 'm-view-result',
+    WORLD_REVEAL: 'm-view-world'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -245,6 +246,35 @@
     el.textContent = `+${payload.gained} AGENDA POINT${payload.gained === 1 ? '' : 'S'}`;
     document.getElementById('result-total').textContent = `Your agenda score: ${payload.total}`;
   });
+
+  // ---------------------------------------------------------------------------
+  // World reveal card: the world the first two votes built and what changes.
+  // ---------------------------------------------------------------------------
+  const WORLD_IMPACT = {
+    AA: ['Wealth and power are shared. The next crises are about meaning when nobody has to work.', 'The Assembly made society volatile: outcomes swing harder for the rest of the game.'],
+    AB: ['Wealth is shared but the Loom governs. The next crises are about dependence on the machine.', 'Delegated control keeps things calm and predictable.'],
+    BA: ['Owners kept the wealth; the masses kept the vote. The next crises are about class conflict.', 'The Assembly made society volatile: outcomes swing harder for the rest of the game.'],
+    BB: ['Owners rule and everyone else lives on stipends. The next crises are about pacification.', 'Delegated control keeps things calm and predictable.']
+  };
+  function renderWorldCard(world) {
+    if (!world || !world.worldKey) return;
+    state.worldKey = world.worldKey;
+    document.body.dataset.world = world.worldKey;
+    document.getElementById('m-world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('m-world-name').textContent = world.name || world.worldKey;
+    document.getElementById('m-world-tagline').textContent = world.tagline || '';
+    const list = document.getElementById('m-world-impact');
+    list.textContent = '';
+    const lines = (WORLD_IMPACT[world.worldKey] || []).slice();
+    if (world.problemLeft) lines.push(`Problem left unsolved: ${world.problemLeft}. Your agenda still scores the same way.`);
+    lines.forEach((text) => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    });
+  }
+  socket.on('world:reveal', renderWorldCard);
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'WORLD_REVEAL') renderWorldCard(payload.world); });
 
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
