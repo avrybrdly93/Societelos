@@ -981,6 +981,20 @@ class GameState extends EventEmitter {
     return { [node]: 1 };
   }
 
+  /**
+   * All finale scoring for the enacted package: role points (+2/+1/+1),
+   * the author bonus, and the Catalyst's +1 if the package moved realized
+   * GDW by 10 or more without shutting the Loom down. Records the ledger
+   * entry and returns { role, author, catalyst } award maps.
+   */
+  scoreFinale(enacted, previousGdw, realizedGdw) {
+    const role = this.awardFinaleRolePoints(enacted);
+    const author = this.awardAuthorBonus(enacted);
+    const catalyst = this.awardCatalystPoints(previousGdw, realizedGdw);
+    this.scoreLedger.push({ cycle: this.cycle, winner: enacted.map((e) => e.id).join(','), role, author, catalyst });
+    return { role, author, catalyst };
+  }
+
   /** Nodes that have ranked (never their order). */
   rankedNodes() {
     return this.finale ? Object.keys(this.finale.ranks) : [];

@@ -973,3 +973,13 @@ test('finale author bonus: +1 to the author of the 1st-place policy only', () =>
   assert.equal(game.scores[author], 1);
   assert.equal(Object.values(game.scores).reduce((a, b) => a + b, 0), 1);
 });
+
+test('finale Catalyst scores +1 when the package moves realized GDW by >= 10 (and GDW > 0)', () => {
+  for (const [prev, now, expected] of [[30, 41, 1], [30, 20, 1], [30, 39.9, 0], [12, 0, 0]]) {
+    const game = scoringFinale([[], [], [], [], []]);
+    const { catalyst } = game.scoreFinale(ENACT, prev, now);
+    const catalystNode = 'NODE-04';
+    assert.deepEqual(catalyst, expected ? { [catalystNode]: 1 } : {}, `${prev} -> ${now}`);
+    assert.equal(game.scoreLedger[game.scoreLedger.length - 1].cycle, 5);
+  }
+});
