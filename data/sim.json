@@ -1,17 +1,79 @@
 {
   "_doc": "Every tunable number for the cohort Monte Carlo simulation lives here (no magic numbers in server/sim). Read by server/sim/state.js.",
-  "traits": ["purpose", "connection", "health", "trust", "fairness", "autonomy"],
+  "traits": [
+    "purpose",
+    "connection",
+    "health",
+    "trust",
+    "fairness",
+    "autonomy"
+  ],
   "gdw": {
     "scale": 125,
-    "floorWellbeing": 0.20,
+    "floorWellbeing": 0.2,
     "min": 0,
     "max": 100,
     "startingGdw": 25
   },
-  "districts": [],
+  "districts": [
+    {
+      "id": "D1",
+      "name": "Old Harbour",
+      "population": 30000,
+      "neighbours": [
+        "D2",
+        "D3"
+      ],
+      "character": "Coastal; most former owners live here"
+    },
+    {
+      "id": "D2",
+      "name": "The Grid",
+      "population": 55000,
+      "neighbours": [
+        "D1",
+        "D3",
+        "D4"
+      ],
+      "character": "Around the Loom infrastructure"
+    },
+    {
+      "id": "D3",
+      "name": "Riverside",
+      "population": 65000,
+      "neighbours": [
+        "D1",
+        "D2",
+        "D4",
+        "D5"
+      ],
+      "character": "Families and schools"
+    },
+    {
+      "id": "D4",
+      "name": "Eastworks",
+      "population": 60000,
+      "neighbours": [
+        "D2",
+        "D3",
+        "D5"
+      ],
+      "character": "Former warehouses and factories"
+    },
+    {
+      "id": "D5",
+      "name": "Highlands",
+      "population": 40000,
+      "neighbours": [
+        "D3",
+        "D4"
+      ],
+      "character": "Rural; sympathetic to the Unplugged"
+    }
+  ],
   "cohorts": [],
   "weights": {},
-  "baseline": 0.40,
+  "baseline": 0.4,
   "offsets": {},
   "sensitivity": {},
   "constants": {}
