@@ -1,0 +1,67 @@
+/* Societelos — shared styles for the host projector and phone controllers.
+   Dystopian post-labor aesthetic: dark slate, Loom cyan, alert crimson.
+   System fonts only, so the UI works on an offline classroom router. */
+
+:root {
+  /* Surfaces */
+  --slate-950: #080b10;
+  --slate-900: #0d1117;
+  --slate-800: #161c25;
+  --slate-700: #222b38;
+  --slate-600: #33404f;
+  --slate-400: #7d8a9a;
+  --slate-200: #c6cfda;
+  --slate-50: #eef2f6;
+
+  /* Accents */
+  --loom-cyan: #3fd8e6;
+  --loom-cyan-dim: #1f7f89;
+  --loom-glow: rgba(63, 216, 230, 0.35);
+  --alert-crimson: #e5484d;
+  --alert-crimson-dim: #8c2a2e;
+  --amber: #f0a430;
+  --teal: #2bc4a0;
+
+  /* Semantic */
+  --bg: var(--slate-900);
+  --bg-raised: var(--slate-800);
+  --bg-sunken: var(--slate-950);
+  --border: var(--slate-700);
+  --text: var(--slate-50);
+  --text-muted: var(--slate-400);
+  --accent: var(--loom-cyan);
+  --danger: var(--alert-crimson);
+
+  /* Type */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Shape */
+  --radius: 10px;
+  --radius-lg: 16px;
+  --gap: 16px;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Only the active view of a screen is shown. */
+.view, .m-view { display: none; }
+.view.is-active, .m-view.is-active { display: block; }
+
+.mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent); }
+.danger { color: var(--danger); }
+.hidden { display: none !important; }
