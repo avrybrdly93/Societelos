@@ -19,8 +19,8 @@
     "id": "assimilator",
     "name": "The Assimilator",
     "icon": "",
-    "goal": "Believes humanity's ultimate telos is to merge with The Loom. Grants the AI cognitive, emotional, and infrastructural control.",
-    "winCondition": "Wins if policies grant The Loom more direct neural, psychological, and systemic governance.",
+    "goal": "Humanity merging with the Loom.",
+    "winCondition": "You score +1 each cycle the winning policy is tagged assimilator.",
     "cardText": "Synthetic Convergence / Machine Telos"
   },
   {
