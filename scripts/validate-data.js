@@ -120,12 +120,31 @@ function checkCrises(data, citizenIds) {
   return undefined;
 }
 
+// No emoji and school-appropriate language in any string of any data file.
+const EMOJI = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u{1F1E6}-\u{1F1FF}]/u;
+const BANNED = /\b(damn|hell|crap|sh[i1]t|f+u+c+k|bitch|bastard|ass(hole)?|piss|sex(y)?|kill yourself|stupid|idiot|retard(ed)?)\b/i;
+function checkStrings(file, value, trail = file) {
+  if (typeof value === 'string') {
+    if (EMOJI.test(value)) err(trail, `contains emoji: "${value.slice(0, 40)}"`);
+    const bad = value.match(BANNED);
+    if (bad) err(trail, `language check: "${bad[0]}"`);
+  } else if (Array.isArray(value)) {
+    value.forEach((v, i) => checkStrings(file, v, `${trail}[${i}]`));
+  } else if (value && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) checkStrings(file, v, `${trail}.${k}`);
+  }
+}
+
 const roles = load('roles.json');
 const citizens = load('citizens.json');
 const crises = load('crises.json');
 if (roles) checkRoles(roles);
 if (citizens) checkCitizens(citizens);
 if (crises) checkCrises(crises, new Set((citizens || []).map((c) => c.id)));
+
+for (const [name, data] of [['roles.json', roles], ['citizens.json', citizens], ['crises.json', crises]]) {
+  if (data) checkStrings(name, data);
+}
 
 if (errors.length) {
   console.error(`Data validation failed (${errors.length}):`);
