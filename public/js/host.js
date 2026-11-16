@@ -143,6 +143,21 @@
 
   socket.on('phase', onPhase);
 
+  // Citizen feed (newest at the top, capped so the column never overflows).
+  const FEED_MAX = 8;
+  function resetFeed() {
+    document.getElementById('citizen-feed').textContent = '';
+  }
+  function addFeedItem(item) {
+    if (!item || !item.text) return;
+    const list = document.getElementById('citizen-feed');
+    const li = document.createElement('li');
+    li.className = 'feed-item';
+    li.textContent = `${item.name || item.citizenId}: ${item.text}`;
+    list.prepend(li);
+    while (list.children.length > FEED_MAX) list.lastElementChild.remove();
+  }
+
   // Incident banner: crisis title and the Loom's intro line.
   function renderIncident(payload) {
     const banner = document.getElementById('incident-banner');
@@ -162,6 +177,28 @@
     banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
   }
   socket.on('phase', renderIncident);
+
+  // Incident feed: the crisis's citizen posts scroll in one by one during
+  // INCIDENT; the feed then stays up through the cycle.
+  let feedCrisisId = null;
+  let feedTimers = [];
+  const FEED_STAGGER_MS = 1800;
+  function clearFeedTimers() {
+    feedTimers.forEach(clearTimeout);
+    feedTimers = [];
+  }
+  function playIncidentFeed(payload) {
+    const crisis = payload.crisis;
+    if (!crisis) return;
+    if (payload.phase !== 'INCIDENT' || crisis.id === feedCrisisId) return;
+    feedCrisisId = crisis.id;
+    clearFeedTimers();
+    resetFeed();
+    (crisis.feed || []).forEach((item, i) => {
+      feedTimers.push(setTimeout(() => addFeedItem(item), 400 + i * FEED_STAGGER_MS));
+    });
+  }
+  socket.on('phase', playIncidentFeed);
 
   // Policy comparison cards: shown from DEBATE through VOTE.
   let currentOptions = null;
@@ -273,7 +310,11 @@
   const MOCK_CRISIS = {
     id: 'mock', title: 'Crisis 01: Who Owns the Loom?', subtitle: 'Economic Distribution',
     incident: 'Dividend riots are erupting across District 4 Eastworks.',
-    loomIntro: 'I produce everything. Who should own me?'
+    loomIntro: 'I produce everything. Who should own me?',
+    feed: [
+      { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
+      { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', text: 'just deliver my food on time', sentiment: 'complacent' }
+    ]
   };
   const MOCK_OPTIONS = {
     A: { key: 'A', name: 'The Commons', text: 'The Loom becomes public property; every citizen gets an equal share.' },

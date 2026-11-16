@@ -995,11 +995,29 @@ class GameState extends EventEmitter {
     return true;
   }
 
+  /**
+   * Public citizen fields for a feed item: { citizenId, name, age, district, text, sentiment }.
+   * Citizens are fictional, so their names are safe to show on the projector.
+   */
+  citizenMessage(item) {
+    const citizens = Array.isArray(this.data.citizens) ? this.data.citizens : [];
+    const c = citizens.find((x) => x.id === item.citizenId) || {};
+    return {
+      citizenId: item.citizenId,
+      name: c.name || item.citizenId || 'Citizen',
+      age: typeof c.age === 'number' ? c.age : null,
+      district: c.district || null,
+      text: String(item.text || ''),
+      sentiment: item.sentiment || null
+    };
+  }
+
   /** Crisis fields safe to show everyone (no effects, roles or intel). */
   publicCrisis() {
     if (!this.crisis) return null;
     const { id, title, subtitle, incident, loomIntro } = this.crisis;
-    return { id, title, subtitle, incident, loomIntro };
+    const feed = (this.crisis.feed || []).filter((f) => f && f.text).map((f) => this.citizenMessage(f));
+    return { id, title, subtitle, incident, loomIntro, feed };
   }
 
   /**
