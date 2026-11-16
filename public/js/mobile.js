@@ -174,5 +174,13 @@
   }
   requestAnimationFrame(tick);
 
+  // intel:drop { text } -> this player's role-slanted research snippet.
+  socket.on('intel:drop', (payload) => {
+    const text = (payload && payload.text) || 'No intel received.';
+    document.getElementById('intel-text').textContent = text;
+    document.getElementById('intel-ref').textContent = `REF C${state.cycle || 0}-${(state.node || 'NODE-00').slice(-2)}`;
+    document.getElementById('shield-intel').checked = false;
+  });
+
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
