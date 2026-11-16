@@ -369,6 +369,10 @@
   function onResolutionMonth(month, gdw, payload) {
     state.resolutionMonth = month;
     if (window.SocietelosMap) window.SocietelosMap.showMonth(month);
+    // Meter and top-bar counter tick with each month; the last month lands
+    // exactly on the server's rounded GDW.
+    const months = (payload.realized && payload.realized.gdw) || [];
+    setGdw(month >= months.length - 1 && typeof payload.gdw === 'number' ? payload.gdw : gdw);
   }
 
   function renderResolution(payload) {
@@ -461,11 +465,11 @@
     return GDW_BANDS.find((b) => gdw <= b.max) || GDW_BANDS[GDW_BANDS.length - 1];
   }
   const gdwMeter = { shown: 25, target: 25, from: 25, start: 0, frame: null };
-  const GDW_TWEEN_MS = 1200;
+  const GDW_TWEEN_MS = 900; // under one simulated month, so monthly ticks stay smooth
   function paintGdw(value) {
     const v = Math.max(0, Math.min(100, value));
     document.getElementById('gdw-readout').textContent = `${v.toFixed(1)}%`;
-    document.getElementById('gdw-badge').textContent = `${Math.round(v)}%`;
+    document.getElementById('gdw-badge').textContent = `${v.toFixed(1)}%`;
   }
   function setGdw(gdw) {
     if (typeof gdw !== 'number' || !Number.isFinite(gdw)) return;
@@ -492,7 +496,13 @@
     gdwMeter.frame = requestAnimationFrame(step);
   }
   setGdw(25);
-  socket.on('resolution', (payload) => { if (payload) setGdw(payload.gdw); });
+  // GDW follows the realized run month by month during Resolution (see
+  // onResolutionMonth); without a trajectory it jumps to the final value.
+  socket.on('resolution', (payload) => {
+    if (!payload) return;
+    const months = payload.realized && payload.realized.gdw;
+    if (!months || months.length < 2) setGdw(payload.gdw);
+  });
 
   // ---------------------------------------------------------------------------
   // Debug mock tester: drive layouts without a live backend, from the console.
