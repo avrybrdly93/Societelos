@@ -752,6 +752,28 @@ class GameState extends EventEmitter {
       this.switchFinaleToBinary('moderation unavailable');
       return;
     }
+    if (results.every((r) => r.status === 'ok')) this.finishFinaleModeration();
+  }
+
+  /**
+   * Moderation settled: turn each node's moderated write-in into a policy
+   * { id, node, text, roles, effects } and move straight on to FINALE_DEBATE.
+   */
+  finishFinaleModeration() {
+    const finale = this.finale;
+    if (finale.closed) return;
+    finale.closed = true;
+    finale.policies = Object.keys(this.players).map((node, i) => {
+      const m = finale.moderation[node] || {};
+      return {
+        id: `POLICY-${i + 1}`,
+        node,
+        text: String(m.cleaned || finale.submissions[node] || DEFAULT_FINALE_POLICY).slice(0, FINALE_MAX_CHARS),
+        roles: Array.isArray(m.roles) ? m.roles : [],
+        effects: m.effects || {}
+      };
+    });
+    if (this.phase === PHASES.FINALE_MOD) this.advancePhase();
   }
 
   /** Fall back to the authored A/B finale: FINALE_MOD -> DEBATE -> VOTE -> RESOLUTION -> END. */

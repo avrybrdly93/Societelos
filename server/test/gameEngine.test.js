@@ -586,3 +586,44 @@ test('if loom.moderate fails, cycle 5 falls back to the authored A/B finale (DEB
   assert.equal(game.phase, 'DEBATE');
   assert.equal(game.nextPhase(), 'VOTE');
 });
+
+/** Replace loom.moderate for one test; returns a restore function. */
+function stubModerate(fn) {
+  const loom = require('../loom');
+  const original = loom.moderate;
+  loom.moderate = fn;
+  return () => { loom.moderate = original; };
+}
+const okModeration = (roles = ['artisan']) => async (subs) => subs.map((s, i) => ({
+  node: s.node, status: 'ok', cleaned: `Cleaned: ${s.text}`, feedback: '', roles,
+  effects: { purpose: 0.1 * (i + 1), connection: 0, health: 0, trust: 0, fairness: -0.1, autonomy: 0 }
+}));
+
+/** Drive a finale game to the end of FINALE_MOD with all nodes writing. */
+async function moderatedFinale(world = 'AA') {
+  const game = finaleGame(world);
+  quiet(() => game.startFinaleWritePhase());
+  NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in from node ${i + 1}`));
+  await new Promise((r) => setImmediate(r));
+  await new Promise((r) => setImmediate(r));
+  return game;
+}
+
+test('when all 5 moderations come back ok, the finale moves straight to FINALE_DEBATE', async () => {
+  const restore = stubModerate(okModeration());
+  try {
+    const seen = [];
+    const game = finaleGame();
+    game.on('phase', (p) => seen.push(p.phase));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.stop();
+    assert.deepEqual(seen, ['FINALE_WRITE', 'FINALE_MOD', 'FINALE_DEBATE']);
+    assert.equal(game.finaleFallback, false);
+    assert.equal(game.finale.policies.length, 5);
+    for (const p of game.finale.policies) assert.ok(p.text.startsWith('Cleaned:') && p.roles[0] === 'artisan');
+  } finally {
+    restore();
+  }
+});
