@@ -64,11 +64,11 @@
           ],
           "effects": {
             "purpose": 0.2,
-            "connection": 0.3,
-            "health": -0.2,
-            "trust": -0.5,
-            "fairness": 0.8,
-            "autonomy": 0.4
+            "connection": -0.3,
+            "health": -0.8,
+            "trust": -0.6,
+            "fairness": 0.6,
+            "autonomy": 0.2
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -91,12 +91,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": -0.2,
-            "connection": -0.1,
-            "health": 0.3,
-            "trust": 0.4,
-            "fairness": -0.4,
-            "autonomy": -0.3
+            "purpose": 0.5,
+            "connection": 0.4,
+            "health": 0.8,
+            "trust": 0.5,
+            "fairness": -0.3,
+            "autonomy": 0.3
           },
           "targetGdwDelta": 10,
           "reactions": [
