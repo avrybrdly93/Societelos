@@ -3,8 +3,8 @@
     "id": "artisan",
     "name": "The Artisan",
     "icon": "",
-    "goal": "Pushes for creative struggle, manual craft, and friction. Believes human fulfillment requires physical effort over automated ease.",
-    "winCondition": "Wins if policies favor human effort, manual labor, and physical struggle over machine automation.",
+    "goal": "Human effort and creative struggle over machine efficiency.",
+    "winCondition": "You score +1 each cycle the winning policy is tagged artisan.",
     "cardText": "Poiesis / Creative Friction"
   },
   {
