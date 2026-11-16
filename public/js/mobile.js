@@ -31,6 +31,7 @@
   });
   socket.on('session:resumed', (info) => {
     state.node = info.node;
+    setNodeLabel(info.node);
     state.roomCode = info.roomCode;
     saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
   });
@@ -75,6 +76,20 @@
       setNodeLabel(res.node);
       showView('m-view-wait');
     });
+  });
+
+  // lobby:update -> confirm our NODE label in the header and show how many
+  // nodes have joined while we wait.
+  socket.on('lobby:update', (payload) => {
+    const players = (payload && payload.players) || [];
+    const me = players.find((p) => p.node === state.node);
+    if (me) setNodeLabel(me.node);
+    const status = document.getElementById('wait-status');
+    if (status && state.phase === 'LOBBY') {
+      status.textContent = players.length >= 5
+        ? 'All five nodes connected. Waiting for the projector…'
+        : `${players.length}/5 nodes connected. Waiting for the council to assemble…`;
+    }
   });
 
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel };
