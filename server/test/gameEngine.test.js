@@ -800,3 +800,25 @@ test('FINALE_DEBATE broadcasts anonymised policies [{ id, text }] only', async (
     restore();
   }
 });
+
+test('FINALE_DEBATE (60 s) is followed by FINALE_RANK (30 s)', async () => {
+  const restore = stubModerate(okModeration());
+  try {
+    const game = finaleGame();
+    const phases = [];
+    game.on('phase', (p) => phases.push(p));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    const debate = phases[phases.length - 1];
+    assert.equal(debate.phase, 'FINALE_DEBATE');
+    assert.ok(debate.endsAt - Date.now() > 59000 && debate.endsAt - Date.now() <= 60000);
+    quiet(() => game.advancePhase()); // the 60 s debate timer expiring
+    const rank = phases[phases.length - 1];
+    game.stop();
+    assert.equal(rank.phase, 'FINALE_RANK');
+    assert.ok(rank.endsAt - Date.now() > 29000 && rank.endsAt - Date.now() <= 30000);
+  } finally {
+    restore();
+  }
+});
