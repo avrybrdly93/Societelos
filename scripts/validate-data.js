@@ -67,6 +67,15 @@ function checkCitizens(citizens) {
   return undefined;
 }
 
+// Writing rule: every option must hurt at least one trait, so neither choice
+// is a free win. Applies to each world variant of an effectsByWorld option.
+function checkHasCost(where, effects) {
+  if (!effects || typeof effects !== 'object') return;
+  if (!TRAITS.some((t) => typeof effects[t] === 'number' && effects[t] < 0)) {
+    err(where, 'writing rule: the option must hurt at least one trait (no free wins)');
+  }
+}
+
 function checkOption(where, o, crisis) {
   if (!o) return err(where, 'missing');
   if (!isStr(o.name)) err(where, '"name" required');
@@ -80,9 +89,13 @@ function checkOption(where, o, crisis) {
   if (o.draft === true && !o.effects && !o.effectsByWorld) {
     warnings.push(`${where}: draft option, effect vector not authored yet`);
   } else if (o.effectsByWorld) {
-    for (const [k, e] of Object.entries(o.effectsByWorld)) checkEffects(`${where}.effectsByWorld.${k}`, e);
+    for (const [k, e] of Object.entries(o.effectsByWorld)) {
+      checkEffects(`${where}.effectsByWorld.${k}`, e);
+      checkHasCost(`${where}.effectsByWorld.${k}`, e);
+    }
   } else {
     checkEffects(where, o.effects);
+    checkHasCost(where, o.effects);
   }
   if (o.volatility !== undefined && (typeof o.volatility !== 'number' || o.volatility <= 0)) err(where, 'volatility must be a positive number');
   if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld && o.draft !== true) err(where, 'finale fallback needs effects');
