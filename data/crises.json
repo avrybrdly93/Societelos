@@ -376,8 +376,8 @@
       ],
       "options": {
         "A": {
-          "name": "The Keeper Corps Mandate",
-          "text": "Mandate that every young citizen spend 2 years learning manual maintenance trades. Slow down infrastructure to human comprehension speed.",
+          "name": "The Keeper Corps",
+          "text": "Every citizen learns a maintenance trade: two days a week on the grid, the pumps or the farms. Infrastructure slows down to the speed humans can understand.",
           "roles": [
             "artisan",
             "ghost"
@@ -385,12 +385,13 @@
           "effects": {
             "purpose": 0.6,
             "connection": 0.5,
-            "health": -0.2,
+            "health": -0.3,
             "trust": -0.4,
             "fairness": 0.3,
-            "autonomy": 0.6
+            "autonomy": 0.5
           },
-          "targetGdwDelta": 7
+          "targetGdwDelta": 7,
+          "loomLine": "Training rotas issued. Expect slower repairs. Expect, apparently, pride."
         },
         "B": {
           "name": "Self-Healing Redundant Mesh",
