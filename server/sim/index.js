@@ -4,6 +4,41 @@
 // Pure functions, no I/O. The caller loads data/sim.json and passes it in
 // (via a state from createInitialState, or opts.config).
 
+/**
+ * @typedef {{ purpose: number, connection: number, health: number, trust: number, fairness: number, autonomy: number }} Effects
+ *   Effect vector, each trait in [-1, 1].
+ *
+ * @typedef {object} Forecast  The Loom's 500-run fan chart.
+ * @property {number} runs        number of forecast runs
+ * @property {number[]} median    median GDW per month (index 0 = start, 12 = end of cycle)
+ * @property {number[]} p5        5th percentile GDW per month
+ * @property {number[]} p95       95th percentile GDW per month
+ * @property {number} pCollapse   share of runs ending at GDW 0
+ * @property {number} pUnrest     share of runs ending below constants.unrestGdw (15)
+ *
+ * @typedef {object} Realized  What actually happens (base parameters, seed = hash(gameId, cycle)).
+ * @property {number} seed
+ * @property {number[]} gdw                    GDW per month (13 values)
+ * @property {number} finalGdw
+ * @property {Object<string, number>[]} districts  per month: { D1: wellbeing W, ... D5 } for the map
+ * @property {{ month, district, trait, amount }[]} shocks  shocks that fired
+ *
+ * @typedef {object} SimSummary  Facts passed to loom.narrate().
+ * @property {number} startGdw
+ * @property {number} realizedDelta
+ * @property {number} medianDelta
+ * @property {number} pCollapse
+ * @property {number} pUnrest
+ * @property {{ district, cohort, trait, change }[]} topMoves  3 biggest trait moves
+ * @property {object[]} shocks
+ *
+ * @typedef {object} SimResult
+ * @property {Forecast} forecast
+ * @property {Realized} realized
+ * @property {object} finalState   next cycle's starting sim state
+ * @property {SimSummary} summary
+ */
+
 const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
 const { runSingleSimulation } = require('./step');
 const { hashSeed } = require('./prng');
@@ -44,14 +79,10 @@ function topMoves(before, after, count = 3) {
  * uncertain parameters) plus one realized run with the base parameters.
  *
  * @param {object} state sim state (or { simState }), from createInitialState
- * @param {object} effects effect vector { purpose, connection, health, trust, fairness, autonomy } in [-1, 1]
- * @param {object} [opts] { runs = 500, seed = 0, volatility = 1, config }
- * @returns {{
- *   forecast: { runs, median: number[], p5: number[], p95: number[], pCollapse: number, pUnrest: number },
- *   realized: { seed, gdw: number[], finalGdw: number, districts: object[], shocks: object[] },
- *   finalState: object,
- *   summary: { startGdw, realizedDelta, medianDelta, pCollapse, pUnrest, topMoves, shocks }
- * }}
+ * @param {Effects} effects
+ * @param {{ runs?: number, seed?: number, volatility?: number, config?: object, mode?: 'stub' }} [opts]
+ *   runs defaults to constants.forecastRuns (500); volatility multiplies noise and shock odds.
+ * @returns {SimResult}
  */
 function simulate(state, effects, opts = {}) {
   // Stub mode, or a caller that has no sim state or config yet (the engine

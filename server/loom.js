@@ -5,6 +5,12 @@
 // timeout and an offline fallback, so the game never waits on (or breaks
 // because of) the network. The Loom never sets scores or game state: it only
 // returns text and clamped effect vectors for the engine to use.
+//
+// Public interface (all async, all resolve, never reject):
+//   narrate(context)                 -> { loomLine, messages: [{ citizenId, text }], fallback? }
+//   moderate(submissions, crisis)    -> [{ node, status, cleaned, feedback, roles, effects, fallback? }]
+//   testConnection()                 -> { ok, model, latencyMs?, line?, error? }
+// `fallback: true` marks an offline/authored answer (no key, timeout, bad output).
 
 // ---------------------------------------------------------------------------
 // Configuration (read from the environment at call time, so a key added to
