@@ -93,6 +93,47 @@ function roleKey(role) {
   return label.replace(/^the\s+/, '').replace(/[^a-z]+/g, '-');
 }
 
+// ---------------------------------------------------------------------------
+// Stream 4 interface stubs. Until server/sim and server/loom.js expose the
+// agreed interfaces, the engine falls back to these so a cycle stays playable.
+// ---------------------------------------------------------------------------
+
+const MONTHS_PER_CYCLE = 12;
+
+/**
+ * Stub for simulate(state, effects, { runs, seed }).
+ * Returns a flat line at current GDW + 5 for both forecast and realized run.
+ */
+function simulateStub(state, effects, { runs = 500, seed = 0 } = {}) {
+  const startGdw = typeof state?.gdw === 'number' ? state.gdw : 25;
+  const endGdw = Math.max(0, Math.min(100, startGdw + 5));
+  const line = Array.from({ length: MONTHS_PER_CYCLE + 1 }, (_, m) => (m === 0 ? startGdw : endGdw));
+  return {
+    forecast: {
+      runs,
+      median: line.slice(),
+      p5: line.slice(),
+      p95: line.slice(),
+      pCollapse: 0,
+      pUnrest: endGdw < 15 ? 1 : 0
+    },
+    realized: { seed, gdw: line.slice(), finalGdw: endGdw, districts: [] },
+    finalState: { ...(state || {}), gdw: endGdw },
+    summary: { realizedDelta: endGdw - startGdw, medianDelta: endGdw - startGdw, pCollapse: 0, topMoves: [], shocks: [], stub: true }
+  };
+}
+
+/** Resolve the real simulate() from server/sim when it exists, else the stub. */
+function resolveSimulate() {
+  try {
+    const sim = require('./sim');
+    if (sim && typeof sim.simulate === 'function') return sim.simulate;
+  } catch (err) {
+    // server/sim/index.js not merged yet.
+  }
+  return simulateStub;
+}
+
 /**
  * State for one game room (one projector + 5 phones).
  */
@@ -207,6 +248,8 @@ module.exports = {
   createPrng,
   seededShuffle,
   roleKey,
+  simulateStub,
+  resolveSimulate,
   ROOM_CODE_ALPHABET,
   NODE_IDS,
   MAX_PLAYERS
