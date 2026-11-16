@@ -356,9 +356,16 @@
     const r = payload.result;
     document.getElementById('resolution-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
     document.getElementById('resolution-loom').textContent = payload.loomLine ? `"${payload.loomLine}"` : '';
-    // Reactions replace the incident posts in the feed column.
+    // Reactions replace the incident posts and appear one by one, spread
+    // across the 12 simulated months as they play out.
+    clearFeedTimers();
     resetFeed();
-    (payload.messages || []).forEach((m) => addFeedItem(m));
+    const messages = payload.messages || [];
+    const span = RESOLUTION_MONTH_MS * 12;
+    messages.forEach((m, i) => {
+      const at = Math.round(((i + 0.5) / messages.length) * span);
+      feedTimers.push(setTimeout(() => addFeedItem(m), at));
+    });
     // The map replays the 12 months in step with the realized line.
     if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS, (payload.realized && payload.realized.shocks) || []);
     renderForecastBanner(payload.forecast);
