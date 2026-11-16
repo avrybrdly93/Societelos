@@ -702,3 +702,12 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 body.host .resolution-loom { font-size: 28px; line-height: 1.35; min-height: 2.7em; }
 .chart-wrap { position: relative; flex: 1; min-height: 360px; border-radius: var(--radius); background: var(--bg-sunken); border: 2px solid var(--border); }
 .forecast-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* Loom forecast stability banner above the chart. */
+body.host .forecast-banner {
+  margin: 0; padding: 6px 12px; font-size: 18px; font-weight: 700; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-radius: var(--radius); border: 2px solid var(--border); color: var(--text-muted);
+}
+body.host .forecast-banner.is-ok { color: var(--teal); border-color: rgba(43, 196, 160, 0.5); }
+body.host .forecast-banner.is-warn { color: var(--amber); border-color: rgba(240, 164, 48, 0.5); }
+body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.1); }

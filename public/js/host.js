@@ -328,6 +328,22 @@
   }
   socket.on('phase', showResolutionPanel);
 
+  // "LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%": stability is
+  // the share of the 500 forecast runs ending at or above the 15% unrest line.
+  function renderForecastBanner(forecast) {
+    const el = document.getElementById('forecast-banner');
+    const pUnrest = forecast && typeof forecast.pUnrest === 'number' ? forecast.pUnrest : null;
+    if (pUnrest === null) {
+      el.textContent = 'LOOM FORECAST: --% CHANCE OF STABILITY | P(UNREST): --%';
+      el.className = 'forecast-banner mono';
+      return;
+    }
+    const stability = Math.round((1 - pUnrest) * 100);
+    const unrest = Math.round(pUnrest * 100);
+    el.textContent = `LOOM FORECAST: ${stability}% CHANCE OF STABILITY | P(UNREST): ${unrest}%`;
+    el.className = `forecast-banner mono ${unrest >= 25 ? 'is-danger' : unrest >= 5 ? 'is-warn' : 'is-ok'}`;
+  }
+
   function renderResolution(payload) {
     if (!payload || !payload.result) return;
     const r = payload.result;
@@ -340,6 +356,7 @@
     const months = payload.districts || [];
     const last = months[months.length - 1];
     if (last && window.SocietelosMap) window.SocietelosMap.renderDistricts(last);
+    renderForecastBanner(payload.forecast);
     if (window.SocietelosCharts) window.SocietelosCharts.render(document.getElementById('forecast-chart'), payload);
   }
   socket.on('resolution', renderResolution);
