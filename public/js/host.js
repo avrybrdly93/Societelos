@@ -516,6 +516,34 @@
   }
   socket.on('phase', renderFinaleCallout);
 
+  // Finale progress pips: which nodes have submitted (never what they wrote).
+  function renderFinalePips(nodes) {
+    const set = new Set(nodes || []);
+    document.querySelectorAll('.finale-pip').forEach((pip) => pip.classList.toggle('is-locked', set.has(pip.dataset.node)));
+    document.getElementById('finale-progress-count').textContent = `${set.size}/5`;
+  }
+  let finaleSubmitted = [];
+  socket.on('phase', (payload) => {
+    const writing = payload.phase === 'FINALE_WRITE';
+    const moderating = payload.phase === 'FINALE_MOD';
+    if (writing && payload.cycle !== state.finaleProgressCycle) {
+      state.finaleProgressCycle = payload.cycle;
+      finaleSubmitted = [];
+    }
+    document.getElementById('finale-progress').hidden = !(writing || moderating);
+    if (writing || moderating) {
+      document.getElementById('finale-progress-label').textContent = 'Policies submitted';
+      // Everyone counts as in once moderation starts (idle phones got a default).
+      renderFinalePips(moderating ? NODE_IDS : finaleSubmitted);
+    }
+  });
+  socket.on('finale:progress', (payload) => {
+    if (payload && Array.isArray(payload.submitted)) {
+      finaleSubmitted = payload.submitted;
+      if (state.phase === 'FINALE_WRITE') renderFinalePips(finaleSubmitted);
+    }
+  });
+
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
     const set = new Set(voted || []);

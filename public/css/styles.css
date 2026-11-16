@@ -896,3 +896,8 @@ body.host .finale-callout-note { margin: 0; font-size: 24px; }
 }
 .finale-revise .m-kicker { color: var(--amber); }
 .finale-feedback { padding: 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); font-size: 17px; margin: 8px 0 0; }
+
+/* Host finale progress pips sit under the callout / moderation status. */
+.finale-progress[hidden] { display: none; }
+.finale-progress { margin-top: 16px; }
+body.host[data-phase="FINALE_MOD"] .finale-spinner { box-shadow: 0 0 48px var(--loom-glow); animation: finale-spin 1.2s linear infinite, orb-pulse 1.6s ease-in-out infinite; }
