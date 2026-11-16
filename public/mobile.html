@@ -59,7 +59,21 @@
         <p id="role-win" class="role-text"></p>
       </article>
     </section>
-    <section id="m-view-intel" class="m-view" aria-label="Intel"></section>
+    <section id="m-view-intel" class="m-view" aria-label="Intel">
+      <p class="m-kicker mono">INTEL DROP // DECRYPTED</p>
+      <article id="intel-memo" class="intel-memo shieldable">
+        <input type="checkbox" id="shield-intel" class="shield-toggle" aria-label="Hide intel">
+        <label for="shield-intel" class="shield-button mono">TAP TO HIDE</label>
+        <label for="shield-intel" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
+        <header class="memo-head mono">
+          <span>LOOM ARCHIVE</span>
+          <span id="intel-ref">REF ----</span>
+        </header>
+        <p class="memo-meta mono">CLEARANCE: <span id="intel-node">NODE-0?</span> ONLY</p>
+        <p id="intel-text" class="memo-body">Awaiting decryption…</p>
+        <p class="memo-foot mono muted">Use it. Or bury it.</p>
+      </article>
+    </section>
     <section id="m-view-debate" class="m-view" aria-label="Debate"></section>
     <section id="m-view-vote" class="m-view" aria-label="Vote"></section>
   </main>
