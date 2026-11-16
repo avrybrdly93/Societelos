@@ -87,6 +87,28 @@ function cohortTraits(state, i) {
 }
 
 /**
+ * A recurring citizen's mood: the simulated state of their own
+ * (district, cohort). Returns { key, district, cohort, wellbeing, gdw, traits }
+ * or null when the citizen's cohort is not in the state.
+ * @param {object} state sim state
+ * @param {{ district: string, cohort: string }} citizen e.g. Mara (D3, workers)
+ */
+function getCitizenMood(state, citizen) {
+  if (!state || !citizen) return null;
+  const i = state.cohorts.findIndex((c) => c.district === citizen.district && c.cohort === citizen.cohort);
+  if (i < 0) return null;
+  const wellbeing = cohortWellbeingAt(state, i);
+  return {
+    key: state.cohorts[i].key,
+    district: citizen.district,
+    cohort: citizen.cohort,
+    wellbeing,
+    gdw: computeGDW(wellbeing, state.config.gdw),
+    traits: cohortTraits(state, i)
+  };
+}
+
+/**
  * District wellbeing: mean of its cohorts' W weighted by cohort population.
  */
 function computeDistrictWellbeing(state, districtId) {
@@ -182,5 +204,6 @@ module.exports = {
   computeCohortWellbeing,
   cohortWellbeingAt,
   cohortTraits,
+  getCitizenMood,
   computeDistrictWellbeing
 };
