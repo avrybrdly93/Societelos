@@ -86,16 +86,22 @@
     <section id="m-view-vote" class="m-view" aria-label="Vote">
       <p class="m-kicker mono">BLIND VOTE</p>
       <div id="vote-panel" class="vote-panel">
+        <label id="override-row" class="override-row override-switch">
+          <input id="vote-override" type="checkbox" role="switch" aria-describedby="override-help">
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span class="override-copy">
+            <span class="override-title mono">SPEND 1X OVERRIDE — VOTE COUNTS DOUBLE</span>
+            <span id="override-help" class="override-help">Once per game. Nobody will know.</span>
+          </span>
+        </label>
         <button id="vote-a" class="btn vote-btn" type="button" data-choice="A">
-          <span class="vote-letter mono">A</span><span id="vote-a-name" class="vote-name">Policy A</span>
+          <span class="vote-letter mono">A</span>
+          <span class="vote-copy"><span id="vote-a-name" class="vote-name">Policy A</span><span id="vote-a-text" class="vote-text"></span></span>
         </button>
         <button id="vote-b" class="btn vote-btn" type="button" data-choice="B">
-          <span class="vote-letter mono">B</span><span id="vote-b-name" class="vote-name">Policy B</span>
+          <span class="vote-letter mono">B</span>
+          <span class="vote-copy"><span id="vote-b-name" class="vote-name">Policy B</span><span id="vote-b-text" class="vote-text"></span></span>
         </button>
-        <label id="override-row" class="override-row">
-          <input id="vote-override" type="checkbox">
-          <span><span class="mono accent">OVERRIDE</span> — your vote counts double. Once per game. Nobody will know.</span>
-        </label>
       </div>
       <div id="vote-locked" class="vote-locked" hidden>
         <div class="vote-lock-icon mono" aria-hidden="true">&#10003;</div>

@@ -189,8 +189,14 @@
   socket.on('phase', (payload) => {
     if (payload && payload.options) {
       const { A, B } = payload.options;
-      if (A) document.getElementById('vote-a-name').textContent = A.name || 'Policy A';
-      if (B) document.getElementById('vote-b-name').textContent = B.name || 'Policy B';
+      if (A) {
+        document.getElementById('vote-a-name').textContent = A.name || 'Policy A';
+        document.getElementById('vote-a-text').textContent = A.text || A.summary || '';
+      }
+      if (B) {
+        document.getElementById('vote-b-name').textContent = B.name || 'Policy B';
+        document.getElementById('vote-b-text').textContent = B.text || B.summary || '';
+      }
     }
   });
 
@@ -255,7 +261,10 @@
     if (phase === 'INTEL') debugEmit('intel:drop', { text: 'Loom archive: districts that ran their own repair councils reported the highest sense of purpose in the region.' });
     const payload = { cycle, phase, endsAt: seconds ? Date.now() + seconds * 1000 : null };
     if (phase === 'VOTE' || phase === 'DEBATE') {
-      payload.options = { A: { key: 'A', name: 'The Commons' }, B: { key: 'B', name: 'The Charter' } };
+      payload.options = {
+        A: { key: 'A', name: 'The Commons', text: 'The Loom and everything it produces become public property; every citizen gets an equal share.' },
+        B: { key: 'B', name: 'The Charter', text: 'Owners keep legal title but pay a robot dividend to everyone from a levy on the Loom\'s output.' }
+      };
     }
     debugEmit('phase', payload);
     return payload;
