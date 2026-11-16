@@ -517,21 +517,22 @@
           "loomLine": "Pods powered down at sunrise. Citizens are outside. Several are squinting at the sky."
         },
         "B": {
-          "name": "Shared Collective VR Realms",
-          "text": "Keep the pods on, but merge solitary simulations into a shared, interconnected digital metropolis.",
+          "name": "Shared Worlds",
+          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbours meet, talk and build together.",
           "roles": [
             "lotus",
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.2,
+            "purpose": 0.1,
             "connection": 0.5,
-            "health": -0.3,
-            "trust": 0.5,
-            "fairness": 0.2,
+            "health": -0.4,
+            "trust": 0.4,
+            "fairness": 0.1,
             "autonomy": -0.4
           },
-          "targetGdwDelta": 7
+          "targetGdwDelta": 7,
+          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up."
         }
       },
       "intel": {}
