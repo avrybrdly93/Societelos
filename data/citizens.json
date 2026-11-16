@@ -159,9 +159,15 @@
     "cohort": "elders",
     "voice": "Retired engineer who once maintained the grid",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "They asked an old engineer how the substation works. Taught twelve people. They took notes. On paper!"
+      ],
+      "mixed": [
+        "Grid's humming fine. I just wish someone besides the Loom knew why."
+      ],
+      "bad": [
+        "If that grid ever goes dark, there are maybe four people left who know where the breaker is. I'm one."
+      ]
     }
   },
   {
