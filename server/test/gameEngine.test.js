@@ -381,3 +381,19 @@ test('loom.narrate failures never reject: the resolution falls back safely', asy
     loom.narrate = original;
   }
 });
+
+test('DEBATE/VOTE payloads keep role tags hidden so players must infer them', () => {
+  const game = votingGame();
+  const payloads = [];
+  game.on('phase', (p) => payloads.push(JSON.parse(JSON.stringify(p))));
+  game.startDebatePhase();
+  game.startBlindVotePhase();
+  game.clearPhaseTimer();
+  for (const p of payloads) {
+    const wire = JSON.stringify(p);
+    for (const secret of ['"roles"', '"rolesByWorld"', '"effects"', '"effectsByWorld"', 'artisan', 'assimilator', 'catalyst', 'ghost']) {
+      assert.ok(!wire.includes(secret), `${p.phase} leaks ${secret}`);
+    }
+  }
+  assert.ok(payloads[0].options.A.text.length > 0, 'policy text is public');
+});
