@@ -449,3 +449,39 @@ test('Cycle 5 detects a writein crisis and starts the write-and-rank finale', ()
   try { game.initFinale(); } finally { console.log = log; }
   assert.equal(game.isFinaleWriteIn(), false);
 });
+
+/** A game sitting at the cycle 5 INCIDENT of world `world`, real durations. */
+function finaleGame(world = 'AA') {
+  const game = votingGame();
+  game.assignRoles(game.data.roles);
+  game.worldKey = world;
+  game.voteHistory = { 1: world[0], 2: world[1], 3: 'A', 4: 'A' };
+  game.cycle = 5;
+  const log = console.log;
+  console.log = () => {};
+  try { game.startIncidentPhase(); } finally { console.log = log; }
+  return game;
+}
+
+/** Run `fn` with console.log silenced. */
+function quiet(fn) {
+  const log = console.log;
+  console.log = () => {};
+  try { return fn(); } finally { console.log = log; }
+}
+
+test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (45 s)', () => {
+  const game = finaleGame();
+  const phases = [];
+  game.on('phase', (p) => phases.push(p));
+  quiet(() => game.enterPhase(engine.PHASES.INCIDENT));
+  assert.equal(phases[0].endsAt - Date.now() <= 15000 && phases[0].endsAt - Date.now() > 14000, true);
+  assert.ok(!('options' in phases[0]), 'no options during the finale incident');
+  quiet(() => game.advancePhase());
+  game.clearPhaseTimer();
+  const write = phases[1];
+  assert.equal(write.phase, 'FINALE_WRITE');
+  assert.ok(write.endsAt - Date.now() > 44000 && write.endsAt - Date.now() <= 45000);
+  assert.deepEqual(write.finale, { maxLength: 140 });
+  assert.equal(game.finale.writingOpen, true);
+});

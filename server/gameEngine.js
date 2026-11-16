@@ -70,6 +70,7 @@ const PHASES = Object.freeze({
 const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
+const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
 // RESOLUTION safety timer.
 const LOOM_BUDGET_MS = 10000;
@@ -105,7 +106,8 @@ const PHASE_STARTERS = {
   DEBATE: 'startDebatePhase',
   VOTE: 'startBlindVotePhase',
   RESOLUTION: 'startResolutionPhase',
-  WORLD_REVEAL: 'startWorldRevealPhase'
+  WORLD_REVEAL: 'startWorldRevealPhase',
+  FINALE_WRITE: 'startFinaleWritePhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -638,6 +640,16 @@ class GameState extends EventEmitter {
       enacted: null
     };
     console.log(`[game ${this.roomCode}] finale: ${this.finaleFallback ? 'binary A/B' : 'write-and-rank'} (${this.crisis ? this.crisis.id : 'no crisis'})`);
+  }
+
+  /**
+   * FINALE_WRITE (45 s): after the 15 s finale INCIDENT (no options shown),
+   * every phone writes one policy of up to 140 characters.
+   */
+  startFinaleWritePhase() {
+    if (!this.finale) this.initFinale();
+    this.finale.writingOpen = true;
+    this.enterPhase(PHASES.FINALE_WRITE, { finale: { maxLength: FINALE_MAX_CHARS } });
   }
 
   /** Public view of policy options A and B (no effect vectors or role tags). */
