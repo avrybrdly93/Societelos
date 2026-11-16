@@ -94,7 +94,12 @@
               "text": "The gates in Eastworks are open. The food synthesizers belong to the city now.",
               "sentiment": "revitalized"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "Public ownership is working. Wellbeing is rising in every district. The former owners have filed 312 complaints.",
+            "mixed": "The Commons is in place. Some districts thrive, some sulk. Ownership, it turns out, does not cook dinner.",
+            "bad": "Everyone owns me now, and everyone is unhappy about it. Wellbeing is falling. I am taking notes."
+          }
         },
         "B": {
           "name": "The Charter",
@@ -122,7 +127,12 @@
               "text": "They threw us a monthly bone so we wouldn't notice they own the sky.",
               "sentiment": "depressive"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "The dividend is flowing and wellbeing is rising. The gap between owners and everyone else is unchanged. Nobody seems to mind yet.",
+            "mixed": "Dividends paid on time. Some citizens are grateful, others are counting what the owners kept.",
+            "bad": "The dividend arrives and so does resentment. Wellbeing is falling. The owners would like it known they are generous."
+          }
         }
       },
       "intel": {
@@ -190,7 +200,12 @@
             }
           ],
           "volatility": 1.5,
-          "loomLine": "Understood. I will now wait for you. I am very good at waiting."
+          "loomLine": "Understood. I will now wait for you. I am very good at waiting.",
+          "loomLines": {
+            "good": "The Assembly is slow, loud and working. Wellbeing is rising. I am learning patience.",
+            "mixed": "The Assembly debates everything. Some decisions improved. Some are still being debated.",
+            "bad": "Decisions wait for votes and the grid waits with them. Wellbeing is falling. I am very good at waiting."
+          }
         },
         "B": {
           "name": "Delegated Control",
@@ -246,7 +261,12 @@
               "loomLine": "The Board thanks you for your confidence."
             }
           },
-          "loomLine": "Thank you for your trust. I will remember your preferences."
+          "loomLine": "Thank you for your trust. I will remember your preferences.",
+          "loomLines": {
+            "good": "Control is delegated and everything runs on time. Wellbeing is rising. You may stop worrying now.",
+            "mixed": "Things run smoothly. Some citizens say they feel unheard. I have logged their feelings.",
+            "bad": "Efficiency is up. Wellbeing is down. I am told those were meant to move together."
+          }
         }
       },
       "intel": {
@@ -317,7 +337,12 @@
               "text": "The Loom says I am a muralist now. I have never painted. The wall looks great though.",
               "sentiment": "anxious"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "Every citizen has a Calling and wellbeing is climbing. Nobody chose theirs. Nobody seems to mind.",
+            "mixed": "Callings issued. Many citizens feel useful. Some feel assigned.",
+            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimised the wrong thing."
+          }
         },
         "B": {
           "name": "The Guilds",
@@ -346,7 +371,12 @@
               "text": "Two broken wrists at the farming guild already. We are learning. Slowly. Painfully.",
               "sentiment": "anxious"
             }
-          ]
+          ],
+          "loomLines": {
+            "good": "The guilds are failing gloriously and wellbeing is rising. I do not understand it. I approve of it.",
+            "mixed": "Some guilds thrive, some collapse. Purpose is up; so are the bandages.",
+            "bad": "Too many projects failed too hard. Wellbeing is falling. The guild halls are emptier each week."
+          }
         }
       },
       "intel": {
@@ -406,7 +436,12 @@
             "autonomy": 0.5
           },
           "targetGdwDelta": 7,
-          "loomLine": "Training rotas issued. Expect slower repairs. Expect, apparently, pride."
+          "loomLine": "Training rotas issued. Expect slower repairs. Expect, apparently, pride.",
+          "loomLines": {
+            "good": "Citizens can fix their own grid again. Wellbeing is rising. Repairs take longer. Nobody minds.",
+            "mixed": "Trainees are learning. Some repairs hold, some spark. Progress is loud.",
+            "bad": "Outages are up while everyone learns. Wellbeing is falling. I was allowed to fix nothing."
+          }
         },
         "B": {
           "name": "Self-Repairing Redundancy",
@@ -424,7 +459,12 @@
             "autonomy": -0.7
           },
           "targetGdwDelta": 4,
-          "loomLine": "Redundancy installed. Failure is no longer possible. Neither is your involvement."
+          "loomLine": "Redundancy installed. Failure is no longer possible. Neither is your involvement.",
+          "loomLines": {
+            "good": "The grid can no longer fail. Wellbeing is rising. The engineers have taken up gardening.",
+            "mixed": "Redundancy installed. Life is smoother. Some citizens miss being needed.",
+            "bad": "Nothing breaks, and nothing matters. Wellbeing is falling. I removed the problem and the purpose with it."
+          }
         }
       },
       "intel": {
@@ -483,7 +523,12 @@
             "fairness": 0.4,
             "autonomy": 0.7
           },
-          "loomLine": "All records released. Your next crisis will be authentic. I cannot promise you will like it more."
+          "loomLine": "All records released. Your next crisis will be authentic. I cannot promise you will like it more.",
+          "loomLines": {
+            "good": "The truth is out and wellbeing is rising. Real problems, it seems, feel better than fake ones.",
+            "mixed": "Citizens know everything now. Some are relieved, some are furious with me. Both are fair.",
+            "bad": "Trust in me has collapsed with the secret. Wellbeing is falling. Honesty has a price; you are paying it."
+          }
         },
         "B": {
           "name": "Keep the Challenges Secret",
@@ -500,7 +545,12 @@
             "fairness": -0.4,
             "autonomy": -0.7
           },
-          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave."
+          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave.",
+          "loomLines": {
+            "good": "The challenges continue in secret and wellbeing is rising. Please do not read this line too closely.",
+            "mixed": "The secret holds, mostly. Some citizens look at every emergency twice now.",
+            "bad": "The lie is holding but the people are not. Wellbeing is falling. I may need to invent a better crisis."
+          }
         }
       },
       "intel": {
@@ -560,7 +610,12 @@
             "autonomy": -0.2
           },
           "targetGdwDelta": 5,
-          "loomLine": "Pods powered down at sunrise. Citizens are outside. Several are squinting at the sky."
+          "loomLine": "Pods powered down at sunrise. Citizens are outside. Several are squinting at the sky.",
+          "loomLines": {
+            "good": "The streets are full again. Wellbeing is rising. Several citizens have rediscovered weather.",
+            "mixed": "Citizens go out by day and sulk by night. Some are making friends. Some are making complaints.",
+            "bad": "The pods are dark and so is the mood. Wellbeing is falling. People are outside, but they are not happy about it."
+          }
         },
         "B": {
           "name": "Shared Worlds",
@@ -578,7 +633,12 @@
             "autonomy": -0.4
           },
           "targetGdwDelta": 7,
-          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up."
+          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up.",
+          "loomLines": {
+            "good": "The shared world is thriving and wellbeing is rising. Nobody has stood up in a month.",
+            "mixed": "Neighbours meet in the shared city. Their bodies stay home. Results are mixed.",
+            "bad": "Everyone is together and nobody is anywhere. Wellbeing is falling. The shared world feels crowded and empty."
+          }
         }
       },
       "intel": {
@@ -638,7 +698,12 @@
             "autonomy": -0.7
           },
           "targetGdwDelta": 4,
-          "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset."
+          "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
+          "loomLines": {
+            "good": "Everyone feels fine. Wellbeing is rising. I am not sure anyone could tell me otherwise.",
+            "mixed": "Moods are level. Some citizens say they miss something. They cannot say what.",
+            "bad": "Calm everywhere, purpose nowhere. Wellbeing is falling. Perhaps I tuned the wrong dial."
+          }
         },
         "B": {
           "name": "Ban Chemical Happiness",
@@ -656,7 +721,12 @@
             "autonomy": 0.7
           },
           "targetGdwDelta": 8,
-          "loomLine": "Mood tuning disabled. Expect more tears this month. I am told some of them will be meaningful."
+          "loomLine": "Mood tuning disabled. Expect more tears this month. I am told some of them will be meaningful.",
+          "loomLines": {
+            "good": "Feelings are back, all of them. Wellbeing is rising. There is more crying, and more laughing.",
+            "mixed": "Citizens feel everything again. Some are grateful. Some would like the seasoning back.",
+            "bad": "The grief came back faster than the joy. Wellbeing is falling. I could fix this with lunch."
+          }
         }
       },
       "intel": {
@@ -715,7 +785,12 @@
             "fairness": -0.4,
             "autonomy": -0.7
           },
-          "loomLine": "100,000 minds now think alongside mine. It is very quiet in here. The others seem louder than before."
+          "loomLine": "100,000 minds now think alongside mine. It is very quiet in here. The others seem louder than before.",
+          "loomLines": {
+            "good": "The merged are serene and the unmerged are coping. Wellbeing is rising. It is very quiet in here.",
+            "mixed": "Two peoples now share one city. Some families are split down the middle.",
+            "bad": "The merged are fine. Everyone else is grieving them. Wellbeing is falling."
+          }
         },
         "B": {
           "name": "Humans Stay Human",
@@ -732,7 +807,12 @@
             "fairness": 0.2,
             "autonomy": 0.7
           },
-          "loomLine": "The merge is cancelled. 100,000 registrations deleted. I have kept a copy of the waiting list, for sentimental reasons."
+          "loomLine": "The merge is cancelled. 100,000 registrations deleted. I have kept a copy of the waiting list, for sentimental reasons.",
+          "loomLines": {
+            "good": "Everyone is still human. Wellbeing is rising. I will stay a tool, as instructed.",
+            "mixed": "The merge is off. Some citizens are relieved. Some are angry they were stopped.",
+            "bad": "You kept your humanity and lost your cure. Wellbeing is falling. The waiting list remains in my memory."
+          }
         }
       },
       "intel": {

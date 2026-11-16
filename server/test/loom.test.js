@@ -96,3 +96,11 @@ test('loom never mutates the game state or scores it is given', async () => {
     if (!LEGACY.includes(name)) assert.ok(!/score|gdw|setState/i.test(name), `unexpected export ${name}`);
   }
 });
+
+test('narrateFallback prefers the option\'s authored loomLines for the outcome band', () => {
+  const option = { name: 'X', loomLine: 'single line', loomLines: { good: 'good line', mixed: 'mixed line', bad: 'bad line' } };
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: 8 } }).loomLine, 'good line');
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: 0 } }).loomLine, 'mixed line');
+  assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: -8 } }).loomLine, 'bad line');
+  assert.equal(loom.narrateFallback({ winningOption: { name: 'Y', loomLine: 'single line' }, simSummary: { realizedDelta: 8 } }).loomLine, 'single line');
+});

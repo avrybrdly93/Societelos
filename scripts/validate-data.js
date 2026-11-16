@@ -97,6 +97,13 @@ function checkOption(where, o, crisis) {
     checkEffects(where, o.effects);
     checkHasCost(where, o.effects);
   }
+  if (o.loomLines !== undefined) {
+    for (const b of BANDS) {
+      const line = o.loomLines && o.loomLines[b];
+      if (!isStr(line)) err(where, `loomLines.${b} required when loomLines is set`);
+      else if (line.length > 200) err(where, `loomLines.${b} over 200 chars`);
+    }
+  }
   if (o.volatility !== undefined && (typeof o.volatility !== 'number' || o.volatility <= 0)) err(where, 'volatility must be a positive number');
   if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld && o.draft !== true) err(where, 'finale fallback needs effects');
   return undefined;

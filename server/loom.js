@@ -157,7 +157,9 @@ function narrateFallback(context = {}) {
   if (!messages.length) {
     messages = (option.reactions || []).map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
   }
-  return { loomLine: truncate(option.loomLine || BAND_LOOM_LINES[band], 200), messages, band, fallback: true };
+  // Authored line for this outcome band, then the option's single line, then a template.
+  const bandLine = option.loomLines && option.loomLines[band];
+  return { loomLine: truncate(bandLine || option.loomLine || BAND_LOOM_LINES[band], 200), messages, band, fallback: true };
 }
 
 /**

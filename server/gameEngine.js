@@ -250,6 +250,7 @@ function normalizeOption(raw, key) {
     worldNotes: raw.worldNotes || null,
     volatility: typeof raw.volatility === 'number' ? raw.volatility : null,
     loomLine: raw.loomLine || null,
+    loomLines: raw.loomLines || null,
     reactions: raw.reactions || []
   };
 }
