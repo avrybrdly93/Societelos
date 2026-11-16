@@ -358,8 +358,8 @@
       "cycle": 4,
       "title": "The Lost Knowledge",
       "subtitle": "Infrastructure Fragility & The Death of Craft",
-      "incident": "A severe lightning strike cascades through District 2's primary power converter. For the first time in 50 years, no living human knows how the high-voltage relays operate.",
-      "loomIntro": "",
+      "incident": "A lightning strike cascades through District 2's main power converter and the grid fails. For the first time in 50 years, no living human knows how the high-voltage relays work.",
+      "loomIntro": "I restored power in 0.4 seconds. You did not notice. That is the problem I want to discuss.",
       "teacherPrompt": "Classroom Debrief: If humans rely entirely on self-repairing AI, do we forfeit our species' right to understand the world?",
       "mode": "binary",
       "feed": [
