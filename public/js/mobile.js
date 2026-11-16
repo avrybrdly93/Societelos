@@ -185,6 +185,23 @@
     document.getElementById('intel-text').textContent = text;
     document.getElementById('intel-ref').textContent = `REF C${state.cycle || 0}-${(state.node || 'NODE-00').slice(-2)}`;
     document.getElementById('shield-intel').checked = false;
+    // Keep it in the intel drawer for DEBATE and VOTE.
+    document.getElementById('intel-drawer-text').textContent = text;
+    document.getElementById('intel-drawer-ref').textContent = `CYCLE ${state.cycle || 0}`;
+  });
+
+  // The intel drawer is available from DEBATE through VOTE of the cycle it
+  // belongs to; a new INCIDENT clears it.
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    const drawer = document.getElementById('intel-drawer');
+    if (payload.phase === 'INCIDENT') {
+      document.getElementById('intel-drawer-text').textContent = '';
+      drawer.open = false;
+    }
+    const hasIntel = !!document.getElementById('intel-drawer-text').textContent;
+    drawer.hidden = !(hasIntel && ['DEBATE', 'VOTE'].includes(payload.phase));
+    if (drawer.hidden) drawer.open = false;
   });
 
   // Policy names arrive with the DEBATE phase; label the vote buttons with them.
