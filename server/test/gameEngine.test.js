@@ -104,3 +104,35 @@ test('a 3-3 tie resolves to the option with the higher forecast median', async (
     console.log = log;
   }
 });
+
+/** Resolve the current cycle with every node voting `choice`. */
+async function resolveWith(game, choice) {
+  game.phase = engine.PHASES.VOTE;
+  game.votingOpen = true;
+  game.votes = {};
+  game.simCache = {};
+  cast(game, NODE_IDS.map(() => [choice]));
+  const log = console.log;
+  console.log = () => {};
+  try {
+    return await game.startResolutionPhase();
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+}
+
+test('worldKey is vote1 + vote2 across all 4 combinations', async () => {
+  assert.equal(engine.computeWorldKey('A', 'B'), 'AB');
+  assert.equal(engine.computeWorldKey('A', null), null);
+  for (const key of ['AA', 'AB', 'BA', 'BB']) {
+    const game = votingGame({ cycle: 1 });
+    await resolveWith(game, key[0]);
+    assert.equal(game.worldKey, null, 'world is unknown after cycle 1');
+    game.cycle = 2;
+    game.crisis = engine.selectCrisis(game.data.crises, 2, null, game.data.roles);
+    await resolveWith(game, key[1]);
+    assert.equal(game.worldKey, key);
+    assert.equal(game.worldInfo().name, game.data.crises.worlds[key].name);
+  }
+});
