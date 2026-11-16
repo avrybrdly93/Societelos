@@ -124,7 +124,28 @@ function applyShocks(state, monthIndex, params, rng, out) {
     if (out) out.push({ month: monthIndex, district: districtIds[d], trait: state.traitNames[k], amount });
   }
 }
-function applySpillover() {}
+/**
+ * Step 5, neighbour spillover: each cohort's traits move spilloverRate (10%)
+ * toward the mean of the same cohort type in neighbouring districts.
+ * Computed from a snapshot so update order doesn't matter.
+ */
+function applySpillover(state, params) {
+  const { K, n, neighbourCohorts } = params;
+  const rate = params.constants.spilloverRate;
+  if (!(rate > 0)) return;
+  const t = state.traits;
+  const snapshot = new Float64Array(t);
+  for (let i = 0; i < n; i++) {
+    const neighbours = neighbourCohorts[i];
+    if (!neighbours.length) continue;
+    for (let k = 0; k < K; k++) {
+      let mean = 0;
+      for (const j of neighbours) mean += snapshot[j * K + k];
+      mean /= neighbours.length;
+      t[i * K + k] += rate * (mean - snapshot[i * K + k]);
+    }
+  }
+}
 function clampTraits() {}
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clamp01 };
