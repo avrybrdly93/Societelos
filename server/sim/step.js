@@ -67,11 +67,32 @@ function stepMonth(state, effects, monthIndex, params, rng) {
 }
 
 // Steps 1-6 are implemented one by one below.
-function applyAdoption() {}
+/** Share of a policy applied by month t: 1 - exp(-t / tau). */
+function adoptedShare(t, tau) {
+  return 1 - Math.exp(-t / tau);
+}
+
+/**
+ * Step 1, gradual adoption: this month adds the newly adopted share of the
+ * full shift(c, k) = alpha * e(k) * s(c, k).
+ */
+function applyAdoption(state, effects, monthIndex, params) {
+  if (!effects) return;
+  const { K, n, S, alpha } = params;
+  const tau = params.constants.adoptionTau;
+  const increment = adoptedShare(monthIndex, tau) - adoptedShare(monthIndex - 1, tau);
+  const e = state.traitNames.map((t) => (typeof effects[t] === 'number' ? effects[t] : 0));
+  const t = state.traits;
+  for (let i = 0; i < n; i++) {
+    for (let k = 0; k < K; k++) {
+      if (e[k] !== 0) t[i * K + k] += increment * alpha * e[k] * S[i * K + k];
+    }
+  }
+}
 function applyDrift() {}
 function applyNoise() {}
 function applyShocks() {}
 function applySpillover() {}
 function clampTraits() {}
 
-module.exports = { buildParams, stepMonth, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, clamp01 };
