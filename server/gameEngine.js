@@ -113,7 +113,8 @@ const PHASE_STARTERS = {
   RESOLUTION: 'startResolutionPhase',
   WORLD_REVEAL: 'startWorldRevealPhase',
   FINALE_WRITE: 'startFinaleWritePhase',
-  FINALE_MOD: 'startFinaleModPhase'
+  FINALE_MOD: 'startFinaleModPhase',
+  FINALE_DEBATE: 'startFinaleDebatePhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -328,7 +329,9 @@ const SECRET_KEYS = new Set([
   'effects', 'effectsByWorld', 'rolesByWorld', 'roles', 'role', 'roleAssignment', 'intel', 'intelDrops',
   'token', 'socketId', 'name', 'reactions', 'volatility',
   // Override secrecy: never reveal per-node votes or who spent an Override.
-  'votes', 'override', 'overridesUsed'
+  'votes', 'override', 'overridesUsed',
+  // Finale anonymity: authors and moderation stay server-side until the end.
+  'authors', 'author', 'node', 'moderation', 'submissions', 'ballots', 'ranks'
 ]);
 
 /** Deep copy of `value` with every SECRET_KEYS field removed. */
@@ -800,6 +803,16 @@ class GameState extends EventEmitter {
     // Secret policyId -> author map, revealed only on the end screen.
     finale.authors = Object.fromEntries(finale.policies.map((p) => [p.id, p.node]));
     if (advance && this.phase === PHASES.FINALE_MOD) this.advancePhase();
+  }
+
+  /** The finale policies everyone may see: [{ id, text }] (no tags, effects or authors). */
+  publicPolicies() {
+    return ((this.finale && this.finale.policies) || []).map((p) => ({ id: p.id, text: p.text }));
+  }
+
+  /** FINALE_DEBATE (60 s): the five anonymised policies go up on the projector. */
+  startFinaleDebatePhase() {
+    this.enterPhase(PHASES.FINALE_DEBATE, { policies: this.publicPolicies() });
   }
 
   /** Author of a finale policy (server-side only; null if unknown). */

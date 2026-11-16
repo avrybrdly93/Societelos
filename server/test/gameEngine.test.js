@@ -780,3 +780,23 @@ test('the policyId -> author map is stored server-side', async () => {
     restore();
   }
 });
+
+test('FINALE_DEBATE broadcasts anonymised policies [{ id, text }] only', async () => {
+  const restore = stubModerate(okModeration(['ghost', 'artisan']));
+  try {
+    const game = finaleGame();
+    const phases = [];
+    game.on('phase', (p) => phases.push(JSON.parse(JSON.stringify(p))));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.stop();
+    const debate = phases.find((p) => p.phase === 'FINALE_DEBATE');
+    assert.equal(debate.policies.length, 5);
+    for (const p of debate.policies) assert.deepEqual(Object.keys(p).sort(), ['id', 'text']);
+    const wire = JSON.stringify(debate);
+    for (const leak of ['NODE-0', 'ghost', 'artisan', 'effects', 'roles', 'authors']) assert.ok(!wire.includes(leak), leak);
+  } finally {
+    restore();
+  }
+});
