@@ -229,5 +229,35 @@
     btn.addEventListener('click', () => castVote(btn.dataset.choice));
   });
 
+  // ---------------------------------------------------------------------------
+  // Debug mock tester for standalone screen checks, from the console:
+  //   debugMobilePhase('VOTE')   debugMobilePhase('INTEL')   debugMobilePhase('ROLE_ASSIGN')
+  // Seats a fake NODE-03 and feeds the same handlers real events would.
+  // ---------------------------------------------------------------------------
+  const MOCK_ROLE = {
+    key: 'artisan', name: 'The Artisan', icon: '\u2692',
+    goal: 'Human effort and creative struggle over machine efficiency.',
+    winCondition: 'The winning policy is tagged artisan.',
+    cardText: 'Poiesis / Creative Friction'
+  };
+  function debugEmit(event, payload) {
+    socket.listeners(event).forEach((fn) => fn(payload));
+  }
+  function debugMobilePhase(phase, { seconds = 20, cycle = 1 } = {}) {
+    if (!state.node) {
+      state.node = 'NODE-03';
+      setNodeLabel(state.node);
+    }
+    if (phase === 'ROLE_ASSIGN') debugEmit('role:assigned', { role: MOCK_ROLE });
+    if (phase === 'INTEL') debugEmit('intel:drop', { text: 'Loom archive: districts that ran their own repair councils reported the highest sense of purpose in the region.' });
+    const payload = { cycle, phase, endsAt: seconds ? Date.now() + seconds * 1000 : null };
+    if (phase === 'VOTE' || phase === 'DEBATE') {
+      payload.options = { A: { key: 'A', name: 'The Commons' }, B: { key: 'B', name: 'The Charter' } };
+    }
+    debugEmit('phase', payload);
+    return payload;
+  }
+  window.debugMobilePhase = debugMobilePhase;
+
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
