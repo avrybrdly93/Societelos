@@ -32,6 +32,7 @@
   socket.on('session:resumed', (info) => {
     state.node = info.node;
     setNodeLabel(info.node);
+    renderRole(info.role);
     state.roomCode = info.roomCode;
     saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
   });
@@ -92,5 +93,25 @@
     }
   });
 
-  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel };
+  // role:assigned { role } -> fill the secret role card and the agenda drawer.
+  function renderRole(role) {
+    if (!role) return;
+    state.role = role;
+    document.getElementById('role-icon').textContent = role.icon || '';
+    document.getElementById('role-title').textContent = role.name || 'Unknown role';
+    document.getElementById('role-flavor').textContent = role.cardText || '';
+    document.getElementById('role-goal').textContent = role.goal || '';
+    document.getElementById('role-win').textContent = role.winCondition || '';
+    document.getElementById('drawer-role-name').textContent = role.name || '';
+    document.getElementById('drawer-goal').textContent = role.goal || '';
+    document.getElementById('drawer-win').textContent = role.winCondition || '';
+    document.getElementById('role-drawer').hidden = false;
+  }
+
+  socket.on('role:assigned', (payload) => {
+    renderRole(payload && payload.role);
+    showView('m-view-role');
+  });
+
+  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole };
 })();
