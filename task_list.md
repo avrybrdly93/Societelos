@@ -287,60 +287,60 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-255:** Prepare `feature/backend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
-- [ ] **TASK-256:** Build Host GDW Meter component in `public/index.html` with animated percentage readout, stability status label, and 0%–100% progress bar.
-- [ ] **TASK-257:** Build Host Incident screen in `public/index.html` featuring The Loom's spoken intro line (`loomIntro`), crisis narrative (`incident`), and scrolling citizen incident feed.
-- [ ] **TASK-258:** Build scrolling Citizen Feed component in `public/js/host.js` rendering citizen avatar badge, name, age, district tag (`D1`–`D5`), and message text.
-- [ ] **TASK-259:** Style Citizen Feed items in `public/css/styles.css` with smooth vertical slide-in animations and district color badges.
-- [ ] **TASK-260:** Build Host Debate screen in `public/index.html` showing side-by-side Policy A and Policy B cards, debate hook prompts, and giant 90s/60s countdown clock.
-- [ ] **TASK-261:** Add optional Forecast Preview badges to Policy A and Policy B cards on Host Debate screen when `showForecastBeforeVote` is active.
-- [ ] **TASK-262:** Build Host Blind Vote screen in `public/index.html` showing locked-in vote indicators for `NODE-01`..`NODE-05` and "OVERRIDE PROTOCOL ARMED" warning graphic.
-- [ ] **TASK-263:** Build Host World Reveal fullscreen takeover view in `public/index.html` for the 10-second beat after Cycle 2.
-- [ ] **TASK-264:** Implement `world:reveal` listener in `public/js/host.js` displaying the created world title (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, or `The Gilded Cage`) and applying the world's CSS color theme (`body.world-aa`, etc.).
-- [ ] **TASK-265:** Recolor SVG Region Map border and HUD accents in `public/js/map.js` when `world:reveal` triggers.
-- [ ] **TASK-266:** Build Mobile Blind Vote screen in `public/mobile.html` displaying full Policy A text, Policy B text, and the secret Override toggle switch.
-- [ ] **TASK-267:** Style the Mobile Override toggle switch in `public/css/styles.css` with high-contrast warning styling ("SPEND 1X OVERRIDE — VOTE COUNTS DOUBLE").
-- [ ] **TASK-268:** Disable and hide the Mobile Override toggle in `public/js/mobile.js` once the player has spent their one-time Override in a previous cycle.
-- [ ] **TASK-269:** Add 2-step confirmation or clear visual state when Override is toggled on before tapping Vote A or Vote B in `public/js/mobile.js`.
-- [ ] **TASK-270:** Build Mobile Resolution view in `public/mobile.html` showing whether the player's voted policy won, current GDW, and private role score update notification (`+1 AGENDA POINT` if scored).
-- [ ] **TASK-271:** Build Host Resolution view layout in `public/index.html` pairing the Region Map, Forecast Fan Chart canvas, Loom resolution commentary, and live Citizen Reactions feed.
-- [ ] **TASK-272:** Create `public/js/charts.js` to render the Monte Carlo Forecast Fan and Realized GDW line on an HTML5 `<canvas>`.
-- [ ] **TASK-273:** Implement canvas high-DPI (`devicePixelRatio`) scaling in `public/js/charts.js` for crisp projector rendering.
-- [ ] **TASK-274:** Draw chart axes, gridlines (0% to 100% GDW, Months 1 to 12), and 0% Collapse danger zone in `public/js/charts.js`.
-- [ ] **TASK-275:** Implement `drawForecastFan(forecast)` in `public/js/charts.js` plotting the 5th-to-95th percentile shaded confidence band and dashed median GDW line.
-- [ ] **TASK-276:** Display Loom Forecast stability banner above the chart ("LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%").
-- [ ] **TASK-277:** Implement `animateRealizedLine(realized, onMonthTick)` in `public/js/charts.js` drawing the realized GDW trajectory month-by-month (Months 1–12) over 12 seconds.
-- [ ] **TASK-278:** Synchronize `public/js/map.js` with `onMonthTick(monthIndex)` so all 5 SVG districts smoothly interpolate their colors month-by-month during Resolution.
-- [ ] **TASK-279:** Display Shock alert badges on affected SVG districts in `public/js/map.js` when a monthly shock fires during the realized run animation.
-- [ ] **TASK-280:** Stagger citizen reaction messages in `public/js/host.js` so the 6–10 citizen posts appear sequentially as the 12 simulated months play out on screen.
-- [ ] **TASK-281:** Render The Loom's resolution line (`loomLine`) with a typewriter text effect at the top of the Resolution screen in `public/js/host.js`.
-- [ ] **TASK-282:** Show tie-breaker notification badge on Host Resolution screen if the vote tied and The Loom stepped in to choose the higher median option.
-- [ ] **TASK-283:** Show "OVERRIDE DETECTED IN TALLY" indicator on Host Resolution screen when total vote weight exceeds 5 (without naming which Node used it).
-- [ ] **TASK-284:** Update Host top bar GDW counter smoothly as each simulated month ticks during Resolution.
-- [ ] **TASK-285:** Add visual flash and alarm border on Host screen if GDW drops below 15% (Unrest threshold).
-- [ ] **TASK-286:** Implement Mobile World Reveal card in `public/mobile.html` showing the new world name and how it impacts the council's remaining cycles.
-- [ ] **TASK-287:** Add role tag badges on Mobile Debate/Vote screen ONLY if design allows, or keep role tags hidden so players must infer which policy serves their agenda (verify spec: players infer from intel & policy text).
-- [ ] **TASK-288:** Implement `intel:drop` history drawer in `public/mobile.html` so players can re-read their current cycle's secret research snippet while debating and voting.
-- [ ] **TASK-289:** Add subtle haptic feedback (`navigator.vibrate(50)`) on mobile phase transitions and vote submission (where supported by mobile browser).
-- [ ] **TASK-290:** Create district detail labels on the SVG map showing +/- wellbeing delta arrows at the end of the 12-month resolution animation.
-- [ ] **TASK-291:** Ensure Citizen Feed automatically scrolls to the newest message without overflowing the projector layout.
-- [ ] **TASK-292:** Add distinct styling for Fixed Crisis 2B projector resolution line ("The Loom will govern on your behalf." vs "The Board thanks you for your confidence.").
-- [ ] **TASK-293:** Test Forecast Fan rendering with extreme spreads (5th percentile at 0%, 95th percentile at 90%).
-- [ ] **TASK-294:** Test Realized Line animation when GDW hits 0% mid-cycle and halts in Collapse.
-- [ ] **TASK-295:** Ensure `requestAnimationFrame` loops in `charts.js` and `map.js` cancel cleanly if a new phase event arrives early.
-- [ ] **TASK-296:** Verify all 4 world color themes maintain WCAG AA text contrast on projector views.
-- [ ] **TASK-297:** Add phase progress breadcrumbs on Host HUD (`INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION`).
-- [ ] **TASK-298:** Style Debate Hook questions on Host Debate screen to prompt lively classroom discussion.
-- [ ] **TASK-299:** Test Mobile Vote UI when switching rapidly between Option A and Option B before submitting.
-- [ ] **TASK-300:** Verify mobile screen lock / wake behavior resilience when students look up at the projector for 90 seconds of debate.
-- [ ] **TASK-301:** Add audio-free visual cues (screen edge pulse) on mobile when transitioning from Debate (in-person) to Blind Vote (on phone).
-- [ ] **TASK-302:** Verify Citizen Feed displays citizen cohort and district metadata clearly (`Mara, 58 • D3 Riverside • Former workers`).
-- [ ] **TASK-303:** Test SVG map recoloring across all 5 districts (`D1`–`D5`) with mock monthly data.
-- [ ] **TASK-304:** Verify `public/index.html` includes `<script src="js/charts.js">` and `<script src="js/map.js">` in correct load order.
-- [ ] **TASK-305:** Ensure zero layout shift (CLS) on Host screen when transitioning between Incident, Debate, and Resolution.
-- [ ] **TASK-306:** Test `world:reveal` transition animation duration (10 seconds) on Host and Mobile.
-- [ ] **TASK-307:** Verify all mobile buttons disable immediately after tap to prevent double-submits.
-- [ ] **TASK-308:** Check `public/js/host.js`, `public/js/mobile.js`, `public/js/map.js`, and `public/js/charts.js` for clean console output.
-- [ ] **TASK-309:** Run end-to-end UI simulation for Cycles 1–4.
+- [x] **TASK-256:** Build Host GDW Meter component in `public/index.html` with animated percentage readout, stability status label, and 0%–100% progress bar.
+- [x] **TASK-257:** Build Host Incident screen in `public/index.html` featuring The Loom's spoken intro line (`loomIntro`), crisis narrative (`incident`), and scrolling citizen incident feed.
+- [x] **TASK-258:** Build scrolling Citizen Feed component in `public/js/host.js` rendering citizen avatar badge, name, age, district tag (`D1`–`D5`), and message text.
+- [x] **TASK-259:** Style Citizen Feed items in `public/css/styles.css` with smooth vertical slide-in animations and district color badges.
+- [x] **TASK-260:** Build Host Debate screen in `public/index.html` showing side-by-side Policy A and Policy B cards, debate hook prompts, and giant 90s/60s countdown clock.
+- [x] **TASK-261:** Add optional Forecast Preview badges to Policy A and Policy B cards on Host Debate screen when `showForecastBeforeVote` is active.
+- [x] **TASK-262:** Build Host Blind Vote screen in `public/index.html` showing locked-in vote indicators for `NODE-01`..`NODE-05` and "OVERRIDE PROTOCOL ARMED" warning graphic.
+- [x] **TASK-263:** Build Host World Reveal fullscreen takeover view in `public/index.html` for the 10-second beat after Cycle 2.
+- [x] **TASK-264:** Implement `world:reveal` listener in `public/js/host.js` displaying the created world title (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, or `The Gilded Cage`) and applying the world's CSS color theme (`body.world-aa`, etc.).
+- [x] **TASK-265:** Recolor SVG Region Map border and HUD accents in `public/js/map.js` when `world:reveal` triggers.
+- [x] **TASK-266:** Build Mobile Blind Vote screen in `public/mobile.html` displaying full Policy A text, Policy B text, and the secret Override toggle switch.
+- [x] **TASK-267:** Style the Mobile Override toggle switch in `public/css/styles.css` with high-contrast warning styling ("SPEND 1X OVERRIDE — VOTE COUNTS DOUBLE").
+- [x] **TASK-268:** Disable and hide the Mobile Override toggle in `public/js/mobile.js` once the player has spent their one-time Override in a previous cycle.
+- [x] **TASK-269:** Add 2-step confirmation or clear visual state when Override is toggled on before tapping Vote A or Vote B in `public/js/mobile.js`.
+- [x] **TASK-270:** Build Mobile Resolution view in `public/mobile.html` showing whether the player's voted policy won, current GDW, and private role score update notification (`+1 AGENDA POINT` if scored).
+- [x] **TASK-271:** Build Host Resolution view layout in `public/index.html` pairing the Region Map, Forecast Fan Chart canvas, Loom resolution commentary, and live Citizen Reactions feed.
+- [x] **TASK-272:** Create `public/js/charts.js` to render the Monte Carlo Forecast Fan and Realized GDW line on an HTML5 `<canvas>`.
+- [x] **TASK-273:** Implement canvas high-DPI (`devicePixelRatio`) scaling in `public/js/charts.js` for crisp projector rendering.
+- [x] **TASK-274:** Draw chart axes, gridlines (0% to 100% GDW, Months 1 to 12), and 0% Collapse danger zone in `public/js/charts.js`.
+- [x] **TASK-275:** Implement `drawForecastFan(forecast)` in `public/js/charts.js` plotting the 5th-to-95th percentile shaded confidence band and dashed median GDW line.
+- [x] **TASK-276:** Display Loom Forecast stability banner above the chart ("LOOM FORECAST: XX% CHANCE OF STABILITY | P(UNREST): YY%").
+- [x] **TASK-277:** Implement `animateRealizedLine(realized, onMonthTick)` in `public/js/charts.js` drawing the realized GDW trajectory month-by-month (Months 1–12) over 12 seconds.
+- [x] **TASK-278:** Synchronize `public/js/map.js` with `onMonthTick(monthIndex)` so all 5 SVG districts smoothly interpolate their colors month-by-month during Resolution.
+- [x] **TASK-279:** Display Shock alert badges on affected SVG districts in `public/js/map.js` when a monthly shock fires during the realized run animation.
+- [x] **TASK-280:** Stagger citizen reaction messages in `public/js/host.js` so the 6–10 citizen posts appear sequentially as the 12 simulated months play out on screen.
+- [x] **TASK-281:** Render The Loom's resolution line (`loomLine`) with a typewriter text effect at the top of the Resolution screen in `public/js/host.js`.
+- [x] **TASK-282:** Show tie-breaker notification badge on Host Resolution screen if the vote tied and The Loom stepped in to choose the higher median option.
+- [x] **TASK-283:** Show "OVERRIDE DETECTED IN TALLY" indicator on Host Resolution screen when total vote weight exceeds 5 (without naming which Node used it).
+- [x] **TASK-284:** Update Host top bar GDW counter smoothly as each simulated month ticks during Resolution.
+- [x] **TASK-285:** Add visual flash and alarm border on Host screen if GDW drops below 15% (Unrest threshold).
+- [x] **TASK-286:** Implement Mobile World Reveal card in `public/mobile.html` showing the new world name and how it impacts the council's remaining cycles.
+- [x] **TASK-287:** Add role tag badges on Mobile Debate/Vote screen ONLY if design allows, or keep role tags hidden so players must infer which policy serves their agenda (verify spec: players infer from intel & policy text).
+- [x] **TASK-288:** Implement `intel:drop` history drawer in `public/mobile.html` so players can re-read their current cycle's secret research snippet while debating and voting.
+- [x] **TASK-289:** Add subtle haptic feedback (`navigator.vibrate(50)`) on mobile phase transitions and vote submission (where supported by mobile browser).
+- [x] **TASK-290:** Create district detail labels on the SVG map showing +/- wellbeing delta arrows at the end of the 12-month resolution animation.
+- [x] **TASK-291:** Ensure Citizen Feed automatically scrolls to the newest message without overflowing the projector layout.
+- [x] **TASK-292:** Add distinct styling for Fixed Crisis 2B projector resolution line ("The Loom will govern on your behalf." vs "The Board thanks you for your confidence.").
+- [x] **TASK-293:** Test Forecast Fan rendering with extreme spreads (5th percentile at 0%, 95th percentile at 90%).
+- [x] **TASK-294:** Test Realized Line animation when GDW hits 0% mid-cycle and halts in Collapse.
+- [x] **TASK-295:** Ensure `requestAnimationFrame` loops in `charts.js` and `map.js` cancel cleanly if a new phase event arrives early.
+- [x] **TASK-296:** Verify all 4 world color themes maintain WCAG AA text contrast on projector views.
+- [x] **TASK-297:** Add phase progress breadcrumbs on Host HUD (`INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION`).
+- [x] **TASK-298:** Style Debate Hook questions on Host Debate screen to prompt lively classroom discussion.
+- [x] **TASK-299:** Test Mobile Vote UI when switching rapidly between Option A and Option B before submitting.
+- [x] **TASK-300:** Verify mobile screen lock / wake behavior resilience when students look up at the projector for 90 seconds of debate.
+- [x] **TASK-301:** Add audio-free visual cues (screen edge pulse) on mobile when transitioning from Debate (in-person) to Blind Vote (on phone).
+- [x] **TASK-302:** Verify Citizen Feed displays citizen cohort and district metadata clearly (`Mara, 58 • D3 Riverside • Former workers`).
+- [x] **TASK-303:** Test SVG map recoloring across all 5 districts (`D1`–`D5`) with mock monthly data.
+- [x] **TASK-304:** Verify `public/index.html` includes `<script src="js/charts.js">` and `<script src="js/map.js">` in correct load order.
+- [x] **TASK-305:** Ensure zero layout shift (CLS) on Host screen when transitioning between Incident, Debate, and Resolution.
+- [x] **TASK-306:** Test `world:reveal` transition animation duration (10 seconds) on Host and Mobile.
+- [x] **TASK-307:** Verify all mobile buttons disable immediately after tap to prevent double-submits.
+- [x] **TASK-308:** Check `public/js/host.js`, `public/js/mobile.js`, `public/js/map.js`, and `public/js/charts.js` for clean console output.
+- [x] **TASK-309:** Run end-to-end UI simulation for Cycles 1–4.
 - [ ] **TASK-310:** Prepare `feature/frontend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
