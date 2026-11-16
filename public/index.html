@@ -8,7 +8,25 @@
 </head>
 <body class="host">
   <!-- Host projector screen, designed for a 1920x1080 classroom projector. -->
-  <header id="host-topbar" class="topbar" aria-label="Session status"></header>
+  <header id="host-topbar" class="topbar" aria-label="Session status">
+    <div class="topbar-brand mono">SOCIETELOS <span class="muted">// THE LOOM</span></div>
+    <div class="topbar-item">
+      <span class="label">Room</span>
+      <span id="room-code" class="topbar-value mono">----</span>
+    </div>
+    <div class="topbar-item">
+      <span class="label">Cycle</span>
+      <span id="cycle-indicator" class="topbar-value mono">CYCLE 0/5</span>
+    </div>
+    <div class="topbar-item">
+      <span id="phase-name" class="label">Lobby</span>
+      <span id="phase-timer" class="topbar-value mono timer">--:--</span>
+    </div>
+    <div class="topbar-item">
+      <span class="label">GDW</span>
+      <span id="gdw-badge" class="gdw-badge mono">25%</span>
+    </div>
+  </header>
 
   <main id="host-main" class="host-main">
     <section id="view-lobby" class="view is-active" aria-label="Lobby"></section>

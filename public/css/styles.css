@@ -97,3 +97,28 @@ body.host .label {
   letter-spacing: 0.12em;
   color: var(--text-muted);
 }
+
+/* Host top bar: room code, cycle, phase countdown, GDW. */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  height: 96px;
+  padding: 0 40px;
+  background: var(--bg-sunken);
+  border-bottom: 2px solid var(--border);
+}
+.topbar-brand { font-size: 28px; font-weight: 700; color: var(--accent); margin-right: auto; }
+.topbar-item { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.topbar-value { font-size: 40px; font-weight: 700; }
+.gdw-badge {
+  font-size: 40px;
+  font-weight: 700;
+  padding: 2px 16px;
+  border-radius: var(--radius);
+  background: rgba(63, 216, 230, 0.12);
+  color: var(--accent);
+  border: 2px solid var(--loom-cyan-dim);
+}
+.gdw-badge.is-critical { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.12); }
+.host-main { height: calc(100vh - 96px); padding: 32px 40px; }
