@@ -118,6 +118,11 @@ function initSockets(io, gameEngine) {
       io.to(roomChannel(game.roomCode)).emit('resolution', payload);
     });
 
+    // world:reveal { worldKey, name, problemLeft } to the room after Cycle 2.
+    game.on('world:reveal', ({ worldKey, name, tagline, problemLeft }) => {
+      io.to(roomChannel(game.roomCode)).emit('world:reveal', { worldKey, name, tagline, problemLeft });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
