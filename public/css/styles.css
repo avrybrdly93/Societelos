@@ -918,3 +918,11 @@ body.host .finale-instruction { font-size: 26px; margin: 0; max-width: 1300px; }
 .proposal-card:nth-child(5) { grid-column: 4 / span 2; }
 body.host .proposal-label { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; color: var(--theme-current, var(--accent)); }
 body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
+
+/* Mobile finale ballot */
+.rank-help { margin: 0 0 12px; font-size: 15px; }
+.rank-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.rank-cards[hidden] { display: none; }
+.rank-card { position: relative; padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-raised); }
+.rank-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.rank-text { margin: 0; font-size: 16px; line-height: 1.4; }

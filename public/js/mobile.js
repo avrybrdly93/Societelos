@@ -164,7 +164,8 @@
     RESOLUTION: 'm-view-result',
     WORLD_REVEAL: 'm-view-world',
     FINALE_WRITE: 'm-view-finale-write',
-    FINALE_MOD: 'm-view-finale-wait'
+    FINALE_MOD: 'm-view-finale-wait',
+    FINALE_RANK: 'm-view-finale-rank'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -489,6 +490,37 @@
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // Finale ballot: finale:ballot { policies: [{ id, text }] x4 } (own hidden).
+  // ---------------------------------------------------------------------------
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  const proposalName = (id) => `PROPOSAL ${ROMAN[Number(String(id).replace(/\D+/g, '')) - 1] || id}`;
+  const ballot = { policies: [], order: [] };
+  function renderBallot() {
+    const list = document.getElementById('rank-cards');
+    list.textContent = '';
+    ballot.policies.forEach((p) => {
+      const li = document.createElement('li');
+      li.className = 'rank-card';
+      li.dataset.policy = p.id;
+      const head = document.createElement('p');
+      head.className = 'rank-name mono';
+      head.textContent = proposalName(p.id);
+      const text = document.createElement('p');
+      text.className = 'rank-text';
+      text.textContent = p.text;
+      li.append(head, text);
+      list.appendChild(li);
+    });
+  }
+  socket.on('finale:ballot', (payload) => {
+    ballot.policies = (payload && Array.isArray(payload.policies)) ? payload.policies.slice(0, 4) : [];
+    ballot.order = [];
+    document.getElementById('rank-locked').hidden = true;
+    document.getElementById('rank-cards').hidden = false;
+    renderBallot();
+  });
+
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
     // One vote per cycle from this phone: ignore taps once a vote is in
@@ -629,6 +661,12 @@
   }
   window.debugMobilePhase = debugMobilePhase;
   window.debugMobileEvent = debugEmit;
+  window.debugMobileBallot = () => debugEmit('finale:ballot', { policies: [
+    { id: 'POLICY-1', text: 'Every district elects a repair council that controls its own grid.' },
+    { id: 'POLICY-3', text: 'Publish every staged challenge and let citizens vote on future ones.' },
+    { id: 'POLICY-4', text: 'Keep the challenges but let anyone opt out of them.' },
+    { id: 'POLICY-5', text: 'Continue current policy unchanged while the council reviews its options.' }
+  ] });
 
   window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
