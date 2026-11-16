@@ -164,6 +164,8 @@ function initSockets(io, gameEngine) {
     socket.data.roomCode = game.roomCode;
     socket.join([roomChannel(game.roomCode), hostChannel(game.roomCode)]);
     socket.emit('host:room', { roomCode: game.roomCode, gameId: game.gameId, phase: game.phase });
+    // A projector reloading mid-game gets the world it missed.
+    if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
     broadcastLobby(game);
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
@@ -201,7 +203,9 @@ function initSockets(io, gameEngine) {
       cycle: game.cycle,
       phase: game.phase,
       endsAt: game.endsAt,
-      role: role ? roleCard(role) : null
+      role: role ? roleCard(role) : null,
+      // Persistent world (set at the Cycle 2 reveal) so a rejoining phone re-themes.
+      world: game.worldKey ? game.worldInfo() : null
     });
     broadcastLobby(game);
     return true;
