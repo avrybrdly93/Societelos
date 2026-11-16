@@ -1081,3 +1081,12 @@ test('Borda count across 5 players who each rank the 4 policies they did not wri
   assert.equal(total, 5 * 10, 'every ballot hands out 4+3+2+1');
   assert.deepEqual(engine.rankBorda(tally).map((r) => r.id), pref);
 });
+
+test('finale role points accumulate when a role is tagged on several of the top 3', () => {
+  // artisan on 1st and 3rd (+2 +1), ghost on 2nd and 3rd (+1 +1), lotus on all three (+4).
+  const game = scoringFinale([['artisan', 'lotus'], ['ghost', 'lotus'], ['artisan', 'ghost'], ['assimilator'], []]);
+  game.finale.policies[2].roles.push('lotus'); // a third tag only in this test, to cover all three places
+  const awards = game.awardFinaleRolePoints(ENACT);
+  assert.deepEqual(awards, { 'NODE-01': 3, 'NODE-02': 4, 'NODE-05': 2 });
+  assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the unenacted 4th');
+});
