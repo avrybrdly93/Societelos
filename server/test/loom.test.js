@@ -163,3 +163,39 @@ test('narrate sends each citizen\'s simulated mood and top trait change to Gemin
   await loom.narrate({ crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: {}, citizens: withMood }, { config: { ...OFFLINE, enabled: true, apiKey: 'k' }, fetchImpl });
   assert.match(prompt, /"id":"mara"[^}]*"mood":20,"moodChange":-1\.5,"topChange":\{"trait":"trust","change":-0\.04\}/);
 });
+
+test('loom.narrate times out cleanly at 8,000 ms and returns fallback citizen messages', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let aborted = false;
+  // A network that never answers until the request is aborted.
+  const hangingFetch = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener('abort', () => {
+      aborted = true;
+      const err = new Error('The operation was aborted');
+      err.name = 'AbortError';
+      reject(err);
+    });
+  });
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    let settled = false;
+    const pending = loom.narrate(
+      { winningOption: { name: 'P' }, simSummary: { realizedDelta: 5 }, citizens },
+      { config: { ...OFFLINE, enabled: true, apiKey: 'k' }, fetchImpl: hangingFetch }
+    ).then((r) => { settled = true; return r; });
+    await Promise.resolve();
+    t.mock.timers.tick(7999);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(settled, false, 'still waiting just before 8 s');
+    assert.equal(aborted, false);
+    t.mock.timers.tick(1);
+    const out = await pending;
+    assert.equal(aborted, true, 'request aborted at 8 s');
+    assert.equal(out.fallback, true);
+    assert.ok(out.loomLine.length > 0);
+    assert.ok(out.messages.length > 0 && out.messages.every((m) => citizens.some((c) => c.id === m.citizenId)));
+  } finally {
+    console.warn = warn;
+  }
+});
