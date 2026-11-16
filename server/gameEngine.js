@@ -451,6 +451,7 @@ class GameState extends EventEmitter {
     this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
     this.worldKey = null;
+    this.ending = null; // 'shutdown' once GDW reaches 0
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
     // Current cycle.
@@ -513,7 +514,7 @@ class GameState extends EventEmitter {
       case P.DEBATE: return P.VOTE;
       case P.VOTE: return P.RESOLUTION;
       case P.RESOLUTION:
-        if (this.gdw <= 0 || this.cycle >= TOTAL_CYCLES) return P.END;
+        if (this.ending === 'shutdown' || this.gdw <= 0 || this.cycle >= TOTAL_CYCLES) return P.END;
         return this.cycle === 2 ? P.WORLD_REVEAL : P.INCIDENT;
       case P.WORLD_REVEAL: return P.INCIDENT;
       case P.FINALE_WRITE: return P.FINALE_MOD;
@@ -772,6 +773,12 @@ class GameState extends EventEmitter {
     if (monthly.length) monthly[monthly.length - 1] = this.gdw;
     this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
     this.voteHistory[this.cycle] = winner;
+    // Loom Shutdown: GDW hit 0, so the remaining cycles are skipped and the
+    // game goes straight from this RESOLUTION to END (Shutdown Ending).
+    if (this.gdw <= 0) {
+      this.ending = 'shutdown';
+      console.log(`[game ${this.roomCode}] Loom shutdown in cycle ${this.cycle}`);
+    }
     // The Assembly (2A) makes society volatile for every remaining cycle.
     if (typeof option.volatility === 'number') this.volatility = option.volatility;
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
@@ -870,6 +877,7 @@ class GameState extends EventEmitter {
       this.volatility = 1.0;
       this.voteHistory = {};
       this.worldKey = null;
+      this.ending = null;
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
