@@ -111,14 +111,21 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   FINALE_ENACT: 20
 });
 
+// Debug: FAST_TIMERS=true shrinks every phase to this many seconds.
+const FAST_TIMER_SECONDS = 3;
+
 /**
  * Build the phase duration dictionary in milliseconds.
  * `overrides` (seconds) win over env, env wins over defaults.
+ * FAST_TIMERS=true sets every phase to 3 s for rapid automated testing.
  */
 function buildPhaseDurations(env = process.env, overrides = {}) {
   const seconds = { ...DEFAULT_PHASE_SECONDS };
   const debate = Number(env.DEBATE_SECONDS);
   if (Number.isFinite(debate) && debate > 0) seconds.DEBATE = debate;
+  if (String(env.FAST_TIMERS).toLowerCase() === 'true') {
+    for (const phase of Object.keys(seconds)) seconds[phase] = FAST_TIMER_SECONDS;
+  }
   Object.assign(seconds, overrides);
   const ms = {};
   for (const [phase, s] of Object.entries(seconds)) ms[phase] = Math.round(s * 1000);
