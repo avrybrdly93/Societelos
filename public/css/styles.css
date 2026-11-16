@@ -713,7 +713,8 @@ body.host .forecast-banner.is-warn { color: var(--amber); border-color: rgba(240
 body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.1); }
 
 /* Shock alert badges on the region map (map.js showShock). */
-.shock-badge { pointer-events: none; animation: shock-in 0.35s ease-out; }
+.shock-badge { pointer-events: none; }
+.shock-badge-inner { animation: shock-in 0.35s ease-out; transform-box: fill-box; transform-origin: center; }
 .shock-badge rect { fill: var(--danger); stroke: var(--slate-950); stroke-width: 2; }
 .shock-badge text { fill: var(--slate-50); font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }
 .district.is-shocked polygon { stroke: var(--danger); stroke-width: 5; }
@@ -837,3 +838,6 @@ body.mobile.edge-pulse::after {
 }
 @keyframes edge-pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 body.host .feed-detail { margin: 0 0 4px; font-size: 18px; color: var(--text-muted); }
+/* Room for the one-decimal GDW badge next to the phase breadcrumbs. */
+.topbar { gap: 28px; padding: 0 32px; }
+.topbar-value, .gdw-badge { font-size: 38px; }

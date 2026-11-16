@@ -77,9 +77,13 @@
     if (!group) return;
     const svgNS = 'http://www.w3.org/2000/svg';
     const { x, y } = districtCenter(group);
+    // Outer group positions (SVG transform attribute); the inner group runs
+    // the CSS pop-in animation, so the two transforms never fight.
     const badge = document.createElementNS(svgNS, 'g');
     badge.setAttribute('class', 'shock-badge');
     badge.setAttribute('transform', `translate(${x}, ${y - 46})`);
+    const inner = document.createElementNS(svgNS, 'g');
+    inner.setAttribute('class', 'shock-badge-inner');
     const text = `\u26A0 SHOCK: ${SHOCK_LABELS[shock.trait] || String(shock.trait || '').toUpperCase()}`;
     const width = 14 + text.length * 8.2;
     const rect = document.createElementNS(svgNS, 'rect');
@@ -92,7 +96,8 @@
     label.setAttribute('text-anchor', 'middle');
     label.setAttribute('y', '3');
     label.textContent = text;
-    badge.append(rect, label);
+    inner.append(rect, label);
+    badge.appendChild(inner);
     group.parentNode.appendChild(badge); // above every district
     group.classList.add('is-shocked');
     setTimeout(() => {
