@@ -388,6 +388,12 @@ function resolveLoom() {
   return loom;
 }
 
+/** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
+function computeWorldKey(vote1, vote2) {
+  const ok = (v) => v === 'A' || v === 'B';
+  return ok(vote1) && ok(vote2) ? vote1 + vote2 : null;
+}
+
 /** Final-month forecast median GDW of a simulate() result (NaN if missing). */
 function forecastMedianEnd(simResult) {
   const median = simResult && simResult.forecast && simResult.forecast.median;
@@ -707,6 +713,8 @@ class GameState extends EventEmitter {
     // The Assembly (2A) makes society volatile for every remaining cycle.
     if (typeof option.volatility === 'number') this.volatility = option.volatility;
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
+    // Cycles 1 and 2 decide the world for cycles 3-5.
+    if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
 
     this.enterPhase(PHASES.RESOLUTION);
 
@@ -1022,6 +1030,7 @@ module.exports = {
   createSimState,
   breakTie,
   forecastMedianEnd,
+  computeWorldKey,
   roundGdw,
   loomStub,
   resolveLoom,
