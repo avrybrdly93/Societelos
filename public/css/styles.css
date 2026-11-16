@@ -530,3 +530,23 @@ body.host .feed-text { margin: 0; font-size: 22px; line-height: 1.3; color: var(
   from { opacity: 0; transform: translateY(-24px); }
   to { opacity: 1; transform: none; }
 }
+
+/* Host debate: hook prompt and a giant countdown above the A/B cards. */
+.debate-panel { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; margin-top: 8px; }
+.debate-panel[hidden] { display: none; }
+body.host .debate-hook-text { font-size: 32px; line-height: 1.25; margin: 4px 0 0; }
+.debate-clock { font-size: 120px; font-weight: 700; line-height: 1; color: var(--accent); text-shadow: 0 0 32px var(--loom-glow); }
+.debate-clock.is-low { color: var(--danger); text-shadow: none; animation: low-time-pulse 0.8s ease-in-out infinite; }
+.incident-banner.is-compact .incident-text,
+.incident-banner.is-compact .loom-line,
+.incident-banner.is-compact .incident-subtitle { display: none; }
+body.host .incident-banner.is-compact .incident-title { font-size: 40px; }
+/* Compact A/B cards so authored policy text (~250 chars) fits the centre column. */
+.policy-panel { gap: 12px; }
+.policy-card { padding: 18px 20px; }
+.policy-letter { float: left; width: 44px; height: 44px; font-size: 26px; margin: 0 12px 4px 0; }
+body.host .policy-name { font-size: 30px; margin: 2px 0 10px; line-height: 1.1; min-height: 44px; }
+body.host .policy-text { font-size: 22px; line-height: 1.3; clear: left; }
+.policy-vs { font-size: 22px; }
+.debate-clock { font-size: 96px; }
+body.host .debate-hook-text { font-size: 28px; }

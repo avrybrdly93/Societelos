@@ -253,6 +253,21 @@
   }
   socket.on('phase', renderPolicies);
 
+  // Debate: a giant countdown and the crisis's debate hook beside A vs B.
+  const DEFAULT_HOOKS = [
+    'Who benefits from each option, and who pays?',
+    'Which option would you choose if you did not know your own district?'
+  ];
+  function renderDebate(payload) {
+    const debating = payload.phase === 'DEBATE';
+    document.getElementById('debate-panel').hidden = !debating;
+    document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase));
+    if (!debating) return;
+    const crisis = payload.crisis || {};
+    document.getElementById('debate-hook').textContent = crisis.debateHook || DEFAULT_HOOKS[(payload.cycle || 0) % DEFAULT_HOOKS.length];
+  }
+  socket.on('phase', renderDebate);
+
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
     const set = new Set(voted || []);
@@ -284,7 +299,10 @@
     if (text !== lastShown) {
       timerEl.textContent = text;
       lastShown = text;
+      // Giant debate clock mirrors the top-bar timer as m:ss.
+      document.getElementById('debate-clock').textContent = remaining === null ? '--' : text.replace(/^0/, '');
     }
+    document.getElementById('debate-clock').classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < 10000);
     state.remainingMs = remaining;
     timerEl.classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < LOW_TIME_MS);
     requestAnimationFrame(tick);
@@ -347,6 +365,7 @@
     id: 'mock', title: 'Crisis 01: Who Owns the Loom?', subtitle: 'Economic Distribution',
     incident: 'Dividend riots are erupting across District 4 Eastworks.',
     loomIntro: 'I produce everything. Who should own me?',
+    debateHook: 'When machines create all wealth, who should own them?',
     feed: [
       { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
       { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', text: 'just deliver my food on time', sentiment: 'complacent' }

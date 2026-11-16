@@ -1016,8 +1016,10 @@ class GameState extends EventEmitter {
   publicCrisis() {
     if (!this.crisis) return null;
     const { id, title, subtitle, incident, loomIntro } = this.crisis;
+    // The classroom debate hook (e.g. "Who should own the machines?").
+    const debateHook = String(this.crisis.teacherPrompt || '').replace(/^Classroom Debrief:\s*/i, '');
     const feed = (this.crisis.feed || []).filter((f) => f && f.text).map((f) => this.citizenMessage(f));
-    return { id, title, subtitle, incident, loomIntro, feed };
+    return { id, title, subtitle, incident, loomIntro, debateHook, feed };
   }
 
   /**
