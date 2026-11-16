@@ -179,9 +179,9 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": -0.3,
-            "health": -0.5,
+            "purpose": 0.1,
+            "connection": -0.4,
+            "health": -0.6,
             "trust": -0.6,
             "fairness": 0.3,
             "autonomy": 0.6
