@@ -88,7 +88,8 @@ const PHASE_STARTERS = {
   INCIDENT: 'startIncidentPhase',
   INTEL: 'startIntelDropPhase',
   DEBATE: 'startDebatePhase',
-  VOTE: 'startBlindVotePhase'
+  VOTE: 'startBlindVotePhase',
+  RESOLUTION: 'startResolutionPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -566,6 +567,65 @@ class GameState extends EventEmitter {
   allVotesIn() {
     const seated = Object.keys(this.players);
     return seated.length > 0 && seated.every((node) => this.votes[node]);
+  }
+
+  /**
+   * Count the blind votes: a normal vote is worth 1, an Override 2.
+   * Ties go to A for now (the forecast tie-breaker arrives on Tuesday).
+   */
+  tallyVotes() {
+    const totals = { A: 0, B: 0 };
+    for (const { choice, override } of Object.values(this.votes)) {
+      totals[choice] += override ? 2 : 1;
+    }
+    const winner = totals.B > totals.A ? 'B' : 'A';
+    return { totals, winner, tie: totals.A === totals.B };
+  }
+
+  /**
+   * RESOLUTION: close voting, run the simulation (stub until server/sim is
+   * merged) on the winning option and broadcast 'resolution' once the Loom's
+   * narration is ready. The phase timer starts immediately so a slow Loom
+   * never stalls the game.
+   */
+  startResolutionPhase() {
+    this.votingOpen = false;
+    const { totals, winner, tie } = this.tallyVotes();
+    const option = (this.crisis && this.crisis.options[winner]) || { key: winner, effects: {}, roles: [] };
+    const previousGdw = this.gdw;
+
+    const simulate = resolveSimulate();
+    const sim = simulate({ gdw: this.gdw, simState: this.simState }, option.effects, {
+      runs: 500,
+      seed: hashSeed(this.gameId, this.cycle)
+    });
+    this.gdw = Math.max(0, Math.min(100, Math.round(sim.realized.finalGdw)));
+    this.gdwHistory.push(this.gdw);
+    this.choices[this.cycle] = winner;
+
+    this.enterPhase(PHASES.RESOLUTION);
+
+    const result = { cycle: this.cycle, winner, totals, tie, policy: option.name, previousGdw, gdwDelta: this.gdw - previousGdw };
+    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: sim.summary, summary: sim.summary, worldKey: this.worldKey };
+    return Promise.resolve()
+      .then(() => resolveLoom().narrate(context))
+      .catch((err) => {
+        console.error(`[game ${this.roomCode}] narration failed: ${err.message}`);
+        return loomStub.narrate(context);
+      })
+      .then((narration) => {
+        this.lastResolution = {
+          result,
+          gdw: this.gdw,
+          forecast: sim.forecast,
+          realized: sim.realized,
+          districts: sim.realized.districts || [],
+          loomLine: narration.loomLine,
+          messages: narration.messages || []
+        };
+        this.emit('resolution', this.lastResolution);
+        return this.lastResolution;
+      });
   }
 
   /**
