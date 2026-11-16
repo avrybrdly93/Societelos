@@ -48,3 +48,25 @@ test('simulate() is bit-for-bit reproducible for the same state, effects and see
   const c = simulate(state, EFFECTS, { runs: 500, seed: 424243 });
   assert.notDeepEqual(Array.from(a.realized.gdw), Array.from(c.realized.gdw));
 });
+
+test('summary.topMoves lists exactly the 3 largest-magnitude (district, cohort, trait) changes', () => {
+  const state = createInitialState(simConfig);
+  const r = simulate(state, EFFECTS, { runs: 50, seed: 99 });
+  const K = state.traitNames.length;
+  const all = [];
+  state.cohorts.forEach((c, i) => state.traitNames.forEach((t, k) => {
+    all.push({ district: c.district, cohort: c.cohort, trait: t, change: r.finalState.traits[i * K + k] - state.traits[i * K + k] });
+  }));
+  all.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+  const { topMoves } = r.summary;
+  assert.equal(topMoves.length, 3);
+  topMoves.forEach((m, j) => {
+    assert.equal(m.district, all[j].district);
+    assert.equal(m.cohort, all[j].cohort);
+    assert.equal(m.trait, all[j].trait);
+    assert.ok(Math.abs(m.change - all[j].change) < 0.0006, 'rounded to 3 decimals');
+  });
+  // Ordered by magnitude, and nothing outside the top 3 is bigger.
+  assert.ok(Math.abs(topMoves[0].change) >= Math.abs(topMoves[1].change) && Math.abs(topMoves[1].change) >= Math.abs(topMoves[2].change));
+  assert.ok(Math.abs(all[3].change) <= Math.abs(topMoves[2].change) + 0.0006);
+});
