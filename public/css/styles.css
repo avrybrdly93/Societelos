@@ -367,3 +367,19 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 .memo-foot { font-size: 12px; margin: 16px 0 0; color: #5a6270; }
 .intel-memo .shield-button { background: #1b1f24; color: #eae6dc; border-color: #1b1f24; }
 .m-clock { font-size: 72px; font-weight: 700; color: var(--accent); margin: 8px 0; }
+
+/* Blind vote */
+.vote-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.vote-btn { display: flex; align-items: center; gap: 16px; text-align: left; padding: 18px; font-size: 18px; }
+.vote-letter {
+  flex: 0 0 auto; width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); font-size: 24px;
+}
+.override-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px; border: 1px dashed var(--slate-600); border-radius: var(--radius);
+  font-size: 15px;
+}
+.override-row input { width: 24px; height: 24px; flex: 0 0 auto; accent-color: var(--accent); }
+.override-row.is-spent { opacity: 0.4; }

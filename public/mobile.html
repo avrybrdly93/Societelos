@@ -82,7 +82,21 @@
         <p class="muted">Argue. Persuade. Mislead if you must. The vote is blind.</p>
       </div>
     </section>
-    <section id="m-view-vote" class="m-view" aria-label="Vote"></section>
+    <section id="m-view-vote" class="m-view" aria-label="Vote">
+      <p class="m-kicker mono">BLIND VOTE</p>
+      <div id="vote-panel" class="vote-panel">
+        <button id="vote-a" class="btn vote-btn" type="button" data-choice="A">
+          <span class="vote-letter mono">A</span><span id="vote-a-name" class="vote-name">Policy A</span>
+        </button>
+        <button id="vote-b" class="btn vote-btn" type="button" data-choice="B">
+          <span class="vote-letter mono">B</span><span id="vote-b-name" class="vote-name">Policy B</span>
+        </button>
+        <label id="override-row" class="override-row">
+          <input id="vote-override" type="checkbox">
+          <span><span class="mono accent">OVERRIDE</span> — your vote counts double. Once per game. Nobody will know.</span>
+        </label>
+      </div>
+    </section>
   </main>
 </body>
 </html>
