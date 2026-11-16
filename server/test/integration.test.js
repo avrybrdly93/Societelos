@@ -168,3 +168,23 @@ test('integration: the Catalyst scores +1 exactly on cycles whose realized GDW s
   });
   assert.ok(swings >= 1, 'at least one >= 10 point swing was exercised');
 });
+
+test('integration: role +1 goes to every node whose secret role is tagged on the winning option', async () => {
+  const out = await playFourCycles({ gameId: 'rolescore001', voteFor: (cycle) => [cycle % 2 ? 'B' : 'A'] });
+  const data = engine.loadGameData();
+  const totals = {};
+  out.resolutions.forEach((r) => {
+    const { cycle, winner } = r.result;
+    const crisis = engine.selectCrisis(data.crises, cycle, cycle <= 2 ? null : out.game.worldKey, data.roles);
+    const option = crisis.options[winner];
+    // Crisis 2B's tags depend on the Cycle 1 vote.
+    const tags = option.rolesByWorld ? option.rolesByWorld[out.game.voteHistory[1]] : option.roles;
+    for (const node of NODE_IDS) {
+      const update = out.scores.find((s) => s.node === node && s.cycle === cycle);
+      assert.equal(update.role, tags.includes(out.roles[node]) ? 1 : 0, `cycle ${cycle} ${node} (${out.roles[node]})`);
+      totals[node] = update.total;
+    }
+  });
+  for (const node of NODE_IDS) assert.equal(out.game.scores[node], totals[node], 'running totals match the engine');
+  assert.ok(Object.values(totals).some((t) => t > 0), 'some roles scored');
+});
