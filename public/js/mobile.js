@@ -308,6 +308,10 @@
 
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
+    // One vote per cycle from this phone: ignore taps once a vote is in
+    // flight or recorded (rapid A/B mashing sends a single vote:cast).
+    if (state.voteLockedCycle === state.cycle) return;
+    state.voteLockedCycle = state.cycle;
     const override = document.getElementById('vote-override').checked;
     state.lastVote = { cycle: state.cycle, choice };
     buzz(override ? [40, 40, 120] : 50);
@@ -319,6 +323,7 @@
       }
       // Already voted counts as locked; anything else lets the player retry.
       if (res && res.reason === 'ALREADY_VOTED') return;
+      state.voteLockedCycle = null; // rejected: allow a retry
       if (res && res.reason === 'OVERRIDE_SPENT') {
         state.overrideUsed = true;
         renderOverrideAvailability();
