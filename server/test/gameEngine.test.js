@@ -397,3 +397,32 @@ test('DEBATE/VOTE payloads keep role tags hidden so players must infer them', ()
   }
   assert.ok(payloads[0].options.A.text.length > 0, 'policy text is public');
 });
+
+test('WORLD_REVEAL lasts 10 seconds and then advances to the Cycle 3 incident', () => {
+  assert.equal(engine.DEFAULT_PHASE_SECONDS.WORLD_REVEAL, 10);
+  const game = votingGame({ cycle: 2, voteHistory: { 1: 'A', 2: 'B' } });
+  game.worldKey = 'AB';
+  game.phase = engine.PHASES.RESOLUTION;
+  const phases = [];
+  game.on('phase', (p) => phases.push(p));
+  const log = console.log;
+  console.log = () => {};
+  try {
+    const before = Date.now();
+    assert.equal(game.advancePhase(), 'WORLD_REVEAL');
+    const reveal = phases[0];
+    assert.equal(reveal.phase, 'WORLD_REVEAL');
+    assert.ok(Math.abs(reveal.endsAt - before - 10000) < 100, 'host and phones count down 10 s');
+    assert.equal(reveal.world.worldKey, 'AB');
+    // When the timer expires, both screens leave the takeover for cycle 3.
+    assert.equal(game.advancePhase(), 'INCIDENT');
+    assert.equal(game.cycle, 3);
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+  // The reveal animation itself (CSS) finishes well inside the 10 s beat.
+  const css = require('fs').readFileSync(require('path').join(__dirname, '..', '..', 'public', 'css', 'styles.css'), 'utf8');
+  const m = css.match(/\.view-world\.is-active \.world-name \{ animation: world-in ([\d.]+)s/);
+  assert.ok(m && Number(m[1]) < 10, 'world-in animation shorter than the beat');
+});
