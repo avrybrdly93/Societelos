@@ -255,9 +255,9 @@
       "world": "AA",
       "cycle": 3,
       "title": "Purpose Drift",
-      "subtitle": "Universal Wealth, Collective Governance, Zero Purpose",
-      "incident": "In The Commonwealth, poverty and tyranny have been abolished. Yet posts about 'existential emptiness' are surging across every district. Suicide hotline calls are up 40%.",
-      "loomIntro": "",
+      "subtitle": "The Commonwealth: what is left is meaning",
+      "incident": "Posts about feeling useless are spiking in every district. Wealth is shared and power is shared, but nobody can say what they are for.",
+      "loomIntro": "Searches for the phrase what is the point have risen 340% this quarter. I can answer most questions. Not that one.",
       "teacherPrompt": "Classroom Debrief: When equality and democracy are achieved, what provides a reason to get out of bed in the morning?",
       "mode": "binary",
       "feed": [
