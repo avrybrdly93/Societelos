@@ -102,9 +102,15 @@
     "cohort": "elders",
     "voice": "Ran a union local; remembers strikes",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Packed hall, everybody shouting, nobody agreeing. Felt exactly like 1987. I have never been happier."
+      ],
+      "mixed": [
+        "They listened to us, then did what they planned to do anyway. Some things never change."
+      ],
+      "bad": [
+        "In my day you could strike. Who do you strike against when the boss is a server farm?"
+      ]
     }
   },
   {
