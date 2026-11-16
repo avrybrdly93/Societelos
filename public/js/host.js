@@ -153,5 +153,42 @@
   }
   requestAnimationFrame(tick);
 
+  // ---------------------------------------------------------------------------
+  // Debug mock tester: drive layouts without a live backend, from the console.
+  //   debugTriggerPhase('DEBATE')              -> fake phase with mock crisis
+  //   debugTriggerPhase('CHAMBER', { seconds: 10 })
+  //   debugTriggerEvent('lobby:update', { players: [...] })
+  // ---------------------------------------------------------------------------
+  const MOCK_CRISIS = {
+    id: 'mock', title: 'Crisis 01: Who Owns the Loom?', subtitle: 'Economic Distribution',
+    incident: 'Dividend riots are erupting across District 4 Eastworks.',
+    loomIntro: 'I produce everything. Who should own me?'
+  };
+  const MOCK_OPTIONS = {
+    A: { key: 'A', name: 'The Commons', text: 'The Loom becomes public property; every citizen gets an equal share.' },
+    B: { key: 'B', name: 'The Charter', text: 'Owners keep title but pay a robot dividend to everyone.' }
+  };
+
+  function debugTriggerEvent(event, payload) {
+    socket.listeners(event).forEach((fn) => fn(payload));
+  }
+
+  function debugTriggerPhase(phase, { seconds = 30, cycle = 1, ...extra } = {}) {
+    const payload = {
+      cycle: phase === 'LOBBY' || phase === 'INTRO' || phase === 'ROLE_ASSIGN' ? 0 : cycle,
+      phase,
+      endsAt: seconds ? Date.now() + seconds * 1000 : null,
+      crisis: ['LOBBY', 'INTRO', 'ROLE_ASSIGN', 'CHAMBER'].includes(phase) ? null : MOCK_CRISIS,
+      ...(phase === 'DEBATE' ? { options: MOCK_OPTIONS } : {}),
+      ...(phase === 'CHAMBER' ? { region: { population: 250000, districts: [] } } : {}),
+      ...extra
+    };
+    debugTriggerEvent('phase', payload);
+    return payload;
+  }
+
+  window.debugTriggerPhase = debugTriggerPhase;
+  window.debugTriggerEvent = debugTriggerEvent;
+
   window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber };
 })();
