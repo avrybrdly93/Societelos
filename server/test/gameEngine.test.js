@@ -993,3 +993,25 @@ test('Overrides are ignored in Cycle 5 (counted as a normal vote, not spent)', (
   ['NODE-02', 'NODE-03'].forEach((n) => game.castVote(n, 'B', true));
   assert.deepEqual(game.tallyVotes().totals, { A: 1, B: 2 });
 });
+
+/** Drive a finale through ranking (every node ranks its ballot as dealt) into FINALE_ENACT. */
+async function enactedFinale(moderation = okModeration()) {
+  const { game } = await rankingFinale('AA', moderation);
+  for (const node of NODE_IDS) game.rankPolicies(node, game.finale.ballots[node]);
+  quiet(() => game.advancePhase()); // FINALE_RANK -> FINALE_ENACT
+  return game;
+}
+
+test('FINALE_ENACT simulates the 50/25/25 package as cycle 5\'s realized run', async () => {
+  const game = await enactedFinale();
+  game.stop();
+  const f = game.finale;
+  assert.equal(game.phase, 'FINALE_ENACT');
+  assert.equal(f.enacted.length, 3);
+  assert.deepEqual(f.enacted.map((e) => e.weight), [0.5, 0.25, 0.25]);
+  const effectsOf = (id) => f.policies.find((p) => p.id === id).effects;
+  assert.deepEqual(f.packageEffects, engine.packageEffects(f.enacted, effectsOf));
+  assert.equal(game.gdw, Math.round(f.simResult.realized.finalGdw * 10) / 10);
+  assert.equal(game.voteHistory[5], 'package');
+  assert.ok(f.simResult.forecast.median.length === 13);
+});

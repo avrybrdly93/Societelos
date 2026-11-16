@@ -947,9 +947,38 @@ class GameState extends EventEmitter {
     return defaulted;
   }
 
-  /** FINALE_ENACT (20 s): rankings close and the council's package is enacted. */
+  /** Forecast median end GDW of one finale policy on its own (Borda tie-breaker). */
+  finaleMedianOf(policyId) {
+    const policy = this.finale.policies.find((p) => p.id === policyId);
+    const r = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, (policy && policy.effects) || {}, {
+      runs: 200, seed: hashSeed(this.gameId, this.cycle, policyId), volatility: this.volatility
+    });
+    return forecastMedianEnd(r);
+  }
+
+  /**
+   * FINALE_ENACT (20 s): rankings close, the Borda tally picks the top three,
+   * and their 50/25/25 package is simulated as cycle 5's realized run.
+   */
   startFinaleEnactPhase() {
     this.closeRanking();
+    const finale = this.finale;
+    const byId = Object.fromEntries(finale.policies.map((p) => [p.id, p]));
+    finale.tally = bordaCount(finale.ranks, finale.policies.map((p) => p.id));
+    finale.rows = rankBorda(finale.tally, (id) => this.finaleMedianOf(id));
+    finale.enacted = selectEnacted(finale.rows);
+    finale.packageEffects = packageEffects(finale.enacted, (id) => byId[id] && byId[id].effects);
+
+    const previousGdw = this.gdw;
+    const simResult = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, finale.packageEffects, {
+      runs: 500, seed: hashSeed(this.gameId, this.cycle), volatility: this.volatility
+    });
+    this.applySimResult(simResult);
+    this.voteHistory[this.cycle] = 'package';
+    if (this.gdw <= 0) this.ending = 'shutdown';
+    finale.previousGdw = previousGdw;
+    finale.simResult = simResult;
+    finale.awards = this.scoreFinale(finale.enacted, previousGdw, this.gdw);
     this.enterPhase(PHASES.FINALE_ENACT);
   }
 
@@ -1191,6 +1220,21 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * Carry a cycle's realized run into the game: next sim state, GDW (one
+   * decimal) and the monthly trajectory appended to gdwHistory (months 1-12;
+   * month 0 is the previous cycle's last entry).
+   */
+  applySimResult(simResult) {
+    if (simResult.finalState) this.simState = simResult.finalState;
+    this.gdw = roundGdw(simResult.realized.finalGdw);
+    // (realized.gdw may be a Float64Array, so copy it into a plain array.)
+    const trajectory = simResult.realized.gdw;
+    const monthly = trajectory && typeof trajectory.length === 'number' ? Array.from(trajectory).slice(1).map(roundGdw) : [];
+    if (monthly.length) monthly[monthly.length - 1] = this.gdw;
+    this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
+  }
+
+  /**
    * Role scoring (cycles 1-4): +1 to every node whose secret role is tagged
    * on the winning option. Returns { node: points } for the nodes scored.
    */
@@ -1259,15 +1303,7 @@ class GameState extends EventEmitter {
     }
     const option = this.optionFor(winner);
     const stateBefore = this.simState;
-    if (simResult.finalState) this.simState = simResult.finalState;
-    this.gdw = roundGdw(simResult.realized.finalGdw);
-    // Monthly trajectory: months 1..12 of the realized run (month 0 is the
-    // previous cycle's last entry), so gdwHistory reads as one continuous line.
-    // (realized.gdw may be a Float64Array, so copy it into a plain array.)
-    const trajectory = simResult.realized.gdw;
-    const monthly = trajectory && typeof trajectory.length === 'number' ? Array.from(trajectory).slice(1).map(roundGdw) : [];
-    if (monthly.length) monthly[monthly.length - 1] = this.gdw;
-    this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
+    this.applySimResult(simResult);
     this.voteHistory[this.cycle] = winner;
     // Loom Shutdown: GDW hit 0, so the remaining cycles are skipped and the
     // game goes straight from this RESOLUTION to END (Shutdown Ending).
