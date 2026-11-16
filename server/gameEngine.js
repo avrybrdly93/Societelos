@@ -306,7 +306,9 @@ function selectCrisis(crises, cycle, worldKey, roles = []) {
 
 const SECRET_KEYS = new Set([
   'effects', 'effectsByWorld', 'roles', 'role', 'roleAssignment', 'intel', 'intelDrops',
-  'token', 'socketId', 'name', 'reactions', 'volatility'
+  'token', 'socketId', 'name', 'reactions', 'volatility',
+  // Override secrecy: never reveal per-node votes or who spent an Override.
+  'votes', 'override', 'overridesUsed'
 ]);
 
 /** Deep copy of `value` with every SECRET_KEYS field removed. */
@@ -647,7 +649,9 @@ class GameState extends EventEmitter {
         return loomStub.narrate(context);
       })
       .then((narration) => {
-        this.lastResolution = {
+        // Only aggregate totals leave the server; sanitizing strips any
+        // per-node vote or Override field that might slip into the payload.
+        this.lastResolution = sanitizeForBroadcast({
           result,
           gdw: this.gdw,
           forecast: simResult.forecast,
@@ -655,7 +659,7 @@ class GameState extends EventEmitter {
           districts: simResult.realized.districts || [],
           loomLine: narration.loomLine,
           messages: narration.messages || []
-        };
+        }, ['name']);
         this.emit('resolution', this.lastResolution);
         return this.lastResolution;
       });
