@@ -461,6 +461,7 @@
     { max: 60, band: 'stable', label: 'STABLE' },
     { max: 100, band: 'thriving', label: 'THRIVING' }
   ];
+  const UNREST_GDW = 15;
   function gdwBand(gdw) {
     return GDW_BANDS.find((b) => gdw <= b.max) || GDW_BANDS[GDW_BANDS.length - 1];
   }
@@ -482,6 +483,15 @@
     document.getElementById('gdw-status').textContent = band.label;
     document.getElementById('gdw-fill').style.width = `${target}%`;
     document.getElementById('gdw-badge').classList.toggle('is-critical', band.band === 'critical');
+    // Unrest alarm: below 15% the whole screen gets a pulsing crimson border,
+    // with a one-off flash at the moment GDW crosses the threshold.
+    const unrest = target < UNREST_GDW;
+    if (unrest && !document.body.classList.contains('is-unrest')) {
+      document.body.classList.remove('alarm-flash');
+      void document.body.offsetWidth; // restart the flash animation
+      document.body.classList.add('alarm-flash');
+    }
+    document.body.classList.toggle('is-unrest', unrest);
     gdwMeter.from = gdwMeter.shown;
     gdwMeter.target = target;
     gdwMeter.start = performance.now();

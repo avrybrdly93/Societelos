@@ -737,3 +737,17 @@ body.host .res-badge { font-size: 15px; letter-spacing: 0.04em; padding: 4px 10p
 body.host .forecast-banner { flex-shrink: 0; }
 body.host .resolution-loom { min-height: calc(26px * 1.35 * 3); }
 .chart-wrap { min-height: 300px; }
+
+/* Unrest alarm (GDW < 15%): pulsing crimson frame plus a one-off flash. */
+body.host::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  border: 0 solid var(--danger); opacity: 0;
+}
+body.host.is-unrest::after { border-width: 10px; opacity: 1; animation: alarm-border 1.2s ease-in-out infinite; }
+body.host.alarm-flash::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 49;
+  background: rgba(229, 72, 77, 0.35);
+  animation: alarm-flash 0.9s ease-out 2 forwards;
+}
+@keyframes alarm-border { 0%, 100% { box-shadow: inset 0 0 0 transparent; opacity: 1; } 50% { box-shadow: inset 0 0 80px rgba(229, 72, 77, 0.55); opacity: 0.55; } }
+@keyframes alarm-flash { from { opacity: 1; } to { opacity: 0; } }
