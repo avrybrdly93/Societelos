@@ -194,10 +194,37 @@
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
     const override = document.getElementById('vote-override').checked;
+    setVoteLocked(true, choice, override);
     socket.emit('vote:cast', { choice, override }, (res) => {
-      if (!res || !res.ok) console.warn('[mobile] vote rejected', res && res.reason);
+      if (res && res.ok) {
+        if (override) state.overrideUsed = true;
+        return;
+      }
+      // Already voted counts as locked; anything else lets the player retry.
+      if (res && res.reason === 'ALREADY_VOTED') return;
+      console.warn('[mobile] vote rejected', res && res.reason);
+      setVoteLocked(false);
     });
   }
+
+  // Lock state: "VOTE RECORDED — WAITING FOR OTHER NODES".
+  function setVoteLocked(locked, choice, override) {
+    document.getElementById('vote-panel').hidden = locked;
+    document.getElementById('vote-locked').hidden = !locked;
+    if (locked && choice) {
+      document.getElementById('vote-lock-choice').textContent = `You chose Policy ${choice}${override ? ' with your Override' : ''}.`;
+    }
+  }
+
+  // Each new VOTE phase starts unlocked; a spent Override stays disabled.
+  socket.on('phase', (payload) => {
+    if (!payload || payload.phase !== 'VOTE') return;
+    setVoteLocked(false);
+    const box = document.getElementById('vote-override');
+    box.checked = false;
+    box.disabled = !!state.overrideUsed;
+    document.getElementById('override-row').classList.toggle('is-spent', !!state.overrideUsed);
+  });
   document.querySelectorAll('.vote-btn').forEach((btn) => {
     btn.addEventListener('click', () => castVote(btn.dataset.choice));
   });

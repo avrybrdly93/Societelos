@@ -388,3 +388,12 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 .m-header { flex-wrap: wrap; }
 .m-countdown { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; }
 .m-countdown-fill { height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+.vote-locked { text-align: center; padding-top: 10vh; }
+.vote-lock-icon {
+  width: 96px; height: 96px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; color: var(--accent);
+  border: 3px solid var(--accent); border-radius: 50%;
+  box-shadow: 0 0 28px var(--loom-glow);
+}
+.vote-lock-title { font-size: 24px; font-weight: 700; letter-spacing: 0.12em; margin: 0 0 8px; }
