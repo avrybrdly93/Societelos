@@ -188,3 +188,20 @@ test('integration: role +1 goes to every node whose secret role is tagged on the
   for (const node of NODE_IDS) assert.equal(out.game.scores[node], totals[node], 'running totals match the engine');
   assert.ok(Object.values(totals).some((t) => t > 0), 'some roles scored');
 });
+
+test('integration: with GEMINI_API_KEY unset the game narrates offline and never touches the network', async () => {
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw new Error('network must not be used offline'); };
+  try {
+    const out = await playFourCycles({ gameId: 'offline00001', voteFor: (cycle) => [cycle === 1 ? 'A' : 'B'] });
+    assert.equal(calls, 0, 'no fetch attempted');
+    assert.equal(out.resolutions.length, 4);
+    for (const r of out.resolutions) {
+      assert.ok(r.loomLine.length > 0, 'authored or template Loom line');
+      assert.ok(r.messages.length > 0, 'citizen fallback lines');
+    }
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
