@@ -60,3 +60,20 @@ test('integration: gameEngine + server/sim (real simulate, state carried across 
   assert.equal(out.game.gdwHistory.length, 1 + 4 * 12);
   assert.ok(out.game.simState && out.game.simState.traits.length === 120, '20 cohorts x 6 traits');
 });
+
+test('integration: gameEngine + server/loom.js (offline narration on every resolution)', async () => {
+  const citizens = require('../../data/citizens.json');
+  const out = await playFourCycles({ gameId: 'integration02', voteFor: (cycle) => [cycle === 2 ? 'B' : 'A'] });
+  for (const r of out.resolutions) {
+    assert.ok(typeof r.loomLine === 'string' && r.loomLine.length > 0 && r.loomLine.length <= 200);
+    assert.ok(r.messages.length >= 1 && r.messages.length <= 10);
+    const ids = r.messages.map((m) => m.citizenId);
+    assert.equal(new Set(ids).size, ids.length, 'distinct citizens');
+    for (const m of r.messages) {
+      const c = citizens.find((x) => x.id === m.citizenId);
+      assert.ok(c, m.citizenId);
+      assert.equal(m.name, c.name, 'engine enriches reactions with the citizen card');
+      assert.ok(m.text.length <= 140);
+    }
+  }
+});
