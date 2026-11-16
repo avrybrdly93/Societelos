@@ -84,7 +84,19 @@
       <div class="chamber-grid">
         <aside class="chamber-col chamber-map" aria-label="Region map">
           <p class="label">Region <span id="citizens-online" class="mono accent">250,000 CITIZENS</span></p>
-          <div id="map-container" class="map-container"></div>
+          <div id="map-container" class="map-container">
+            <svg id="region-map" class="region-map" viewBox="0 0 400 500" role="img" aria-label="Region map of five districts">
+              <rect class="map-sea" x="0" y="0" width="400" height="500"/>
+              <g id="map-links" class="map-links"></g>
+              <g id="map-districts" class="map-districts">
+                <g class="district" id="district-D1" data-district="D1" tabindex="0"></g>
+                <g class="district" id="district-D2" data-district="D2" tabindex="0"></g>
+                <g class="district" id="district-D3" data-district="D3" tabindex="0"></g>
+                <g class="district" id="district-D4" data-district="D4" tabindex="0"></g>
+                <g class="district" id="district-D5" data-district="D5" tabindex="0"></g>
+              </g>
+            </svg>
+          </div>
         </aside>
         <section class="chamber-col chamber-center" aria-label="Crisis and policies">
           <div id="crisis-panel" class="crisis-panel"></div>
