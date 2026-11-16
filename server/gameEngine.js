@@ -140,7 +140,10 @@ function buildPhaseDurations(env = process.env, overrides = {}) {
   const debate = Number(env.DEBATE_SECONDS);
   if (Number.isFinite(debate) && debate > 0) seconds.DEBATE = debate;
   if (String(env.FAST_TIMERS).toLowerCase() === 'true') {
-    for (const phase of Object.keys(seconds)) seconds[phase] = FAST_TIMER_SECONDS;
+    // FAST_TIMER_SECONDS (optional) shrinks further, e.g. 0.01 in automated tests.
+    const custom = Number(env.FAST_TIMER_SECONDS);
+    const fast = Number.isFinite(custom) && custom > 0 ? custom : FAST_TIMER_SECONDS;
+    for (const phase of Object.keys(seconds)) seconds[phase] = fast;
   }
   Object.assign(seconds, overrides);
   const ms = {};

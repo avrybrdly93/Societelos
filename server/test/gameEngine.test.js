@@ -278,3 +278,46 @@ test('resetGame() clears cycle counters, Overrides, scores and volatility', asyn
     assert.equal(game.players[node].role, null);
   }
 });
+
+test('FAST_TIMERS=true drives Cycle 1 -> Cycle 4 automatically', async () => {
+  assert.equal(engine.buildPhaseDurations({ FAST_TIMERS: 'true' }).DEBATE, 3000);
+  const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS };
+  process.env.FAST_TIMERS = 'true';
+  process.env.FAST_TIMER_SECONDS = '0.01';
+  const game = new GameState({ roomCode: 'FAST' });
+  Object.assign(process.env, { FAST_TIMERS: saved.fast, FAST_TIMER_SECONDS: saved.secs });
+  if (saved.fast === undefined) delete process.env.FAST_TIMERS;
+  if (saved.secs === undefined) delete process.env.FAST_TIMER_SECONDS;
+  assert.equal(game.durations.VOTE, 10);
+  game.gameId = 'fastflow0001'; // fixed seeds: the run is reproducible
+
+  const log = console.log;
+  console.log = () => {};
+  const seen = [];
+  try {
+    NODE_IDS.forEach((node, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(node, true); });
+    await new Promise((resolve, reject) => {
+      const guard = setTimeout(() => reject(new Error(`stalled at ${seen.slice(-3).join(' -> ')}`)), 10000);
+      game.on('phase', (p) => {
+        seen.push(`${p.cycle}:${p.phase}`);
+        // Cycle 1 and 2 vote A/B -> world AB; later cycles vote by majority.
+        if (p.phase === 'VOTE') NODE_IDS.forEach((n, i) => game.castVote(n, p.cycle === 2 ? 'B' : i < 3 ? 'A' : 'B'));
+        if (p.cycle === 5 || p.phase === 'END') { clearTimeout(guard); game.clearPhaseTimer(); resolve(); }
+      });
+      game.startIntroPhase();
+    });
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+  for (const cycle of [1, 2, 3, 4]) {
+    for (const phase of ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION']) {
+      assert.ok(seen.includes(`${cycle}:${phase}`), `missing ${cycle}:${phase}`);
+    }
+  }
+  assert.ok(seen.indexOf('2:WORLD_REVEAL') > seen.indexOf('2:RESOLUTION'));
+  assert.ok(seen.indexOf('3:INCIDENT') > seen.indexOf('2:WORLD_REVEAL'));
+  assert.deepEqual(game.voteHistory, { 1: 'A', 2: 'B', 3: 'A', 4: 'A' });
+  assert.equal(game.worldKey, 'AB');
+  assert.equal(game.gdwHistory.length, 1 + 4 * 12);
+});
