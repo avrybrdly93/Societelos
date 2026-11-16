@@ -653,3 +653,21 @@ test('"revise" sends private finale:feedback to that author and opens a 25 s res
     restore();
   }
 });
+
+test('only a node in "revise" may resubmit, once, during the FINALE_MOD window', async () => {
+  const restore = stubModerate(async (subs) => subs.map((s) => ({ node: s.node, status: s.node === 'NODE-02' ? 'revise' : 'ok', cleaned: s.text, feedback: 'Rephrase.', roles: [], effects: {} })));
+  try {
+    const game = finaleGame();
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    assert.equal(game.resubmitPolicy('NODE-01', 'sneaky edit').reason, 'NOT_REVISING');
+    assert.equal(game.resubmitPolicy('NODE-02', '   ').reason, 'EMPTY');
+    assert.equal(game.resubmitPolicy('NODE-02', 'Every district elects a repair council.').ok, true);
+    assert.equal(game.resubmitPolicy('NODE-02', 'second try').reason, 'ALREADY_RESUBMITTED');
+    assert.equal(game.finale.submissions['NODE-02'], 'Every district elects a repair council.');
+    game.stop();
+  } finally {
+    restore();
+  }
+});

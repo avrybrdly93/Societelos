@@ -799,6 +799,21 @@ class GameState extends EventEmitter {
     if (this.phase === PHASES.FINALE_MOD) this.advancePhase();
   }
 
+  /**
+   * The single resubmission allowed to a node asked to revise, during the
+   * FINALE_MOD resubmit window. Returns { ok, text } or { ok: false, reason }.
+   */
+  resubmitPolicy(node, text) {
+    const finale = this.finale;
+    if (this.phase !== PHASES.FINALE_MOD || !finale || finale.closed) return { ok: false, reason: 'NOT_REVISING' };
+    if (finale.revise[node] !== 'pending') return { ok: false, reason: finale.revise[node] ? 'ALREADY_RESUBMITTED' : 'NOT_REVISING' };
+    const clean = String(text == null ? '' : text).replace(/\s+/g, ' ').trim().slice(0, FINALE_MAX_CHARS).trim();
+    if (!clean) return { ok: false, reason: 'EMPTY' };
+    finale.revise[node] = 'resubmitted';
+    finale.submissions[node] = clean;
+    return { ok: true, text: clean };
+  }
+
   /** Nodes that have submitted a finale policy (never the text). */
   submittedNodes() {
     return this.finale ? Object.keys(this.finale.submissions) : [];

@@ -273,11 +273,15 @@ function initSockets(io, gameEngine) {
       return undefined;
     });
 
-    // finale:submit { text } -> this phone's write-in policy during FINALE_WRITE.
+    // finale:submit { text } -> this phone's write-in during FINALE_WRITE, or its
+    // single resubmission during the FINALE_MOD revise window.
     onValid(socket, 'finale:submit', { text: 'string' }, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
-      const result = game.submitPolicy(socket.data.node, payload.text);
+      // During FINALE_MOD the same event is the one resubmission for a "revise".
+      const result = game.phase === 'FINALE_MOD'
+        ? game.resubmitPolicy(socket.data.node, payload.text)
+        : game.submitPolicy(socket.data.node, payload.text);
       reply(result);
       // finale:progress { submitted: [node] } -> who has written (never what).
       if (result.ok) io.to(roomChannel(game.roomCode)).emit('finale:progress', { submitted: game.submittedNodes() });
