@@ -297,9 +297,37 @@
     'Who benefits from each option, and who pays?',
     'Which option would you choose if you did not know your own district?'
   ];
+  // Follow-up nudges rotate under the hook every 15 s to keep the room arguing.
+  const DEBATE_NUDGES = [
+    'Who benefits from each option, and who pays?',
+    'Ask the person who has been quietest: A or B?',
+    'What would a citizen of Eastworks say?',
+    'Which option would you pick if you did not know your district?',
+    'What is the worst thing that could happen under each option?',
+    'Someone here is arguing against their own interest. Who?'
+  ];
+  const NUDGE_MS = 15000;
+  let nudgeTimer = null;
+  function startNudges(cycle) {
+    clearInterval(nudgeTimer);
+    const el = document.getElementById('debate-nudge');
+    let i = (cycle || 0) % DEBATE_NUDGES.length;
+    const show = () => {
+      el.classList.remove('is-in');
+      void el.offsetWidth;
+      el.textContent = `\u25B8 ${DEBATE_NUDGES[i % DEBATE_NUDGES.length]}`;
+      el.classList.add('is-in');
+      i += 1;
+    };
+    show();
+    nudgeTimer = setInterval(show, NUDGE_MS);
+  }
+
   function renderDebate(payload) {
     const debating = payload.phase === 'DEBATE';
     document.getElementById('debate-panel').hidden = !debating;
+    if (!debating) clearInterval(nudgeTimer);
+    else startNudges(payload.cycle);
     document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase));
     if (!debating) return;
     const crisis = payload.crisis || {};
