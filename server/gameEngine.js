@@ -4,6 +4,27 @@
 // The server is the only source of truth: this module owns game state and
 // phase timers. socket.js translates client events into calls on it.
 
+const crypto = require('crypto');
+
+// Room codes: 4 uppercase letters, without the easily confused O and I
+// (digits are never used, so 0 and 1 cannot appear either).
+const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+const ROOM_CODE_LENGTH = 4;
+
+/**
+ * Generate a 4-letter room code not present in `taken` (a Set or Map of codes).
+ */
+function generateRoomCode(taken = new Set()) {
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    let code = '';
+    for (let i = 0; i < ROOM_CODE_LENGTH; i++) {
+      code += ROOM_CODE_ALPHABET[crypto.randomInt(ROOM_CODE_ALPHABET.length)];
+    }
+    if (!taken.has(code)) return code;
+  }
+  throw new Error('Unable to allocate a free room code');
+}
+
 /**
  * State for one game room (one projector + 5 phones).
  */
@@ -39,4 +60,4 @@ class GameState {
   }
 }
 
-module.exports = { GameState };
+module.exports = { GameState, generateRoomCode, ROOM_CODE_ALPHABET };
