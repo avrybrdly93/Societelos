@@ -105,6 +105,7 @@
     WORLD_REVEAL: 'view-world',
     FINALE_DEBATE: 'view-finale',
     FINALE_RANK: 'view-finale',
+    FINALE_ENACT: 'view-enact',
     END: 'view-end'
   };
   const PHASE_LABELS = {
@@ -615,6 +616,35 @@
         ? 'You rank the four you did not write. 1st = 4 points ... 4th = 1 point. Top three are enacted 50 / 25 / 25.'
         : 'Debate them. Nobody knows who wrote which.';
     }
+  });
+
+  // Finale enactment reveal: the top three by Borda score with their weights.
+  const PLACE_LABELS = { first: '1ST PLACE', second: '2ND PLACE', third: '3RD PLACE' };
+  function renderEnacted(enacted) {
+    const list = document.getElementById('enact-cards');
+    list.textContent = '';
+    (enacted || []).forEach((e) => {
+      const li = document.createElement('li');
+      li.className = `enact-card is-${e.place}`;
+      const head = document.createElement('p');
+      head.className = 'enact-place mono';
+      head.textContent = `${PLACE_LABELS[e.place] || e.place} \u2014 ${Math.round(e.weight * 100)}% WEIGHT`;
+      const name = document.createElement('p');
+      name.className = 'enact-name mono';
+      name.textContent = `${proposalLabel(e.id)} \u00B7 ${e.points} pts`;
+      const text = document.createElement('p');
+      text.className = 'enact-text';
+      text.textContent = e.text;
+      li.append(head, name, text);
+      list.appendChild(li);
+    });
+    document.getElementById('enact-wait').hidden = !!(enacted && enacted.length);
+  }
+  socket.on('phase', (payload) => {
+    if (payload.phase === 'FINALE_ENACT') renderEnacted([]);
+  });
+  socket.on('resolution', (payload) => {
+    if (payload && payload.result && payload.result.finale) renderEnacted(payload.result.enacted);
   });
 
   // Vote pips: which nodes have locked in, never what they chose.
