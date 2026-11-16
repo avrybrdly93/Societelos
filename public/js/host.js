@@ -344,6 +344,11 @@
     el.className = `forecast-banner mono ${unrest >= 25 ? 'is-danger' : unrest >= 5 ? 'is-warn' : 'is-ok'}`;
   }
 
+  // Called as the realized line reaches each month (1-12).
+  function onResolutionMonth(month, gdw, payload) {
+    state.resolutionMonth = month;
+  }
+
   function renderResolution(payload) {
     if (!payload || !payload.result) return;
     const r = payload.result;
@@ -357,7 +362,12 @@
     const last = months[months.length - 1];
     if (last && window.SocietelosMap) window.SocietelosMap.renderDistricts(last);
     renderForecastBanner(payload.forecast);
-    if (window.SocietelosCharts) window.SocietelosCharts.render(document.getElementById('forecast-chart'), payload);
+    const charts = window.SocietelosCharts;
+    if (charts) {
+      // Fan first, then the realized line plays month by month over 12 s.
+      charts.drawForecastFan(payload.forecast, document.getElementById('forecast-chart'));
+      charts.animateRealizedLine(payload.realized, (month, gdw) => onResolutionMonth(month, gdw, payload));
+    }
   }
   socket.on('resolution', renderResolution);
 

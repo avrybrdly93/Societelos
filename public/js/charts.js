@@ -182,6 +182,81 @@
     return active;
   }
 
+  // Running realized-line animation (one at a time).
+  let animation = null;
+
+  /** Stop the running realized-line animation, if any. */
+  function cancelAnimation() {
+    if (animation) {
+      cancelAnimationFrame(animation.frame);
+      animation = null;
+    }
+  }
+
+  /**
+   * Draw the realized GDW trajectory month by month (months 1-12) over
+   * `durationMs` (12 s) on top of the active forecast fan. `onMonthTick(m, gdw)`
+   * fires as the line reaches each month m = 1..12. Returns { cancel }.
+   */
+  function animateRealizedLine(realized, onMonthTick, { durationMs = 12000, canvas } = {}) {
+    cancelAnimation();
+    const values = Array.from((realized && (realized.gdw || realized)) || []);
+    if (canvas || !active) drawForecastFan(active ? active.forecast : null, canvas || (active && active.canvas));
+    if (!active || values.length < 2) return { cancel: cancelAnimation };
+    const chart = active;
+    const months = values.length - 1;
+    const msPerMonth = durationMs / months;
+    let lastMonth = 0;
+    const start = performance.now();
+    const state = { frame: null };
+    animation = state;
+
+    function drawUpTo(t) {
+      // t in months (fractional): redraw the fan, then the line up to t.
+      drawForecastFan(chart.forecast, chart.canvas);
+      const whole = Math.floor(t);
+      const partial = values.slice(0, whole + 1);
+      if (whole < months) {
+        const frac = t - whole;
+        partial.push(values[whole] + (values[whole + 1] - values[whole]) * frac);
+      }
+      const g = chart.g;
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.strokeStyle = COLORS.realized;
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      partial.forEach((v, i) => {
+        const m = Math.min(i, t);
+        return i === 0 ? ctx.moveTo(g.x(0), g.y(v)) : ctx.lineTo(g.x(m), g.y(v));
+      });
+      ctx.stroke();
+      // Leading dot.
+      const tipM = Math.min(t, months);
+      const tipV = partial[partial.length - 1];
+      ctx.fillStyle = COLORS.realized;
+      ctx.beginPath();
+      ctx.arc(g.x(tipM), g.y(tipV), 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function frame(now) {
+      if (animation !== state) return;
+      const t = Math.min(months, (now - start) / msPerMonth);
+      drawUpTo(t);
+      while (lastMonth < Math.floor(t)) {
+        lastMonth += 1;
+        if (typeof onMonthTick === 'function') onMonthTick(lastMonth, values[lastMonth]);
+      }
+      if (t < months) state.frame = requestAnimationFrame(frame);
+      else animation = null;
+    }
+    state.frame = requestAnimationFrame(frame);
+    return { cancel: () => { if (animation === state) cancelAnimation(); } };
+  }
+
   /**
    * Draw a whole resolution at once: forecast fan plus the full realized
    * line. `payload` is the server's resolution payload.
@@ -193,5 +268,5 @@
     if (chart) line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, render };
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render };
 })();
