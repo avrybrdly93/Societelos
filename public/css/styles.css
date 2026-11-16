@@ -397,3 +397,19 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
   box-shadow: 0 0 28px var(--loom-glow);
 }
 .vote-lock-title { font-size: 24px; font-weight: 700; letter-spacing: 0.12em; margin: 0 0 8px; }
+
+/* Touch targets: at least 56px tall, no grey tap flash, no 300ms delay. */
+body.mobile button,
+body.mobile .btn,
+body.mobile .m-input,
+body.mobile .override-row,
+body.mobile .role-drawer-toggle,
+body.mobile .shield-button {
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+body.mobile .shield-button { min-height: 44px; display: inline-flex; align-items: center; }
+body.mobile .btn:active { transform: scale(0.98); }
+body.mobile { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+body.mobile .m-input { -webkit-user-select: text; user-select: text; }
