@@ -238,9 +238,26 @@
 
   // Policy comparison cards: shown from DEBATE through VOTE.
   let currentOptions = null;
+  let currentForecasts = null;
+  // Forecast preview badge (only when the server sends forecasts, i.e.
+  // showForecastBeforeVote is on): end-of-cycle median and 90% band.
+  function renderForecastBadge(key) {
+    const el = document.getElementById(`policy-${key.toLowerCase()}-forecast`);
+    const f = currentForecasts && currentForecasts[key];
+    const last = (arr) => (Array.isArray(arr) && arr.length ? arr[arr.length - 1] : null);
+    const median = f && last(f.median);
+    el.hidden = typeof median !== 'number';
+    if (el.hidden) return;
+    const lo = last(f.p5);
+    const hi = last(f.p95);
+    const risk = typeof f.pCollapse === 'number' && f.pCollapse > 0 ? ` · collapse ${Math.round(f.pCollapse * 100)}%` : '';
+    el.textContent = `FORECAST ${median.toFixed(1)}% · ${lo.toFixed(0)}–${hi.toFixed(0)}%${risk}`;
+    el.classList.toggle('is-down', median < (state.gdw || 25));
+  }
   function renderPolicies(payload) {
     if (payload.options) currentOptions = payload.options;
-    if (payload.phase === 'INCIDENT' || payload.phase === 'CHAMBER') currentOptions = null;
+    if (payload.phase === 'DEBATE') currentForecasts = payload.forecasts || null;
+    if (payload.phase === 'INCIDENT' || payload.phase === 'CHAMBER') { currentOptions = null; currentForecasts = null; }
     const panel = document.getElementById('policy-panel');
     const show = !!currentOptions && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
     panel.hidden = !show;
@@ -249,6 +266,7 @@
       const o = currentOptions[key] || {};
       document.getElementById(`policy-${key.toLowerCase()}-name`).textContent = o.name || `Policy ${key}`;
       document.getElementById(`policy-${key.toLowerCase()}-text`).textContent = o.text || o.summary || '';
+      renderForecastBadge(key);
     }
   }
   socket.on('phase', renderPolicies);
@@ -332,6 +350,7 @@
   function setGdw(gdw) {
     if (typeof gdw !== 'number' || !Number.isFinite(gdw)) return;
     const target = Math.max(0, Math.min(100, gdw));
+    state.gdw = target;
     const band = gdwBand(target);
     const meter = document.getElementById('gdw-meter');
     meter.dataset.band = band.band;

@@ -550,3 +550,12 @@ body.host .policy-text { font-size: 22px; line-height: 1.3; clear: left; }
 .policy-vs { font-size: 22px; }
 .debate-clock { font-size: 96px; }
 body.host .debate-hook-text { font-size: 28px; }
+
+/* Forecast preview badge on policy cards (showForecastBeforeVote). */
+.policy-forecast[hidden] { display: none; }
+body.host .policy-forecast {
+  display: inline-block; margin: 12px 0 0; padding: 4px 10px;
+  font-size: 18px; letter-spacing: 0.06em;
+  border-radius: 6px; border: 1px solid var(--teal); color: var(--teal);
+}
+body.host .policy-forecast.is-down { border-color: var(--danger); color: var(--danger); }
