@@ -814,6 +814,7 @@ class GameState extends EventEmitter {
       simResult = this.runSimulation(winner);
     }
     const option = this.optionFor(winner);
+    const stateBefore = this.simState;
     if (simResult.finalState) this.simState = simResult.finalState;
     this.gdw = roundGdw(simResult.realized.finalGdw);
     // Monthly trajectory: months 1..12 of the realized run (month 0 is the
@@ -862,7 +863,11 @@ class GameState extends EventEmitter {
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
     const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
-    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens: this.data.citizens };
+    // Each citizen carries their cohort's simulated mood and biggest trait
+    // change, so the Loom's messages match the numbers.
+    const moods = new Map(sim.citizenMoods(stateBefore, this.simState, this.data.citizens).map((m) => [m.id, m]));
+    const citizens = (this.data.citizens || []).map((c) => ({ ...c, ...(moods.get(c.id) || {}) }));
+    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens };
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
       .catch((err) => {

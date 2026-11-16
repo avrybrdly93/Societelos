@@ -227,7 +227,15 @@ async function narrate(rawContext = {}, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) return narrateFallback(context);
   try {
-    const citizens = (context.citizens || []).map((c) => ({ id: c.id, name: c.name, age: c.age, district: c.district, cohort: c.cohort, voice: c.voice }));
+    // mood: the citizen's cohort wellbeing (0-100) after the cycle; topChange:
+    // the trait that moved most for that cohort (from the engine, if known).
+    const citizens = (context.citizens || []).map((c) => {
+      const out = { id: c.id, name: c.name, age: c.age, district: c.district, cohort: c.cohort, voice: c.voice };
+      if (typeof c.mood === 'number') out.mood = c.mood;
+      if (typeof c.moodChange === 'number') out.moodChange = c.moodChange;
+      if (c.topChange) out.topChange = c.topChange;
+      return out;
+    });
     const option = context.winningOption || {};
     const prompt = [
       `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
@@ -236,7 +244,7 @@ async function narrate(rawContext = {}, opts = {}) {
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
       `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
       'Pick 6-10 different citizens, favouring those whose district and cohort moved most in the summary.',
-      'Voice each one in character (see "voice"); their message must match how their own cohort fared.',
+      'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
     const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });

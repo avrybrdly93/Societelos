@@ -152,3 +152,14 @@ test('offline narration names the most affected district and the realized shock'
   assert.equal(loom.withSimFacts(long, summary), `${long} D4 Eastworks moved most.`);
   assert.equal(loom.withSimFacts('y'.repeat(199), summary), 'y'.repeat(199));
 });
+
+test('narrate sends each citizen\'s simulated mood and top trait change to Gemini', async () => {
+  let prompt = '';
+  const fetchImpl = async (url, init) => {
+    prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ loomLine: 'ok', messages: [] }) }] } }] }) };
+  };
+  const withMood = citizens.map((c, i) => ({ ...c, mood: 20 + i, moodChange: -1.5, topChange: { trait: 'trust', change: -0.04 } }));
+  await loom.narrate({ crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: {}, citizens: withMood }, { config: { ...OFFLINE, enabled: true, apiKey: 'k' }, fetchImpl });
+  assert.match(prompt, /"id":"mara"[^}]*"mood":20,"moodChange":-1\.5,"topChange":\{"trait":"trust","change":-0\.04\}/);
+});

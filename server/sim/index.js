@@ -39,7 +39,7 @@
  * @property {SimSummary} summary
  */
 
-const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
+const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood } = require('./state');
 const { runSingleSimulation } = require('./step');
 const { hashSeed } = require('./prng');
 
@@ -178,4 +178,25 @@ function simulateStub(state, opts = {}) {
   };
 }
 
-module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, percentile };
+/**
+ * Each citizen's mood after a cycle and what changed for their cohort:
+ * [{ id, mood (GDW-scaled, 0-100), moodChange, topChange: { trait, change } }].
+ * `before` and `after` are sim states (e.g. the cycle's start and finalState).
+ */
+function citizenMoods(before, after, citizens = []) {
+  if (!before || !after) return [];
+  return citizens.map((c) => {
+    const was = getCitizenMood(before, c);
+    const now = getCitizenMood(after, c);
+    if (!was || !now) return { id: c.id };
+    let top = null;
+    for (const t of Object.keys(now.traits)) {
+      const change = now.traits[t] - was.traits[t];
+      if (!top || Math.abs(change) > Math.abs(top.change)) top = { trait: t, change };
+    }
+    const r1 = (v) => Math.round(v * 10) / 10;
+    return { id: c.id, mood: r1(now.gdw), moodChange: r1(now.gdw - was.gdw), topChange: top && { trait: top.trait, change: Math.round(top.change * 1000) / 1000 } };
+  });
+}
+
+module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };
