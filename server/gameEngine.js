@@ -841,6 +841,7 @@ class GameState extends EventEmitter {
     const resolutionMs = this.durations.RESOLUTION;
     this.enterPhase(PHASES.RESOLUTION, {}, resolutionMs + LOOM_BUDGET_MS);
     const cycleAtStart = this.cycle;
+    const gameIdAtStart = this.gameId;
 
     // Trace: winning policy and realized GDW (no roles, no per-node votes).
     console.log(`[game ${this.roomCode}] cycle ${this.cycle} resolved: ${winner} "${option.name}"${tie ? ' (tie-break)' : ''}; GDW ${previousGdw} -> ${this.gdw}`);
@@ -852,7 +853,14 @@ class GameState extends EventEmitter {
         console.error(`[game ${this.roomCode}] narration failed: ${err.message}`);
         return loomStub.narrate(context);
       })
-      .then((narration) => {
+      .then(async (narration) => {
+        // A narration without a usable Loom line is treated as a failure.
+        if (!narration || typeof narration.loomLine !== 'string' || !narration.loomLine) {
+          console.error(`[game ${this.roomCode}] narration returned no loomLine; using fallback`);
+          narration = await loomStub.narrate(context);
+        }
+        // Stale: the game was reset or moved on while the Loom was thinking.
+        if (this.gameId !== gameIdAtStart || this.cycle !== cycleAtStart) return null;
         // Only aggregate totals leave the server; sanitizing strips any
         // per-node vote or Override field that might slip into the payload.
         this.lastResolution = sanitizeForBroadcast({
@@ -871,6 +879,11 @@ class GameState extends EventEmitter {
         }
         this.emit('resolution', this.lastResolution);
         return this.lastResolution;
+      })
+      .catch((err) => {
+        // Never leave an unhandled rejection: advancePhase ignores this promise.
+        console.error(`[game ${this.roomCode}] resolution broadcast failed: ${err.message}`);
+        return null;
       });
   }
 

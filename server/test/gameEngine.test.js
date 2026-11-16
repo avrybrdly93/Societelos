@@ -354,3 +354,30 @@ test('resolution districts carry per-month wellbeing for all 5 districts', async
     for (const w of Object.values(month)) assert.ok(Number.isFinite(w) && w >= 0 && w <= 1);
   }
 });
+
+test('loom.narrate failures never reject: the resolution falls back safely', async () => {
+  const loom = require('../loom');
+  const original = loom.narrate;
+  try {
+    for (const bad of [async () => { throw new Error('boom'); }, async () => null, async () => ({ messages: [] })]) {
+      loom.narrate = bad;
+      const game = votingGame();
+      const resolution = await resolveWith(game, 'B');
+      assert.ok(resolution, 'resolution still emitted');
+      assert.ok(typeof resolution.loomLine === 'string' && resolution.loomLine.length > 0);
+    }
+    // A listener that throws is caught too (the returned promise resolves to null).
+    loom.narrate = original;
+    const game = votingGame();
+    game.on('resolution', () => { throw new Error('listener failed'); });
+    const err = console.error;
+    console.error = () => {};
+    try {
+      assert.equal(await resolveWith(game, 'A'), null);
+    } finally {
+      console.error = err;
+    }
+  } finally {
+    loom.narrate = original;
+  }
+});
