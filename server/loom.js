@@ -291,6 +291,42 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// testConnection(): one tiny structured call to prove key, model and JSON
+// schema output all work. Run: npm run loom:test
+// ---------------------------------------------------------------------------
+
+const PING_SCHEMA = {
+  type: 'OBJECT',
+  properties: { ok: { type: 'BOOLEAN' }, line: { type: 'STRING' } },
+  required: ['ok', 'line']
+};
+
+/**
+ * @returns {Promise<{ ok: boolean, model: string, latencyMs?: number, line?: string, error?: string }>}
+ */
+async function testConnection(opts = {}) {
+  const cfg = opts.config || getConfig();
+  if (!cfg.enabled) return { ok: false, model: cfg.model, error: 'GEMINI_API_KEY not set (running offline)' };
+  const started = Date.now();
+  try {
+    const result = await callGemini(
+      'Connection test. Reply with ok=true and one short in-character line (max 80 characters) confirming you are online.',
+      { ...opts, config: cfg, schema: PING_SCHEMA, temperature: 0.2, maxOutputTokens: 100 }
+    );
+    const valid = result && result.ok === true && typeof result.line === 'string';
+    return {
+      ok: valid,
+      model: cfg.model,
+      latencyMs: Date.now() - started,
+      line: valid ? truncate(result.line, 80) : undefined,
+      error: valid ? undefined : 'response did not match the JSON schema'
+    };
+  } catch (err) {
+    return { ok: false, model: cfg.model, latencyMs: Date.now() - started, error: err.name === 'AbortError' ? 'timed out after 8 s' : err.message };
+  }
+}
+
 // Legacy names used by the pre-hackathon prototype (npm run start:legacy).
 async function narrateResolution(crisis, winningPolicy, simSummary) {
   return narrate({ crisis, winningOption: winningPolicy, simSummary });
@@ -299,4 +335,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };

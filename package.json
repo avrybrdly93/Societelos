@@ -14,7 +14,8 @@
     "check:dom": "node scripts/check-dom-ids.js",
     "check:offline": "node -e \"const fs=require('fs'),p=require('path');const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p.join(d,e.name)):[p.join(d,e.name)]);const bad=walk('public').filter(f=>/(index|mobile)\\.html$|\\/(css|js)\\//.test(f)).filter(f=>/(src|href)=[\\x22\\x27]https?:|@import\\s+url\\([\\x22\\x27]?https?:|fonts\\.googleapis|cdn\\./.test(fs.readFileSync(f,'utf8')));if(bad.length){console.error('External dependencies in:',bad.join(', '));process.exit(1)}console.log('No external CDN dependencies in public/')\"",
     "check:sim": "node -e \"const fs=require('fs');const hits=fs.readdirSync('server/sim').filter(f=>f.endsWith('.js')).flatMap(f=>fs.readFileSync('server/sim/'+f,'utf8').split('\\n').map((l,i)=>[f,i+1,l])).filter(([,,l])=>/Math\\.random\\s*\\(/.test(l.replace(/\\/\\/.*$/,'')) && !/^\\s*\\*/.test(l));if(hits.length){hits.forEach(h=>console.error(h.join(':')));process.exit(1)}console.log('server/sim: no Math.random() calls')\"",
-    "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\""
+    "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\"",
+    "loom:test": "node -e \"require('dotenv').config({ quiet: true }); require('./server/loom').testConnection().then((r) => { console.log(r); process.exit(r.ok ? 0 : 1); })\""
   },
   "dependencies": {
     "dotenv": "^18.0.10",
