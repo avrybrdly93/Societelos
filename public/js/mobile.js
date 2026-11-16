@@ -182,5 +182,25 @@
     document.getElementById('shield-intel').checked = false;
   });
 
+  // Policy names arrive with the DEBATE phase; label the vote buttons with them.
+  socket.on('phase', (payload) => {
+    if (payload && payload.options) {
+      const { A, B } = payload.options;
+      if (A) document.getElementById('vote-a-name').textContent = A.name || 'Policy A';
+      if (B) document.getElementById('vote-b-name').textContent = B.name || 'Policy B';
+    }
+  });
+
+  // Tap A or B -> vote:cast { choice, override }
+  function castVote(choice) {
+    const override = document.getElementById('vote-override').checked;
+    socket.emit('vote:cast', { choice, override }, (res) => {
+      if (!res || !res.ok) console.warn('[mobile] vote rejected', res && res.reason);
+    });
+  }
+  document.querySelectorAll('.vote-btn').forEach((btn) => {
+    btn.addEventListener('click', () => castVote(btn.dataset.choice));
+  });
+
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
