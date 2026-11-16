@@ -345,7 +345,7 @@
     document.getElementById('debate-panel').hidden = !debating;
     if (!debating) clearInterval(nudgeTimer);
     else startNudges(payload.cycle, payload.crisis && payload.crisis.debateHooks);
-    document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase));
+    document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION', 'FINALE_ENACT'].includes(payload.phase));
     if (!debating) return;
     const crisis = payload.crisis || {};
     document.getElementById('debate-hook').textContent = crisis.debateHook || DEFAULT_HOOKS[(payload.cycle || 0) % DEFAULT_HOOKS.length];
@@ -405,7 +405,8 @@
   }
   let lastPhaseSeen = null;
   socket.on('phase', (payload) => {
-    if (payload.phase !== 'RESOLUTION' && lastPhaseSeen === 'RESOLUTION') {
+    if (payload.phase !== lastPhaseSeen && ['RESOLUTION', 'FINALE_ENACT'].includes(lastPhaseSeen)) {
+      clearTimeout(enactTimer);
       stopResolutionAnimations();
       clearFeedTimers();
     }
@@ -458,8 +459,26 @@
     setGdw(month >= months.length - 1 && typeof payload.gdw === 'number' ? payload.gdw : gdw);
   }
 
+  // Finale: the enactment reveal holds the projector for a few seconds, then
+  // hands over to the chart, map and reactions for the package's 12 months.
+  const ENACT_REVEAL_MS = 5000;
+  let enactTimer = null;
   function renderResolution(payload) {
     if (!payload || !payload.result) return;
+    clearTimeout(enactTimer);
+    if (payload.result.finale) {
+      enactTimer = setTimeout(() => {
+        if (state.phase !== 'FINALE_ENACT') return;
+        showView('view-chamber');
+        document.getElementById('resolution-panel').hidden = false;
+        document.getElementById('policy-panel').hidden = true;
+        playResolution(payload);
+      }, ENACT_REVEAL_MS);
+      return;
+    }
+    playResolution(payload);
+  }
+  function playResolution(payload) {
     const r = payload.result;
     // Fixed Crisis 2B: the new power holder speaks in its own style.
     const gov = document.getElementById('governance-line');
@@ -474,7 +493,7 @@
     const weight = (totals.A || 0) + (totals.B || 0);
     const cast = NODE_IDS.length - (typeof r.abstained === 'number' ? r.abstained : 0);
     document.getElementById('badge-override').hidden = !(weight > cast);
-    document.getElementById('resolution-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
+    document.getElementById('resolution-policy').textContent = r.finale ? (r.policy || 'The Council Package') : `Policy ${r.winner}: ${r.policy || ''}`;
     typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
     // Reactions replace the incident posts and appear one by one, spread
     // across the 12 simulated months as they play out.
