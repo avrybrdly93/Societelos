@@ -275,8 +275,9 @@ function selectCrisis(crises, cycle, worldKey, roles = []) {
   const world = cycle <= 2 ? 'fixed' : worldKey;
   const mode = cycle === TOTAL_CYCLES ? 'writein' : 'binary';
   let raw = null;
-  if (Array.isArray(crises)) {
-    raw = crises.find((c) => c.world === world && c.cycle === cycle) || null;
+  const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : null;
+  if (list) {
+    raw = list.find((c) => c.world === world && c.cycle === cycle) || null;
   } else if (crises) {
     if (cycle <= 2) raw = (crises.fixedCrises || [])[cycle - 1];
     else if (crises.worlds && crises.worlds[worldKey]) {

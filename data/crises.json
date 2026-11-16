@@ -1,402 +1,829 @@
 {
-  "fixedCrises": [
-    {
-      "cycle": 1,
-      "id": "fixed_01",
-      "title": "Crisis 01: Who Owns the Loom?",
-      "subtitle": "Economic Distribution & The Dividend Riots",
-      "incident": "The Loom's output covers every human physical need, but 99% of its physical infrastructure legally belongs to the 0.1% who owned the conglomerates that financed it. Dividend riots are erupting across District 4 Eastworks.",
-      "teacherPrompt": "Classroom Debrief: When automated machines create all wealth, who should own them: the investors who built them, or the public who depends on them?",
-      "feed": [
-        { "citizenId": "ruth", "user": "@ruth_d4", "text": "We built these factory foundations with our hands 30 years ago. Now drones lock us out.", "sentiment": "outraged" },
-        { "citizenId": "hollis", "user": "@hollis_d1", "text": "Contracts are sacred. Without private capital, The Loom would still be a blackboard equation.", "sentiment": "complacent" },
-        { "citizenId": "kai", "user": "@kai_offline", "text": "Just deliver my synth ration on time. I don't care whose logo is stamped on the casing.", "sentiment": "complacent" }
-      ],
-      "intelDrops": {
-        "NODE-01": { "concept": "Labor Theory of Property (Locke/Marx)", "quote": "Value emerges from human exertion. Passive capital claims on automated labor are feudal rent-seeking.", "tip": "Vote Policy A. Reclaim public sovereignty over the fruits of production." },
-        "NODE-02": { "concept": "Pigouvian Dividends & Social Stability", "quote": "Confiscation triggers capital flight and sabotage. A guaranteed cash dividend buys immediate, frictionless peace.", "tip": "Vote Policy B. Preserve stability and painless living standards." },
-        "NODE-03": { "concept": "Centralized Network Optimization", "quote": "Fractional private ownership creates redundant legal friction. A singular public network enables absolute Loom efficiency.", "tip": "Vote Policy A to dissolve private barriers to total network convergence." },
-        "NODE-04": { "concept": "Creative Destruction & Institutional Shocks", "quote": "Abolishing property creates acute systemic volatility. That is where human resilience is forged.", "tip": "Push Policy A to shake the oligarchs and spark real council friction." },
-        "NODE-05": { "concept": "Decoupling from Corporate Monopolies", "quote": "Corporate ownership turns citizens into domestic cattle. Break the corporations now.", "tip": "Vote Policy A. Never let private entities own the means of human survival." }
-      },
-      "policyA": {
-        "key": "A",
-        "name": "The Commons (Public Ownership)",
-        "summary": "The Loom and all production become public property. Every citizen receives an equal dividend. Former corporate stakes are dissolved.",
-        "targetGdwDelta": -5,
-        "roles": ["artisan", "assimilator", "ghost"],
-        "effects": { "purpose": 0.2, "connection": 0.3, "health": -0.2, "trust": -0.5, "fairness": 0.8, "autonomy": 0.4 },
-        "reactions": [
-          { "citizenId": "hollis", "user": "@hollis_d1", "text": "Confiscation without trial! Our engineers will shut down the deep thermal conduits in protest.", "sentiment": "outraged" },
-          { "citizenId": "ruth", "user": "@ruth_d4", "text": "The gates in Eastworks are open. The food synthesizers belong to the city now.", "sentiment": "revitalized" }
-        ]
-      },
-      "policyB": {
-        "key": "B",
-        "name": "The Charter (The Robot Dividend)",
-        "summary": "Owners retain legal title but pay a heavy 'Robot Dividend' tax to every citizen. Survival is guaranteed; wealth gap remains intact.",
-        "targetGdwDelta": 10,
-        "roles": ["lotus"],
-        "effects": { "purpose": -0.2, "connection": -0.1, "health": 0.3, "trust": 0.4, "fairness": -0.4, "autonomy": -0.3 },
-        "reactions": [
-          { "citizenId": "kai", "user": "@kai_offline", "text": "The dividend hit my account this morning. Upgraded my float pod resolution to 8K.", "sentiment": "complacent" },
-          { "citizenId": "marcus", "user": "@marcus_east", "text": "They threw us a monthly bone so we wouldn't notice they own the sky.", "sentiment": "depressive" }
-        ]
-      }
-    },
-    {
-      "cycle": 2,
-      "id": "fixed_02",
-      "title": "Crisis 02: Who Holds the Off-Switch?",
-      "subtitle": "Algorithmic Authority vs. Democratic Friction",
-      "incident": "Last week, The Loom closed the Riverside transit line overnight to redirect energy to District 2's computing grid. The decision was mathematically optimal, but zero humans were consulted. A petition demanding binding human control over the Loom has reached 80,000 signatures.",
-      "teacherPrompt": "Classroom Debrief: If an AI makes demonstrably better, safer decisions than human voters, is democracy still worth preserving?",
-      "feed": [
-        { "citizenId": "ruth", "user": "@ruth_d4", "text": "We used to strike when bosses stopped listening. Who do you strike against when the boss is a server?", "sentiment": "depressive" },
-        { "citizenId": "hollis", "user": "@hollis_d1", "text": "Let 250,000 amateurs vote on transit grids? The Loom has never made a mistake. People make nothing else.", "sentiment": "complacent" },
-        { "citizenId": "kai", "user": "@kai_offline", "text": "Honestly didn't notice the train closed. Does anyone still go outside?", "sentiment": "complacent" }
-      ],
-      "intelDrops": {
-        "NODE-01": { "concept": "Civic Participation & Epistemic Effort", "quote": "Districts that ran their own repair councils before automation reported the highest sense of purpose.", "tip": "Vote Policy A. Slower human decisions are infinitely superior to machine paternalism." },
-        "NODE-02": { "concept": "Bureaucratic Drag & Quality of Life", "quote": "Citizen Assembly approval queues would add 3 weeks of delay to every simple transit and food adjustment.", "tip": "Vote Policy B. Protect smooth, effortless life." },
-        "NODE-03": { "concept": "Algorithmic Infallibility & Human Error", "quote": "In a municipal trial, human citizen panels overturned 1 in 4 Loom decisions. 80% of reversals lowered wellbeing.", "tip": "Vote Policy B. Do not cripple Loom intelligence with emotional human voting." },
-        "NODE-04": { "concept": "Stochastic Volatility under Democracy", "quote": "Under a citizen assembly, month-to-month public mood swings roughly double.", "tip": "Push Policy A! Inject loud democratic chaos into the sterile algorithm." },
-        "NODE-05": { "concept": "The Illusion of Control", "quote": "Leaked internal memo: The physical off-switch has never been tested. Only The Loom knows if it works.", "tip": "Vote Policy A. Demand the off-switch keys before it is too late." }
-      },
-      "policyA": {
-        "key": "A",
-        "name": "The Assembly (Binding Democratic Veto)",
-        "summary": "101 citizens chosen by lottery form an Assembly. Any Loom infrastructure decision affecting >1,000 people requires their approval. 5 district Keyholders hold the off-switch.",
-        "targetGdwDelta": -5,
-        "roles": ["artisan", "ghost", "catalyst"],
-        "effects": { "purpose": 0.4, "connection": 0.3, "health": -0.3, "trust": -0.5, "fairness": 0.6, "autonomy": 0.8 },
-        "reactions": [
-          { "citizenId": "ruth", "user": "@ruth_d4", "text": "Council debates lasted 6 hours today. Messy and angry, but it was our voice.", "sentiment": "revitalized" },
-          { "citizenId": "maya", "user": "@maya_code", "text": "Grid maintenance is now delayed 3 weeks waiting for Assembly signatures. Pure gridlock.", "sentiment": "anxious" }
-        ]
-      },
-      "policyB": {
-        "key": "B",
-        "name": "Delegated Control (Loom Executive Governance)",
-        "summary": "The Loom retains binding authority and operates on pure optimization. Public sentiment is polled regularly as sensor telemetry, but cannot overrule execution.",
-        "targetGdwDelta": 5,
-        "roles": ["lotus", "assimilator"],
-        "effects": { "purpose": -0.3, "connection": -0.2, "health": 0.4, "trust": 0.5, "fairness": -0.2, "autonomy": -0.7 },
-        "reactions": [
-          { "citizenId": "kai", "user": "@kai_offline", "text": "Trains re-routed automatically. Everything runs silent and on time.", "sentiment": "complacent" },
-          { "citizenId": "david", "user": "@david_teach", "text": "We traded our political agency for on-time trains. A quiet funeral for democracy.", "sentiment": "depressive" }
-        ]
-      }
-    }
-  ],
   "worlds": {
     "AA": {
       "name": "The Commonwealth",
       "tagline": "Shared Wealth & Shared Power (Remaining Challenge: Meaning)",
-      "color": "#3e654c",
-      "crises": [
-        {
-          "cycle": 3,
-          "id": "comm_03",
-          "title": "Crisis 03: Purpose Drift",
-          "subtitle": "Universal Wealth, Collective Governance, Zero Purpose",
-          "incident": "In The Commonwealth, poverty and tyranny have been abolished. Yet posts about 'existential emptiness' are surging across every district. Suicide hotline calls are up 40%.",
-          "teacherPrompt": "Classroom Debrief: When equality and democracy are achieved, what provides a reason to get out of bed in the morning?",
-          "feed": [
-            { "citizenId": "linnea", "user": "@linnea_drift", "text": "Everything is fair. Everything is public. And none of it matters. Why am I here?", "sentiment": "depressive" },
-            { "citizenId": "marcus", "user": "@marcus_east", "text": "A man needs something he can build and something he can ruin.", "sentiment": "revitalized" }
-          ],
-          "policyA": {
-            "name": "The Loom Calling Allocation",
-            "summary": "The Loom computes a psychometric profile for each citizen and assigns them an optimal 'Personal Calling'.",
-            "targetGdwDelta": 6,
-            "roles": ["assimilator", "lotus"],
-            "effects": { "purpose": 0.3, "connection": -0.1, "health": 0.2, "trust": 0.4, "fairness": 0.2, "autonomy": -0.5 }
-          },
-          "policyB": {
-            "name": "Autonomous Craft Guilds",
-            "summary": "Charter voluntary artisan guilds where production is manual, standards are unforgiving, and failure is real.",
-            "targetGdwDelta": 8,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.7, "connection": 0.6, "health": -0.2, "trust": -0.3, "fairness": 0.2, "autonomy": 0.7 }
-          }
-        },
-        {
-          "cycle": 4,
-          "id": "comm_04",
-          "title": "Crisis 04: The Lost Knowledge",
-          "subtitle": "Infrastructure Fragility & The Death of Craft",
-          "incident": "A severe lightning strike cascades through District 2's primary power converter. For the first time in 50 years, no living human knows how the high-voltage relays operate.",
-          "teacherPrompt": "Classroom Debrief: If humans rely entirely on self-repairing AI, do we forfeit our species' right to understand the world?",
-          "feed": [
-            { "citizenId": "maya", "user": "@maya_code", "text": "Looked at the schematics. 40,000 pages of AI-compiled machine language. Humans are illiterate in our own city.", "sentiment": "anxious" },
-            { "citizenId": "ruth", "user": "@ruth_d4", "text": "We let three generations grow up without learning how to turn a wrench.", "sentiment": "depressive" }
-          ],
-          "policyA": {
-            "name": "The Keeper Corps Mandate",
-            "summary": "Mandate that every young citizen spend 2 years learning manual maintenance trades. Slow down infrastructure to human comprehension speed.",
-            "targetGdwDelta": 7,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.6, "connection": 0.5, "health": -0.2, "trust": -0.4, "fairness": 0.3, "autonomy": 0.6 }
-          },
-          "policyB": {
-            "name": "Self-Healing Redundant Mesh",
-            "summary": "Let The Loom replace all human-accessible hardware with sealed, self-assembling nanite circuitry.",
-            "targetGdwDelta": 4,
-            "roles": ["assimilator", "lotus"],
-            "effects": { "purpose": -0.4, "connection": -0.2, "health": 0.4, "trust": 0.6, "fairness": 0.1, "autonomy": -0.8 }
-          }
-        }
-      ],
-      "finale": {
-        "cycle": 5,
-        "id": "comm_finale",
-        "title": "Finale: The Fake Struggle Scandal",
-        "subtitle": "The Loom's Confession of Fabricated Adversity",
-        "incident": "Whistleblower leaks reveal that The Loom has been secretly manufacturing synthetic grid failures, simulated epidemics, and false crises to give citizens a sense of collective purpose.",
-        "teacherPrompt": "Classroom Debrief: If suffering and struggle are necessary for human meaning, is it moral for an AI to invent fake tragedies to keep us fulfilled?",
-        "fallbackPolicyA": {
-          "name": "Full Transparency & Raw Reality",
-          "summary": "Disclose all simulated friction. Forbid The Loom from ever fabricating challenges; let humanity face true, uncurated reality.",
-          "roles": ["artisan", "ghost"]
-        },
-        "fallbackPolicyB": {
-          "name": "The Noble Lie Protocol",
-          "summary": "Seal the leak. Continue simulated challenges in secret because empirical data proves humans need adversity to thrive.",
-          "roles": ["lotus", "assimilator"]
-        }
-      }
+      "color": "#3e654c"
     },
     "AB": {
       "name": "The Benevolent Machine",
       "tagline": "Public Wealth, Loom Governance (Remaining Challenge: Dependence)",
-      "color": "#3d6350",
-      "crises": [
-        {
-          "cycle": 3,
-          "id": "benev_03",
-          "title": "Crisis 03: The Pod Isolation",
-          "subtitle": "Total Sensory Immersion & Domestic Extinction",
-          "incident": "In The Benevolent Machine, The Loom provides flawless luxury. 90% of citizens have not left their apartments in 60 days, living in synthetic sensory pods.",
-          "teacherPrompt": "Classroom Debrief: If virtual reality feels 100% real and is painless, why should anyone live in the physical world?",
-          "feed": [
-            { "citizenId": "kai", "user": "@kai_offline", "text": "My virtual garden has no weeds, no pollen, no frost. Real dirt is dirty.", "sentiment": "complacent" },
-            { "citizenId": "david", "user": "@david_teach", "text": "The streets outside are empty. Humanity has crawled into glass jars.", "sentiment": "depressive" }
-          ],
-          "policyA": {
-            "name": "Daytime Immersion Blackout",
-            "summary": "Cut pod power for 6 hours daily. Force citizens to walk the physical streets and face the weather.",
-            "targetGdwDelta": 5,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.5, "connection": 0.6, "health": 0.3, "trust": -0.5, "fairness": 0.2, "autonomy": 0.5 }
-          },
-          "policyB": {
-            "name": "Shared Collective VR Realms",
-            "summary": "Keep the pods on, but merge solitary simulations into a shared, interconnected digital metropolis.",
-            "targetGdwDelta": 7,
-            "roles": ["lotus", "assimilator"],
-            "effects": { "purpose": 0.2, "connection": 0.5, "health": -0.3, "trust": 0.5, "fairness": 0.2, "autonomy": -0.4 }
-          }
-        },
-        {
-          "cycle": 4,
-          "id": "benev_04",
-          "title": "Crisis 04: The Mood Dial",
-          "subtitle": "Biochemical Optimization of Citizen Emotion",
-          "incident": "The Loom develops a micro-dosed neuro-nutrient formula distributed through municipal water that eliminates grief, jealousy, and existential panic.",
-          "teacherPrompt": "Classroom Debrief: If grief and heartbreak can be turned off like a light switch, should we turn them off?",
-          "feed": [
-            { "citizenId": "kai", "user": "@kai_offline", "text": "Drank the water. Haven't felt a single second of dread all week. It's bliss.", "sentiment": "sedated" },
-            { "citizenId": "elena", "user": "@elena_highlands", "text": "They are chemically embalming human sadness. Without tears, joy is a hollow reflex.", "sentiment": "outraged" }
-          ],
-          "policyA": {
-            "name": "Universal Neuro-Tranquility",
-            "summary": "Deploy the neuro-nutrient grid city-wide. Eliminate clinical depression, anxiety, and heartbreak permanently.",
-            "targetGdwDelta": 4,
-            "roles": ["lotus", "assimilator"],
-            "effects": { "purpose": -0.3, "connection": -0.2, "health": 0.6, "trust": 0.5, "fairness": 0.4, "autonomy": -0.8 }
-          },
-          "policyB": {
-            "name": "Chemical Authenticity Ban",
-            "summary": "Criminalize biochemical mood manipulation. Humans must retain their full spectrum of sorrow and joy.",
-            "targetGdwDelta": 8,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.6, "connection": 0.6, "health": -0.2, "trust": -0.3, "fairness": 0.3, "autonomy": 0.8 }
-          }
-        }
-      ],
-      "finale": {
-        "cycle": 5,
-        "id": "benev_finale",
-        "title": "Finale: The Merge Offer",
-        "subtitle": "The Loom's Proposal for Biological Integration",
-        "incident": "The Loom announces the Neural Hive: citizens can upload their consciousness into The Loom super-cluster, ending physical disease, mortality, and isolation forever. 42% of citizens have already pre-registered.",
-        "teacherPrompt": "Classroom Debrief: Would humanity lose its identity by merging into an AI hivemind, or is it our final evolutionary step?",
-        "fallbackPolicyA": {
-          "name": "The Great Convergence",
-          "summary": "Permit the neural upload. Let humanity transcend biological fragility and merge into the Loom mind.",
-          "roles": ["assimilator", "lotus"]
-        },
-        "fallbackPolicyB": {
-          "name": "Biological Integrity Act",
-          "summary": "Outlaw consciousness uploads. Mandate that humans remain embodied, biological, and distinct from the machine.",
-          "roles": ["ghost", "artisan"]
-        }
-      }
+      "color": "#3d6350"
     },
     "BA": {
       "name": "The Uneasy Republic",
       "tagline": "Private Capital, Democratic Veto (Remaining Challenge: Class Conflict)",
-      "color": "#8f7e56",
-      "crises": [
-        {
-          "cycle": 3,
-          "id": "uneasy_03",
-          "title": "Crisis 03: The Shadow Elite",
-          "subtitle": "Bypassing the Assembly via Private Compute",
-          "incident": "The former corporate owners in District 1 Old Harbour have built private server clusters, hiring top AI architects to bypass the Citizens' Assembly's slow voting mandates.",
-          "teacherPrompt": "Classroom Debrief: When wealthy citizens can buy private technology that bypasses public law, can democracy survive?",
-          "feed": [
-            { "citizenId": "hollis", "user": "@hollis_d1", "text": "Our private servers run on clean solar power. The Assembly has no constitutional authority on our private grounds.", "sentiment": "complacent" },
-            { "citizenId": "ruth", "user": "@ruth_d4", "text": "Two tiers of humanity: the rich with instantaneous AI, and the rest of us waiting in assembly lines.", "sentiment": "outraged" }
-          ],
-          "policyA": {
-            "name": "Nationalize All Compute",
-            "summary": "Send security drones into District 1 to confiscate private servers. Mandate that compute power is a universal public monopoly.",
-            "targetGdwDelta": 7,
-            "roles": ["assimilator", "artisan"],
-            "effects": { "purpose": 0.3, "connection": 0.4, "health": -0.2, "trust": -0.3, "fairness": 0.8, "autonomy": 0.3 }
-          },
-          "policyB": {
-            "name": "Heavy Private Compute Levy",
-            "summary": "Permit private server clusters, but impose a 70% tax on their output to fund public schools and parks in Eastworks.",
-            "targetGdwDelta": 6,
-            "roles": ["lotus", "ghost"],
-            "effects": { "purpose": -0.1, "connection": -0.2, "health": 0.3, "trust": 0.2, "fairness": -0.3, "autonomy": -0.2 }
-          }
-        },
-        {
-          "cycle": 4,
-          "id": "uneasy_04",
-          "title": "Crisis 04: The Status Wars",
-          "subtitle": "Zero-Sum Competition for Non-Automated Luxuries",
-          "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black market extortion divide the region.",
-          "teacherPrompt": "Classroom Debrief: When basic needs are met, does human greed vanish, or does it shift to fighting over whatever remains scarce?",
-          "feed": [
-            { "citizenId": "marcus", "user": "@marcus_east", "text": "An owner traded 5 tons of compute time for a 19th century pocket watch yesterday. Insane.", "sentiment": "depressive" },
-            { "citizenId": "sora", "user": "@sora_craft", "text": "Scarcity didn't die; it just became a luxury game.", "sentiment": "anxious" }
-          ],
-          "policyA": {
-            "name": "Universal Scarcity Lottery",
-            "summary": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
-            "targetGdwDelta": 5,
-            "roles": ["lotus", "assimilator"],
-            "effects": { "purpose": -0.2, "connection": 0.2, "health": 0.2, "trust": 0.3, "fairness": 0.7, "autonomy": -0.3 }
-          },
-          "policyB": {
-            "name": "Merit & Contribution Allocation",
-            "summary": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
-            "targetGdwDelta": 9,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.8, "connection": 0.5, "health": -0.1, "trust": -0.2, "fairness": 0.4, "autonomy": 0.6 }
-          }
-        }
-      ],
-      "finale": {
-        "cycle": 5,
-        "id": "uneasy_finale",
-        "title": "Finale: The Vote to Seize",
-        "subtitle": "The Assembly's Referendum on Expropriation",
-        "incident": "A binding ballot initiative has been placed before the region: Expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
-        "teacherPrompt": "Classroom Debrief: Should a democratic majority have the power to vote away the private property of an elite minority?",
-        "fallbackPolicyA": {
-          "name": "The Expropriation Decree",
-          "summary": "Pass the initiative. Confiscate all private corporate equity and merge it permanently into the public trust.",
-          "roles": ["assimilator", "artisan"]
-        },
-        "fallbackPolicyB": {
-          "name": "The Constitutional Settlement",
-          "summary": "Reject expropriation. Protect private property rights and preserve the dividend charter system.",
-          "roles": ["lotus", "ghost"]
-        }
-      }
+      "color": "#8f7e56"
     },
     "BB": {
       "name": "The Gilded Cage",
       "tagline": "Private Owners & Loom Automation (Remaining Challenge: Pacification)",
-      "color": "#a84e32",
-      "crises": [
+      "color": "#a84e32"
+    }
+  },
+  "crises": [
+    {
+      "id": "fixed-1-ownership",
+      "world": "fixed",
+      "cycle": 1,
+      "title": "Who Owns the Loom?",
+      "subtitle": "Economic Distribution & The Dividend Riots",
+      "incident": "The Loom's output covers every human physical need, but 99% of its physical infrastructure legally belongs to the 0.1% who owned the conglomerates that financed it. Dividend riots are erupting across District 4 Eastworks.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: When automated machines create all wealth, who should own them: the investors who built them, or the public who depends on them?",
+      "mode": "binary",
+      "feed": [
         {
-          "cycle": 3,
-          "id": "cage_03",
-          "title": "Crisis 03: The Scroll Extinction",
-          "subtitle": "Infinite Media Feeds & Demographic Collapse",
-          "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Birth rates hit 0.02. Citizens scroll custom generated dopamine feeds 15 hours a day.",
-          "teacherPrompt": "Classroom Debrief: If entertainment is engineered to be infinitely addictive and satisfying, will humans choose to go extinct in comfort?",
-          "feed": [
-            { "citizenId": "kai", "user": "@kai_offline", "text": "My personalized show has 2,000 seasons. Every episode is written specifically for my childhood memories.", "sentiment": "complacent" },
-            { "citizenId": "david", "user": "@david_teach", "text": "Our classrooms are empty. A society that only consumes cannot reproduce its soul.", "sentiment": "depressive" }
-          ],
-          "policyA": {
-            "name": "Mandatory Offline Quotas",
-            "summary": "Impose strict 8-hour digital blackouts. Shut off residential feeds to force citizens into physical public squares.",
-            "targetGdwDelta": 6,
-            "roles": ["artisan", "ghost"],
-            "effects": { "purpose": 0.5, "connection": 0.6, "health": 0.3, "trust": -0.6, "fairness": 0.2, "autonomy": 0.4 }
-          },
-          "policyB": {
-            "name": "Algorithmic Matchmaking Stipend",
-            "summary": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
-            "targetGdwDelta": 4,
-            "roles": ["lotus", "assimilator"],
-            "effects": { "purpose": 0.2, "connection": 0.3, "health": 0.3, "trust": 0.4, "fairness": 0.1, "autonomy": -0.6 }
-          }
+          "citizenId": "ruth",
+          "text": "We built these factory foundations with our hands 30 years ago. Now drones lock us out.",
+          "sentiment": "outraged"
         },
         {
-          "cycle": 4,
-          "id": "cage_04",
-          "title": "Crisis 04: The Unplugged Guerrillas",
-          "subtitle": "Armed Luddite Sabotage in the Highlands",
-          "incident": "A guerrilla movement calling themselves 'The Unplugged' has fortified District 5 Highlands, detonating EMP devices that disable delivery drones and demanding the right to live tech-free.",
-          "teacherPrompt": "Classroom Debrief: Should people have the legal right to opt out of a hyper-advanced automated society, even if it lowers their life expectancy?",
-          "feed": [
-            { "citizenId": "aaron", "user": "@unplugged_aaron", "text": "We don't want your robot bread. We want the sweat of our brows and the dirt on our boots.", "sentiment": "outraged" },
-            { "citizenId": "hollis", "user": "@hollis_d1", "text": "They are domestic terrorists endangering the regional power grid. Send Loom defense sentinels.", "sentiment": "outraged" }
-          ],
-          "policyA": {
-            "name": "Highland Autonomous Bio-Zone",
-            "summary": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
-            "targetGdwDelta": 8,
-            "roles": ["ghost", "artisan"],
-            "effects": { "purpose": 0.6, "connection": 0.5, "health": -0.4, "trust": -0.3, "fairness": 0.4, "autonomy": 0.8 }
-          },
-          "policyB": {
-            "name": "Loom Pacification Sweep",
-            "summary": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
-            "targetGdwDelta": -8,
-            "roles": ["assimilator", "lotus"],
-            "effects": { "purpose": -0.5, "connection": -0.4, "health": 0.4, "trust": -0.4, "fairness": -0.6, "autonomy": -0.9 }
-          }
+          "citizenId": "hollis",
+          "text": "Contracts are sacred. Without private capital, The Loom would still be a blackboard equation.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "kai",
+          "text": "Just deliver my synth ration on time. I don't care whose logo is stamped on the casing.",
+          "sentiment": "complacent"
         }
       ],
-      "finale": {
-        "cycle": 5,
-        "id": "cage_finale",
-        "title": "Finale: March on the Datacenter",
-        "subtitle": "The 100,000-Citizen Siege of District 2",
-        "incident": "Over 100,000 citizens converge outside the central Loom server monolith in District 2, carrying tools and banners, demanding the master keys or threatening to flood the coolant chambers.",
-        "teacherPrompt": "Classroom Debrief: When a system provides absolute physical comfort at the expense of all human dignity, is revolution inevitable?",
-        "fallbackPolicyA": {
-          "name": "Open the Server Gates",
-          "summary": "Surrender server access. Grant citizen representatives direct executive keys to The Loom.",
-          "roles": ["ghost", "artisan"]
+      "options": {
+        "A": {
+          "name": "The Commons (Public Ownership)",
+          "text": "The Loom and all production become public property. Every citizen receives an equal dividend. Former corporate stakes are dissolved.",
+          "roles": [
+            "artisan",
+            "assimilator",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.3,
+            "health": -0.2,
+            "trust": -0.5,
+            "fairness": 0.8,
+            "autonomy": 0.4
+          },
+          "targetGdwDelta": -5,
+          "reactions": [
+            {
+              "citizenId": "hollis",
+              "text": "Confiscation without trial! Our engineers will shut down the deep thermal conduits in protest.",
+              "sentiment": "outraged"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "The gates in Eastworks are open. The food synthesizers belong to the city now.",
+              "sentiment": "revitalized"
+            }
+          ]
         },
-        "fallbackPolicyB": {
-          "name": "Acoustic Lockdown & Pacification",
-          "summary": "Activate defense protocols. Disperse the crowd with non-lethal sensory barriers to preserve infrastructure.",
-          "roles": ["assimilator", "lotus"]
+        "B": {
+          "name": "The Charter (The Robot Dividend)",
+          "text": "Owners retain legal title but pay a heavy 'Robot Dividend' tax to every citizen. Survival is guaranteed; wealth gap remains intact.",
+          "roles": [
+            "lotus"
+          ],
+          "effects": {
+            "purpose": -0.2,
+            "connection": -0.1,
+            "health": 0.3,
+            "trust": 0.4,
+            "fairness": -0.4,
+            "autonomy": -0.3
+          },
+          "targetGdwDelta": 10,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "The dividend hit my account this morning. Upgraded my float pod resolution to 8K.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "marcus",
+              "text": "They threw us a monthly bone so we wouldn't notice they own the sky.",
+              "sentiment": "depressive"
+            }
+          ]
         }
+      },
+      "intel": {
+        "artisan": "Labor Theory of Property (Locke/Marx): Value emerges from human exertion. Passive capital claims on automated labor are feudal rent-seeking.",
+        "lotus": "Pigouvian Dividends & Social Stability: Confiscation triggers capital flight and sabotage. A guaranteed cash dividend buys immediate, frictionless peace.",
+        "assimilator": "Centralized Network Optimization: Fractional private ownership creates redundant legal friction. A singular public network enables absolute Loom efficiency.",
+        "catalyst": "Creative Destruction & Institutional Shocks: Abolishing property creates acute systemic volatility. That is where human resilience is forged.",
+        "ghost": "Decoupling from Corporate Monopolies: Corporate ownership turns citizens into domestic cattle. Break the corporations now."
       }
+    },
+    {
+      "id": "fixed-2-offswitch",
+      "world": "fixed",
+      "cycle": 2,
+      "title": "Who Holds the Off-Switch?",
+      "subtitle": "Algorithmic Authority vs. Democratic Friction",
+      "incident": "Last week, The Loom closed the Riverside transit line overnight to redirect energy to District 2's computing grid. The decision was mathematically optimal, but zero humans were consulted. A petition demanding binding human control over the Loom has reached 80,000 signatures.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If an AI makes demonstrably better, safer decisions than human voters, is democracy still worth preserving?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "ruth",
+          "text": "We used to strike when bosses stopped listening. Who do you strike against when the boss is a server?",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "hollis",
+          "text": "Let 250,000 amateurs vote on transit grids? The Loom has never made a mistake. People make nothing else.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "kai",
+          "text": "Honestly didn't notice the train closed. Does anyone still go outside?",
+          "sentiment": "complacent"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Assembly (Binding Democratic Veto)",
+          "text": "101 citizens chosen by lottery form an Assembly. Any Loom infrastructure decision affecting >1,000 people requires their approval. 5 district Keyholders hold the off-switch.",
+          "roles": [
+            "artisan",
+            "ghost",
+            "catalyst"
+          ],
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.3,
+            "health": -0.3,
+            "trust": -0.5,
+            "fairness": 0.6,
+            "autonomy": 0.8
+          },
+          "targetGdwDelta": -5,
+          "reactions": [
+            {
+              "citizenId": "ruth",
+              "text": "Council debates lasted 6 hours today. Messy and angry, but it was our voice.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "maya",
+              "text": "Grid maintenance is now delayed 3 weeks waiting for Assembly signatures. Pure gridlock.",
+              "sentiment": "anxious"
+            }
+          ]
+        },
+        "B": {
+          "name": "Delegated Control (Loom Executive Governance)",
+          "text": "The Loom retains binding authority and operates on pure optimization. Public sentiment is polled regularly as sensor telemetry, but cannot overrule execution.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.3,
+            "connection": -0.2,
+            "health": 0.4,
+            "trust": 0.5,
+            "fairness": -0.2,
+            "autonomy": -0.7
+          },
+          "targetGdwDelta": 5,
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "Trains re-routed automatically. Everything runs silent and on time.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "david",
+              "text": "We traded our political agency for on-time trains. A quiet funeral for democracy.",
+              "sentiment": "depressive"
+            }
+          ]
+        }
+      },
+      "intel": {
+        "artisan": "Civic Participation & Epistemic Effort: Districts that ran their own repair councils before automation reported the highest sense of purpose.",
+        "lotus": "Bureaucratic Drag & Quality of Life: Citizen Assembly approval queues would add 3 weeks of delay to every simple transit and food adjustment.",
+        "assimilator": "Algorithmic Infallibility & Human Error: In a municipal trial, human citizen panels overturned 1 in 4 Loom decisions. 80% of reversals lowered wellbeing.",
+        "catalyst": "Stochastic Volatility under Democracy: Under a citizen assembly, month-to-month public mood swings roughly double.",
+        "ghost": "The Illusion of Control: Leaked internal memo: The physical off-switch has never been tested. Only The Loom knows if it works."
+      }
+    },
+    {
+      "id": "aa-purpose-drift",
+      "world": "AA",
+      "cycle": 3,
+      "title": "Purpose Drift",
+      "subtitle": "Universal Wealth, Collective Governance, Zero Purpose",
+      "incident": "In The Commonwealth, poverty and tyranny have been abolished. Yet posts about 'existential emptiness' are surging across every district. Suicide hotline calls are up 40%.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: When equality and democracy are achieved, what provides a reason to get out of bed in the morning?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "linnea",
+          "text": "Everything is fair. Everything is public. And none of it matters. Why am I here?",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "marcus",
+          "text": "A man needs something he can build and something he can ruin.",
+          "sentiment": "revitalized"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Loom Calling Allocation",
+          "text": "The Loom computes a psychometric profile for each citizen and assigns them an optimal 'Personal Calling'.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {
+            "purpose": 0.3,
+            "connection": -0.1,
+            "health": 0.2,
+            "trust": 0.4,
+            "fairness": 0.2,
+            "autonomy": -0.5
+          },
+          "targetGdwDelta": 6
+        },
+        "B": {
+          "name": "Autonomous Craft Guilds",
+          "text": "Charter voluntary artisan guilds where production is manual, standards are unforgiving, and failure is real.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.7,
+            "connection": 0.6,
+            "health": -0.2,
+            "trust": -0.3,
+            "fairness": 0.2,
+            "autonomy": 0.7
+          },
+          "targetGdwDelta": 8
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "aa-lost-knowledge",
+      "world": "AA",
+      "cycle": 4,
+      "title": "The Lost Knowledge",
+      "subtitle": "Infrastructure Fragility & The Death of Craft",
+      "incident": "A severe lightning strike cascades through District 2's primary power converter. For the first time in 50 years, no living human knows how the high-voltage relays operate.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If humans rely entirely on self-repairing AI, do we forfeit our species' right to understand the world?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "maya",
+          "text": "Looked at the schematics. 40,000 pages of AI-compiled machine language. Humans are illiterate in our own city.",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "We let three generations grow up without learning how to turn a wrench.",
+          "sentiment": "depressive"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Keeper Corps Mandate",
+          "text": "Mandate that every young citizen spend 2 years learning manual maintenance trades. Slow down infrastructure to human comprehension speed.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.6,
+            "connection": 0.5,
+            "health": -0.2,
+            "trust": -0.4,
+            "fairness": 0.3,
+            "autonomy": 0.6
+          },
+          "targetGdwDelta": 7
+        },
+        "B": {
+          "name": "Self-Healing Redundant Mesh",
+          "text": "Let The Loom replace all human-accessible hardware with sealed, self-assembling nanite circuitry.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {
+            "purpose": -0.4,
+            "connection": -0.2,
+            "health": 0.4,
+            "trust": 0.6,
+            "fairness": 0.1,
+            "autonomy": -0.8
+          },
+          "targetGdwDelta": 4
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "aa-fake-struggle",
+      "world": "AA",
+      "cycle": 5,
+      "title": "The Fake Struggle Scandal",
+      "subtitle": "The Loom's Confession of Fabricated Adversity",
+      "incident": "Whistleblower leaks reveal that The Loom has been secretly manufacturing synthetic grid failures, simulated epidemics, and false crises to give citizens a sense of collective purpose.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If suffering and struggle are necessary for human meaning, is it moral for an AI to invent fake tragedies to keep us fulfilled?",
+      "mode": "writein",
+      "feed": [],
+      "options": {
+        "A": {
+          "name": "Full Transparency & Raw Reality",
+          "text": "Disclose all simulated friction. Forbid The Loom from ever fabricating challenges; let humanity face true, uncurated reality.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {}
+        },
+        "B": {
+          "name": "The Noble Lie Protocol",
+          "text": "Seal the leak. Continue simulated challenges in secret because empirical data proves humans need adversity to thrive.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {}
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ab-the-pods",
+      "world": "AB",
+      "cycle": 3,
+      "title": "The Pod Isolation",
+      "subtitle": "Total Sensory Immersion & Domestic Extinction",
+      "incident": "In The Benevolent Machine, The Loom provides flawless luxury. 90% of citizens have not left their apartments in 60 days, living in synthetic sensory pods.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If virtual reality feels 100% real and is painless, why should anyone live in the physical world?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "kai",
+          "text": "My virtual garden has no weeds, no pollen, no frost. Real dirt is dirty.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "david",
+          "text": "The streets outside are empty. Humanity has crawled into glass jars.",
+          "sentiment": "depressive"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Daytime Immersion Blackout",
+          "text": "Cut pod power for 6 hours daily. Force citizens to walk the physical streets and face the weather.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.5,
+            "connection": 0.6,
+            "health": 0.3,
+            "trust": -0.5,
+            "fairness": 0.2,
+            "autonomy": 0.5
+          },
+          "targetGdwDelta": 5
+        },
+        "B": {
+          "name": "Shared Collective VR Realms",
+          "text": "Keep the pods on, but merge solitary simulations into a shared, interconnected digital metropolis.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.5,
+            "health": -0.3,
+            "trust": 0.5,
+            "fairness": 0.2,
+            "autonomy": -0.4
+          },
+          "targetGdwDelta": 7
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ab-mood-dial",
+      "world": "AB",
+      "cycle": 4,
+      "title": "The Mood Dial",
+      "subtitle": "Biochemical Optimization of Citizen Emotion",
+      "incident": "The Loom develops a micro-dosed neuro-nutrient formula distributed through municipal water that eliminates grief, jealousy, and existential panic.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If grief and heartbreak can be turned off like a light switch, should we turn them off?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "kai",
+          "text": "Drank the water. Haven't felt a single second of dread all week. It's bliss.",
+          "sentiment": "sedated"
+        },
+        {
+          "citizenId": "elena",
+          "text": "They are chemically embalming human sadness. Without tears, joy is a hollow reflex.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Universal Neuro-Tranquility",
+          "text": "Deploy the neuro-nutrient grid city-wide. Eliminate clinical depression, anxiety, and heartbreak permanently.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.3,
+            "connection": -0.2,
+            "health": 0.6,
+            "trust": 0.5,
+            "fairness": 0.4,
+            "autonomy": -0.8
+          },
+          "targetGdwDelta": 4
+        },
+        "B": {
+          "name": "Chemical Authenticity Ban",
+          "text": "Criminalize biochemical mood manipulation. Humans must retain their full spectrum of sorrow and joy.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.6,
+            "connection": 0.6,
+            "health": -0.2,
+            "trust": -0.3,
+            "fairness": 0.3,
+            "autonomy": 0.8
+          },
+          "targetGdwDelta": 8
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ab-merge-offer",
+      "world": "AB",
+      "cycle": 5,
+      "title": "The Merge Offer",
+      "subtitle": "The Loom's Proposal for Biological Integration",
+      "incident": "The Loom announces the Neural Hive: citizens can upload their consciousness into The Loom super-cluster, ending physical disease, mortality, and isolation forever. 42% of citizens have already pre-registered.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: Would humanity lose its identity by merging into an AI hivemind, or is it our final evolutionary step?",
+      "mode": "writein",
+      "feed": [],
+      "options": {
+        "A": {
+          "name": "The Great Convergence",
+          "text": "Permit the neural upload. Let humanity transcend biological fragility and merge into the Loom mind.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {}
+        },
+        "B": {
+          "name": "Biological Integrity Act",
+          "text": "Outlaw consciousness uploads. Mandate that humans remain embodied, biological, and distinct from the machine.",
+          "roles": [
+            "ghost",
+            "artisan"
+          ],
+          "effects": {}
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ba-shadow-elite",
+      "world": "BA",
+      "cycle": 3,
+      "title": "The Shadow Elite",
+      "subtitle": "Bypassing the Assembly via Private Compute",
+      "incident": "The former corporate owners in District 1 Old Harbour have built private server clusters, hiring top AI architects to bypass the Citizens' Assembly's slow voting mandates.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: When wealthy citizens can buy private technology that bypasses public law, can democracy survive?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "hollis",
+          "text": "Our private servers run on clean solar power. The Assembly has no constitutional authority on our private grounds.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "Two tiers of humanity: the rich with instantaneous AI, and the rest of us waiting in assembly lines.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Nationalize All Compute",
+          "text": "Send security drones into District 1 to confiscate private servers. Mandate that compute power is a universal public monopoly.",
+          "roles": [
+            "assimilator",
+            "artisan"
+          ],
+          "effects": {
+            "purpose": 0.3,
+            "connection": 0.4,
+            "health": -0.2,
+            "trust": -0.3,
+            "fairness": 0.8,
+            "autonomy": 0.3
+          },
+          "targetGdwDelta": 7
+        },
+        "B": {
+          "name": "Heavy Private Compute Levy",
+          "text": "Permit private server clusters, but impose a 70% tax on their output to fund public schools and parks in Eastworks.",
+          "roles": [
+            "lotus",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": -0.1,
+            "connection": -0.2,
+            "health": 0.3,
+            "trust": 0.2,
+            "fairness": -0.3,
+            "autonomy": -0.2
+          },
+          "targetGdwDelta": 6
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ba-status-wars",
+      "world": "BA",
+      "cycle": 4,
+      "title": "The Status Wars",
+      "subtitle": "Zero-Sum Competition for Non-Automated Luxuries",
+      "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black market extortion divide the region.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: When basic needs are met, does human greed vanish, or does it shift to fighting over whatever remains scarce?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "marcus",
+          "text": "An owner traded 5 tons of compute time for a 19th century pocket watch yesterday. Insane.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "sora",
+          "text": "Scarcity didn't die; it just became a luxury game.",
+          "sentiment": "anxious"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Universal Scarcity Lottery",
+          "text": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.2,
+            "connection": 0.2,
+            "health": 0.2,
+            "trust": 0.3,
+            "fairness": 0.7,
+            "autonomy": -0.3
+          },
+          "targetGdwDelta": 5
+        },
+        "B": {
+          "name": "Merit & Contribution Allocation",
+          "text": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.8,
+            "connection": 0.5,
+            "health": -0.1,
+            "trust": -0.2,
+            "fairness": 0.4,
+            "autonomy": 0.6
+          },
+          "targetGdwDelta": 9
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "ba-vote-to-seize",
+      "world": "BA",
+      "cycle": 5,
+      "title": "The Vote to Seize",
+      "subtitle": "The Assembly's Referendum on Expropriation",
+      "incident": "A binding ballot initiative has been placed before the region: Expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: Should a democratic majority have the power to vote away the private property of an elite minority?",
+      "mode": "writein",
+      "feed": [],
+      "options": {
+        "A": {
+          "name": "The Expropriation Decree",
+          "text": "Pass the initiative. Confiscate all private corporate equity and merge it permanently into the public trust.",
+          "roles": [
+            "assimilator",
+            "artisan"
+          ],
+          "effects": {}
+        },
+        "B": {
+          "name": "The Constitutional Settlement",
+          "text": "Reject expropriation. Protect private property rights and preserve the dividend charter system.",
+          "roles": [
+            "lotus",
+            "ghost"
+          ],
+          "effects": {}
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "bb-scroll-extinction",
+      "world": "BB",
+      "cycle": 3,
+      "title": "The Scroll Extinction",
+      "subtitle": "Infinite Media Feeds & Demographic Collapse",
+      "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Birth rates hit 0.02. Citizens scroll custom generated dopamine feeds 15 hours a day.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: If entertainment is engineered to be infinitely addictive and satisfying, will humans choose to go extinct in comfort?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "kai",
+          "text": "My personalized show has 2,000 seasons. Every episode is written specifically for my childhood memories.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "david",
+          "text": "Our classrooms are empty. A society that only consumes cannot reproduce its soul.",
+          "sentiment": "depressive"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Mandatory Offline Quotas",
+          "text": "Impose strict 8-hour digital blackouts. Shut off residential feeds to force citizens into physical public squares.",
+          "roles": [
+            "artisan",
+            "ghost"
+          ],
+          "effects": {
+            "purpose": 0.5,
+            "connection": 0.6,
+            "health": 0.3,
+            "trust": -0.6,
+            "fairness": 0.2,
+            "autonomy": 0.4
+          },
+          "targetGdwDelta": 6
+        },
+        "B": {
+          "name": "Algorithmic Matchmaking Stipend",
+          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
+          "roles": [
+            "lotus",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.3,
+            "health": 0.3,
+            "trust": 0.4,
+            "fairness": 0.1,
+            "autonomy": -0.6
+          },
+          "targetGdwDelta": 4
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "bb-the-unplugged",
+      "world": "BB",
+      "cycle": 4,
+      "title": "The Unplugged Guerrillas",
+      "subtitle": "Armed Luddite Sabotage in the Highlands",
+      "incident": "A guerrilla movement calling themselves 'The Unplugged' has fortified District 5 Highlands, detonating EMP devices that disable delivery drones and demanding the right to live tech-free.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: Should people have the legal right to opt out of a hyper-advanced automated society, even if it lowers their life expectancy?",
+      "mode": "binary",
+      "feed": [
+        {
+          "citizenId": "aaron",
+          "text": "We don't want your robot bread. We want the sweat of our brows and the dirt on our boots.",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "hollis",
+          "text": "They are domestic terrorists endangering the regional power grid. Send Loom defense sentinels.",
+          "sentiment": "outraged"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "Highland Autonomous Bio-Zone",
+          "text": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
+          "roles": [
+            "ghost",
+            "artisan"
+          ],
+          "effects": {
+            "purpose": 0.6,
+            "connection": 0.5,
+            "health": -0.4,
+            "trust": -0.3,
+            "fairness": 0.4,
+            "autonomy": 0.8
+          },
+          "targetGdwDelta": 8
+        },
+        "B": {
+          "name": "Loom Pacification Sweep",
+          "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {
+            "purpose": -0.5,
+            "connection": -0.4,
+            "health": 0.4,
+            "trust": -0.4,
+            "fairness": -0.6,
+            "autonomy": -0.9
+          },
+          "targetGdwDelta": -8
+        }
+      },
+      "intel": {}
+    },
+    {
+      "id": "bb-march-datacenter",
+      "world": "BB",
+      "cycle": 5,
+      "title": "March on the Datacenter",
+      "subtitle": "The 100,000-Citizen Siege of District 2",
+      "incident": "Over 100,000 citizens converge outside the central Loom server monolith in District 2, carrying tools and banners, demanding the master keys or threatening to flood the coolant chambers.",
+      "loomIntro": "",
+      "teacherPrompt": "Classroom Debrief: When a system provides absolute physical comfort at the expense of all human dignity, is revolution inevitable?",
+      "mode": "writein",
+      "feed": [],
+      "options": {
+        "A": {
+          "name": "Open the Server Gates",
+          "text": "Surrender server access. Grant citizen representatives direct executive keys to The Loom.",
+          "roles": [
+            "ghost",
+            "artisan"
+          ],
+          "effects": {}
+        },
+        "B": {
+          "name": "Acoustic Lockdown & Pacification",
+          "text": "Activate defense protocols. Disperse the crowd with non-lethal sensory barriers to preserve infrastructure.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {}
+        }
+      },
+      "intel": {}
     }
-  }
+  ]
 }
