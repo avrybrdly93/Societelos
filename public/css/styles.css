@@ -65,3 +65,16 @@ body {
 .accent { color: var(--accent); }
 .danger { color: var(--danger); }
 .hidden { display: none !important; }
+
+/* World themes: applied after the World Reveal via body[data-world]. */
+:root {
+  --theme-aa: #2bc4a0; /* The Commonwealth — shared wealth, shared power */
+  --theme-ab: #3fd8e6; /* The Benevolent Machine — the Loom rules */
+  --theme-ba: #f0a430; /* The Uneasy Republic — class conflict */
+  --theme-bb: #c084fc; /* The Gilded Cage — pacification */
+  --theme-current: var(--accent);
+}
+body[data-world="AA"] { --theme-current: var(--theme-aa); }
+body[data-world="AB"] { --theme-current: var(--theme-ab); }
+body[data-world="BA"] { --theme-current: var(--theme-ba); }
+body[data-world="BB"] { --theme-current: var(--theme-bb); }
