@@ -216,3 +216,19 @@ test('loom.narrate strips emoji the model outputs despite instructions', async (
   assert.deepEqual(out.messages, [{ citizenId: 'kai', text: 'best day ever' }], 'emoji-only message dropped');
   assert.ok(!/\p{Extended_Pictographic}/u.test(JSON.stringify(out)));
 });
+
+test('loom.narrate truncates a 250-character citizen message to 140 characters cleanly', async () => {
+  const words = 'The grid hums again and the kids are back at the river and nobody quite knows who to thank for it. ';
+  const long = words.repeat(3).slice(0, 250);
+  assert.equal(long.length, 250);
+  const out = await loom.narrate(
+    { winningOption: { name: 'P' }, simSummary: {}, citizens },
+    { config: ONLINE, fetchImpl: geminiReturns({ loomLine: 'x'.repeat(260), messages: [{ citizenId: 'mara', text: long }] }) }
+  );
+  const text = out.messages[0].text;
+  assert.ok(text.length <= 140, `length ${text.length}`);
+  assert.ok(text.endsWith('…'), 'ends with an ellipsis');
+  assert.ok(long.startsWith(text.slice(0, -1)), 'a prefix of the original');
+  assert.ok(/\w…$/.test(text), 'cut at a word boundary, no dangling space or punctuation');
+  assert.ok(out.loomLine.length <= 200);
+});
