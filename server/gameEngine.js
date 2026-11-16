@@ -53,6 +53,47 @@ function hashSeed(gameId, ...parts) {
 }
 
 /**
+ * mulberry32 seeded PRNG: returns a function producing floats in [0, 1).
+ * The engine never uses Math.random(), so a game is replayable from its id.
+ */
+function createPrng(seed) {
+  let a = seed >>> 0;
+  return function next() {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Fisher–Yates shuffle of a copy of `items` driven by a seeded PRNG. */
+function seededShuffle(items, seed) {
+  const rand = createPrng(seed);
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/**
+ * Stable short key for a role: 'artisan' | 'lotus' | 'assimilator' | 'catalyst' | 'ghost'.
+ * Accepts both the spec schema ({ id: 'artisan', name }) and the legacy one
+ * ({ id: 'NODE-01', designation: 'The Artisan' }).
+ */
+function roleKey(role) {
+  if (role.key) return role.key;
+  const label = String(role.id && !/^NODE-/.test(role.id) ? role.id : role.name || role.designation || '').toLowerCase();
+  if (label.includes('lotus')) return 'lotus';
+  for (const key of ['artisan', 'assimilator', 'catalyst', 'ghost']) {
+    if (label.includes(key)) return key;
+  }
+  return label.replace(/^the\s+/, '').replace(/[^a-z]+/g, '-');
+}
+
+/**
  * State for one game room (one projector + 5 phones).
  */
 class GameState {
@@ -132,6 +173,25 @@ class GameState {
     return Object.keys(this.players).length === MAX_PLAYERS && this.readyCount() === MAX_PLAYERS;
   }
 
+  /**
+   * Secretly deal the 5 roles to the 5 nodes with a shuffle seeded from the
+   * game id. Returns { node: role } where each role carries a `key`.
+   */
+  assignRoles(roles) {
+    if (!Array.isArray(roles) || roles.length < MAX_PLAYERS) {
+      throw new Error(`assignRoles needs ${MAX_PLAYERS} roles`);
+    }
+    const dealt = seededShuffle(roles.slice(0, MAX_PLAYERS), hashSeed(this.gameId, 'roles'));
+    const assignment = {};
+    NODE_IDS.forEach((node, i) => {
+      const role = { ...dealt[i], key: roleKey(dealt[i]) };
+      assignment[node] = role;
+      if (this.players[node]) this.players[node].role = role;
+    });
+    this.roleAssignment = assignment;
+    return assignment;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);
@@ -144,6 +204,9 @@ module.exports = {
   generateRoomCode,
   generateGameId,
   hashSeed,
+  createPrng,
+  seededShuffle,
+  roleKey,
   ROOM_CODE_ALPHABET,
   NODE_IDS,
   MAX_PLAYERS
