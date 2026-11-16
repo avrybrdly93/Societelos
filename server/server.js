@@ -11,6 +11,7 @@ const http = require('http');
 const os = require('os');
 const path = require('path');
 const express = require('express');
+const QRCode = require('qrcode');
 const { Server } = require('socket.io');
 
 const gameEngine = require('./gameEngine');
@@ -73,6 +74,19 @@ app.get('/health', (req, res) => {
     uptimeSeconds: Math.round(process.uptime()),
     activeRooms: app.locals.getActiveRoomCount()
   });
+});
+
+// QR code (PNG data URL) pointing phones at http://<lan-ip>:<port>/mobile.
+app.get('/api/qr', async (req, res) => {
+  try {
+    const port = (server.address() && server.address().port) || PORT;
+    const joinUrl = getJoinUrl(port);
+    const dataUrl = await QRCode.toDataURL(joinUrl, { margin: 1, width: 320 });
+    res.json({ joinUrl, dataUrl });
+  } catch (err) {
+    console.error('[server] QR generation failed', err);
+    res.status(500).json({ error: 'QR_FAILED' });
+  }
 });
 
 // HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.
