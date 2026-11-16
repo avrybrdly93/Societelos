@@ -424,6 +424,28 @@ function catalystScores(previousGdw, realizedGdw) {
   return swing >= CATALYST_SWING && realizedGdw > 0;
 }
 
+// Finale Borda points by rank position (1st..4th).
+const BORDA_POINTS = Object.freeze([4, 3, 2, 1]);
+
+/**
+ * Borda count over the finale ballots. `ranks` is { node: [id x4] } (best
+ * first). Returns { policyId: { points, places: [n1st, n2nd, n3rd, n4th] } }
+ * for every policy that appears; with 5 voters each policy gets 4 rankings
+ * (max 16 points).
+ */
+function bordaCount(ranks, policyIds = []) {
+  const tally = {};
+  for (const id of policyIds) tally[id] = { points: 0, places: [0, 0, 0, 0] };
+  for (const order of Object.values(ranks || {})) {
+    (order || []).slice(0, BORDA_POINTS.length).forEach((id, i) => {
+      if (!tally[id]) tally[id] = { points: 0, places: [0, 0, 0, 0] };
+      tally[id].points += BORDA_POINTS[i];
+      tally[id].places[i] += 1;
+    });
+  }
+  return tally;
+}
+
 /** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
 function computeWorldKey(vote1, vote2) {
   const ok = (v) => v === 'A' || v === 'B';
@@ -1636,6 +1658,8 @@ module.exports = {
   forecastMedianEnd,
   computeWorldKey,
   catalystScores,
+  bordaCount,
+  BORDA_POINTS,
   roundGdw,
   loomStub,
   resolveLoom,

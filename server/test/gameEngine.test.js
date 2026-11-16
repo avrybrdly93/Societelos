@@ -906,3 +906,13 @@ test('players who do not rank before FINALE_RANK expires get a deterministic def
   assert.deepEqual(a.finale.ranks, b.finale.ranks, 'same game, same defaults');
   assert.deepEqual(a.finale.ranks['NODE-01'], a.finale.ballots['NODE-01'].slice().reverse(), 'real rankings kept');
 });
+
+test('bordaCount awards 4/3/2/1 points by rank and counts places', () => {
+  const tally = engine.bordaCount({
+    'NODE-01': ['P2', 'P3', 'P4', 'P5'],
+    'NODE-02': ['P1', 'P3', 'P4', 'P5']
+  }, ['P1', 'P2', 'P3', 'P4', 'P5']);
+  assert.deepEqual(tally.P1, { points: 4, places: [1, 0, 0, 0] });
+  assert.deepEqual(tally.P3, { points: 6, places: [0, 2, 0, 0] });
+  assert.deepEqual(tally.P5, { points: 2, places: [0, 0, 0, 2] });
+});
