@@ -106,8 +106,25 @@ function applyNoise(state, params, rng) {
   const t = state.traits;
   for (let j = 0; j < t.length; j++) t[j] += randomNormal(rng, 0, sd);
 }
-function applyShocks() {}
+/**
+ * Step 4, district shocks: each district has a (shockChance * volatility)
+ * chance per month of an event (outage, heatwave, viral trend) that cuts one
+ * random trait by U(shockMin, shockMax) for every cohort there. Fired shocks
+ * are pushed onto `out` as { month, district, trait, amount }.
+ */
+function applyShocks(state, monthIndex, params, rng, out) {
+  const { K, constants, volatility, districtIds, cohortsByDistrict } = params;
+  const chance = Math.min(1, constants.shockChance * volatility);
+  const t = state.traits;
+  for (let d = 0; d < districtIds.length; d++) {
+    if (rng() >= chance) continue;
+    const k = Math.floor(rng() * K);
+    const amount = randomUniform(rng, constants.shockMin, constants.shockMax);
+    for (const i of cohortsByDistrict[d]) t[i * K + k] -= amount;
+    if (out) out.push({ month: monthIndex, district: districtIds[d], trait: state.traitNames[k], amount });
+  }
+}
 function applySpillover() {}
 function clampTraits() {}
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, clamp01 };
