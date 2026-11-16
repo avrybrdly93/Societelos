@@ -539,6 +539,23 @@
       renderFinalePips(moderating ? NODE_IDS : finaleSubmitted);
     }
   });
+  // Ranking progress: which nodes have locked in their ballots (never how).
+  function renderRankPips(nodes) {
+    const set = new Set(nodes || []);
+    document.querySelectorAll('.rank-pip').forEach((pip) => pip.classList.toggle('is-locked', set.has(pip.dataset.node)));
+    document.getElementById('rank-progress-count').textContent = `${set.size}/5`;
+  }
+  socket.on('phase', (payload) => {
+    const ranking = payload.phase === 'FINALE_RANK';
+    document.getElementById('rank-progress').hidden = !ranking;
+    if (ranking) {
+      renderRankPips([]);
+      requestAnimationFrame(fitProposals); // the cards just got shorter
+    }
+  });
+  socket.on('finale:progress', (payload) => {
+    if (payload && Array.isArray(payload.ranked) && state.phase === 'FINALE_RANK') renderRankPips(payload.ranked);
+  });
   socket.on('finale:progress', (payload) => {
     if (payload && Array.isArray(payload.submitted)) {
       finaleSubmitted = payload.submitted;
@@ -574,7 +591,7 @@
   // Shrink a card's text (32px down to 22px) until all 140 characters fit,
   // so the five cards never scroll or clip on a 1080p projector.
   const PROPOSAL_FONT_MAX = 32;
-  const PROPOSAL_FONT_MIN = 22;
+  const PROPOSAL_FONT_MIN = 20;
   function fitProposals() {
     document.querySelectorAll('.proposal-card').forEach((card) => {
       const text = card.querySelector('.proposal-text');

@@ -944,3 +944,9 @@ body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
 }
 .rank-submit { margin-top: 16px; }
 .rank-submit[hidden] { display: none; }
+
+/* Host ranking progress under the proposals */
+.rank-progress[hidden] { display: none; }
+.rank-progress .vote-pips { margin-top: 4px; }
+body.host .rank-progress .vote-pip { padding: 8px 0; font-size: 24px; }
+body.host[data-phase="FINALE_RANK"] .proposal-card { padding: 16px 24px; gap: 8px; }
