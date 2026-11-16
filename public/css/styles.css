@@ -313,3 +313,19 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 .role-flavor { font-size: 15px; margin: 0 0 16px; }
 .role-heading { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 16px 0 4px; }
 .role-text { margin: 0; font-size: 18px; }
+
+/* Role drawer (collapsible, sticky under the header) */
+.role-drawer {
+  position: sticky; top: 45px; z-index: 9;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+}
+.role-drawer-toggle {
+  list-style: none; cursor: pointer;
+  padding: 12px 16px; font-size: 14px; letter-spacing: 0.12em; color: var(--accent);
+}
+.role-drawer-toggle::-webkit-details-marker { display: none; }
+.role-drawer-toggle::after { content: "▾"; float: right; color: var(--text-muted); }
+.role-drawer[open] .role-drawer-toggle::after { content: "▴"; }
+.role-drawer-body { padding: 0 16px 12px; font-size: 15px; }
+.role-drawer-body p { margin: 6px 0; }
