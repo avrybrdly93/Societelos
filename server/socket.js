@@ -34,6 +34,13 @@ function initSockets(io, gameEngine) {
     wiredRooms.add(game);
   }
 
+  // lobby:update { players: [{ node, ready, connected }] } to everyone in the room.
+  // Names are deliberately left out: the projector shows node ids only.
+  function broadcastLobby(game) {
+    const players = Object.values(game.players).map((p) => ({ node: p.node, ready: p.ready, connected: p.connected }));
+    io.to(roomChannel(game.roomCode)).emit('lobby:update', { players });
+  }
+
   function handleHost(socket) {
     const requested = socket.handshake.auth && socket.handshake.auth.roomCode;
     const game = gameEngine.getRoom(requested) || gameEngine.createRoom();
@@ -41,6 +48,7 @@ function initSockets(io, gameEngine) {
     socket.data.roomCode = game.roomCode;
     socket.join([roomChannel(game.roomCode), hostChannel(game.roomCode)]);
     socket.emit('host:room', { roomCode: game.roomCode, gameId: game.gameId, phase: game.phase });
+    broadcastLobby(game);
     console.log(`[socket] host connected to room ${game.roomCode}`);
   }
 
@@ -72,7 +80,17 @@ function initSockets(io, gameEngine) {
       socket.join(roomChannel(game.roomCode));
       const joined = { ok: true, node: seat.node, roomCode: game.roomCode };
       socket.emit('lobby:joined', joined);
-      return reply(joined);
+      reply(joined);
+      return broadcastLobby(game);
+    });
+
+    // lobby:ready { ready? } -> set or toggle this phone's ready flag.
+    socket.on('lobby:ready', (payload) => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node || game.phase !== 'LOBBY') return;
+      const ready = payload && typeof payload.ready === 'boolean' ? payload.ready : undefined;
+      game.setReady(socket.data.node, ready);
+      broadcastLobby(game);
     });
   }
 
