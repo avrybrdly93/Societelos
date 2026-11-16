@@ -11,6 +11,11 @@ const crypto = require('crypto');
 const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const ROOM_CODE_LENGTH = 4;
 
+// The five player slots. Phones are mapped to these ids; student names never
+// leave the server and are never written to logs.
+const NODE_IDS = Object.freeze(['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05']);
+const MAX_PLAYERS = NODE_IDS.length;
+
 /**
  * Generate a 4-letter room code not present in `taken` (a Set or Map of codes).
  */
@@ -82,4 +87,12 @@ class GameState {
   }
 }
 
-module.exports = { GameState, generateRoomCode, generateGameId, hashSeed, ROOM_CODE_ALPHABET };
+module.exports = {
+  GameState,
+  generateRoomCode,
+  generateGameId,
+  hashSeed,
+  ROOM_CODE_ALPHABET,
+  NODE_IDS,
+  MAX_PLAYERS
+};
