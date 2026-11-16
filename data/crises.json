@@ -233,20 +233,20 @@
           },
           "effectsByWorld": {
             "A": {
-              "purpose": -0.2,
-              "connection": 0,
-              "health": 0.4,
-              "trust": 0.5,
-              "fairness": 0,
-              "autonomy": -0.6
+              "purpose": 0.1,
+              "connection": 0.2,
+              "health": 0.7,
+              "trust": 0.8,
+              "fairness": 0.3,
+              "autonomy": -0.4
             },
             "B": {
-              "purpose": -0.1,
-              "connection": 0,
-              "health": 0.3,
-              "trust": 0,
-              "fairness": -0.5,
-              "autonomy": -0.5
+              "purpose": 0.2,
+              "connection": 0.3,
+              "health": 0.85,
+              "trust": 0.7,
+              "fairness": -0.3,
+              "autonomy": -0.3
             }
           },
           "worldNotes": {
