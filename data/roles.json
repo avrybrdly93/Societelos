@@ -35,8 +35,8 @@
     "id": "ghost",
     "name": "The Ghost",
     "icon": "",
-    "goal": "Seeks to dismantle The Loom entirely and return humanity to biological, earthen, and sovereign roots.",
-    "winCondition": "Wins if policies systematically reject artificial infrastructure in favor of biological autonomy.",
+    "goal": "Dismantling the Loom; a return to the earth.",
+    "winCondition": "You score +1 each cycle the winning policy is tagged ghost.",
     "cardText": "Biological Grounding / Subversive Decoupling"
   }
 ]
