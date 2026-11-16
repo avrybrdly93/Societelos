@@ -178,9 +178,15 @@
     "cohort": "youth",
     "voice": "Unplugged sympathiser",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Planted beans with twenty strangers on the ridge. No screens. Everyone stayed for dinner."
+      ],
+      "mixed": [
+        "They gave us a little more room to breathe. Still the Loom's room, though."
+      ],
+      "bad": [
+        "Every new sensor on the ridge is another reason to go further up the mountain."
+      ]
     }
   }
 ]
