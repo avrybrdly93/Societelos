@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const sim = require('./sim');
+const loom = require('./loom');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 
@@ -346,12 +347,13 @@ function createSimState(simConfig) {
 }
 
 /**
- * Stub for server/loom.js: canned JSON for narrate() and moderate().
+ * Last-resort canned narration, used only if server/loom.js itself throws
+ * (it already falls back to authored lines when Gemini is unavailable).
  * Both are async to match the real Gemini-backed interface.
  */
 const loomStub = {
   async narrate(context = {}) {
-    const delta = context.summary?.realizedDelta ?? 0;
+    const delta = (context.simSummary || context.summary)?.realizedDelta ?? 0;
     const loomLine = delta >= 0
       ? 'The council has decided. Wellbeing indicators are rising. I will continue to observe.'
       : 'The council has decided. Wellbeing indicators are falling. I will continue to observe.';
@@ -377,15 +379,9 @@ const loomStub = {
   }
 };
 
-/** Resolve the real Loom module when it exposes narrate/moderate, else the stub. */
+/** The Loom module used by the engine (server/loom.js, Gemini with offline fallback). */
 function resolveLoom() {
-  try {
-    const loom = require('./loom');
-    if (loom && typeof loom.narrate === 'function' && typeof loom.moderate === 'function') return loom;
-  } catch (err) {
-    // server/loom.js not merged yet.
-  }
-  return loomStub;
+  return loom;
 }
 
 /**
@@ -633,7 +629,7 @@ class GameState extends EventEmitter {
     this.enterPhase(PHASES.RESOLUTION);
 
     const result = { cycle: this.cycle, winner, totals, tie, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
-    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, summary: simResult.summary, worldKey: this.worldKey };
+    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens: this.data.citizens };
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
       .catch((err) => {
