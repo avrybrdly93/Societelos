@@ -886,3 +886,13 @@ body.host .finale-callout-note { margin: 0; font-size: 24px; }
 }
 @keyframes orb-pulse { 0%, 100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.05); opacity: 1; } }
 .finale-mine { font-size: 16px; font-style: italic; color: var(--slate-200); margin: 0 0 8px; }
+
+/* Mobile revise modal */
+.finale-revise[hidden] { display: none; }
+.finale-revise {
+  position: fixed; inset: 0; z-index: 50; overflow-y: auto;
+  padding: calc(56px + env(safe-area-inset-top)) 16px 24px;
+  background: rgba(8, 11, 16, 0.96);
+}
+.finale-revise .m-kicker { color: var(--amber); }
+.finale-feedback { padding: 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); font-size: 17px; margin: 8px 0 0; }

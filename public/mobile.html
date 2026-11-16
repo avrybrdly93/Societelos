@@ -152,6 +152,16 @@
         <p id="finale-wait-mine" class="finale-mine"></p>
         <p id="finale-wait-status" class="muted">Waiting for the other council members.</p>
       </div>
+      <!-- "revise": the Loom's private feedback and one chance to rephrase. -->
+      <div id="finale-revise" class="finale-revise" role="dialog" aria-modal="true" aria-labelledby="finale-revise-title" hidden>
+        <p id="finale-revise-title" class="m-kicker mono">THE LOOM ASKS YOU TO REVISE</p>
+        <p id="finale-feedback" class="finale-feedback"></p>
+        <form id="finale-revise-form" class="m-form" autocomplete="off">
+          <textarea id="finale-revise-text" class="m-input finale-text" maxlength="140" rows="4" required></textarea>
+          <button id="finale-revise-submit" class="btn btn-primary m-btn" type="submit">RESUBMIT (ONE CHANCE)</button>
+          <p id="finale-revise-error" class="m-error danger" role="alert" hidden></p>
+        </form>
+      </div>
     </section>
     <section id="m-view-result" class="m-view" aria-label="Resolution">
       <p class="m-kicker mono">RESOLUTION // CYCLE <span id="result-cycle">1</span></p>

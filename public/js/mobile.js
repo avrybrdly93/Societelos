@@ -410,6 +410,41 @@
       : 'Submitted. Waiting for the other council members.');
     showView('m-view-finale-wait');
   }
+  // Revise modal: shows the Loom's private feedback and allows one resubmit
+  // (finale:submit during FINALE_MOD's 25 s window).
+  const reviseBox = document.getElementById('finale-revise');
+  const reviseForm = document.getElementById('finale-revise-form');
+  const reviseText = document.getElementById('finale-revise-text');
+  const reviseSubmit = document.getElementById('finale-revise-submit');
+  const reviseError = document.getElementById('finale-revise-error');
+  function openRevise(feedback) {
+    document.getElementById('finale-feedback').textContent = feedback || 'Please rephrase your policy.';
+    reviseText.value = state.finaleSubmitted || '';
+    reviseSubmit.disabled = false;
+    reviseError.hidden = true;
+    reviseBox.hidden = false;
+    showView('m-view-finale-wait');
+    reviseText.focus();
+  }
+  function closeRevise() { reviseBox.hidden = true; }
+  reviseForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = reviseText.value.trim();
+    if (!text || reviseSubmit.disabled) return;
+    reviseSubmit.disabled = true; // one chance only
+    socket.emit('finale:submit', { text }, (res) => {
+      if (res && res.ok) {
+        state.finaleSubmitted = res.text || text;
+        closeRevise();
+        showFinaleWait('Revision received. The Loom is evaluating it again.');
+        return;
+      }
+      reviseError.textContent = res && res.reason === 'ALREADY_RESUBMITTED' ? 'You have already used your one revision.' : 'The revision window has closed.';
+      reviseError.hidden = false;
+    });
+  });
+  socket.on('phase', (payload) => { if (payload && payload.phase !== 'FINALE_MOD') closeRevise(); });
+
   socket.on('phase', (payload) => {
     if (!payload) return;
     // Already submitted when FINALE_WRITE is (re)broadcast: stay on the wait screen.
@@ -574,5 +609,5 @@
   window.debugMobilePhase = debugMobilePhase;
   window.debugMobileEvent = debugEmit;
 
-  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
+  window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
