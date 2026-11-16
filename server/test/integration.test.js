@@ -114,3 +114,11 @@ test('integration: headless 4-cycle playthrough on the AA (Commonwealth) branch'
   checkWorldRun(out, 'AA', ['aa-purpose-drift', 'aa-lost-knowledge']);
   assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) made the rest of the game volatile');
 });
+
+test('integration: headless 4-cycle playthrough on the AB (Benevolent Machine) branch', async () => {
+  const out = await playFourCycles({ gameId: 'playthroughAB', voteFor: (cycle) => [cycle === 2 ? 'B' : 'A'] });
+  checkWorldRun(out, 'AB', ['ab-the-pods', 'ab-mood-dial']);
+  assert.equal(out.game.volatility, 1, 'Delegated Control keeps normal volatility');
+  // Crisis 2B after 1A: the Loom governs, with the assimilator tag.
+  assert.deepEqual(out.resolutions[1].result.governance, { holder: 'loom', line: 'The Loom will govern on your behalf.' });
+});
