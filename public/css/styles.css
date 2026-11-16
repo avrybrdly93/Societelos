@@ -177,3 +177,19 @@ body.host .label {
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--slate-950); }
 .btn-primary:not(:disabled):hover { box-shadow: 0 0 24px var(--loom-glow); }
 .btn-start { margin-top: 32px; width: 100%; font-size: 32px; padding: 24px; }
+
+/* Intro: 30-second text crawl (animation restarts when the view activates). */
+.crawl-window {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(transparent 0%, #000 18%, #000 82%, transparent 100%);
+          mask-image: linear-gradient(transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+.crawl { max-width: 1200px; margin: 0 auto; text-align: center; transform: translateY(100%); }
+.crawl p { font-size: 44px; margin: 0 0 1.1em; }
+.view.is-active .crawl { animation: crawl-up 30s linear forwards; }
+@keyframes crawl-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(-110%); }
+}
