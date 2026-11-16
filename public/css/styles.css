@@ -193,3 +193,33 @@ body.host .label {
   from { transform: translateY(100%); }
   to { transform: translateY(-110%); }
 }
+
+/* Role assignment: encryption locks per node; role names are never shown here. */
+.lock-cards { list-style: none; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; }
+.lock-card {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 36px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+}
+.lock-card .node-id { font-size: 32px; font-weight: 700; }
+.lock-card .lock-status { font-size: 24px; color: var(--text-muted); }
+.lock-icon {
+  width: 72px; height: 64px; position: relative; margin-top: 36px;
+  border: 6px solid var(--accent); border-radius: 10px;
+}
+.lock-icon::before {
+  content: ""; position: absolute; left: 50%; bottom: 100%;
+  width: 40px; height: 36px; transform: translateX(-50%);
+  border: 6px solid var(--accent); border-bottom: none; border-radius: 22px 22px 0 0;
+}
+.view.is-active .lock-card { animation: lock-scan 1.6s ease-in-out infinite; }
+.view.is-active .lock-card:nth-child(2) { animation-delay: 0.2s; }
+.view.is-active .lock-card:nth-child(3) { animation-delay: 0.4s; }
+.view.is-active .lock-card:nth-child(4) { animation-delay: 0.6s; }
+.view.is-active .lock-card:nth-child(5) { animation-delay: 0.8s; }
+@keyframes lock-scan {
+  0%, 100% { box-shadow: 0 0 0 transparent; border-color: var(--border); }
+  50% { box-shadow: 0 0 28px var(--loom-glow); border-color: var(--accent); }
+}
