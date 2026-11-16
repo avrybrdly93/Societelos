@@ -89,10 +89,18 @@ function applyAdoption(state, effects, monthIndex, params) {
     }
   }
 }
-function applyDrift() {}
+/** Step 2, hedonic drift: purpose and connection fall by 0.003 a month regardless. */
+function applyDrift(state, params) {
+  const { K, n, driftIdx } = params;
+  const drift = params.constants.hedonicDrift;
+  const t = state.traits;
+  for (let i = 0; i < n; i++) {
+    for (const k of driftIdx) t[i * K + k] -= drift;
+  }
+}
 function applyNoise() {}
 function applyShocks() {}
 function applySpillover() {}
 function clampTraits() {}
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, clamp01 };
