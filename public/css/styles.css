@@ -926,3 +926,11 @@ body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
 .rank-card { position: relative; padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-raised); }
 .rank-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
 .rank-text { margin: 0; font-size: 16px; line-height: 1.4; }
+.rank-card { cursor: pointer; padding-right: 72px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 56px; }
+.rank-card.is-ranked { border-color: var(--accent); box-shadow: 0 0 16px var(--loom-glow); }
+.rank-card.is-ranked::after {
+  content: attr(data-place); position: absolute; top: 50%; right: 16px; transform: translateY(-50%);
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--accent); color: var(--slate-950);
+  font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+}

@@ -510,8 +510,34 @@
       text.className = 'rank-text';
       text.textContent = p.text;
       li.append(head, text);
+      // Tap-to-rank: tapping an unranked card gives it the next free place
+      // (1st, 2nd, ...); tapping a ranked card clears it and every place after.
+      li.setAttribute('role', 'button');
+      li.tabIndex = 0;
+      li.addEventListener('click', () => toggleRank(p.id));
       list.appendChild(li);
     });
+    renderRanks();
+  }
+  const PLACE_NAMES = ['1st', '2nd', '3rd', '4th'];
+  function toggleRank(id) {
+    if (ballot.locked) return;
+    const at = ballot.order.indexOf(id);
+    if (at >= 0) ballot.order = ballot.order.slice(0, at);
+    else if (ballot.order.length < ballot.policies.length) ballot.order.push(id);
+    renderRanks();
+  }
+  function renderRanks() {
+    document.querySelectorAll('.rank-card').forEach((card) => {
+      const place = ballot.order.indexOf(card.dataset.policy);
+      card.classList.toggle('is-ranked', place >= 0);
+      card.dataset.place = place >= 0 ? String(place + 1) : '';
+      card.setAttribute('aria-label', `${proposalName(card.dataset.policy)}${place >= 0 ? `, ranked ${PLACE_NAMES[place]}` : ', not ranked yet'}`);
+    });
+    const left = ballot.policies.length - ballot.order.length;
+    document.getElementById('rank-help').textContent = left
+      ? `Tap the proposals in order of preference: ${PLACE_NAMES[ballot.order.length]} next. Tap a ranked one to undo.`
+      : 'All four ranked. Tap one to change it, or lock in.';
   }
   socket.on('finale:ballot', (payload) => {
     ballot.policies = (payload && Array.isArray(payload.policies)) ? payload.policies.slice(0, 4) : [];
