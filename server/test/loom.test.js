@@ -232,3 +232,16 @@ test('loom.narrate truncates a 250-character citizen message to 140 characters c
   assert.ok(/\w…$/.test(text), 'cut at a word boundary, no dangling space or punctuation');
   assert.ok(out.loomLine.length <= 200);
 });
+
+test('narrate fallback never repeats a citizen in the same resolution feed', async () => {
+  const doubled = [...citizens, ...citizens.map((c) => ({ ...c }))];
+  const out = await loom.narrate({ winningOption: { name: 'P' }, simSummary: { realizedDelta: 4, topMoves: [{ district: 'D5', cohort: 'youth', trait: 'autonomy', change: 0.3 }] }, citizens: doubled }, { config: OFFLINE });
+  const ids = out.messages.map((m) => m.citizenId);
+  assert.equal(new Set(ids).size, ids.length, `duplicates in ${ids}`);
+  assert.equal(ids.length, 6);
+  assert.equal(ids[0], 'sol', 'most affected citizen (D5 youth) speaks first');
+  // Authored reactions fallback is de-duplicated too.
+  const reactions = [{ citizenId: 'kai', text: 'a' }, { citizenId: 'kai', text: 'b' }, { citizenId: 'lin', text: 'c' }];
+  const out2 = await loom.narrate({ winningOption: { name: 'P', reactions }, simSummary: {} }, { config: OFFLINE });
+  assert.deepEqual(out2.messages.map((m) => m.citizenId), ['kai', 'lin']);
+});

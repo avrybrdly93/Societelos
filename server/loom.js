@@ -169,15 +169,23 @@ function narrateFallback(context = {}) {
   const band = outcomeBand(context.simSummary || context.summary);
   const option = context.winningOption || {};
   const citizens = Array.isArray(context.citizens) ? context.citizens : [];
-  let messages = citizens
-    .map((c) => {
-      const lines = (c.lines && c.lines[band]) || [];
-      return lines.length ? { citizenId: c.id, text: truncate(lines[0], 140) } : null;
-    })
-    .filter(Boolean)
-    .slice(0, 6);
+  // Most affected citizens first, each at most once in the feed.
+  const byId = new Map();
+  for (const c of citizens) if (c && c.id && !byId.has(c.id)) byId.set(c.id, c);
+  const order = rankCitizensByShift([...byId.values()], context.simSummary || context.summary || {});
+  const seen = new Set();
+  let messages = [];
+  for (const { id } of order) {
+    const lines = (byId.get(id).lines && byId.get(id).lines[band]) || [];
+    if (!lines.length || seen.has(id)) continue;
+    seen.add(id);
+    messages.push({ citizenId: id, text: truncate(lines[0], 140) });
+    if (messages.length === 6) break;
+  }
   if (!messages.length) {
-    messages = (option.reactions || []).map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
+    messages = (option.reactions || [])
+      .filter((r) => r && r.citizenId && !seen.has(r.citizenId) && seen.add(r.citizenId))
+      .map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
   }
   // Authored line for this outcome band, then the option's single line, then a template.
   const bandLine = option.loomLines && option.loomLines[band];
