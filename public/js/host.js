@@ -113,7 +113,23 @@
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
   }
 
+  // CHAMBER reveal: colour the map at the baseline (W = 0.40, GDW 25%) unless
+  // the server sent per-district wellbeing.
+  const BASELINE_WELLBEING = 0.40;
+  function revealChamber(payload) {
+    const region = payload.region || {};
+    const districts = (region.districts || []).map((d) => ({
+      id: d.id,
+      wellbeing: typeof d.wellbeing === 'number' ? d.wellbeing : BASELINE_WELLBEING
+    }));
+    const map = window.SocietelosMap;
+    if (map) map.renderDistricts(districts.length ? districts : map.DISTRICT_IDS.map((id) => ({ id, wellbeing: BASELINE_WELLBEING })));
+    const total = region.population || 250000;
+    document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
+  }
+
   socket.on('phase', onPhase);
+  socket.on('phase', (payload) => { if (payload.phase === 'CHAMBER') revealChamber(payload); });
 
   // Countdown: recomputed every frame from the server's endsAt timestamp, so
   // the display never drifts from the authoritative server timer.
@@ -137,5 +153,5 @@
   }
   requestAnimationFrame(tick);
 
-  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView };
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber };
 })();
