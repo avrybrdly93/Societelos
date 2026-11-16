@@ -929,3 +929,12 @@ test('rankBorda breaks ties on 1st places, then 2nd places, then forecast median
   assert.deepEqual(rows.map((r) => r.id), ['C', 'B', 'E', 'D', 'A']);
   assert.equal(rows.find((r) => r.id === 'E').median, 30);
 });
+
+test('selectEnacted takes the top 3 policies at 50% / 25% / 25%', () => {
+  const rows = [{ id: 'P3', points: 14 }, { id: 'P1', points: 11 }, { id: 'P5', points: 9 }, { id: 'P2', points: 8 }, { id: 'P4', points: 8 }];
+  assert.deepEqual(engine.selectEnacted(rows), [
+    { id: 'P3', place: 'first', weight: 0.5, points: 14 },
+    { id: 'P1', place: 'second', weight: 0.25, points: 11 },
+    { id: 'P5', place: 'third', weight: 0.25, points: 9 }
+  ]);
+});

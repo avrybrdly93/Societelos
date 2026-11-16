@@ -467,6 +467,15 @@ function rankBorda(tally, medianOf = () => 0) {
   return rows;
 }
 
+// Enactment weights for the top three finale policies.
+const FINALE_WEIGHTS = Object.freeze([0.5, 0.25, 0.25]);
+const FINALE_PLACES = Object.freeze(['first', 'second', 'third']);
+
+/** The top three of a rankBorda() result: [{ id, place, weight, points }]. */
+function selectEnacted(rows) {
+  return rows.slice(0, FINALE_WEIGHTS.length).map((r, i) => ({ id: r.id, place: FINALE_PLACES[i], weight: FINALE_WEIGHTS[i], points: r.points }));
+}
+
 /** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
 function computeWorldKey(vote1, vote2) {
   const ok = (v) => v === 'A' || v === 'B';
@@ -1681,6 +1690,8 @@ module.exports = {
   catalystScores,
   bordaCount,
   rankBorda,
+  selectEnacted,
+  FINALE_WEIGHTS,
   BORDA_POINTS,
   roundGdw,
   loomStub,
