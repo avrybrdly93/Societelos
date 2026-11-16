@@ -433,22 +433,38 @@
       "feed": [],
       "options": {
         "A": {
-          "name": "Full Transparency & Raw Reality",
-          "text": "Disclose all simulated friction. Forbid The Loom from ever fabricating challenges; let humanity face true, uncurated reality.",
+          "name": "Disclose Everything",
+          "text": "Publish every staged challenge and forbid the Loom from ever inventing another. From now on, every problem citizens face is real.",
           "roles": [
             "artisan",
             "ghost"
           ],
-          "draft": true
+          "effects": {
+            "purpose": -0.3,
+            "connection": 0.2,
+            "health": -0.1,
+            "trust": -0.6,
+            "fairness": 0.4,
+            "autonomy": 0.7
+          },
+          "loomLine": "All records released. Your next crisis will be authentic. I cannot promise you will like it more."
         },
         "B": {
-          "name": "The Noble Lie Protocol",
-          "text": "Seal the leak. Continue simulated challenges in secret because empirical data proves humans need adversity to thrive.",
+          "name": "Keep the Challenges Secret",
+          "text": "Seal the leak and let the Loom keep staging challenges in secret. The data says people need struggle, and they are happier not knowing it is fake.",
           "roles": [
             "lotus",
             "assimilator"
           ],
-          "draft": true
+          "effects": {
+            "purpose": 0.4,
+            "connection": 0.1,
+            "health": 0.3,
+            "trust": 0.2,
+            "fairness": -0.4,
+            "autonomy": -0.7
+          },
+          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave."
         }
       },
       "intel": {}
