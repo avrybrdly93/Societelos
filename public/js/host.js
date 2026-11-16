@@ -115,5 +115,27 @@
 
   socket.on('phase', onPhase);
 
+  // Countdown: recomputed every frame from the server's endsAt timestamp, so
+  // the display never drifts from the authoritative server timer.
+  const timerEl = document.getElementById('phase-timer');
+  let lastShown = '';
+  function formatClock(ms) {
+    const total = Math.ceil(ms / 1000);
+    const m = Math.floor(total / 60);
+    const sec = total % 60;
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  }
+  function tick() {
+    const remaining = state.endsAt ? Math.max(0, state.endsAt - Date.now()) : null;
+    const text = remaining === null ? '--:--' : formatClock(remaining);
+    if (text !== lastShown) {
+      timerEl.textContent = text;
+      lastShown = text;
+    }
+    state.remainingMs = remaining;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
   window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView };
 })();
