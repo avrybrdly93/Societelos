@@ -44,8 +44,36 @@ function initSockets(io, gameEngine) {
     console.log(`[socket] host connected to room ${game.roomCode}`);
   }
 
+  // Room a phone targets: the code it sent, else the classroom's latest room.
+  function findPhoneRoom(code) {
+    return code ? gameEngine.getRoom(code) : gameEngine.getLatestRoom();
+  }
+
   function handlePhone(socket) {
     socket.emit('client:type', { clientType: 'phone' });
+
+    // lobby:join { name, room? } -> seat the phone in a NODE slot.
+    socket.on('lobby:join', (payload, ack) => {
+      const reply = typeof ack === 'function' ? ack : () => {};
+      if (!payload || typeof payload !== 'object' || typeof payload.name !== 'string' || !payload.name.trim()) {
+        return reply({ ok: false, reason: 'BAD_PAYLOAD' });
+      }
+      if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
+      const game = findPhoneRoom(payload.room);
+      if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
+      if (game.phase !== 'LOBBY') return reply({ ok: false, reason: 'GAME_IN_PROGRESS' });
+
+      const seat = game.addPlayer(socket.id, payload.name);
+      if (!seat.ok) return reply(seat);
+
+      wireRoom(game);
+      socket.data.roomCode = game.roomCode;
+      socket.data.node = seat.node;
+      socket.join(roomChannel(game.roomCode));
+      const joined = { ok: true, node: seat.node, roomCode: game.roomCode };
+      socket.emit('lobby:joined', joined);
+      return reply(joined);
+    });
   }
 
   io.on('connection', (socket) => {
