@@ -3,7 +3,9 @@
 
 // End-to-end UI simulation: a Chromium projector page and 5 phone pages join,
 // vote and play Cycles 1-4 (plus the world reveal) on shortened timers, then
-// report the phase sequence, the world built and any console errors.
+// report the phase sequence, the world built and any console errors. It also
+// checks the world reveal themed the projector, recoloured the map and themed
+// the phones.
 //
 // Needs Playwright with Chromium (not a project dependency, so CI stays light):
 //   npm i --no-save playwright && npx playwright install chromium
@@ -75,6 +77,14 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   const out = process.env.SHOT_DIR;
   if (out) { await host.screenshot({ path: out + '/e2e-host.png' }); await phones[0].screenshot({ path: out + '/e2e-phone.png' }); }
   const hostText = await host.textContent('#world-name');
+  // World reveal applied in the browser: host theme, map recolour, phone theme.
+  const themed = {
+    hostBody: await host.evaluate(() => document.body.dataset.world || null),
+    hostClass: await host.evaluate(() => document.body.className),
+    map: await host.evaluate(() => document.getElementById('region-map').dataset.world || null),
+    mapAccent: await host.evaluate(() => getComputedStyle(document.getElementById('region-map')).getPropertyValue('--map-accent').trim()),
+    phone: await phones[0].evaluate(() => document.body.dataset.world || null)
+  };
   console.log = log;
   if (consoleMsgs.length) process.stderr.write('console:\n' + consoleMsgs.join('\n') + '\n');
   process.stderr.write(JSON.stringify({ phases: hostPhases.join(' '), voteHistory: game.voteHistory, worldKey: game.worldKey, hostWorld: hostText, gdw: game.gdw }) + '\n');
@@ -85,6 +95,11 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
     }
   }
   if (!seen.has('2:WORLD_REVEAL')) problems.push('missing world reveal');
+  const wk = game.worldKey;
+  if (themed.hostBody !== wk || !themed.hostClass.includes(`world-${String(wk).toLowerCase()}`)) problems.push(`host not themed for ${wk}: ${JSON.stringify(themed)}`);
+  if (themed.map !== wk || !themed.mapAccent) problems.push(`map not recoloured for ${wk}: ${JSON.stringify(themed)}`);
+  if (themed.phone !== wk) problems.push(`phone not themed for ${wk}: ${JSON.stringify(themed)}`);
+  if (hostText !== engine.loadGameData().crises.worlds[wk].name) problems.push(`world title "${hostText}"`);
   await browser.close();
   if (problems.length) {
     process.stderr.write('E2E FAILED:\n' + problems.join('\n') + '\n');
