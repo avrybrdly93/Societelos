@@ -62,6 +62,39 @@ const PHASES = Object.freeze({
   END: 'END'
 });
 
+// Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
+// (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
+const DEFAULT_PHASE_SECONDS = Object.freeze({
+  INTRO: 30,
+  ROLE_ASSIGN: 20,
+  CHAMBER: 10,
+  INCIDENT: 15,
+  INTEL: 20,
+  DEBATE: 90,
+  VOTE: 15,
+  RESOLUTION: 20,
+  WORLD_REVEAL: 10,
+  FINALE_WRITE: 45,
+  FINALE_MOD: 10,
+  FINALE_DEBATE: 60,
+  FINALE_RANK: 30,
+  FINALE_ENACT: 20
+});
+
+/**
+ * Build the phase duration dictionary in milliseconds.
+ * `overrides` (seconds) win over env, env wins over defaults.
+ */
+function buildPhaseDurations(env = process.env, overrides = {}) {
+  const seconds = { ...DEFAULT_PHASE_SECONDS };
+  const debate = Number(env.DEBATE_SECONDS);
+  if (Number.isFinite(debate) && debate > 0) seconds.DEBATE = debate;
+  Object.assign(seconds, overrides);
+  const ms = {};
+  for (const [phase, s] of Object.entries(seconds)) ms[phase] = Math.round(s * 1000);
+  return ms;
+}
+
 /**
  * Generate a 4-letter room code not present in `taken` (a Set or Map of codes).
  */
@@ -227,7 +260,7 @@ function resolveLoom() {
  * State for one game room (one projector + 5 phones).
  */
 class GameState {
-  constructor({ roomCode = null } = {}) {
+  constructor({ roomCode = null, phaseSeconds = {} } = {}) {
     this.roomCode = roomCode;
     this.gameId = generateGameId();
     this.createdAt = Date.now();
@@ -236,6 +269,7 @@ class GameState {
     this.players = {};
 
     // Phase state machine.
+    this.durations = buildPhaseDurations(process.env, phaseSeconds);
     this.phase = null;
     this.endsAt = null;
     this.cycle = 0;
@@ -345,5 +379,7 @@ module.exports = {
   ROOM_CODE_ALPHABET,
   NODE_IDS,
   MAX_PLAYERS,
-  PHASES
+  PHASES,
+  DEFAULT_PHASE_SECONDS,
+  buildPhaseDurations
 };
