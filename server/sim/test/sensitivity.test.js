@@ -29,3 +29,10 @@ test('D2 youth are highly sensitive to connection and trust', () => {
     assert.ok(S['D2:youth'][trait] > mean(trait), `above the regional mean ${mean(trait).toFixed(2)}`);
   }
 });
+
+test('every D5 cohort has heightened autonomy sensitivity (sympathetic to the Unplugged)', () => {
+  for (const cohort of ['youth', 'workers', 'elders', 'elite']) {
+    const v = S[`D5:${cohort}`].autonomy;
+    assert.ok(v >= 1.2 && v > mean('autonomy'), `D5:${cohort} autonomy ${v} (mean ${mean('autonomy').toFixed(2)})`);
+  }
+});

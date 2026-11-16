@@ -309,7 +309,7 @@
       "health": 0.9,
       "trust": 1.2,
       "fairness": 1.2,
-      "autonomy": 1.2
+      "autonomy": 1.3
     },
     "D5:elders": {
       "purpose": 0.8,
@@ -317,7 +317,7 @@
       "health": 1.4,
       "trust": 1.32,
       "fairness": 0.9,
-      "autonomy": 0.84
+      "autonomy": 1.2
     },
     "D5:elite": {
       "purpose": 0.7,
