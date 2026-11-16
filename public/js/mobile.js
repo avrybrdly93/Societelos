@@ -256,8 +256,40 @@
     state.overrideUsed = !payload.overrideAvailable;
     renderOverrideAvailability();
   });
+  // Override armed: clear visual state (crimson row, "x2" on both buttons) and
+  // a 2-step confirm — the first tap arms that button, a second tap within
+  // 4 s casts the doubled vote. Without the Override one tap votes.
+  const CONFIRM_MS = 4000;
+  let pendingChoice = null;
+  let pendingTimer = null;
+  function clearPendingConfirm() {
+    pendingChoice = null;
+    clearTimeout(pendingTimer);
+    document.querySelectorAll('.vote-btn').forEach((b) => b.classList.remove('is-confirming'));
+  }
+  function renderOverrideArmed() {
+    const armed = document.getElementById('vote-override').checked;
+    document.getElementById('override-row').classList.toggle('is-armed', armed);
+    document.getElementById('vote-panel').classList.toggle('is-override-armed', armed);
+    clearPendingConfirm();
+  }
+  document.getElementById('vote-override').addEventListener('change', renderOverrideArmed);
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'VOTE') renderOverrideArmed(); });
+
   document.querySelectorAll('.vote-btn').forEach((btn) => {
-    btn.addEventListener('click', () => castVote(btn.dataset.choice));
+    btn.addEventListener('click', () => {
+      const choice = btn.dataset.choice;
+      const armed = document.getElementById('vote-override').checked;
+      if (armed && pendingChoice !== choice) {
+        clearPendingConfirm();
+        pendingChoice = choice;
+        btn.classList.add('is-confirming');
+        pendingTimer = setTimeout(clearPendingConfirm, CONFIRM_MS);
+        return;
+      }
+      clearPendingConfirm();
+      castVote(choice);
+    });
   });
 
   // ---------------------------------------------------------------------------

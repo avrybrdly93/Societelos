@@ -658,3 +658,15 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 
 .override-row[hidden], .override-spent[hidden] { display: none; }
 .override-spent { margin: 0; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 8px; border: 1px dashed var(--slate-600); border-radius: var(--radius); }
+
+/* Override armed on the vote buttons: x2 badge, then a confirm step. */
+.vote-btn { position: relative; }
+.vote-panel.is-override-armed .vote-btn { border-color: var(--alert-crimson-dim); }
+.vote-panel.is-override-armed .vote-btn::after {
+  content: "\00D7 2"; position: absolute; bottom: 10px; right: 12px;
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px; background: var(--danger); color: var(--slate-50);
+}
+.vote-btn.is-confirming { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.35); }
+.vote-panel.is-override-armed .vote-btn.is-confirming::after { content: "TAP AGAIN TO CONFIRM \00D7 2"; }
+.vote-panel.is-override-armed .vote-btn { padding-bottom: 44px; }
