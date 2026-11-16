@@ -321,3 +321,26 @@ test('FAST_TIMERS=true drives Cycle 1 -> Cycle 4 automatically', async () => {
   assert.equal(game.worldKey, 'AB');
   assert.equal(game.gdwHistory.length, 1 + 4 * 12);
 });
+
+test('resolution payload matches the socket specification table', async () => {
+  const game = votingGame();
+  const resolution = JSON.parse(JSON.stringify(await resolveWith(game, 'A'))); // as sent over the wire
+  const spec = ['result', 'gdw', 'forecast', 'realized', 'districts', 'loomLine', 'messages'];
+  for (const key of spec) assert.ok(key in resolution, `missing ${key}`);
+  // Only documented additions beyond the table: the restarted RESOLUTION endsAt.
+  assert.deepEqual(Object.keys(resolution).filter((k) => !spec.includes(k)), ['endsAt']);
+
+  assert.equal(resolution.result.winner, 'A');
+  assert.equal(typeof resolution.gdw, 'number');
+  for (const band of ['median', 'p5', 'p95']) {
+    assert.ok(Array.isArray(resolution.forecast[band]) && resolution.forecast[band].length === 13, band);
+  }
+  assert.ok(Array.isArray(resolution.realized.gdw) && resolution.realized.gdw.length === 13);
+  assert.ok(Array.isArray(resolution.districts));
+  assert.ok(typeof resolution.loomLine === 'string' && resolution.loomLine.length > 0);
+  assert.ok(Array.isArray(resolution.messages));
+  for (const m of resolution.messages) assert.ok(typeof m.citizenId === 'string' && typeof m.text === 'string');
+  // Secrets never ride along.
+  const wire = JSON.stringify(resolution);
+  for (const secret of ['"effects"', '"roles"', '"override"', '"votes"', '"token"']) assert.ok(!wire.includes(secret), secret);
+});
