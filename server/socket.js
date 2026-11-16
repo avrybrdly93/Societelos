@@ -53,6 +53,11 @@ function isValidPayload(payload, schema = {}) {
  */
 function onValid(socket, event, schema, handler) {
   socket.on(event, (payload, ack) => {
+    // A client that emits with only an ack callback sends the callback first.
+    if (typeof payload === 'function') {
+      ack = payload;
+      payload = undefined;
+    }
     const reply = typeof ack === 'function' ? ack : () => {};
     const body = payload === undefined || payload === null ? {} : payload;
     if (!isValidPayload(body, schema)) return reply({ ok: false, reason: 'BAD_PAYLOAD' });
