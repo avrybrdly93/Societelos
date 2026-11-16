@@ -420,7 +420,7 @@ class GameState extends EventEmitter {
 
     // Scoring.
     this.scores = {};
-    this.overridesUsed = {};
+    this.overridesUsed = {}; // node id -> true once its single Override is spent (whole game)
   }
 
   /**
@@ -581,8 +581,16 @@ class GameState extends EventEmitter {
     if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
     if (choice !== 'A' && choice !== 'B') return { ok: false, reason: 'BAD_CHOICE' };
     if (this.votes[node]) return { ok: false, reason: 'ALREADY_VOTED' };
-    this.votes[node] = { choice, override: !!override };
+    const useOverride = override === true;
+    this.votes[node] = { choice, override: useOverride };
+    // One Override per player per game: spent the moment it is cast.
+    if (useOverride) this.overridesUsed[node] = true;
     return { ok: true };
+  }
+
+  /** True while `node` still holds its one Override for this game. */
+  overrideAvailable(node) {
+    return !!this.players[node] && !this.overridesUsed[node];
   }
 
   /** True once every seated player has voted this cycle. */
