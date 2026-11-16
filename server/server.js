@@ -7,8 +7,10 @@
 require('dotenv').config({ quiet: true });
 
 const fs = require('fs');
+const http = require('http');
 const path = require('path');
 const express = require('express');
+const { Server } = require('socket.io');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -44,10 +46,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+// HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+
 if (require.main === module) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`[server] Societelos listening on http://localhost:${PORT}`);
   });
 }
 
-module.exports = { app, PORT, PUBLIC_DIR };
+module.exports = { app, server, io, PORT, PUBLIC_DIR };
