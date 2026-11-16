@@ -33,6 +33,7 @@
     state.node = info.node;
     setNodeLabel(info.node);
     renderRole(info.role);
+    onPhase({ phase: info.phase, cycle: info.cycle, endsAt: info.endsAt });
     state.roomCode = info.roomCode;
     saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
   });
@@ -113,5 +114,43 @@
     showView('m-view-role');
   });
 
-  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole };
+  // phase -> switch phone screens in lockstep with the server state machine.
+  // Phases without a phone screen show the waiting view with a status line.
+  const PHASE_SCREENS = {
+    ROLE_ASSIGN: 'm-view-role',
+    INTEL: 'm-view-intel',
+    DEBATE: 'm-view-debate',
+    VOTE: 'm-view-vote'
+  };
+  const WAIT_MESSAGES = {
+    LOBBY: 'Waiting for the council to assemble…',
+    INTRO: 'Incoming transmission. Watch the projector.',
+    CHAMBER: 'The region is coming online. Watch the projector.',
+    INCIDENT: 'A crisis is unfolding. Watch the projector.',
+    RESOLUTION: 'The Loom is simulating your decision. Watch the projector.',
+    WORLD_REVEAL: 'Your world is taking shape. Watch the projector.',
+    FINALE_WRITE: 'Finale in progress. Watch the projector.',
+    FINALE_MOD: 'The Loom is reviewing policies…',
+    FINALE_DEBATE: 'Debate the policies on the projector.',
+    FINALE_RANK: 'Ranking in progress…',
+    FINALE_ENACT: 'The Loom is enacting your policies. Watch the projector.',
+    END: 'Session complete. Look at the projector.'
+  };
+
+  function onPhase(payload) {
+    if (!payload || !payload.phase) return;
+    state.phase = payload.phase;
+    state.cycle = payload.cycle || 0;
+    state.endsAt = payload.endsAt || null;
+    document.body.dataset.phase = payload.phase;
+    if (!state.node) return showView('m-view-join');
+    const screen = PHASE_SCREENS[payload.phase];
+    if (screen) return showView(screen);
+    document.getElementById('wait-status').textContent = WAIT_MESSAGES[payload.phase] || 'Stand by.';
+    return showView('m-view-wait');
+  }
+
+  socket.on('phase', onPhase);
+
+  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
