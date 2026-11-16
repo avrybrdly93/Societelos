@@ -1,7 +1,7 @@
 'use strict';
 
 // Deterministic randomness for the simulation. Nothing in server/sim may use
-// Math.random(): every run is reproducible from its seed.
+// unseeded random: every run is reproducible from its seed.
 
 /**
  * mulberry32: fast 32-bit seeded PRNG.

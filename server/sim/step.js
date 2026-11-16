@@ -39,6 +39,12 @@ function getTopology(state) {
   const popWeight = Float64Array.from(state.cohorts, (c) => c.population / totalPop);
   const traitWeight = Float64Array.from(state.traitNames, (t) => cfg.weights[t] || 0);
   const c = cfg.constants;
+  const tau = c.adoptionTau;
+  const maxMonths = (c.monthsPerCycle || 12) + 1;
+  const adoptionIncrements = new Float64Array(maxMonths);
+  for (let m = 1; m < maxMonths; m++) {
+    adoptionIncrements[m] = (1 - Math.exp(-m / tau)) - (1 - Math.exp(-(m - 1) / tau));
+  }
   topo = {
     districtIds,
     cohortsByDistrict,
@@ -46,6 +52,7 @@ function getTopology(state) {
     baseS,
     popWeight,
     traitWeight,
+    adoptionIncrements,
     driftIdx: (c.driftTraits || []).map((t) => state.traitNames.indexOf(t)).filter((k) => k >= 0)
   };
   topologyCache.set(state.cohorts, topo);
@@ -73,19 +80,30 @@ function buildParams(state, opts = {}) {
     }
   }
 
+  let e = null;
+  if (opts.effects) {
+    e = new Float64Array(K);
+    for (let k = 0; k < K; k++) {
+      const v = opts.effects[state.traitNames[k]];
+      e[k] = typeof v === 'number' ? v : 0;
+    }
+  }
+
   return {
     K,
     n,
     alpha: typeof opts.alpha === 'number' ? opts.alpha : c.alpha,
     volatility: typeof opts.volatility === 'number' ? opts.volatility : 1,
     S,
+    e,
     constants: c,
     districtIds: topo.districtIds,
     cohortsByDistrict: topo.cohortsByDistrict,
     neighbourCohorts: topo.neighbourCohorts,
     driftIdx: topo.driftIdx,
     popWeight: topo.popWeight,
-    traitWeight: topo.traitWeight
+    traitWeight: topo.traitWeight,
+    adoptionIncrements: topo.adoptionIncrements
   };
 }
 
@@ -129,10 +147,11 @@ function adoptedShare(t, tau) {
  */
 function applyAdoption(state, effects, monthIndex, params) {
   if (!effects) return;
-  const { K, n, S, alpha } = params;
-  const tau = params.constants.adoptionTau;
-  const increment = adoptedShare(monthIndex, tau) - adoptedShare(monthIndex - 1, tau);
-  const e = state.traitNames.map((t) => (typeof effects[t] === 'number' ? effects[t] : 0));
+  const { K, n, S, alpha, adoptionIncrements } = params;
+  const increment = (adoptionIncrements && adoptionIncrements[monthIndex] !== undefined)
+    ? adoptionIncrements[monthIndex]
+    : (adoptedShare(monthIndex, params.constants.adoptionTau) - adoptedShare(monthIndex - 1, params.constants.adoptionTau));
+  const e = params.e || state.traitNames.map((t) => (typeof effects[t] === 'number' ? effects[t] : 0));
   const t = state.traits;
   for (let i = 0; i < n; i++) {
     for (let k = 0; k < K; k++) {
@@ -224,7 +243,7 @@ function runSingleSimulation(initialState, effects, seed, isForecast = false, op
   const c = initialState.config.constants;
   const rng = mulberry32(seed);
   const state = cloneState(initialState);
-  const paramOpts = { volatility: opts.volatility };
+  const paramOpts = { volatility: opts.volatility, effects };
   if (isForecast) {
     const a = randomNormal(rng, c.alpha, c.alphaSD);
     paramOpts.alpha = Math.min(c.alphaMax, Math.max(c.alphaMin, a));

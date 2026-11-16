@@ -111,7 +111,7 @@ function simulate(state, effects, opts = {}) {
   const p5 = [];
   const p95 = [];
   for (let m = 0; m <= months; m++) {
-    const sorted = Array.from(byMonth[m]).sort((a, b) => a - b);
+    const sorted = byMonth[m].sort();
     median.push(percentile(sorted, 0.5));
     p5.push(percentile(sorted, 0.05));
     p95.push(percentile(sorted, 0.95));
