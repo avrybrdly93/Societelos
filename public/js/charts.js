@@ -6,6 +6,7 @@
 
   const COLORS = {
     band: 'rgba(63, 216, 230, 0.18)',
+    bandLegend: 'rgba(63, 216, 230, 0.35)',
     median: '#3fd8e6',
     realized: '#f0a430',
     text: '#7d8a9a',
@@ -137,23 +138,60 @@
     ctx.restore();
   }
 
+  // The chart currently on screen: { canvas, ctx, g, forecast }.
+  let active = null;
+
+  /** Small legend in the top-right corner of the plot. */
+  function drawLegend(ctx, g) {
+    const items = [
+      { label: '5–95% of 500 runs', swatch: (x, y) => { ctx.fillStyle = COLORS.bandLegend; ctx.fillRect(x, y - 7, 26, 14); } },
+      { label: 'Forecast median', swatch: (x, y) => { ctx.strokeStyle = COLORS.median; ctx.setLineDash([8, 6]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); ctx.setLineDash([]); } },
+      { label: 'Realized', swatch: (x, y) => { ctx.strokeStyle = COLORS.realized; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); } }
+    ];
+    ctx.save();
+    ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    let y = PAD.top + 14;
+    const x = g.x(g.months) - 230;
+    for (const item of items) {
+      item.swatch(x, y);
+      ctx.fillStyle = COLORS.text;
+      ctx.fillText(item.label, x + 36, y);
+      y += 24;
+    }
+    ctx.restore();
+  }
+
   /**
-   * Draw a whole resolution: forecast fan (p5-p95 band + median) and the
-   * realized GDW line. `payload` is the server's resolution payload.
+   * Draw the Loom's forecast fan: axes, the shaded 5th-95th percentile band
+   * and the dashed median GDW line. `canvas` defaults to the active chart.
    */
-  function render(canvas, payload) {
-    if (!canvas || !canvas.getContext || !payload) return;
+  function drawForecastFan(forecast, canvas = active && active.canvas) {
+    if (!canvas || !canvas.getContext) return null;
     const { ctx } = fitCanvas(canvas);
-    const forecast = payload.forecast || {};
-    const realized = (payload.realized && payload.realized.gdw) || [];
-    const months = Math.max(1, (forecast.median || realized).length - 1);
+    const f = forecast || {};
+    const months = Math.max(1, ((f.median && f.median.length) || 13) - 1);
     const g = geometry(canvas, months);
     clear(ctx, g);
     drawAxes(ctx, g);
-    band(ctx, g, forecast.p5, forecast.p95, COLORS.band);
-    line(ctx, g, forecast.median, { color: COLORS.median, width: 2 });
-    line(ctx, g, realized, { color: COLORS.realized, width: 4 });
+    band(ctx, g, f.p5, f.p95, COLORS.band);
+    line(ctx, g, f.median, { color: COLORS.median, width: 3, dash: [10, 8] });
+    drawLegend(ctx, g);
+    active = { canvas, ctx, g, forecast: f };
+    return active;
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, render };
+  /**
+   * Draw a whole resolution at once: forecast fan plus the full realized
+   * line. `payload` is the server's resolution payload.
+   */
+  function render(canvas, payload) {
+    if (!canvas || !canvas.getContext || !payload) return;
+    const chart = drawForecastFan(payload.forecast, canvas);
+    const realized = (payload.realized && payload.realized.gdw) || [];
+    if (chart) line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
+  }
+
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, render };
 })();
