@@ -197,6 +197,28 @@ const STATUSES = ['ok', 'revise', 'reject'];
 const truncate = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 const clamp = (v) => (Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
 
+const NODE_ID = /^NODE-0[1-5]$/;
+
+/**
+ * Privacy: replace any known player name in free text with a neutral phrase,
+ * so nothing sent to Gemini can identify a student. Whole-word, case-insensitive.
+ */
+function redactNames(text, names = []) {
+  let out = String(text == null ? '' : text);
+  for (const name of names) {
+    const n = String(name || '').trim();
+    if (n.length < 2) continue;
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), 'a council member');
+  }
+  return out;
+}
+
+/** Only NODE-01..NODE-05 may identify a player; anything else is dropped. */
+function safeNode(node) {
+  return NODE_ID.test(String(node)) ? String(node) : null;
+}
+
 function zeroEffects() {
   return Object.fromEntries(TRAITS.map((t) => [t, 0]));
 }
@@ -262,7 +284,11 @@ function moderateFallback(submissions) {
  * @returns {Promise<{ node, status: 'ok'|'revise'|'reject', cleaned, feedback, roles: string[], effects: object, fallback?: boolean }[]>}
  */
 async function moderate(submissions = [], crisis = {}, opts = {}) {
-  const list = (submissions || []).map((s) => ({ node: s.node, text: truncate(s.text, 280) }));
+  // Send only { node: 'NODE-0X', text } with player names redacted; never names or socket ids.
+  const names = opts.playerNames || [];
+  const list = (submissions || [])
+    .map((s) => ({ node: safeNode(s.node), text: truncate(redactNames(s.text, names), 280) }))
+    .filter((s) => s.node);
   const cfg = opts.config || getConfig();
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
@@ -335,4 +361,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
