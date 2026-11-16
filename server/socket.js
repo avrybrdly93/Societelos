@@ -60,6 +60,11 @@ function initSockets(io, gameEngine) {
     game.on('role:assigned', ({ node, role }) => {
       emitToNode(game, node, 'role:assigned', { role: roleCard(role) });
     });
+
+    // intel:drop { text } privately, chosen by the node's secret role.
+    game.on('intel:drop', ({ node, text }) => {
+      emitToNode(game, node, 'intel:drop', { text });
+    });
   }
 
   // lobby:update { players: [{ node, ready, connected }] } to everyone in the room.
