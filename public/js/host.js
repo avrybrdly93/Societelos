@@ -569,6 +569,22 @@
       li.append(label, text);
       list.appendChild(li);
     });
+    requestAnimationFrame(fitProposals);
+  }
+  // Shrink a card's text (32px down to 22px) until all 140 characters fit,
+  // so the five cards never scroll or clip on a 1080p projector.
+  const PROPOSAL_FONT_MAX = 32;
+  const PROPOSAL_FONT_MIN = 22;
+  function fitProposals() {
+    document.querySelectorAll('.proposal-card').forEach((card) => {
+      const text = card.querySelector('.proposal-text');
+      let size = PROPOSAL_FONT_MAX;
+      text.style.fontSize = `${size}px`;
+      while (card.scrollHeight > card.clientHeight + 1 && size > PROPOSAL_FONT_MIN) {
+        size -= 1;
+        text.style.fontSize = `${size}px`;
+      }
+    });
   }
   socket.on('phase', (payload) => {
     if (payload.phase === 'FINALE_DEBATE' && Array.isArray(payload.policies)) {
