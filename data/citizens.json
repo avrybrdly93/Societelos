@@ -140,9 +140,15 @@
     "cohort": "youth",
     "voice": "New parent unsure what to teach her kid",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "My daughter fixed her own toy today instead of asking the house to. I cried a little. Proud parent."
+      ],
+      "mixed": [
+        "What do I teach her? Kindness, I suppose. The Loom has the rest covered. Or does it?"
+      ],
+      "bad": [
+        "She asked me what I do all day. I didn't have an answer. Neither did the Loom."
+      ]
     }
   },
   {
