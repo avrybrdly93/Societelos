@@ -76,6 +76,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Debug: non-secret state of every room for integration testing.
+// Disabled when NODE_ENV=production (responds 404, like any unknown route).
+app.get('/api/state', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') return next();
+  const rooms = Array.from(gameEngine.rooms.values()).map((game) => game.debugState());
+  return res.json({ rooms });
+});
+
 // QR code (PNG data URL) pointing phones at http://<lan-ip>:<port>/mobile.
 app.get('/api/qr', async (req, res) => {
   try {

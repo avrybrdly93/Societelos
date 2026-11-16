@@ -935,6 +935,29 @@ class GameState extends EventEmitter {
     return { id, title, subtitle, incident, loomIntro };
   }
 
+  /**
+   * Non-secret snapshot for the /api/state debug endpoint: no names, roles,
+   * tokens, per-node votes, Override usage, scores or effect vectors.
+   */
+  debugState() {
+    return {
+      roomCode: this.roomCode,
+      gameId: this.gameId,
+      phase: this.phase,
+      cycle: this.cycle,
+      endsAt: this.endsAt,
+      gdw: this.gdw,
+      gdwHistory: this.gdwHistory.slice(),
+      volatility: this.volatility,
+      worldKey: this.worldKey,
+      voteHistory: { ...this.voteHistory },
+      ending: this.ending,
+      crisis: this.publicCrisis(),
+      voted: Object.keys(this.votes),
+      players: Object.values(this.players).map((p) => ({ node: p.node, ready: p.ready, connected: p.connected }))
+    };
+  }
+
   /** Milliseconds left on the current phase timer (0 when none). */
   timeRemainingMs() {
     return this.endsAt ? Math.max(0, this.endsAt - Date.now()) : 0;
