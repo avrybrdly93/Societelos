@@ -156,3 +156,24 @@ test('Crisis 2B applies assimilator in the AB world and lotus in the BB world', 
     assert.deepEqual(game.scoreLedger[1].role, { [holder]: 1 });
   }
 });
+
+/** The node holding the Catalyst role in a game with roles dealt. */
+function catalystGame() {
+  const game = votingGame();
+  game.assignRoles(game.data.roles);
+  const node = Object.keys(game.roleAssignment).find((n) => game.roleAssignment[n].key === 'catalyst');
+  return { game, node };
+}
+
+test('Catalyst scores +1 on a -10 GDW drop (GDW > 0) and 0 on a -9.9 drop', () => {
+  assert.equal(engine.catalystScores(35, 25), true);
+  assert.equal(engine.catalystScores(25, 35), true, 'a +10 rise counts too');
+  assert.equal(engine.catalystScores(35, 25.1), false);
+  assert.equal(engine.catalystScores(30.3, 20.3), true, 'float noise does not hide a 10.0 swing');
+
+  const { game, node } = catalystGame();
+  assert.deepEqual(game.awardCatalystPoints(35, 25), { [node]: 1 });
+  assert.equal(game.scores[node], 1);
+  assert.deepEqual(game.awardCatalystPoints(35, 25.1), {});
+  assert.equal(game.scores[node], 1);
+});
