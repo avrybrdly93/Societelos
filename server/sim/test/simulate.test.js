@@ -110,3 +110,18 @@ test('near 5% GDW, P(collapse) equals the fraction of forecast runs ending at 0%
   assert.equal(forecast.pCollapse, collapsed / runs);
   assert.equal(forecast.pUnrest, unrest / runs);
 });
+
+test('realized run clamps GDW at 0% and records collapsed: true when W <= 0.20 at month 12', () => {
+  const { computeRegionWellbeing } = require('../state');
+  const state = createInitialState(simConfig);
+  state.traits.fill(0.22); // GDW 2.5%: a harsh policy pushes W under the 0.20 floor
+  const harsh = { purpose: -1, connection: -1, health: -1, trust: -1, fairness: -1, autonomy: -1 };
+  const r = simulate(state, harsh, { runs: 20, seed: 5 });
+  assert.ok(computeRegionWellbeing(r.finalState) <= 0.20, 'W fell to the floor');
+  assert.equal(r.realized.finalGdw, 0, 'clamped, never negative');
+  assert.ok(Array.from(r.realized.gdw).every((g) => g >= 0));
+  assert.equal(r.realized.collapsed, true);
+  // A healthy run is not collapsed.
+  const ok = simulate(createInitialState(simConfig), EFFECTS, { runs: 20, seed: 5 });
+  assert.equal(ok.realized.collapsed, false);
+});
