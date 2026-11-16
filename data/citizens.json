@@ -7,9 +7,15 @@
     "cohort": "workers",
     "voice": "Retired nurse who misses being needed",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Three neighbours asked me to check on their kids today. I felt like a nurse again. I had forgotten that feeling."
+      ],
+      "mixed": [
+        "Some days I'm useful, some days I'm furniture. Today was a bit of both."
+      ],
+      "bad": [
+        "Nobody needs bandages anymore. Nobody needs me either, apparently."
+      ]
     }
   },
   {
