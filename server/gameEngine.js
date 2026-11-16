@@ -306,16 +306,31 @@ class GameState extends EventEmitter {
    * Returns endsAt, or null when the phase has no duration.
    */
   startPhaseTimer(durationMs, onExpire) {
+    this.clearPhaseTimer();
     if (!Number.isFinite(durationMs) || durationMs <= 0) {
       this.endsAt = null;
       return null;
     }
     this.endsAt = Date.now() + durationMs;
+    const token = (this.timerToken = (this.timerToken || 0) + 1);
     this.phaseTimer = setTimeout(() => {
+      // Ignore a stale callback if the timer was replaced or cleared meanwhile.
+      if (token !== this.timerToken) return;
       this.phaseTimer = null;
       onExpire();
     }, durationMs);
     return this.endsAt;
+  }
+
+  /**
+   * Cancel the pending phase timer so an early advance (e.g. all votes in)
+   * can never be followed by a second, duplicate transition.
+   */
+  clearPhaseTimer() {
+    if (this.phaseTimer) clearTimeout(this.phaseTimer);
+    this.phaseTimer = null;
+    this.timerToken = (this.timerToken || 0) + 1;
+    this.endsAt = null;
   }
 
   /**
@@ -359,6 +374,7 @@ class GameState extends EventEmitter {
   advancePhase() {
     const from = this.phase;
     const to = this.nextPhase();
+    this.clearPhaseTimer();
     if (from === PHASES.END) return to;
     // A cycle begins at each INCIDENT reached from setup, a resolution or the world reveal.
     if (to === PHASES.INCIDENT && from !== PHASES.INCIDENT) {
