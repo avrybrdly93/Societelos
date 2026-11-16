@@ -394,8 +394,8 @@
           "loomLine": "Training rotas issued. Expect slower repairs. Expect, apparently, pride."
         },
         "B": {
-          "name": "Self-Healing Redundant Mesh",
-          "text": "Let The Loom replace all human-accessible hardware with sealed, self-assembling nanite circuitry.",
+          "name": "Self-Repairing Redundancy",
+          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will ever fail again, and nothing will ever need a human hand.",
           "roles": [
             "assimilator",
             "lotus"
@@ -404,11 +404,12 @@
             "purpose": -0.4,
             "connection": -0.2,
             "health": 0.4,
-            "trust": 0.6,
+            "trust": 0.5,
             "fairness": 0.1,
-            "autonomy": -0.8
+            "autonomy": -0.7
           },
-          "targetGdwDelta": 4
+          "targetGdwDelta": 4,
+          "loomLine": "Redundancy installed. Failure is no longer possible. Neither is your involvement."
         }
       },
       "intel": {}
