@@ -7,6 +7,7 @@
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
     "start:legacy": "node server/index.js",
+    "test": "node --test server/sim/test/*.test.js",
     "check": "node --check server/server.js && node --check server/socket.js && node --check server/gameEngine.js && node --check public/js/host.js && node --check public/js/mobile.js && node --check public/js/map.js",
     "check:json": "node -e \"const fs=require('fs');let bad=0;for(const f of fs.readdirSync('data').filter(f=>f.endsWith('.json'))){try{JSON.parse(fs.readFileSync('data/'+f,'utf8'));console.log('ok   data/'+f)}catch(e){bad++;console.error('FAIL data/'+f+': '+e.message)}}process.exit(bad?1:0)\"",
     "check:data": "node scripts/validate-data.js",
