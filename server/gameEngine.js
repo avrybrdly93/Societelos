@@ -67,7 +67,8 @@ const TOTAL_CYCLES = 5;
 
 // Phases with dedicated entry logic -> GameState method name.
 const PHASE_STARTERS = {
-  INTRO: 'startIntroPhase'
+  INTRO: 'startIntroPhase',
+  ROLE_ASSIGN: 'startRoleAssignmentPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -269,9 +270,10 @@ function resolveLoom() {
  * Emits events ('phase', ...) that socket.js relays to clients.
  */
 class GameState extends EventEmitter {
-  constructor({ roomCode = null, phaseSeconds = {} } = {}) {
+  constructor({ roomCode = null, phaseSeconds = {}, data = null } = {}) {
     super();
     this.roomCode = roomCode;
+    this.data = data || loadGameData();
     this.gameId = generateGameId();
     this.createdAt = Date.now();
 
@@ -412,6 +414,18 @@ class GameState extends EventEmitter {
     this.enterPhase(PHASES.INTRO);
     console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
     return true;
+  }
+
+  /**
+   * INTRO -> ROLE_ASSIGN: deal roles and emit one private 'role:assigned'
+   * event per node ({ node, role }) for socket.js to deliver to that phone only.
+   */
+  startRoleAssignmentPhase() {
+    const assignment = this.assignRoles(this.data.roles);
+    for (const [node, role] of Object.entries(assignment)) {
+      this.emit('role:assigned', { node, role });
+    }
+    this.enterPhase(PHASES.ROLE_ASSIGN);
   }
 
   /** Begin a cycle (stub until startCycle is fully implemented). */
