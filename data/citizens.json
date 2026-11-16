@@ -121,9 +121,15 @@
     "cohort": "workers",
     "voice": "Ex-truck driver, angry and funny",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Drove a real truck today. Museum route, but still. Honked at a pigeon. Living the dream."
+      ],
+      "mixed": [
+        "The Loom says morale is up four percent. Funny, mine is exactly where I left it: in the garage."
+      ],
+      "bad": [
+        "Great. Another genius decision from people who have never parked anything bigger than a bike."
+      ]
     }
   },
   {
