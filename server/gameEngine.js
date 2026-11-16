@@ -66,7 +66,9 @@ const PHASES = Object.freeze({
 const TOTAL_CYCLES = 5;
 
 // Phases with dedicated entry logic -> GameState method name.
-const PHASE_STARTERS = {};
+const PHASE_STARTERS = {
+  INTRO: 'startIntroPhase'
+};
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
@@ -398,6 +400,18 @@ class GameState extends EventEmitter {
     const endsAt = this.startPhaseTimer(this.durations[phase], () => this.advancePhase());
     this.emit('phase', { cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra });
     return endsAt;
+  }
+
+  /**
+   * LOBBY -> INTRO, triggered by the host. Returns false if the game has
+   * already started.
+   */
+  startIntroPhase() {
+    if (this.phase !== PHASES.LOBBY) return false;
+    this.startedAt = Date.now();
+    this.enterPhase(PHASES.INTRO);
+    console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
+    return true;
   }
 
   /** Begin a cycle (stub until startCycle is fully implemented). */
