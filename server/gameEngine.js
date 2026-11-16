@@ -877,7 +877,8 @@ class GameState extends EventEmitter {
           realized: simResult.realized,
           districts: simResult.realized.districts || [],
           loomLine: narration.loomLine,
-          messages: narration.messages || []
+          // Reactions carry the citizen's public name, age and district for the feed.
+          messages: (narration.messages || []).filter((m) => m && m.text).map((m) => this.citizenMessage(m))
         }, ['name']);
         // The month-by-month animation starts when clients receive this
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
