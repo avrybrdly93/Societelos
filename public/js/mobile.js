@@ -35,5 +35,47 @@
     saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
   });
 
-  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession };
+  // Screen switching.
+  function showView(id) {
+    document.querySelectorAll('#m-main > .m-view').forEach((v) => v.classList.toggle('is-active', v.id === id));
+  }
+
+  function setNodeLabel(node) {
+    document.getElementById('m-node-label').textContent = node || 'NOT CONNECTED';
+    document.getElementById('wait-node').textContent = node || 'NODE-0?';
+    document.getElementById('intel-node').textContent = node || 'NODE-0?';
+  }
+
+  // Join form -> lobby:join { name }
+  const JOIN_ERRORS = {
+    ROOM_FULL: 'The council is full. All five nodes are taken.',
+    NO_ROOM: 'No council session found. Is the projector open?',
+    GAME_IN_PROGRESS: 'A session is already running.',
+    BAD_PAYLOAD: 'Enter a name (up to 24 characters).'
+  };
+  const joinForm = document.getElementById('join-form');
+  const joinError = document.getElementById('join-error');
+  const joinSubmit = document.getElementById('join-submit');
+  joinForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = document.getElementById('join-name').value.trim();
+    if (!name) return;
+    joinSubmit.disabled = true;
+    joinError.hidden = true;
+    socket.emit('lobby:join', { name }, (res) => {
+      joinSubmit.disabled = false;
+      if (!res || !res.ok) {
+        joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Connection refused. Try again.';
+        joinError.hidden = false;
+        return;
+      }
+      state.node = res.node;
+      state.roomCode = res.roomCode;
+      saveSession({ node: res.node, token: res.token, roomCode: res.roomCode });
+      setNodeLabel(res.node);
+      showView('m-view-wait');
+    });
+  });
+
+  window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel };
 })();
