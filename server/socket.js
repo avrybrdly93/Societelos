@@ -123,6 +123,11 @@ function initSockets(io, gameEngine) {
       io.to(roomChannel(game.roomCode)).emit('world:reveal', { worldKey, name, tagline, problemLeft });
     });
 
+    // override:status { overrideAvailable } privately to each phone as VOTE opens.
+    game.on('override:status', ({ node, overrideAvailable }) => {
+      emitToNode(game, node, 'override:status', { overrideAvailable: !!overrideAvailable });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });

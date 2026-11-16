@@ -619,6 +619,10 @@ class GameState extends EventEmitter {
     this.votes = {};
     this.votingOpen = true;
     this.enterPhase(PHASES.VOTE);
+    // Private per-phone Override status (never broadcast: it would reveal who spent one).
+    for (const node of Object.keys(this.players)) {
+      this.emit('override:status', { node, overrideAvailable: this.overrideAvailable(node) });
+    }
   }
 
   /**
