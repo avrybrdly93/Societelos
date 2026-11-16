@@ -129,6 +129,26 @@
   }
 
   socket.on('phase', onPhase);
+
+  // Incident banner: crisis title and the Loom's intro line.
+  function renderIncident(payload) {
+    const banner = document.getElementById('incident-banner');
+    const crisis = payload.crisis;
+    if (!crisis) {
+      banner.hidden = true;
+      return;
+    }
+    banner.hidden = false;
+    document.getElementById('incident-cycle').textContent = `Cycle ${payload.cycle}`;
+    document.getElementById('incident-title').textContent = crisis.title || '';
+    document.getElementById('incident-subtitle').textContent = crisis.subtitle || '';
+    document.getElementById('incident-text').textContent = crisis.incident || '';
+    const loom = document.getElementById('incident-loom');
+    loom.textContent = crisis.loomIntro ? `"${crisis.loomIntro}"` : '';
+    loom.hidden = !crisis.loomIntro;
+    banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
+  }
+  socket.on('phase', renderIncident);
   socket.on('phase', (payload) => { if (payload.phase === 'CHAMBER') revealChamber(payload); });
 
   // Countdown: recomputed every frame from the server's endsAt timestamp, so
