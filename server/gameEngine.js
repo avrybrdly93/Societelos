@@ -26,12 +26,34 @@ function generateRoomCode(taken = new Set()) {
 }
 
 /**
+ * Unique game id (12 hex chars). Shown on the end screen so a class can replay
+ * a game: every seed in the game is derived from it.
+ */
+function generateGameId() {
+  return crypto.randomBytes(6).toString('hex');
+}
+
+/**
+ * Deterministic 32-bit seed from a game id and any extra parts (e.g. cycle),
+ * using FNV-1a. hashSeed(gameId, 3) is always the same number.
+ */
+function hashSeed(gameId, ...parts) {
+  const input = [gameId, ...parts].join(':');
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/**
  * State for one game room (one projector + 5 phones).
  */
 class GameState {
   constructor({ roomCode = null } = {}) {
     this.roomCode = roomCode;
-    this.gameId = null;
+    this.gameId = generateGameId();
     this.createdAt = Date.now();
 
     // Players keyed by node id ('NODE-01'..'NODE-05').
@@ -60,4 +82,4 @@ class GameState {
   }
 }
 
-module.exports = { GameState, generateRoomCode, ROOM_CODE_ALPHABET };
+module.exports = { GameState, generateRoomCode, generateGameId, hashSeed, ROOM_CODE_ALPHABET };
