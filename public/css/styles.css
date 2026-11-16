@@ -655,3 +655,6 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 .override-switch.is-armed { border-color: var(--danger); }
 .override-switch:has(input:checked) .override-help,
 .override-switch.is-armed .override-help { color: var(--slate-200); }
+
+.override-row[hidden], .override-spent[hidden] { display: none; }
+.override-spent { margin: 0; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 8px; border: 1px dashed var(--slate-600); border-radius: var(--radius); }

@@ -211,6 +211,10 @@
       }
       // Already voted counts as locked; anything else lets the player retry.
       if (res && res.reason === 'ALREADY_VOTED') return;
+      if (res && res.reason === 'OVERRIDE_SPENT') {
+        state.overrideUsed = true;
+        renderOverrideAvailability();
+      }
       console.warn('[mobile] vote rejected', res && res.reason);
       setVoteLocked(false);
     });
@@ -225,14 +229,32 @@
     }
   }
 
-  // Each new VOTE phase starts unlocked; a spent Override stays disabled.
+  // Override availability: once spent (in any earlier cycle) the switch is
+  // disabled and hidden for the rest of the game.
+  function renderOverrideAvailability() {
+    const spent = !!state.overrideUsed;
+    const box = document.getElementById('vote-override');
+    const row = document.getElementById('override-row');
+    box.checked = false;
+    box.disabled = spent;
+    row.classList.remove('is-armed');
+    row.classList.toggle('is-spent', spent);
+    row.hidden = spent;
+    document.getElementById('override-spent').hidden = !spent;
+  }
+
+  // Each new VOTE phase starts unlocked; a spent Override stays hidden.
   socket.on('phase', (payload) => {
     if (!payload || payload.phase !== 'VOTE') return;
     setVoteLocked(false);
-    const box = document.getElementById('vote-override');
-    box.checked = false;
-    box.disabled = !!state.overrideUsed;
-    document.getElementById('override-row').classList.toggle('is-spent', !!state.overrideUsed);
+    renderOverrideAvailability();
+  });
+
+  // override:status { overrideAvailable } -> the server's word wins (e.g. after a reconnect).
+  socket.on('override:status', (payload) => {
+    if (!payload || typeof payload.overrideAvailable !== 'boolean') return;
+    state.overrideUsed = !payload.overrideAvailable;
+    renderOverrideAvailability();
   });
   document.querySelectorAll('.vote-btn').forEach((btn) => {
     btn.addEventListener('click', () => castVote(btn.dataset.choice));
