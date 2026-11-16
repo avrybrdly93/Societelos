@@ -1059,3 +1059,25 @@ test('FINALE_ENACT broadcasts a resolution with the Borda tally, enacted 50/25/2
   assert.ok(Array.isArray(r.messages));
   assert.ok(!JSON.stringify(r).includes('NODE-0'), 'no authors before game:end');
 });
+
+test('Borda count across 5 players who each rank the 4 policies they did not write', async () => {
+  const { game } = await rankingFinale();
+  // Everyone ranks their ballot in the same global preference: P1 > P2 > P3 > P4 > P5 (minus their own).
+  const pref = ['POLICY-1', 'POLICY-2', 'POLICY-3', 'POLICY-4', 'POLICY-5'];
+  for (const node of NODE_IDS) {
+    const order = pref.filter((id) => game.finale.ballots[node].includes(id));
+    assert.equal(game.rankPolicies(node, order).ok, true);
+  }
+  game.stop();
+  const tally = engine.bordaCount(game.finale.ranks, pref);
+  // Each policy is ranked by exactly the 4 non-authors.
+  for (const id of pref) assert.equal(tally[id].places.reduce((a, b) => a + b, 0), 4, id);
+  // POLICY-1 is 1st on all 4 ballots it appears on (16). POLICY-2 is 1st only
+  // for POLICY-1's author and 2nd for the other 3 (4 + 9). POLICY-5 is always last (4).
+  assert.equal(tally['POLICY-1'].points, 16);
+  assert.equal(tally['POLICY-2'].points, 4 + 3 * 3);
+  assert.equal(tally['POLICY-5'].points, 4 * 1);
+  const total = pref.reduce((a, id) => a + tally[id].points, 0);
+  assert.equal(total, 5 * 10, 'every ballot hands out 4+3+2+1');
+  assert.deepEqual(engine.rankBorda(tally).map((r) => r.id), pref);
+});
