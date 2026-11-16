@@ -926,6 +926,11 @@ class GameState extends EventEmitter {
     if (order.some((id) => this.finale.authors[id] === node)) return { ok: false, reason: 'OWN_POLICY' };
     if (!order.every((id) => ballot.includes(id))) return { ok: false, reason: 'UNKNOWN_POLICY' };
     this.finale.ranks[node] = order.slice();
+    // All five ranked: enact now rather than waiting out the 30 s.
+    const seated = Object.keys(this.players);
+    if (seated.every((n) => this.finale.ranks[n])) {
+      setImmediate(() => { if (this.phase === PHASES.FINALE_RANK) this.advancePhase(); });
+    }
     return { ok: true };
   }
 

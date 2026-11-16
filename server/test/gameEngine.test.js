@@ -1120,3 +1120,25 @@ test('if loom.moderate times out, Write-and-Rank falls back to the authored bina
     restore();
   }
 });
+
+test('FINALE_RANK advances to FINALE_ENACT as soon as all 5 players have ranked', async () => {
+  const { game } = await rankingFinale();
+  const seen = [];
+  game.on('phase', (p) => seen.push(p.phase));
+  NODE_IDS.slice(0, 4).forEach((n) => game.rankPolicies(n, game.finale.ballots[n]));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(game.phase, 'FINALE_RANK', 'waiting for the fifth');
+  quiet(() => game.rankPolicies('NODE-05', game.finale.ballots['NODE-05']));
+  await new Promise((r) => setImmediate(r));
+  const log = console.log;
+  console.log = () => {};
+  try {
+    await new Promise((r) => setImmediate(r));
+    assert.equal(seen[0], 'FINALE_ENACT');
+    assert.deepEqual(game.finale.rankDefaulted, []);
+    await game.finale.narrated;
+  } finally {
+    game.stop();
+    console.log = log;
+  }
+});
