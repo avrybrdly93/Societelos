@@ -1,0 +1,18 @@
+{
+  "_doc": "Every tunable number for the cohort Monte Carlo simulation lives here (no magic numbers in server/sim). Read by server/sim/state.js.",
+  "traits": ["purpose", "connection", "health", "trust", "fairness", "autonomy"],
+  "gdw": {
+    "scale": 125,
+    "floorWellbeing": 0.20,
+    "min": 0,
+    "max": 100,
+    "startingGdw": 25
+  },
+  "districts": [],
+  "cohorts": [],
+  "weights": {},
+  "baseline": 0.40,
+  "offsets": {},
+  "sensitivity": {},
+  "constants": {}
+}
