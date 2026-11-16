@@ -88,6 +88,13 @@ function onValid(socket, event, schema, handler) {
 
 const nonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 64;
 
+// Finale payload schemas: bounded, so an oversized or malformed packet is
+// refused before it reaches the engine (the engine re-validates contents).
+const FINALE_SCHEMAS = Object.freeze({
+  submit: { text: (v) => typeof v === 'string' && v.length <= 1000 },
+  rank: { order: (v) => Array.isArray(v) && v.length <= 10 && v.every((id) => typeof id === 'string' && id.length <= 32) }
+});
+
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
 function roleCard(role) {
   return {
@@ -280,7 +287,7 @@ function initSockets(io, gameEngine) {
 
     // finale:submit { text } -> this phone's write-in during FINALE_WRITE, or its
     // single resubmission during the FINALE_MOD revise window.
-    onValid(socket, 'finale:submit', { text: 'string' }, (payload, reply) => {
+    onValid(socket, 'finale:submit', FINALE_SCHEMAS.submit, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
       // During FINALE_MOD the same event is the one resubmission for a "revise".
@@ -294,7 +301,7 @@ function initSockets(io, gameEngine) {
     });
 
     // finale:rank { order: [id, id, id, id] } -> this phone's Borda ballot.
-    onValid(socket, 'finale:rank', { order: 'array' }, (payload, reply) => {
+    onValid(socket, 'finale:rank', FINALE_SCHEMAS.rank, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
       const result = game.rankPolicies(socket.data.node, payload.order);
@@ -335,4 +342,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
