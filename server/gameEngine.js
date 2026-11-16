@@ -582,6 +582,8 @@ class GameState extends EventEmitter {
     if (choice !== 'A' && choice !== 'B') return { ok: false, reason: 'BAD_CHOICE' };
     if (this.votes[node]) return { ok: false, reason: 'ALREADY_VOTED' };
     const useOverride = override === true;
+    // Reject a second Override: the vote is not recorded, so the phone may recast.
+    if (useOverride && this.overridesUsed[node]) return { ok: false, reason: 'OVERRIDE_SPENT' };
     this.votes[node] = { choice, override: useOverride };
     // One Override per player per game: spent the moment it is cast.
     if (useOverride) this.overridesUsed[node] = true;
