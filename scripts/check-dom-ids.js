@@ -11,7 +11,8 @@ const ROOT = path.join(__dirname, '..', 'public');
 
 // script(s) -> page they run on
 const PAIRS = [
-  { page: 'index.html', scripts: ['js/host.js', 'js/map.js'] }
+  { page: 'index.html', scripts: ['js/host.js', 'js/map.js'] },
+  { page: 'mobile.html', scripts: ['js/mobile.js'] }
 ];
 
 function idsInHtml(html) {
