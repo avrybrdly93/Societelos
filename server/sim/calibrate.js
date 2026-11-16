@@ -78,4 +78,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { medianDelta, calibrateFixed, pathGdw, RUNS, SEED };
+module.exports = { main, medianDelta, calibrateFixed, pathGdw, RUNS, SEED };
