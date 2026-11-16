@@ -5,6 +5,7 @@
 // phase timers. socket.js translates client events into calls on it.
 
 const crypto = require('crypto');
+const { EventEmitter } = require('events');
 const fs = require('fs');
 const path = require('path');
 
@@ -258,9 +259,11 @@ function resolveLoom() {
 
 /**
  * State for one game room (one projector + 5 phones).
+ * Emits events ('phase', ...) that socket.js relays to clients.
  */
-class GameState {
+class GameState extends EventEmitter {
   constructor({ roomCode = null, phaseSeconds = {} } = {}) {
+    super();
     this.roomCode = roomCode;
     this.gameId = generateGameId();
     this.createdAt = Date.now();
@@ -270,8 +273,9 @@ class GameState {
 
     // Phase state machine.
     this.durations = buildPhaseDurations(process.env, phaseSeconds);
-    this.phase = null;
+    this.phase = PHASES.LOBBY;
     this.endsAt = null;
+    this.phaseTimer = null;
     this.cycle = 0;
 
     // Society.
@@ -289,6 +293,29 @@ class GameState {
     // Scoring.
     this.scores = {};
     this.overridesUsed = {};
+  }
+
+  /**
+   * Authoritative server timer. Sets `endsAt = Date.now() + durationMs` (the
+   * timestamp clients count down to) and calls `onExpire` when it passes.
+   * Returns endsAt, or null when the phase has no duration.
+   */
+  startPhaseTimer(durationMs, onExpire) {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      this.endsAt = null;
+      return null;
+    }
+    this.endsAt = Date.now() + durationMs;
+    this.phaseTimer = setTimeout(() => {
+      this.phaseTimer = null;
+      onExpire();
+    }, durationMs);
+    return this.endsAt;
+  }
+
+  /** Milliseconds left on the current phase timer (0 when none). */
+  timeRemainingMs() {
+    return this.endsAt ? Math.max(0, this.endsAt - Date.now()) : 0;
   }
 
   /**
