@@ -50,6 +50,18 @@ function initSockets(io, gameEngine) {
     socket.emit('host:room', { roomCode: game.roomCode, gameId: game.gameId, phase: game.phase });
     broadcastLobby(game);
     console.log(`[socket] host connected to room ${game.roomCode}`);
+
+    // host:start {} -> begin the phase flow once all 5 nodes have joined.
+    socket.on('host:start', (payload, ack) => {
+      const reply = typeof ack === 'function' ? ack : () => {};
+      const joined = Object.keys(game.players).length;
+      if (joined < gameEngine.MAX_PLAYERS) {
+        socket.emit('host:error', { reason: 'NOT_ENOUGH_PLAYERS', joined });
+        return reply({ ok: false, reason: 'NOT_ENOUGH_PLAYERS', joined });
+      }
+      if (!game.startIntroPhase()) return reply({ ok: false, reason: 'ALREADY_STARTED' });
+      return reply({ ok: true });
+    });
   }
 
   // Room a phone targets: the code it sent, else the classroom's latest room.
