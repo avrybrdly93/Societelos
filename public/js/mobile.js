@@ -152,5 +152,27 @@
 
   socket.on('phase', onPhase);
 
+  // Countdown bar (and the debate clock), recomputed each frame from the
+  // server's endsAt so every phone stays in step with the projector.
+  const countdownFill = document.getElementById('m-countdown-fill');
+  const debateClock = document.getElementById('debate-clock');
+  let phaseDurationMs = 0;
+  let durationFor = null;
+  function tick() {
+    const remaining = state.endsAt ? Math.max(0, state.endsAt - Date.now()) : 0;
+    if (durationFor !== state.endsAt) {
+      // New phase: its full length is whatever was left when it arrived.
+      durationFor = state.endsAt;
+      phaseDurationMs = remaining;
+    }
+    const fraction = phaseDurationMs > 0 ? remaining / phaseDurationMs : 0;
+    countdownFill.style.transform = `scaleX(${fraction.toFixed(4)})`;
+    const secs = Math.ceil(remaining / 1000);
+    debateClock.textContent = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    state.remainingMs = remaining;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();

@@ -383,3 +383,8 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 }
 .override-row input { width: 24px; height: 24px; flex: 0 0 auto; accent-color: var(--accent); }
 .override-row.is-spent { opacity: 0.4; }
+
+/* Phone countdown bar along the bottom edge of the header */
+.m-header { flex-wrap: wrap; }
+.m-countdown { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; }
+.m-countdown-fill { height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
