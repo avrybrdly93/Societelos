@@ -57,3 +57,42 @@ test('loom.moderate returns valid fallback JSON when the API key is missing', as
   });
   assert.equal(parsed[0].cleaned, 'Every district elects a repair council.');
 });
+
+test('loom never mutates the game state or scores it is given', async () => {
+  const deepFreeze = (o) => {
+    if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+      Object.freeze(o);
+      Object.values(o).forEach(deepFreeze);
+    }
+    return o;
+  };
+  const game = deepFreeze({
+    scores: { 'NODE-01': 2, 'NODE-02': 0 },
+    gdw: 31,
+    crisis: { title: 'Purpose Drift', incident: 'Posts about feeling useless are spiking.' },
+    winningOption: { name: 'The Guilds', text: 'Fund voluntary guilds.', roles: ['artisan'], effects: { purpose: 0.6 } },
+    simSummary: { realizedDelta: 4, topMoves: [] },
+    citizens
+  });
+  const submissions = deepFreeze([{ node: 'NODE-01', text: 'Plant a forest.' }]);
+  const before = JSON.stringify({ game, submissions });
+
+  // Online path with a mocked Gemini reply, and the offline path.
+  const reply = (obj) => async () => ({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(obj) }] } }] }) });
+  const online = { enabled: true, apiKey: 'test', model: 'gemini-2.5-flash', timeoutMs: 1000 };
+  await loom.narrate(game, { config: online, fetchImpl: reply({ loomLine: 'Noted.', messages: [{ citizenId: 'mara', text: 'Hi.' }] }) });
+  await loom.narrate(game, { config: OFFLINE });
+  await loom.moderate(submissions, game.crisis, {
+    config: online,
+    fetchImpl: reply([{ node: 'NODE-01', status: 'ok', cleaned: 'Plant a forest.', feedback: '', roles: ['ghost'], effects: { purpose: 0.4 } }])
+  });
+  await loom.moderate(submissions, game.crisis, { config: OFFLINE });
+
+  assert.equal(JSON.stringify({ game, submissions }), before);
+  // The module exposes no way to set scores or GDW (moderateAndScorePolicies is
+  // the prototype's alias for moderate(); it returns effect vectors, not scores).
+  const LEGACY = ['moderateAndScorePolicies'];
+  for (const name of Object.keys(loom)) {
+    if (!LEGACY.includes(name)) assert.ok(!/score|gdw|setState/i.test(name), `unexpected export ${name}`);
+  }
+});
