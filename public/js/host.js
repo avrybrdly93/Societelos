@@ -219,6 +219,52 @@
   requestAnimationFrame(tick);
 
   // ---------------------------------------------------------------------------
+  // GDW meter: animated readout, stability label and progress bar.
+  // ---------------------------------------------------------------------------
+  const GDW_BANDS = [
+    { max: 0, band: 'critical', label: 'SHUTDOWN' },
+    { max: 15, band: 'critical', label: 'CRITICAL' },
+    { max: 35, band: 'unstable', label: 'UNSTABLE' },
+    { max: 60, band: 'stable', label: 'STABLE' },
+    { max: 100, band: 'thriving', label: 'THRIVING' }
+  ];
+  function gdwBand(gdw) {
+    return GDW_BANDS.find((b) => gdw <= b.max) || GDW_BANDS[GDW_BANDS.length - 1];
+  }
+  const gdwMeter = { shown: 25, target: 25, from: 25, start: 0, frame: null };
+  const GDW_TWEEN_MS = 1200;
+  function paintGdw(value) {
+    const v = Math.max(0, Math.min(100, value));
+    document.getElementById('gdw-readout').textContent = `${v.toFixed(1)}%`;
+    document.getElementById('gdw-badge').textContent = `${Math.round(v)}%`;
+  }
+  function setGdw(gdw) {
+    if (typeof gdw !== 'number' || !Number.isFinite(gdw)) return;
+    const target = Math.max(0, Math.min(100, gdw));
+    const band = gdwBand(target);
+    const meter = document.getElementById('gdw-meter');
+    meter.dataset.band = band.band;
+    meter.setAttribute('aria-valuenow', target.toFixed(1));
+    document.getElementById('gdw-status').textContent = band.label;
+    document.getElementById('gdw-fill').style.width = `${target}%`;
+    document.getElementById('gdw-badge').classList.toggle('is-critical', band.band === 'critical');
+    gdwMeter.from = gdwMeter.shown;
+    gdwMeter.target = target;
+    gdwMeter.start = performance.now();
+    if (gdwMeter.frame) cancelAnimationFrame(gdwMeter.frame);
+    const step = (now) => {
+      const t = Math.min(1, (now - gdwMeter.start) / GDW_TWEEN_MS);
+      const eased = 1 - Math.pow(1 - t, 3);
+      gdwMeter.shown = gdwMeter.from + (gdwMeter.target - gdwMeter.from) * eased;
+      paintGdw(gdwMeter.shown);
+      gdwMeter.frame = t < 1 ? requestAnimationFrame(step) : null;
+    };
+    gdwMeter.frame = requestAnimationFrame(step);
+  }
+  setGdw(25);
+  socket.on('resolution', (payload) => { if (payload) setGdw(payload.gdw); });
+
+  // ---------------------------------------------------------------------------
   // Debug mock tester: drive layouts without a live backend, from the console.
   //   debugTriggerPhase('DEBATE')              -> fake phase with mock crisis
   //   debugTriggerPhase('CHAMBER', { seconds: 10 })
@@ -255,5 +301,5 @@
   window.debugTriggerPhase = debugTriggerPhase;
   window.debugTriggerEvent = debugTriggerEvent;
 
-  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber };
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber, setGdw };
 })();

@@ -83,6 +83,19 @@
     <section id="view-chamber" class="view" aria-label="Council chamber">
       <div class="chamber-grid">
         <aside class="chamber-col chamber-map" aria-label="Region map">
+          <div id="gdw-meter" class="gdw-meter" role="meter" aria-label="Gross Domestic Well-Being" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+            <div class="gdw-meter-head">
+              <span class="label">Gross Domestic Well-Being</span>
+              <span id="gdw-status" class="gdw-status mono">UNSTABLE</span>
+            </div>
+            <div id="gdw-readout" class="gdw-readout mono">25.0%</div>
+            <div class="gdw-track" aria-hidden="true">
+              <div id="gdw-fill" class="gdw-fill"></div>
+              <span class="gdw-tick" style="left: 15%"></span>
+              <span class="gdw-tick" style="left: 60%"></span>
+            </div>
+            <div class="gdw-scale mono" aria-hidden="true"><span>0%</span><span>100%</span></div>
+          </div>
           <p class="label">Region <span id="citizens-online" class="mono accent">250,000 CITIZENS</span></p>
           <div id="map-container" class="map-container">
             <svg id="region-map" class="region-map" viewBox="0 0 400 500" role="img" aria-label="Region map of five districts">

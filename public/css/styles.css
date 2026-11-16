@@ -472,3 +472,19 @@ body.host {
   left: 0;
 }
 body.host .view.is-active { height: 100%; }
+
+/* Host GDW meter: animated readout, stability label and 0-100% bar. */
+.gdw-meter { display: flex; flex-direction: column; gap: 6px; }
+.gdw-meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+body.host .gdw-meter .label { font-size: 20px; }
+.gdw-status { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--gdw-color, var(--amber)); }
+.gdw-readout { font-size: 64px; font-weight: 700; line-height: 1; color: var(--gdw-color, var(--amber)); }
+.gdw-track { position: relative; height: 18px; border-radius: 9px; background: var(--bg-sunken); border: 2px solid var(--border); overflow: hidden; }
+.gdw-fill { height: 100%; width: 25%; background: var(--gdw-color, var(--amber)); box-shadow: 0 0 16px var(--gdw-color, var(--amber)); transition: width 1.2s ease, background 0.6s; }
+.gdw-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--slate-600); }
+.gdw-scale { display: flex; justify-content: space-between; font-size: 18px; color: var(--text-muted); }
+.gdw-meter[data-band="critical"] { --gdw-color: var(--danger); }
+.gdw-meter[data-band="unstable"] { --gdw-color: var(--amber); }
+.gdw-meter[data-band="stable"] { --gdw-color: var(--accent); }
+.gdw-meter[data-band="thriving"] { --gdw-color: var(--teal); }
+.gdw-meter[data-band="critical"] .gdw-readout { animation: low-time-pulse 1.6s ease-in-out infinite; }
