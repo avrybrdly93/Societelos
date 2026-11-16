@@ -65,10 +65,24 @@ const PHASES = Object.freeze({
 
 const TOTAL_CYCLES = 5;
 
+// The region revealed in the Council Chamber (250,000 citizens, 5 districts).
+// Display data only; the simulation's tunables live in data/sim.json.
+const REGION = Object.freeze({
+  population: 250000,
+  districts: Object.freeze([
+    { id: 'D1', name: 'Old Harbour', population: 30000 },
+    { id: 'D2', name: 'The Grid', population: 55000 },
+    { id: 'D3', name: 'Riverside', population: 65000 },
+    { id: 'D4', name: 'Eastworks', population: 60000 },
+    { id: 'D5', name: 'Highlands', population: 40000 }
+  ])
+});
+
 // Phases with dedicated entry logic -> GameState method name.
 const PHASE_STARTERS = {
   INTRO: 'startIntroPhase',
-  ROLE_ASSIGN: 'startRoleAssignmentPhase'
+  ROLE_ASSIGN: 'startRoleAssignmentPhase',
+  CHAMBER: 'startCouncilChamberPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -428,6 +442,11 @@ class GameState extends EventEmitter {
     this.enterPhase(PHASES.ROLE_ASSIGN);
   }
 
+  /** ROLE_ASSIGN -> CHAMBER: reveal the region map on the projector. */
+  startCouncilChamberPhase() {
+    this.enterPhase(PHASES.CHAMBER, { region: REGION });
+  }
+
   /** Begin a cycle (stub until startCycle is fully implemented). */
   startCycle(cycleNumber) {
     this.cycle = cycleNumber;
@@ -536,6 +555,7 @@ module.exports = {
   MAX_PLAYERS,
   PHASES,
   TOTAL_CYCLES,
+  REGION,
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
   buildPhaseDurations
