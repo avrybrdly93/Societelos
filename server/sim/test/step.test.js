@@ -47,3 +47,35 @@ test('neighbour spillover moves D1 traits toward the average of D2 and D3', () =
     assert.ok(Math.abs(state.traits[d1 * K + k] - expected) < 1e-12, `trait ${TRAITS[k]}`);
   }
 });
+
+test('volatility 1.5 raises noise SD and shock frequency by 50%', () => {
+  const measure = (volatility) => {
+    const state = createInitialState(simConfig);
+    const params = buildParams(state, { volatility });
+    const base = new Float64Array(state.traits);
+    const rng = mulberry32(2026);
+    let sumSq = 0;
+    let n = 0;
+    for (let rep = 0; rep < 400; rep++) {
+      state.traits.set(base);
+      applyNoise(state, params, rng);
+      for (let j = 0; j < base.length; j++) {
+        const d = state.traits[j] - base[j];
+        sumSq += d * d;
+        n++;
+      }
+    }
+    const shocks = [];
+    const months = 20000;
+    const shockRng = mulberry32(7);
+    for (let m = 0; m < months; m++) applyShocks(state, 1, params, shockRng, shocks);
+    return { sd: Math.sqrt(sumSq / n), shockRate: shocks.length / (months * params.districtIds.length) };
+  };
+  const calm = measure(1);
+  const noisy = measure(1.5);
+  const sdRatio = noisy.sd / calm.sd;
+  const shockRatio = noisy.shockRate / calm.shockRate;
+  assert.ok(Math.abs(sdRatio - 1.5) < 0.03, `noise SD ratio ${sdRatio}`);
+  assert.ok(Math.abs(shockRatio - 1.5) < 0.08, `shock rate ratio ${shockRatio}`);
+  assert.ok(Math.abs(calm.shockRate - simConfig.constants.shockChance) < 0.005, `base shock rate ${calm.shockRate}`);
+});
