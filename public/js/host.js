@@ -191,10 +191,20 @@
       tag.textContent = item.district;
       meta.appendChild(tag);
     }
+    // "D3 Riverside • Former workers" under the name.
+    const detail = [item.district && item.districtName ? `${item.district} ${item.districtName}` : item.district, item.cohort]
+      .filter(Boolean).join(' \u2022 ');
     const text = document.createElement('p');
     text.className = 'feed-text';
     text.textContent = item.text;
-    body.append(meta, text);
+    if (detail) {
+      const sub = document.createElement('p');
+      sub.className = 'feed-detail';
+      sub.textContent = detail;
+      body.append(meta, sub, text);
+    } else {
+      body.append(meta, text);
+    }
     li.append(avatar, body);
     return li;
   }
@@ -597,8 +607,8 @@
     loomIntro: 'I produce everything. Who should own me?',
     debateHook: 'When machines create all wealth, who should own them?',
     feed: [
-      { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
-      { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', text: 'just deliver my food on time', sentiment: 'complacent' }
+      { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', districtName: 'Eastworks', cohort: 'Elders', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
+      { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', districtName: 'The Grid', cohort: 'Youth', text: 'just deliver my food on time', sentiment: 'complacent' }
     ]
   };
   const MOCK_OPTIONS = {

@@ -836,3 +836,4 @@ body.mobile.edge-pulse::after {
   animation: edge-pulse 0.8s ease-in-out 3;
 }
 @keyframes edge-pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+body.host .feed-detail { margin: 0 0 4px; font-size: 18px; color: var(--text-muted); }

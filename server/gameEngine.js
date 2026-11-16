@@ -1018,11 +1018,16 @@ class GameState extends EventEmitter {
   citizenMessage(item) {
     const citizens = Array.isArray(this.data.citizens) ? this.data.citizens : [];
     const c = citizens.find((x) => x.id === item.citizenId) || {};
+    const sim = this.data.sim || {};
+    const district = (sim.districts || REGION.districts).find((d) => d.id === c.district);
+    const cohort = (sim.cohorts || []).find((k) => k.id === c.cohort);
     return {
       citizenId: item.citizenId,
       name: c.name || item.citizenId || 'Citizen',
       age: typeof c.age === 'number' ? c.age : null,
       district: c.district || null,
+      districtName: district ? district.name : null,
+      cohort: cohort ? cohort.name : null,
       text: String(item.text || ''),
       sentiment: item.sentiment || null
     };
