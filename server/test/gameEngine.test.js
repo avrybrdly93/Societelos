@@ -136,3 +136,23 @@ test('worldKey is vote1 + vote2 across all 4 combinations', async () => {
     assert.equal(game.worldInfo().name, game.data.crises.worlds[key].name);
   }
 });
+
+test('Crisis 2B applies assimilator in the AB world and lotus in the BB world', async () => {
+  for (const [vote1, tag] of [['A', 'assimilator'], ['B', 'lotus']]) {
+    const game = votingGame({ cycle: 1 });
+    game.assignRoles(game.data.roles);
+    await resolveWith(game, vote1);
+    game.cycle = 2;
+    game.crisis = engine.selectCrisis(game.data.crises, 2, null, game.data.roles);
+    const raw = game.data.crises.crises.find((c) => c.id === game.crisis.id).options.B;
+    assert.deepEqual(game.rolesFor('B'), [tag]);
+    assert.deepEqual(game.effectsFor('B'), raw.effectsByWorld[vote1]);
+
+    const holder = Object.keys(game.roleAssignment).find((n) => game.roleAssignment[n].key === tag);
+    const before = game.scores[holder];
+    await resolveWith(game, 'B');
+    assert.equal(game.worldKey, `${vote1}B`);
+    assert.equal(game.scores[holder], before + 1, `${tag} scores in ${vote1}B`);
+    assert.deepEqual(game.scoreLedger[1].role, { [holder]: 1 });
+  }
+});
