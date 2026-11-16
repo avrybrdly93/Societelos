@@ -260,3 +260,22 @@ body.host .label {
 .district-pop { fill: var(--slate-200); font-family: var(--font-mono); font-size: 13px; text-anchor: middle; pointer-events: none; }
 .map-links { pointer-events: none; }
 .map-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6; opacity: 0.45; }
+
+/* Phone controller base */
+body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
+.m-main { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+.m-kicker { font-size: 13px; color: var(--accent); letter-spacing: 0.14em; margin: 8px 0 4px; }
+.m-title { font-size: 32px; margin: 0 0 8px; }
+.m-form { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.m-label { font-size: 13px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.12em; }
+.m-input {
+  font: inherit; font-size: 20px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--text);
+}
+.m-input:focus { outline: none; border-color: var(--accent); }
+.m-btn { width: 100%; font-size: 18px; }
+.m-error { margin: 0; font-size: 15px; }

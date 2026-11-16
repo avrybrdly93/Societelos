@@ -13,7 +13,17 @@
   <header id="m-header" class="m-header" aria-label="Node status"></header>
 
   <main id="m-main" class="m-main">
-    <section id="m-view-join" class="m-view is-active" aria-label="Join"></section>
+    <section id="m-view-join" class="m-view is-active" aria-label="Join">
+      <p class="m-kicker mono">THE LOOM // SECURE CHANNEL</p>
+      <h1 class="m-title">Council Access</h1>
+      <p class="muted">Enter a name. Only the Loom will see it; the projector shows your node number.</p>
+      <form id="join-form" class="m-form" autocomplete="off">
+        <label for="join-name" class="m-label mono">Trustee name</label>
+        <input id="join-name" class="m-input" name="name" type="text" maxlength="24" required placeholder="First name" enterkeyhint="go">
+        <button id="join-submit" class="btn btn-primary m-btn" type="submit">CONNECT TO LOOM</button>
+        <p id="join-error" class="m-error danger" role="alert" hidden></p>
+      </form>
+    </section>
     <section id="m-view-wait" class="m-view" aria-label="Waiting"></section>
     <section id="m-view-role" class="m-view" aria-label="Secret role"></section>
     <section id="m-view-intel" class="m-view" aria-label="Intel"></section>
