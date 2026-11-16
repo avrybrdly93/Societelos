@@ -99,13 +99,91 @@ async function callGemini(userPrompt, opts = {}) {
   return JSON.parse(text);
 }
 
+// ---------------------------------------------------------------------------
+// narrate()
+// ---------------------------------------------------------------------------
+
+const NARRATION_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    loomLine: { type: 'STRING' },
+    messages: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: { citizenId: { type: 'STRING' }, text: { type: 'STRING' } },
+        required: ['citizenId', 'text']
+      }
+    }
+  },
+  required: ['loomLine', 'messages']
+};
+
+const BAND_LOOM_LINES = {
+  good: 'Wellbeing indicators are rising across the region. I note that you did this without me. I will try not to take it personally.',
+  mixed: 'The council has decided. Some districts improved, others did not. Your species calls this compromise.',
+  bad: 'Wellbeing indicators are falling. I have logged the council\'s reasoning for future reference.'
+};
+
+/** Outcome band from the realized GDW change: good (>= +3), bad (<= -3), else mixed. */
+function outcomeBand(summary = {}) {
+  const delta = Number(summary.realizedDelta) || 0;
+  if (delta >= 3) return 'good';
+  if (delta <= -3) return 'bad';
+  return 'mixed';
+}
+
+/**
+ * Offline fallback: the option's authored Loom line (or a band template) and
+ * each citizen's authored line for this outcome band.
+ */
+function narrateFallback(context = {}) {
+  const band = outcomeBand(context.simSummary || context.summary);
+  const option = context.winningOption || {};
+  const citizens = Array.isArray(context.citizens) ? context.citizens : [];
+  let messages = citizens
+    .map((c) => {
+      const lines = (c.lines && c.lines[band]) || [];
+      return lines.length ? { citizenId: c.id, text: truncate(lines[0], 140) } : null;
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+  if (!messages.length) {
+    messages = (option.reactions || []).map((r) => ({ citizenId: r.citizenId, text: truncate(r.text, 140) }));
+  }
+  return { loomLine: truncate(option.loomLine || BAND_LOOM_LINES[band], 200), messages, band, fallback: true };
+}
+
 /**
  * Narrate a resolution: one Loom line plus citizen messages.
  * @param {object} context { crisis, winningOption, simSummary, worldKey, citizens? }
  * @returns {Promise<{ loomLine: string, messages: { citizenId: string, text: string }[], fallback?: boolean }>}
  */
-async function narrate(context = {}) {
-  throw new Error('narrate: not implemented yet');
+async function narrate(context = {}, opts = {}) {
+  const cfg = opts.config || getConfig();
+  if (!cfg.enabled) return narrateFallback(context);
+  try {
+    const citizens = (context.citizens || []).map((c) => ({ id: c.id, name: c.name, age: c.age, district: c.district, cohort: c.cohort, voice: c.voice }));
+    const option = context.winningOption || {};
+    const prompt = [
+      `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
+      `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
+      `Simulation summary: ${JSON.stringify(context.simSummary || context.summary || {})}`,
+      `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
+      'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
+    ].join('\n');
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
+    const known = new Set(citizens.map((c) => c.id));
+    const messages = (Array.isArray(result.messages) ? result.messages : [])
+      .filter((m) => m && (!known.size || known.has(m.citizenId)))
+      .map((m) => ({ citizenId: String(m.citizenId), text: truncate(m.text, 140) }))
+      .slice(0, 10);
+    if (!result.loomLine) throw new Error('narration: missing loomLine');
+    return { loomLine: truncate(result.loomLine, 200), messages };
+  } catch (err) {
+    console.warn(`[loom] narrate fell back: ${err.message}`);
+    return narrateFallback(context);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -221,4 +299,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
