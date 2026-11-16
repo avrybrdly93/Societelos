@@ -129,6 +129,16 @@
         <ul id="m-world-impact" class="world-card-impact"></ul>
       </article>
     </section>
+    <section id="m-view-finale-write" class="m-view" aria-label="Write your policy">
+      <p class="m-kicker mono">FINALE // THE LOOM CANNOT COMPUTE AN ANSWER</p>
+      <h2 class="m-title">Write your policy</h2>
+      <form id="finale-form" class="m-form finale-form" autocomplete="off">
+        <label for="finale-text" class="m-label mono">One sentence the Loom will enact</label>
+        <textarea id="finale-text" class="m-input finale-text" maxlength="140" rows="4" required placeholder="e.g. Every district elects a repair council that controls its own grid."></textarea>
+        <button id="finale-submit" class="btn btn-primary m-btn" type="submit">SUBMIT POLICY TO THE LOOM</button>
+        <p id="finale-error" class="m-error danger" role="alert" hidden></p>
+      </form>
+    </section>
     <section id="m-view-result" class="m-view" aria-label="Resolution">
       <p class="m-kicker mono">RESOLUTION // CYCLE <span id="result-cycle">1</span></p>
       <div id="result-card" class="result-card">

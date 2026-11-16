@@ -162,7 +162,8 @@
     DEBATE: 'm-view-debate',
     VOTE: 'm-view-vote',
     RESOLUTION: 'm-view-result',
-    WORLD_REVEAL: 'm-view-world'
+    WORLD_REVEAL: 'm-view-world',
+    FINALE_WRITE: 'm-view-finale-write'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -358,6 +359,39 @@
   }
   socket.on('world:reveal', renderWorldCard);
   socket.on('phase', (payload) => { if (payload && payload.phase === 'WORLD_REVEAL') renderWorldCard(payload.world); });
+
+  // ---------------------------------------------------------------------------
+  // Finale write-in: one policy, up to 140 characters -> finale:submit { text }.
+  // ---------------------------------------------------------------------------
+  const finaleForm = document.getElementById('finale-form');
+  const finaleText = document.getElementById('finale-text');
+  const finaleSubmit = document.getElementById('finale-submit');
+  const finaleError = document.getElementById('finale-error');
+  finaleForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = finaleText.value.trim();
+    if (!text || finaleSubmit.disabled) return;
+    finaleSubmit.disabled = true;
+    finaleError.hidden = true;
+    socket.emit('finale:submit', { text }, (res) => {
+      finaleSubmit.disabled = false;
+      if (res && res.ok) {
+        state.finaleSubmitted = res.text || text;
+        return;
+      }
+      finaleError.textContent = 'The Loom did not accept that. Try again.';
+      finaleError.hidden = false;
+    });
+  });
+  socket.on('phase', (payload) => {
+    if (payload && payload.phase === 'FINALE_WRITE' && state.finaleCycle !== payload.cycle) {
+      state.finaleCycle = payload.cycle;
+      state.finaleSubmitted = null;
+      finaleText.value = '';
+      finaleError.hidden = true;
+      finaleSubmit.disabled = false;
+    }
+  });
 
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {

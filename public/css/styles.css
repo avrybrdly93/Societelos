@@ -866,3 +866,6 @@ body.host #phase-name { font-size: 20px; letter-spacing: 0.08em; white-space: no
 body.host .finale-callout-title { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 0.06em; color: var(--theme-current, var(--accent)); }
 body.host .finale-callout-sub { margin: 8px 0 12px; font-size: 48px; font-weight: 700; letter-spacing: 0.1em; }
 body.host .finale-callout-note { margin: 0; font-size: 24px; }
+
+/* Mobile finale write-in */
+.finale-text { resize: none; min-height: 132px; line-height: 1.4; -webkit-user-select: text; user-select: text; }
