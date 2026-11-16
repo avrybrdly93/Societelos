@@ -83,9 +83,15 @@
     "cohort": "youth",
     "voice": "VR streamer who rarely logs off",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "logged off for six whole hours to meet people in person. they were fine. maybe better than fine"
+      ],
+      "mixed": [
+        "stream numbers are steady. outside numbers are steady too. i haven't checked those personally"
+      ],
+      "bad": [
+        "the feed glitched for ten minutes and nobody in my building knew what to do with their hands"
+      ]
     }
   },
   {
