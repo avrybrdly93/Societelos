@@ -45,5 +45,32 @@
 
   fetchQR();
 
-  window.SocietelosHost = { socket, state, fetchQR };
+  const NODE_IDS = ['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05'];
+
+  // lobby:update { players: [{ node, ready, connected }] } -> light up node cards.
+  function renderLobby(players) {
+    const byNode = {};
+    players.forEach((p) => { byNode[p.node] = p; });
+    NODE_IDS.forEach((node) => {
+      const card = document.querySelector(`.node-card[data-node="${node}"]`);
+      if (!card) return;
+      const p = byNode[node];
+      const status = card.querySelector('.node-status');
+      card.classList.toggle('is-connected', !!(p && p.connected));
+      card.classList.toggle('is-ready', !!(p && p.connected && p.ready));
+      card.classList.toggle('is-disconnected', !!(p && !p.connected));
+      status.textContent = !p ? 'Offline' : !p.connected ? 'Signal lost' : p.ready ? 'Ready' : 'Connected';
+    });
+    const joined = players.length;
+    document.getElementById('lobby-count').textContent = `${joined}/5`;
+    const startBtn = document.getElementById('btn-start');
+    startBtn.disabled = joined < NODE_IDS.length;
+    document.getElementById('start-hint').textContent = joined < NODE_IDS.length
+      ? `Waiting for ${NODE_IDS.length - joined} more node${NODE_IDS.length - joined === 1 ? '' : 's'}…`
+      : 'All five nodes synchronised.';
+  }
+
+  socket.on('lobby:update', (payload) => renderLobby((payload && payload.players) || []));
+
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby };
 })();
