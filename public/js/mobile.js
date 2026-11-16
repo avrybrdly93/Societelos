@@ -17,7 +17,14 @@
   }
 
   const saved = loadSession();
-  const socket = window.io({ auth: { clientType: 'phone', token: saved && saved.token } });
+  // auth is a function so every (re)connect sends the latest saved token: a
+  // phone that joined after page load keeps its seat across a network drop.
+  const socket = window.io({
+    auth: (cb) => {
+      const current = loadSession();
+      cb({ clientType: 'phone', token: (current && current.token) || undefined });
+    }
+  });
 
   const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
 
@@ -35,8 +42,38 @@
     renderRole(info.role);
     onPhase({ phase: info.phase, cycle: info.cycle, endsAt: info.endsAt });
     state.roomCode = info.roomCode;
-    saveSession({ node: info.node, token: saved && saved.token, roomCode: info.roomCode });
+    const current = loadSession();
+    saveSession({ node: info.node, token: (current && current.token) || (saved && saved.token), roomCode: info.roomCode });
   });
+
+  // ---------------------------------------------------------------------------
+  // Screen lock / wake resilience: students look up at the projector for the
+  // 90 s debate. Ask for a Screen Wake Lock while seated (where supported),
+  // and when the page becomes visible again re-acquire it, reconnect if the
+  // socket dropped, and re-sync state with the server.
+  // ---------------------------------------------------------------------------
+  let wakeLock = null;
+  async function requestWakeLock() {
+    try {
+      if (!('wakeLock' in navigator) || wakeLock || document.visibilityState !== 'visible' || !state.node) return;
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) { wakeLock = null; /* denied, low battery or unsupported */ }
+  }
+  function resyncAfterWake() {
+    if (document.visibilityState !== 'visible') return;
+    requestWakeLock();
+    if (!socket.connected) {
+      socket.connect(); // the handshake carries the token; the server resumes the seat
+      return;
+    }
+    const current = loadSession();
+    if (current && current.token) socket.emit('session:resume', { token: current.token });
+  }
+  document.addEventListener('visibilitychange', resyncAfterWake);
+  window.addEventListener('pageshow', resyncAfterWake);
+  // Wake locks need a user gesture on some browsers: retry on the first taps.
+  document.addEventListener('click', requestWakeLock);
 
   // Screen switching.
   function showView(id) {
