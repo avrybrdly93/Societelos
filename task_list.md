@@ -443,60 +443,60 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 **Milestone:** Full 5-cycle game playable with Cycle 5 Write-and-Rank Finale, Gemini moderation + private feedback/resubmit loop, Borda count scoring, 50/25/25 package enactment, and all 4 worlds complete. Ready for first 5-player live playtest Wednesday night.
 
 ### Agent 1: Network & State (`feature/backend` — 55 Tasks)
-- [ ] **TASK-401:** Implement Cycle 5 initialization in `server/gameEngine.js` detecting `crisis.mode === "writein"`.
-- [ ] **TASK-402:** Transition Cycle 5 from `INCIDENT` (15s, no options shown) to `FINALE_WRITE` (45s) in `server/gameEngine.js`.
-- [ ] **TASK-403:** Implement `finale:submit` handler in `server/socket.js` receiving `{ text }` from each phone during `FINALE_WRITE`.
-- [ ] **TASK-404:** Enforce server-side 140-character trim and non-empty check on raw policy submissions in `server/gameEngine.js`.
-- [ ] **TASK-405:** Auto-fill a default neutral submission if a disconnected or idle player fails to submit before the 45s `FINALE_WRITE` timer expires.
-- [ ] **TASK-406:** Transition to `FINALE_MOD` (5–10s) once all 5 submissions are received or the 45s write timer expires in `server/gameEngine.js`.
-- [ ] **TASK-407:** Invoke `loom.moderate(submissions, crisis)` batch call for all 5 submissions in `server/gameEngine.js`.
-- [ ] **TASK-408:** Implement the 8-second Gemini failure fallback for Cycle 5 in `server/gameEngine.js`: if batch `loom.moderate` fails or times out, automatically switch Cycle 5 to the world's authored A/B finale options and transition to a normal `DEBATE` -> `VOTE` binary flow!
-- [ ] **TASK-409:** Process moderation results in `server/gameEngine.js`: if all 5 submissions have `status === "ok"`, transition immediately to `FINALE_DEBATE` (60s).
-- [ ] **TASK-410:** Handle `status === "revise"` in `server/gameEngine.js`: emit `finale:feedback` privately to the specific author's phone with `{ status: "revise", feedback }` and grant a single 25-second resubmit window.
-- [ ] **TASK-411:** Implement single resubmit listener on `finale:submit` in `server/socket.js` for players in `"revise"` state.
-- [ ] **TASK-412:** Invoke single-item `loom.moderateOne(revisedSubmission, crisis)` in `server/gameEngine.js` upon resubmission.
-- [ ] **TASK-413:** Handle `status === "reject"` (or failed second attempt / timeout on resubmit) in `server/gameEngine.js`: replace that player's policy with a safe, bland placeholder policy (`effects: {0,0,0,0,0,0}`, `roles: []`) so nothing inappropriate ever reaches the projector.
-- [ ] **TASK-414:** Assign anonymous policy IDs (`POLICY-1` through `POLICY-5`) in a deterministic shuffled order in `server/gameEngine.js` so projector order does not match `NODE-01`..`NODE-05` order.
-- [ ] **TASK-415:** Store secret mapping of `policyId -> authorNodeId` in `server/gameEngine.js` (kept hidden until the End Screen).
-- [ ] **TASK-416:** Broadcast anonymized cleaned policies `[{ id, text }]` to the projector during `FINALE_DEBATE` (60s) without leaking role tags, effect vectors, or authors.
-- [ ] **TASK-417:** Transition from `FINALE_DEBATE` (60s) to `FINALE_RANK` (30s) in `server/gameEngine.js`.
-- [ ] **TASK-418:** Generate personalized ballots in `server/gameEngine.js` for each player containing ONLY the 4 policies they did NOT write.
-- [ ] **TASK-419:** Emit `finale:ballot` privately to each phone in `server/socket.js` with `{ policies: [{ id, text }, ...] }` (length 4).
-- [ ] **TASK-420:** Implement `finale:rank` listener in `server/socket.js` receiving `{ order: [id1, id2, id3, id4] }` from each phone.
-- [ ] **TASK-421:** Validate `finale:rank` payload in `server/gameEngine.js`: ensure exactly 4 unique valid policy IDs are ranked and none of them is the voter's own policy.
-- [ ] **TASK-422:** Auto-generate a deterministic default ranking if a disconnected player fails to rank before the 30s `FINALE_RANK` timer expires.
-- [ ] **TASK-423:** Implement Borda Count calculator in `server/gameEngine.js`: award `4` points for Rank 1, `3` points for Rank 2, `2` points for Rank 3, and `1` point for Rank 4 across all 5 ballots (each policy receives 4 rankings, max 16 points).
-- [ ] **TASK-424:** Implement Finale Borda Tie-Breaker in `server/gameEngine.js`: on equal Borda points, sort by most 1st-place ranks, then most 2nd-place ranks, then higher single-policy forecast median GDW.
-- [ ] **TASK-425:** Select the top 3 ranked policies (`first`, `second`, `third`) for enactment at `50% / 25% / 25%` weights in `server/gameEngine.js`.
-- [ ] **TASK-426:** Compute the combined Finale Package effect vector in `server/gameEngine.js`: $e_{\text{package}}(k) = 0.50 \times e_1(k) + 0.25 \times e_2(k) + 0.25 \times e_3(k)$ for each of the 6 traits (opposing effects naturally cancel).
-- [ ] **TASK-427:** Implement Finale Role Scoring in `server/gameEngine.js`: roles tagged on the 1st-place policy score `+2`; roles tagged on the 2nd-place policy score `+1`; roles tagged on the 3rd-place policy score `+1`.
-- [ ] **TASK-428:** Implement Finale Author Bonus in `server/gameEngine.js`: award `+1` point to the player who authored the 1st-place policy.
-- [ ] **TASK-429:** Implement Finale Catalyst Scoring in `server/gameEngine.js`: award `+1` point to the Catalyst if the enacted 50/25/25 package moves realized GDW by 10 or more (and realized GDW stays $> 0$).
-- [ ] **TASK-430:** Ensure Overrides cannot be used during Cycle 5 (`override` ignored in finale).
-- [ ] **TASK-431:** Run `simulate(state.simState, packageEffects, ...)` for the Cycle 5 `FINALE_ENACT` resolution phase in `server/gameEngine.js`.
-- [ ] **TASK-432:** Call `loom.narrate()` with the enacted 50/25/25 package (top 3 policies) and simulation summary in `server/gameEngine.js`.
-- [ ] **TASK-433:** Broadcast `resolution` payload for `FINALE_ENACT` (20s) including the Borda tally, top 3 enacted policies (`50/25/25`), forecast fan, realized run, and Loom narration.
-- [ ] **TASK-434:** Write unit test in `server/` verifying Borda count calculation across 5 players where each player omits their own policy.
-- [ ] **TASK-435:** Write unit test verifying Borda tie-breaking rules (1st-place count -> 2nd-place count -> forecast median).
-- [ ] **TASK-436:** Write unit test verifying `0.50 * first + 0.25 * second + 0.25 * third` effect vector combination and cancellation of opposing traits.
-- [ ] **TASK-437:** Write unit test verifying Finale Role points (`+2` for 1st, `+1` for 2nd, `+1` for 3rd, and cumulative scoring if a role appears on multiple top-3 policies).
-- [ ] **TASK-438:** Write unit test verifying Finale Author Bonus (`+1` to author of 1st-place policy).
-- [ ] **TASK-439:** Write unit test verifying fallback from Write-and-Rank to authored binary A/B vote when `loom.moderate` times out.
-- [ ] **TASK-440:** Write unit test verifying private `finale:feedback` emission and single resubmit flow for a `"revise"` policy.
-- [ ] **TASK-441:** Write unit test verifying `"reject"` replacement with bland placeholder policy.
-- [ ] **TASK-442:** Verify voter cannot rank their own policy even if they send a spoofed socket packet.
-- [ ] **TASK-443:** Verify `FINALE_RANK` advances early as soon as all 5 players submit their rank order.
-- [ ] **TASK-444:** Verify `FINALE_WRITE` advances early as soon as all 5 players submit their policies (and moderation completes).
-- [ ] **TASK-445:** Ensure author identities remain scrubbed from `FINALE_DEBATE` and `FINALE_ENACT` payloads until `game:end`.
-- [ ] **TASK-446:** Test full 5-cycle state machine progression with `FAST_TIMERS=true`.
-- [ ] **TASK-447:** Verify `BA` and `BB` world keys properly load their Cycle 3, 4, and 5 crises from `data/crises.json`.
-- [ ] **TASK-448:** Add logging for Cycle 5 moderation latency and Borda results.
-- [ ] **TASK-449:** Check all error boundaries in `server/socket.js` for `finale:*` events.
-- [ ] **TASK-450:** Verify `server/` passes all unit tests.
-- [ ] **TASK-451:** Review `server/gameEngine.js` code cleanliness and modularity.
-- [ ] **TASK-452:** Verify timer synchronization during the `"revise"` resubmit sub-phase.
-- [ ] **TASK-453:** Confirm projector shows a "THE LOOM IS INTERPRETING COUNCIL PROPOSALS..." state during `FINALE_MOD`.
-- [ ] **TASK-454:** Confirm all Wednesday backend tasks complete.
+- [x] **TASK-401:** Implement Cycle 5 initialization in `server/gameEngine.js` detecting `crisis.mode === "writein"`.
+- [x] **TASK-402:** Transition Cycle 5 from `INCIDENT` (15s, no options shown) to `FINALE_WRITE` (45s) in `server/gameEngine.js`.
+- [x] **TASK-403:** Implement `finale:submit` handler in `server/socket.js` receiving `{ text }` from each phone during `FINALE_WRITE`.
+- [x] **TASK-404:** Enforce server-side 140-character trim and non-empty check on raw policy submissions in `server/gameEngine.js`.
+- [x] **TASK-405:** Auto-fill a default neutral submission if a disconnected or idle player fails to submit before the 45s `FINALE_WRITE` timer expires.
+- [x] **TASK-406:** Transition to `FINALE_MOD` (5–10s) once all 5 submissions are received or the 45s write timer expires in `server/gameEngine.js`.
+- [x] **TASK-407:** Invoke `loom.moderate(submissions, crisis)` batch call for all 5 submissions in `server/gameEngine.js`.
+- [x] **TASK-408:** Implement the 8-second Gemini failure fallback for Cycle 5 in `server/gameEngine.js`: if batch `loom.moderate` fails or times out, automatically switch Cycle 5 to the world's authored A/B finale options and transition to a normal `DEBATE` -> `VOTE` binary flow!
+- [x] **TASK-409:** Process moderation results in `server/gameEngine.js`: if all 5 submissions have `status === "ok"`, transition immediately to `FINALE_DEBATE` (60s).
+- [x] **TASK-410:** Handle `status === "revise"` in `server/gameEngine.js`: emit `finale:feedback` privately to the specific author's phone with `{ status: "revise", feedback }` and grant a single 25-second resubmit window.
+- [x] **TASK-411:** Implement single resubmit listener on `finale:submit` in `server/socket.js` for players in `"revise"` state.
+- [x] **TASK-412:** Invoke single-item `loom.moderateOne(revisedSubmission, crisis)` in `server/gameEngine.js` upon resubmission.
+- [x] **TASK-413:** Handle `status === "reject"` (or failed second attempt / timeout on resubmit) in `server/gameEngine.js`: replace that player's policy with a safe, bland placeholder policy (`effects: {0,0,0,0,0,0}`, `roles: []`) so nothing inappropriate ever reaches the projector.
+- [x] **TASK-414:** Assign anonymous policy IDs (`POLICY-1` through `POLICY-5`) in a deterministic shuffled order in `server/gameEngine.js` so projector order does not match `NODE-01`..`NODE-05` order.
+- [x] **TASK-415:** Store secret mapping of `policyId -> authorNodeId` in `server/gameEngine.js` (kept hidden until the End Screen).
+- [x] **TASK-416:** Broadcast anonymized cleaned policies `[{ id, text }]` to the projector during `FINALE_DEBATE` (60s) without leaking role tags, effect vectors, or authors.
+- [x] **TASK-417:** Transition from `FINALE_DEBATE` (60s) to `FINALE_RANK` (30s) in `server/gameEngine.js`.
+- [x] **TASK-418:** Generate personalized ballots in `server/gameEngine.js` for each player containing ONLY the 4 policies they did NOT write.
+- [x] **TASK-419:** Emit `finale:ballot` privately to each phone in `server/socket.js` with `{ policies: [{ id, text }, ...] }` (length 4).
+- [x] **TASK-420:** Implement `finale:rank` listener in `server/socket.js` receiving `{ order: [id1, id2, id3, id4] }` from each phone.
+- [x] **TASK-421:** Validate `finale:rank` payload in `server/gameEngine.js`: ensure exactly 4 unique valid policy IDs are ranked and none of them is the voter's own policy.
+- [x] **TASK-422:** Auto-generate a deterministic default ranking if a disconnected player fails to rank before the 30s `FINALE_RANK` timer expires.
+- [x] **TASK-423:** Implement Borda Count calculator in `server/gameEngine.js`: award `4` points for Rank 1, `3` points for Rank 2, `2` points for Rank 3, and `1` point for Rank 4 across all 5 ballots (each policy receives 4 rankings, max 16 points).
+- [x] **TASK-424:** Implement Finale Borda Tie-Breaker in `server/gameEngine.js`: on equal Borda points, sort by most 1st-place ranks, then most 2nd-place ranks, then higher single-policy forecast median GDW.
+- [x] **TASK-425:** Select the top 3 ranked policies (`first`, `second`, `third`) for enactment at `50% / 25% / 25%` weights in `server/gameEngine.js`.
+- [x] **TASK-426:** Compute the combined Finale Package effect vector in `server/gameEngine.js`: $e_{\text{package}}(k) = 0.50 \times e_1(k) + 0.25 \times e_2(k) + 0.25 \times e_3(k)$ for each of the 6 traits (opposing effects naturally cancel).
+- [x] **TASK-427:** Implement Finale Role Scoring in `server/gameEngine.js`: roles tagged on the 1st-place policy score `+2`; roles tagged on the 2nd-place policy score `+1`; roles tagged on the 3rd-place policy score `+1`.
+- [x] **TASK-428:** Implement Finale Author Bonus in `server/gameEngine.js`: award `+1` point to the player who authored the 1st-place policy.
+- [x] **TASK-429:** Implement Finale Catalyst Scoring in `server/gameEngine.js`: award `+1` point to the Catalyst if the enacted 50/25/25 package moves realized GDW by 10 or more (and realized GDW stays $> 0$).
+- [x] **TASK-430:** Ensure Overrides cannot be used during Cycle 5 (`override` ignored in finale).
+- [x] **TASK-431:** Run `simulate(state.simState, packageEffects, ...)` for the Cycle 5 `FINALE_ENACT` resolution phase in `server/gameEngine.js`.
+- [x] **TASK-432:** Call `loom.narrate()` with the enacted 50/25/25 package (top 3 policies) and simulation summary in `server/gameEngine.js`.
+- [x] **TASK-433:** Broadcast `resolution` payload for `FINALE_ENACT` (20s) including the Borda tally, top 3 enacted policies (`50/25/25`), forecast fan, realized run, and Loom narration.
+- [x] **TASK-434:** Write unit test in `server/` verifying Borda count calculation across 5 players where each player omits their own policy.
+- [x] **TASK-435:** Write unit test verifying Borda tie-breaking rules (1st-place count -> 2nd-place count -> forecast median).
+- [x] **TASK-436:** Write unit test verifying `0.50 * first + 0.25 * second + 0.25 * third` effect vector combination and cancellation of opposing traits.
+- [x] **TASK-437:** Write unit test verifying Finale Role points (`+2` for 1st, `+1` for 2nd, `+1` for 3rd, and cumulative scoring if a role appears on multiple top-3 policies).
+- [x] **TASK-438:** Write unit test verifying Finale Author Bonus (`+1` to author of 1st-place policy).
+- [x] **TASK-439:** Write unit test verifying fallback from Write-and-Rank to authored binary A/B vote when `loom.moderate` times out.
+- [x] **TASK-440:** Write unit test verifying private `finale:feedback` emission and single resubmit flow for a `"revise"` policy.
+- [x] **TASK-441:** Write unit test verifying `"reject"` replacement with bland placeholder policy.
+- [x] **TASK-442:** Verify voter cannot rank their own policy even if they send a spoofed socket packet.
+- [x] **TASK-443:** Verify `FINALE_RANK` advances early as soon as all 5 players submit their rank order.
+- [x] **TASK-444:** Verify `FINALE_WRITE` advances early as soon as all 5 players submit their policies (and moderation completes).
+- [x] **TASK-445:** Ensure author identities remain scrubbed from `FINALE_DEBATE` and `FINALE_ENACT` payloads until `game:end`.
+- [x] **TASK-446:** Test full 5-cycle state machine progression with `FAST_TIMERS=true`.
+- [x] **TASK-447:** Verify `BA` and `BB` world keys properly load their Cycle 3, 4, and 5 crises from `data/crises.json`.
+- [x] **TASK-448:** Add logging for Cycle 5 moderation latency and Borda results.
+- [x] **TASK-449:** Check all error boundaries in `server/socket.js` for `finale:*` events.
+- [x] **TASK-450:** Verify `server/` passes all unit tests.
+- [x] **TASK-451:** Review `server/gameEngine.js` code cleanliness and modularity.
+- [x] **TASK-452:** Verify timer synchronization during the `"revise"` resubmit sub-phase.
+- [x] **TASK-453:** Confirm projector shows a "THE LOOM IS INTERPRETING COUNCIL PROPOSALS..." state during `FINALE_MOD`.
+- [x] **TASK-454:** Confirm all Wednesday backend tasks complete.
 - [ ] **TASK-455:** Prepare `feature/backend` Wednesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
