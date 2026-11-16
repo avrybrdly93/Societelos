@@ -108,6 +108,7 @@
   /** Start a playback at month 0; later months come from onMonthTick. */
   function startPlayback(districtsByMonth, msPerMonth = 1000, shocks = []) {
     clearShocks();
+    clearDeltas();
     playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth, shocks: Array.isArray(shocks) ? shocks : [] };
     const svg = document.getElementById('region-map');
     if (svg) svg.style.setProperty('--district-transition', `${Math.max(200, msPerMonth * 0.9)}ms`);
@@ -120,6 +121,34 @@
     const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
     if (values) renderDistricts(values);
     playback.shocks.filter((sh) => sh.month === monthIndex).forEach(showShock);
+    if (monthIndex >= playback.months.length - 1) showDeltas(playback.months[0], values);
+  }
+
+  // End-of-cycle labels: each district's wellbeing change (in points of W x 100)
+  // with an up/down arrow, under its name.
+  const DELTA_EPSILON = 0.05;
+  function clearDeltas() {
+    document.querySelectorAll('#region-map .district-delta').forEach((t) => t.remove());
+  }
+  function showDeltas(start, end) {
+    clearDeltas();
+    if (!start || !end) return;
+    DISTRICT_IDS.forEach((id) => {
+      const group = districtGroup(id);
+      if (!group || typeof start[id] !== 'number' || typeof end[id] !== 'number') return;
+      const delta = (end[id] - start[id]) * 100;
+      const pop = group.querySelector('.district-pop');
+      const x = pop ? Number(pop.getAttribute('x')) : districtCenter(group).x;
+      const y = pop ? Number(pop.getAttribute('y')) + 20 : districtCenter(group).y + 20;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      const dir = delta > DELTA_EPSILON ? 'up' : delta < -DELTA_EPSILON ? 'down' : 'flat';
+      text.setAttribute('class', `district-delta is-${dir}`);
+      text.setAttribute('x', String(x));
+      text.setAttribute('y', String(y));
+      const arrow = dir === 'up' ? '\u25B2' : dir === 'down' ? '\u25BC' : '\u25C6';
+      text.textContent = `${arrow} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+      group.appendChild(text);
+    });
   }
 
   /** Stop playback (colours stay where they are). */
@@ -151,5 +180,5 @@
     if (color) svg.classList.add('is-recoloring');
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks };
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas };
 })();

@@ -769,3 +769,9 @@ body.host.alarm-flash::before {
 .intel-drawer { top: 101px; }
 .intel-drawer .role-drawer-toggle { color: var(--amber); }
 .intel-drawer-text { font-family: var(--font-mono); font-size: 15px; line-height: 1.5; color: var(--slate-200); }
+
+/* End-of-resolution wellbeing deltas on the map. */
+.district-delta { font-family: var(--font-mono); font-size: 16px; font-weight: 800; text-anchor: middle; pointer-events: none; animation: incident-in 0.5s ease-out; }
+.district-delta.is-up { fill: #064d3b; }
+.district-delta.is-down { fill: #7a1418; }
+.district-delta.is-flat { fill: var(--slate-800); }
