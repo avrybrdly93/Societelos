@@ -845,3 +845,17 @@ body.host .feed-detail { margin: 0 0 4px; font-size: 18px; color: var(--text-mut
 .gdw-meter-head { flex-wrap: nowrap; }
 body.host .gdw-meter .label { font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
 .gdw-status { white-space: nowrap; }
+
+/* Finale moderation state on the projector. */
+.finale-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex: 1; text-align: center; }
+.finale-status[hidden] { display: none; }
+.finale-spinner {
+  width: 120px; height: 120px; border-radius: 50%;
+  border: 6px solid var(--slate-700); border-top-color: var(--theme-current, var(--accent));
+  animation: finale-spin 1.2s linear infinite;
+}
+body.host .finale-status-text { font-size: 34px; font-weight: 700; letter-spacing: 0.08em; color: var(--theme-current, var(--accent)); margin: 0; }
+body.host .finale-status-sub { font-size: 24px; margin: 0; }
+@keyframes finale-spin { to { transform: rotate(360deg); } }
+/* Long phase labels ("LOOM MODERATION") plus a one-decimal GDW must fit the top bar. */
+body.host #phase-name { font-size: 20px; letter-spacing: 0.08em; white-space: nowrap; }

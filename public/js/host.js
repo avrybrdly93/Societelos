@@ -493,6 +493,20 @@
   }
   socket.on('resolution', renderResolution);
 
+  // Finale moderation: the projector shows the Loom at work (and, during a
+  // resubmit window, that some proposals are being revised).
+  function renderFinaleStatus(payload) {
+    const panel = document.getElementById('finale-status');
+    const moderating = payload.phase === 'FINALE_MOD';
+    panel.hidden = !moderating;
+    if (!moderating) return;
+    document.getElementById('finale-status-text').textContent = 'THE LOOM IS INTERPRETING COUNCIL PROPOSALS...';
+    document.getElementById('finale-status-sub').textContent = payload.resubmit
+      ? `${payload.revising || 'Some'} proposal${payload.revising === 1 ? ' is' : 's are'} being revised by ${payload.revising === 1 ? 'its author' : 'their authors'}.`
+      : 'Cleaning language. Translating intent into numbers. Withholding judgement.';
+  }
+  socket.on('phase', renderFinaleStatus);
+
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
     const set = new Set(voted || []);
