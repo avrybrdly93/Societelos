@@ -149,7 +149,9 @@
   const CRUMB_ORDER = ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
   function renderCrumbs(payload) {
     const crumbs = document.getElementById('phase-crumbs');
-    const idx = CRUMB_ORDER.indexOf(payload.phase);
+    // The write-in finale has its own flow, so the binary breadcrumbs hide.
+    const writein = payload.crisis && payload.crisis.mode === 'writein';
+    const idx = writein ? -1 : CRUMB_ORDER.indexOf(payload.phase);
     crumbs.classList.toggle('is-idle', idx < 0);
     crumbs.querySelectorAll('li').forEach((li, i) => {
       li.classList.toggle('is-done', idx >= 0 && i < idx);
@@ -506,6 +508,13 @@
       : 'Cleaning language. Translating intent into numbers. Withholding judgement.';
   }
   socket.on('phase', renderFinaleStatus);
+
+  // Finale incident and writing: no A/B options, just the Loom's admission.
+  function renderFinaleCallout(payload) {
+    const writein = payload.crisis && payload.crisis.mode === 'writein';
+    document.getElementById('finale-callout').hidden = !(writein && ['INCIDENT', 'FINALE_WRITE'].includes(payload.phase));
+  }
+  socket.on('phase', renderFinaleCallout);
 
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {

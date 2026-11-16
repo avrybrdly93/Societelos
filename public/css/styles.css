@@ -859,3 +859,10 @@ body.host .finale-status-sub { font-size: 24px; margin: 0; }
 @keyframes finale-spin { to { transform: rotate(360deg); } }
 /* Long phase labels ("LOOM MODERATION") plus a one-decimal GDW must fit the top bar. */
 body.host #phase-name { font-size: 20px; letter-spacing: 0.08em; white-space: nowrap; }
+
+/* Finale incident: the Loom admits it cannot compute an answer. */
+.finale-callout { margin-top: auto; padding: 28px; text-align: center; border: 3px solid var(--theme-current, var(--accent)); border-radius: var(--radius-lg); background: rgba(63, 216, 230, 0.06); }
+.finale-callout[hidden] { display: none; }
+body.host .finale-callout-title { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 0.06em; color: var(--theme-current, var(--accent)); }
+body.host .finale-callout-sub { margin: 8px 0 12px; font-size: 48px; font-weight: 700; letter-spacing: 0.1em; }
+body.host .finale-callout-note { margin: 0; font-size: 24px; }

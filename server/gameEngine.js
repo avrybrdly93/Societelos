@@ -1502,7 +1502,9 @@ class GameState extends EventEmitter {
     // The classroom debate hook (e.g. "Who should own the machines?").
     const debateHook = String(this.crisis.teacherPrompt || '').replace(/^Classroom Debrief:\s*/i, '');
     const feed = (this.crisis.feed || []).filter((f) => f && f.text).map((f) => this.citizenMessage(f));
-    return { id, title, subtitle, incident, loomIntro, debateHook, debateHooks: this.crisis.debateHooks || [], feed };
+    // mode tells clients a write-in finale ("writein") from an A/B vote.
+    const mode = this.crisis.mode === 'writein' && !this.finaleFallback ? 'writein' : 'binary';
+    return { id, title, subtitle, incident, loomIntro, mode, debateHook, debateHooks: this.crisis.debateHooks || [], feed };
   }
 
   /**
