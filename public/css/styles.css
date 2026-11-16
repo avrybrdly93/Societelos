@@ -366,3 +366,4 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 .memo-body { font-family: var(--font-mono); font-size: 17px; line-height: 1.5; margin: 0; }
 .memo-foot { font-size: 12px; margin: 16px 0 0; color: #5a6270; }
 .intel-memo .shield-button { background: #1b1f24; color: #eae6dc; border-color: #1b1f24; }
+.m-clock { font-size: 72px; font-weight: 700; color: var(--accent); margin: 8px 0; }
