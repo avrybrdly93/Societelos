@@ -135,3 +135,28 @@ body.host .label {
 .qr-container img { width: 320px; height: 320px; image-rendering: pixelated; }
 .qr-container #qr-placeholder { color: var(--slate-600); }
 .node-cards { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; }
+
+/* Node connection cards: offline -> connected -> ready. */
+.node-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 28px;
+  border-radius: var(--radius);
+  border: 2px dashed var(--slate-600);
+  background: transparent;
+  color: var(--text-muted);
+  transition: border-color 0.3s, background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+.node-card .node-id { font-size: 32px; font-weight: 700; }
+.node-card .node-status { font-family: var(--font-mono); font-size: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+.node-card.is-connected {
+  border-style: solid;
+  border-color: var(--loom-cyan-dim);
+  background: var(--bg-raised);
+  color: var(--text);
+}
+.node-card.is-ready {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 24px var(--loom-glow);
+}
+.node-card.is-disconnected { border-style: solid; border-color: var(--alert-crimson-dim); color: var(--danger); }
