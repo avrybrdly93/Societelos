@@ -659,8 +659,11 @@ class GameState extends EventEmitter {
   submitPolicy(node, text) {
     if (this.phase !== PHASES.FINALE_WRITE || !this.finale || !this.finale.writingOpen) return { ok: false, reason: 'WRITING_CLOSED' };
     if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
-    this.finale.submissions[node] = String(text);
-    return { ok: true };
+    // Server-side hygiene: collapse whitespace, trim, cap at 140 characters.
+    const clean = String(text == null ? '' : text).replace(/\s+/g, ' ').trim().slice(0, FINALE_MAX_CHARS).trim();
+    if (!clean) return { ok: false, reason: 'EMPTY' };
+    this.finale.submissions[node] = clean;
+    return { ok: true, text: clean };
   }
 
   /** Nodes that have submitted a finale policy (never the text). */

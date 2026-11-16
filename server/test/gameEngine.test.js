@@ -491,7 +491,20 @@ test('submitPolicy records one write-in per node during FINALE_WRITE only', () =
   assert.deepEqual(game.submitPolicy('NODE-01', 'Too early'), { ok: false, reason: 'WRITING_CLOSED' });
   quiet(() => game.startFinaleWritePhase());
   game.clearPhaseTimer();
-  assert.deepEqual(game.submitPolicy('NODE-01', 'Every district elects a repair council.'), { ok: true });
+  assert.equal(game.submitPolicy('NODE-01', 'Every district elects a repair council.').ok, true);
   assert.deepEqual(game.submitPolicy('NODE-09', 'x'), { ok: false, reason: 'UNKNOWN_NODE' });
   assert.deepEqual(game.submittedNodes(), ['NODE-01']);
+});
+
+test('finale submissions are trimmed to 140 characters and must not be empty', () => {
+  const game = finaleGame();
+  quiet(() => game.startFinaleWritePhase());
+  game.clearPhaseTimer();
+  assert.deepEqual(game.submitPolicy('NODE-01', '   \n  '), { ok: false, reason: 'EMPTY' });
+  assert.equal(game.submittedNodes().length, 0);
+  const long = `  ${'Give every district a citizens jury.  '.repeat(10)}`;
+  const res = game.submitPolicy('NODE-02', long);
+  assert.equal(res.ok, true);
+  assert.ok(game.finale.submissions['NODE-02'].length <= 140);
+  assert.ok(!/^\s|\s$|\s{2}/.test(game.finale.submissions['NODE-02']));
 });
