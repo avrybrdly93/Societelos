@@ -39,3 +39,30 @@ test('server/sim/index.js exports everything gameEngine.js calls, with the agree
   assert.equal(moods.length, 10);
   for (const m of moods) assert.ok(typeof m.mood === 'number' && m.topChange && typeof m.topChange.trait === 'string');
 });
+
+test('server/loom.js exports the narrate/moderate contract gameEngine.js expects', async () => {
+  const loom = require('../loom');
+  assert.ok(/\bresolveLoom\(\)\.narrate\(/.test(ENGINE_SRC), 'engine narrates through loom.narrate');
+  for (const fn of ['narrate', 'moderate', 'testConnection']) assert.equal(typeof loom[fn], 'function', fn);
+  const OFFLINE = { enabled: false, apiKey: '', model: 'x', timeoutMs: 8000 };
+  // narrate(context) resolves (never rejects) to { loomLine, messages: [{ citizenId, text }] }.
+  const citizens = require('../../data/citizens.json');
+  const n = await loom.narrate({ crisis: { title: 'T' }, winningOption: { name: 'P' }, simSummary: { realizedDelta: 2 }, worldKey: null, citizens }, { config: OFFLINE });
+  assert.equal(typeof n.loomLine, 'string');
+  assert.ok(n.loomLine.length > 0 && n.loomLine.length <= 200);
+  for (const m of n.messages) assert.ok(typeof m.citizenId === 'string' && typeof m.text === 'string' && m.text.length <= 140);
+  // Even with garbage input.
+  const g = await loom.narrate(undefined, { config: OFFLINE });
+  assert.equal(typeof g.loomLine, 'string');
+  // moderate(submissions, crisis) -> one entry per submission with clamped effects.
+  const mod = await loom.moderate([{ node: 'NODE-01', text: 'Every district elects a repair council.' }], { title: 'T' }, { config: OFFLINE });
+  assert.equal(mod.length, 1);
+  const e = mod[0];
+  assert.equal(e.node, 'NODE-01');
+  assert.ok(['ok', 'revise', 'reject'].includes(e.status));
+  assert.equal(typeof e.cleaned, 'string');
+  assert.ok(Array.isArray(e.roles));
+  for (const t of ['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy']) {
+    assert.ok(typeof e.effects[t] === 'number' && e.effects[t] >= -1 && e.effects[t] <= 1, t);
+  }
+});
