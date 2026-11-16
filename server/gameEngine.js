@@ -72,6 +72,8 @@ const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
+const PLACEHOLDER_POLICY = 'Continue current policy unchanged while the council reviews its options.';
+const ZERO_EFFECTS = Object.freeze({ purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
 const FINALE_RESUBMIT_MS = 25000; // one resubmit window for "revise" write-ins
 const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review them again next year.';
 // Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
@@ -779,6 +781,11 @@ class GameState extends EventEmitter {
     finale.closed = true;
     finale.policies = Object.keys(this.players).map((node, i) => {
       const m = finale.moderation[node] || {};
+      // "reject", a second "revise", or a resubmit that never came / timed
+      // out: a safe, bland placeholder so nothing unmoderated is shown.
+      if (m.status !== 'ok') {
+        return { id: `POLICY-${i + 1}`, node, text: PLACEHOLDER_POLICY, roles: [], effects: { ...ZERO_EFFECTS }, placeholder: true };
+      }
       return {
         id: `POLICY-${i + 1}`,
         node,
@@ -1549,5 +1556,6 @@ module.exports = {
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
   DEFAULT_FINALE_POLICY,
+  PLACEHOLDER_POLICY,
   buildPhaseDurations
 };

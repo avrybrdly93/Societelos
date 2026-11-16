@@ -708,3 +708,38 @@ test('loom.moderateOne rejects (bland placeholder) when the Loom is unavailable'
   assert.equal(r.status, 'reject');
   assert.equal(r.fallback, true);
 });
+
+test('"reject", a failed second attempt or a missed resubmit becomes a bland placeholder policy', async () => {
+  const loom = require('../loom');
+  const restore = stubModerate(async (subs) => subs.map((s) => ({
+    node: s.node,
+    status: { 'NODE-01': 'reject', 'NODE-02': 'revise', 'NODE-03': 'revise' }[s.node] || 'ok',
+    cleaned: s.node === 'NODE-01' ? 'something awful' : s.text,
+    feedback: 'Rephrase.', roles: ['ghost'], effects: { purpose: 0.5 }
+  })));
+  const originalOne = loom.moderateOne;
+  loom.moderateOne = async (sub) => ({ node: sub.node, status: 'revise', cleaned: 'still bad', roles: ['lotus'], effects: { health: 1 } });
+  try {
+    const game = finaleGame();
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.resubmitPolicy('NODE-02', 'second attempt'); // moderated again as "revise" -> fails
+    await game.finale.pending;
+    // NODE-03 never resubmits: the 25 s window expires.
+    quiet(() => game.advancePhase());
+    game.stop();
+    assert.equal(game.phase, 'FINALE_DEBATE');
+    for (const node of ['NODE-01', 'NODE-02', 'NODE-03']) {
+      const p = game.finale.policies.find((x) => x.node === node);
+      assert.equal(p.text, engine.PLACEHOLDER_POLICY, node);
+      assert.deepEqual(p.roles, []);
+      assert.deepEqual(p.effects, { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
+    }
+    assert.ok(!JSON.stringify(game.finale.policies).includes('something awful'));
+    assert.equal(game.finale.policies.find((x) => x.node === 'NODE-04').text, 'Write-in 4');
+  } finally {
+    loom.moderateOne = originalOne;
+    restore();
+  }
+});
