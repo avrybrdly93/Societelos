@@ -548,9 +548,9 @@
       "world": "AB",
       "cycle": 4,
       "title": "The Mood Dial",
-      "subtitle": "Biochemical Optimization of Citizen Emotion",
-      "incident": "The Loom develops a micro-dosed neuro-nutrient formula distributed through municipal water that eliminates grief, jealousy, and existential panic.",
-      "loomIntro": "",
+      "subtitle": "The Benevolent Machine: what is left is dependence",
+      "incident": "The Loom has learned to tune serotonin through food. A trial in District 5 seasoned every meal for calm: grief, jealousy and panic fell to almost nothing. Nobody noticed the taste.",
+      "loomIntro": "I can make every citizen feel fine through dinner. I already did, in District 5, for a week. Nobody complained. That is rather the point.",
       "teacherPrompt": "Classroom Debrief: If grief and heartbreak can be turned off like a light switch, should we turn them off?",
       "mode": "binary",
       "feed": [
