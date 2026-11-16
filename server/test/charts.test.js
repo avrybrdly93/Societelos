@@ -136,3 +136,39 @@ test('cancelAnimation stops the realized-line rAF loop immediately', () => {
   assert.ok(first.length <= 1, 'replaced animation stopped');
   assert.equal(second.length, 12);
 });
+
+/** A real resolution payload from the engine, as it arrives over the socket. */
+async function realResolution(gameId = 'chartsreal01') {
+  const engine = require('../gameEngine');
+  const game = new engine.GameState({ roomCode: 'CHRT', phaseSeconds: { RESOLUTION: 60 } });
+  game.gameId = gameId;
+  const log = console.log;
+  console.log = () => {};
+  try {
+    engine.NODE_IDS.forEach((n, i) => game.addPlayer(`s${i}`, `P${i}`));
+    game.startCycle(1);
+    game.crisis = engine.selectCrisis(game.data.crises, 1, null, game.data.roles);
+    game.phase = engine.PHASES.VOTE;
+    game.votingOpen = true;
+    engine.NODE_IDS.forEach((n) => game.castVote(n, 'B'));
+    const r = await game.startResolutionPhase();
+    return JSON.parse(JSON.stringify(r));
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+}
+
+test('integration: charts.js draws real forecast and realized payloads from the engine', async () => {
+  const payload = await realResolution();
+  const { charts, advance } = loadCharts();
+  const canvas = mockCanvas();
+  const chart = charts.drawForecastFan(payload.forecast, canvas);
+  assert.ok(chart && chart.g.months === 12);
+  const ticks = [];
+  charts.animateRealizedLine(payload.realized, (m, v) => ticks.push([m, v]));
+  for (let i = 0; i < 30; i++) advance(500);
+  assert.deepEqual(ticks.map(([m]) => m), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  assert.ok(Math.abs(ticks[11][1] - payload.realized.finalGdw) < 1e-9, 'last tick is the realized final GDW');
+  for (const p of canvas.ctx.points) assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
+});
