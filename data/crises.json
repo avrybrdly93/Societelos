@@ -238,12 +238,17 @@
         }
       },
       "intel": {
-        "artisan": "Civic Participation & Epistemic Effort: Districts that ran their own repair councils before automation reported the highest sense of purpose.",
-        "lotus": "Bureaucratic Drag & Quality of Life: Citizen Assembly approval queues would add 3 weeks of delay to every simple transit and food adjustment.",
-        "assimilator": "Algorithmic Infallibility & Human Error: In a municipal trial, human citizen panels overturned 1 in 4 Loom decisions. 80% of reversals lowered wellbeing.",
-        "catalyst": "Stochastic Volatility under Democracy: Under a citizen assembly, month-to-month public mood swings roughly double.",
-        "ghost": "The Illusion of Control: Leaked internal memo: The physical off-switch has never been tested. Only The Loom knows if it works."
-      }
+        "artisan": "Loom archive: districts that ran their own repair councils before automation reported the highest sense of purpose in the region.",
+        "lotus": "Loom projection: Assembly approval queues would add about three weeks to every service change, from transit to food delivery.",
+        "assimilator": "Pilot audit: in a trial council, citizens overturned 1 in 4 Loom decisions, and most reversals lowered wellbeing.",
+        "catalyst": "Forecast: under an Assembly, month-to-month mood swings roughly double.",
+        "ghost": "Leaked memo: the off-switch has never been tested. Only the Loom knows whether it works."
+      },
+      "debateHooks": [
+        "Is a slower, worse decision you chose better than a faster, better one you didn't?",
+        "If the Loom has never made a mistake, why does it need an off-switch?",
+        "After vote 1, who exactly are you trusting under Policy B: the Loom or the owners?"
+      ]
     },
     {
       "id": "aa-purpose-drift",
