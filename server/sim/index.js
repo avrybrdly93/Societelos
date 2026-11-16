@@ -54,7 +54,10 @@ function topMoves(before, after, count = 3) {
  * }}
  */
 function simulate(state, effects, opts = {}) {
-  if (opts.mode === 'stub') return simulateStub(state, opts);
+  // Stub mode, or a caller that has no sim state or config yet (the engine
+  // before it is wired to data/sim.json): flat-line stub, never a crash.
+  const hasState = !!(state && (state.traits || (state.simState && state.simState.traits) || state.config)) || !!opts.config;
+  if (opts.mode === 'stub' || !hasState) return simulateStub(state, opts);
   const start = resolveState(state, opts);
   const c = start.config.constants;
   const runs = Number.isInteger(opts.runs) ? opts.runs : c.forecastRuns;
