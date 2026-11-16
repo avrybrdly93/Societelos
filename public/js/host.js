@@ -318,14 +318,16 @@
   ];
   const NUDGE_MS = 15000;
   let nudgeTimer = null;
-  function startNudges(cycle) {
+  function startNudges(cycle, crisisHooks) {
     clearInterval(nudgeTimer);
     const el = document.getElementById('debate-nudge');
-    let i = (cycle || 0) % DEBATE_NUDGES.length;
+    // The crisis's authored debate hooks come first, then the generic nudges.
+    const nudges = (Array.isArray(crisisHooks) && crisisHooks.length) ? crisisHooks : DEBATE_NUDGES;
+    let i = crisisHooks && crisisHooks.length ? 0 : (cycle || 0) % nudges.length;
     const show = () => {
       el.classList.remove('is-in');
       void el.offsetWidth;
-      el.textContent = `\u25B8 ${DEBATE_NUDGES[i % DEBATE_NUDGES.length]}`;
+      el.textContent = `\u25B8 ${nudges[i % nudges.length]}`;
       el.classList.add('is-in');
       i += 1;
     };
@@ -337,7 +339,7 @@
     const debating = payload.phase === 'DEBATE';
     document.getElementById('debate-panel').hidden = !debating;
     if (!debating) clearInterval(nudgeTimer);
-    else startNudges(payload.cycle);
+    else startNudges(payload.cycle, payload.crisis && payload.crisis.debateHooks);
     document.getElementById('incident-banner').classList.toggle('is-compact', ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase));
     if (!debating) return;
     const crisis = payload.crisis || {};

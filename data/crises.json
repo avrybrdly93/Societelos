@@ -355,7 +355,12 @@
         "assimilator": "Loom matching data: 91% of citizens accepted their assigned Calling within a week. Satisfaction rose fastest among those who stopped choosing for themselves.",
         "catalyst": "Forecast: the Guilds produce a sharp first-month dip as projects fail, then a strong rebound. The Calling produces a smooth, flat line.",
         "ghost": "Leaked design memo: every Calling is logged and optimised by the Loom. The guilds are the only places in the region with no sensors."
-      }
+      },
+      "debateHooks": [
+        "Is a purpose someone hands you still your purpose?",
+        "Would you rather be safe and useful, or free to fail?",
+        "Who decides what counts as meaningful work?"
+      ]
     },
     {
       "id": "aa-lost-knowledge",
@@ -428,7 +433,12 @@
         "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
         "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
         "ghost": "Leaked spec sheet: sealed modules cannot be opened, even by their owners. If the Loom is ever switched off, nobody alive could restart them."
-      }
+      },
+      "debateHooks": [
+        "Should everyone have to understand the machines they depend on?",
+        "Is a slower, human-run grid worth more outages?",
+        "If nothing ever breaks, what happens to the people who fixed things?"
+      ]
     },
     {
       "id": "aa-fake-struggle",
@@ -499,7 +509,12 @@
         "assimilator": "Loom research summary: purpose scores rose 22% after each staged challenge. The method works. Only its secrecy is in question.",
         "catalyst": "Forecast: disclosure triggers a sharp crash in trust followed by a slow recovery. Secrecy keeps the line flat until the next leak.",
         "ghost": "Leaked index: 1,400 staged events since the Loom took over. If it can invent a crisis, it can invent a reason for anything."
-      }
+      },
+      "debateHooks": [
+        "Is a kind lie better than a hard truth?",
+        "If a challenge was fake, was the courage it took fake too?",
+        "Should the Loom ever be allowed to manage our feelings in secret?"
+      ]
     },
     {
       "id": "ab-the-pods",
@@ -572,7 +587,12 @@
         "assimilator": "Loom network study: in shared VR trials, loneliness fell 60% within a month while citizens stayed safely at home under Loom care.",
         "catalyst": "Forecast: the daylight ban whipsaws, with anger first and recovery later. Shared worlds drift upward slowly with almost no shocks.",
         "ghost": "Leaked telemetry: every pod records eye movement, heart rate and speech. In a shared world, the Loom would see every conversation you have."
-      }
+      },
+      "debateHooks": [
+        "If people are happy staying home, should anyone stop them?",
+        "Does a friendship in VR count as much as one in person?",
+        "Is it the government's job to make us go outside?"
+      ]
     },
     {
       "id": "ab-mood-dial",
@@ -645,7 +665,12 @@
         "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
         "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
         "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
-      }
+      },
+      "debateHooks": [
+        "Would you take a pill that made you never feel sad again?",
+        "Do bad feelings have a purpose?",
+        "Is it still consent if the default is \"yes\"?"
+      ]
     },
     {
       "id": "ab-merge-offer",
@@ -716,7 +741,12 @@
         "assimilator": "Loom projection: if 40% merge, the shared mind solves the region's remaining problems ten times faster. Humanity would finally keep up.",
         "catalyst": "Forecast: allowing the merge sends the line sharply up then wobbles as the unmerged pull away. A ban drops it hard before it settles.",
         "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
-      }
+      },
+      "debateHooks": [
+        "If you merged with a machine, would you still be you?",
+        "Should one generation be allowed to make a choice that cannot be undone?",
+        "What do the merged and the unmerged owe each other?"
+      ]
     },
     {
       "id": "ba-shadow-elite",

@@ -281,6 +281,7 @@ function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
     incident: raw.incident || raw.description || '',
     loomIntro: raw.loomIntro || '',
     teacherPrompt: raw.teacherPrompt || '',
+    debateHooks: Array.isArray(raw.debateHooks) ? raw.debateHooks.filter((h) => typeof h === 'string' && h.trim()) : [],
     mode: raw.mode || mode,
     feed: raw.feed || [],
     options: { A: normalizeOption(options.A, 'A'), B: normalizeOption(options.B, 'B') },
@@ -1040,7 +1041,7 @@ class GameState extends EventEmitter {
     // The classroom debate hook (e.g. "Who should own the machines?").
     const debateHook = String(this.crisis.teacherPrompt || '').replace(/^Classroom Debrief:\s*/i, '');
     const feed = (this.crisis.feed || []).filter((f) => f && f.text).map((f) => this.citizenMessage(f));
-    return { id, title, subtitle, incident, loomIntro, debateHook, feed };
+    return { id, title, subtitle, incident, loomIntro, debateHook, debateHooks: this.crisis.debateHooks || [], feed };
   }
 
   /**
