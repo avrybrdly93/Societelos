@@ -478,7 +478,7 @@ test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (45 s)', () =>
   assert.equal(phases[0].endsAt - Date.now() <= 15000 && phases[0].endsAt - Date.now() > 14000, true);
   assert.ok(!('options' in phases[0]), 'no options during the finale incident');
   quiet(() => game.advancePhase());
-  game.clearPhaseTimer();
+  game.stop();
   const write = phases[1];
   assert.equal(write.phase, 'FINALE_WRITE');
   assert.ok(write.endsAt - Date.now() > 44000 && write.endsAt - Date.now() <= 45000);
@@ -490,7 +490,7 @@ test('submitPolicy records one write-in per node during FINALE_WRITE only', () =
   const game = finaleGame();
   assert.deepEqual(game.submitPolicy('NODE-01', 'Too early'), { ok: false, reason: 'WRITING_CLOSED' });
   quiet(() => game.startFinaleWritePhase());
-  game.clearPhaseTimer();
+  game.stop();
   assert.equal(game.submitPolicy('NODE-01', 'Every district elects a repair council.').ok, true);
   assert.deepEqual(game.submitPolicy('NODE-09', 'x'), { ok: false, reason: 'UNKNOWN_NODE' });
   assert.deepEqual(game.submittedNodes(), ['NODE-01']);
@@ -499,7 +499,7 @@ test('submitPolicy records one write-in per node during FINALE_WRITE only', () =
 test('finale submissions are trimmed to 140 characters and must not be empty', () => {
   const game = finaleGame();
   quiet(() => game.startFinaleWritePhase());
-  game.clearPhaseTimer();
+  game.stop();
   assert.deepEqual(game.submitPolicy('NODE-01', '   \n  '), { ok: false, reason: 'EMPTY' });
   assert.equal(game.submittedNodes().length, 0);
   const long = `  ${'Give every district a citizens jury.  '.repeat(10)}`;
@@ -516,7 +516,7 @@ test('idle or disconnected players get a neutral default policy when FINALE_WRIT
   game.submitPolicy('NODE-03', 'Fund one public workshop per street.');
   game.markDisconnected && quiet(() => game.markDisconnected('NODE-05'));
   quiet(() => game.advancePhase()); // the 45 s timer expiring
-  game.clearPhaseTimer();
+  game.stop();
   assert.equal(game.phase, 'FINALE_MOD');
   assert.equal(game.finale.writingOpen, false);
   assert.deepEqual(game.finale.defaulted.sort(), ['NODE-02', 'NODE-04', 'NODE-05']);
@@ -528,6 +528,8 @@ test('idle or disconnected players get a neutral default policy when FINALE_WRIT
 test('FINALE_WRITE advances to FINALE_MOD as soon as all 5 policies are in', async () => {
   const game = finaleGame();
   quiet(() => game.startFinaleWritePhase());
+  const seen = [];
+  game.on('phase', (p) => seen.push(p.phase));
   const log = console.log;
   console.log = () => {};
   try {
@@ -536,10 +538,10 @@ test('FINALE_WRITE advances to FINALE_MOD as soon as all 5 policies are in', asy
     assert.equal(game.phase, 'FINALE_WRITE', 'still writing with 4 of 5');
     game.submitPolicy('NODE-05', 'Policy number 5 for the council.');
     await new Promise((r) => setImmediate(r));
-    assert.equal(game.phase, 'FINALE_MOD');
+    assert.equal(seen[0], 'FINALE_MOD', 'moved on without waiting for the timer');
     assert.deepEqual(game.finale.defaulted, []);
   } finally {
-    game.clearPhaseTimer();
+    game.stop();
     console.log = log;
   }
 });
@@ -557,7 +559,7 @@ test('FINALE_MOD calls loom.moderate once with all 5 submissions (node ids and t
     quiet(() => game.startFinaleWritePhase());
     NODE_IDS.slice(0, 3).forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
     const results = await quiet(() => { game.clearPhaseTimer(); game.phase = 'FINALE_WRITE'; return game.startFinaleModPhase(); });
-    game.clearPhaseTimer();
+    game.stop();
     assert.equal(calls.length, 1, 'one batch call');
     assert.equal(calls[0].subs.length, 5);
     for (const sub of calls[0].subs) assert.deepEqual(Object.keys(sub).sort(), ['node', 'text']);
@@ -568,4 +570,19 @@ test('FINALE_MOD calls loom.moderate once with all 5 submissions (node ids and t
   } finally {
     loom.moderate = original;
   }
+});
+
+test('if loom.moderate fails, cycle 5 falls back to the authored A/B finale (DEBATE -> VOTE)', async () => {
+  const game = finaleGame();
+  const phases = [];
+  game.on('phase', (p) => phases.push(p.phase));
+  quiet(() => game.startFinaleWritePhase());
+  game.submitPolicy('NODE-01', 'Disclose everything.');
+  // No API key in tests: loom.moderate returns fallback results.
+  await quiet(() => { game.clearPhaseTimer(); return game.startFinaleModPhase(); });
+  game.stop();
+  assert.equal(game.finaleFallback, true);
+  assert.deepEqual(phases.slice(-2), ['FINALE_MOD', 'DEBATE']);
+  assert.equal(game.phase, 'DEBATE');
+  assert.equal(game.nextPhase(), 'VOTE');
 });

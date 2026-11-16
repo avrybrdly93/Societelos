@@ -498,6 +498,7 @@ class GameState extends EventEmitter {
    */
   startPhaseTimer(durationMs, onExpire) {
     this.clearPhaseTimer();
+    if (this.stopped) return null; // a closed room never restarts its clock
     if (!Number.isFinite(durationMs) || durationMs <= 0) {
       this.endsAt = null;
       return null;
@@ -511,6 +512,15 @@ class GameState extends EventEmitter {
       onExpire();
     }, durationMs);
     return this.endsAt;
+  }
+
+  /**
+   * Stop the game for good (room closed): clears the timer and makes any
+   * late async work (moderation, narration) unable to restart one.
+   */
+  stop() {
+    this.stopped = true;
+    this.clearPhaseTimer();
   }
 
   /**
@@ -544,7 +554,13 @@ class GameState extends EventEmitter {
         return this.cycle === 2 ? P.WORLD_REVEAL : P.INCIDENT;
       case P.WORLD_REVEAL: return P.INCIDENT;
       case P.FINALE_WRITE: return P.FINALE_MOD;
-      case P.FINALE_MOD: return P.FINALE_DEBATE;
+      case P.FINALE_MOD:
+        // Moderation never came back before the FINALE_MOD timer: authored A/B.
+        if (this.finale && !this.finale.moderationDone && !this.finaleFallback) {
+          this.finaleFallback = true;
+          this.finale.closed = true;
+        }
+        return this.finaleFallback ? P.DEBATE : P.FINALE_DEBATE;
       case P.FINALE_DEBATE: return P.FINALE_RANK;
       case P.FINALE_RANK: return P.FINALE_ENACT;
       case P.FINALE_ENACT: return P.END;
@@ -718,8 +734,33 @@ class GameState extends EventEmitter {
       .then((results) => {
         finale.moderationMs = Date.now() - started;
         for (const r of results || []) if (r && r.node) finale.moderation[r.node] = r;
+        finale.moderationDone = true;
+        this.onFinaleModeration(results || []);
         return results;
       });
+  }
+
+  /**
+   * Act on the batch moderation. If Gemini was unavailable (every result is a
+   * fallback: no key, error or the 8 s timeout), cycle 5 switches to the
+   * world's authored A/B finale and plays a normal DEBATE -> VOTE.
+   */
+  onFinaleModeration(results) {
+    if (this.phase !== PHASES.FINALE_MOD || this.finale.closed) return;
+    const failed = !results.length || results.every((r) => r && r.fallback);
+    if (failed) {
+      this.switchFinaleToBinary('moderation unavailable');
+      return;
+    }
+  }
+
+  /** Fall back to the authored A/B finale: FINALE_MOD -> DEBATE -> VOTE -> RESOLUTION -> END. */
+  switchFinaleToBinary(reason) {
+    if (this.finaleFallback) return;
+    this.finaleFallback = true;
+    this.finale.closed = true;
+    console.log(`[game ${this.roomCode}] finale falls back to authored A/B (${reason})`);
+    if (this.phase === PHASES.FINALE_MOD) this.advancePhase();
   }
 
   /** Nodes that have submitted a finale policy (never the text). */
@@ -948,8 +989,10 @@ class GameState extends EventEmitter {
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
     // Cycles 1 and 2 decide the world for cycles 3-5.
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
-    const roleAwards = this.cycle < TOTAL_CYCLES ? this.awardRolePoints(winner) : {};
-    const catalystAwards = this.cycle < TOTAL_CYCLES ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
+    // Binary scoring in cycles 1-4, and in a cycle 5 that fell back to A/B.
+    const binaryScoring = this.cycle < TOTAL_CYCLES || this.finaleFallback;
+    const roleAwards = binaryScoring ? this.awardRolePoints(winner) : {};
+    const catalystAwards = binaryScoring ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
     this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
     // Private per-phone score updates (never broadcast: they would hint at
     // roles), sent right after the resolution payload.
@@ -1332,7 +1375,7 @@ function findSession(token) {
 function closeRoom(roomCode) {
   const game = getRoom(roomCode);
   if (!game) return false;
-  game.clearPhaseTimer();
+  game.stop();
   game.removeAllListeners();
   return rooms.delete(game.roomCode);
 }
