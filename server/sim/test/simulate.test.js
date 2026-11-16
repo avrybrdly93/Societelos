@@ -86,3 +86,27 @@ test('hedonic drift slowly erodes GDW under a zero-effect policy', () => {
   const flat = simulate(createInitialState(noDrift), zero, { runs: 500, seed: 31 }).forecast.median;
   assert.ok(Math.abs(flat[12] - flat[0]) < 0.5, `no drift: ${flat[0].toFixed(2)} -> ${flat[12].toFixed(2)}`);
 });
+
+test('near 5% GDW, P(collapse) equals the fraction of forecast runs ending at 0%', () => {
+  const { runSingleSimulation } = require('../step');
+  const { hashSeed } = require('../prng');
+  const { computeGDW } = require('../state');
+  const state = createInitialState(simConfig);
+  state.traits.fill(0.24); // W = 0.24 -> GDW = 125 * (0.24 - 0.20) = 5%
+  assert.ok(Math.abs(computeGDW(state) - 5) < 1e-9);
+  const effects = { purpose: -0.1, connection: -0.05, health: 0, trust: 0, fairness: 0, autonomy: 0 };
+  const runs = 500;
+  const seed = 2026;
+  const { forecast } = simulate(state, effects, { runs, seed });
+  // Replay every forecast run with the documented seed scheme and count collapses.
+  let collapsed = 0;
+  let unrest = 0;
+  for (let r = 0; r < runs; r++) {
+    const run = runSingleSimulation(state, effects, hashSeed(`${seed}:forecast:${r}`), true);
+    if (run.gdw[12] <= 0) collapsed++;
+    if (run.gdw[12] < simConfig.constants.unrestGdw) unrest++;
+  }
+  assert.ok(collapsed > 0 && collapsed < runs, `a real mix of outcomes (${collapsed}/${runs})`);
+  assert.equal(forecast.pCollapse, collapsed / runs);
+  assert.equal(forecast.pUnrest, unrest / runs);
+});
