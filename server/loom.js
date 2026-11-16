@@ -217,13 +217,7 @@ async function narrate(rawContext = {}, opts = {}) {
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
     const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
-    const known = new Set(citizens.map((c) => c.id));
-    const messages = (Array.isArray(result.messages) ? result.messages : [])
-      .filter((m) => m && (!known.size || known.has(m.citizenId)))
-      .map((m) => ({ citizenId: String(m.citizenId), text: truncate(m.text, 140) }))
-      .slice(0, 10);
-    if (!result.loomLine) throw new Error('narration: missing loomLine');
-    return { loomLine: truncate(result.loomLine, 200), messages };
+    return validateNarration(result, citizens.map((c) => c.id));
   } catch (err) {
     console.warn(`[loom] narrate fell back: ${err.message}`);
     return narrateFallback(context);
@@ -242,6 +236,46 @@ const truncate = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 const clamp = (v) => (Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
 
 const NODE_ID = /^NODE-0[1-5]$/;
+
+/** Remove emoji (and the joiners/variation selectors around them), tidy spaces. */
+const EMOJI_RE = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]/gu;
+function stripEmoji(text) {
+  return String(text == null ? '' : text).replace(EMOJI_RE, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+/** Truncate to `max` characters, cutting at a word boundary with an ellipsis when possible. */
+function clip(text, max) {
+  const t = String(text == null ? '' : text).trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s.,;:!?-]+$/, '')}\u2026`;
+}
+
+/**
+ * Post-call validator for narrate(): checks the JSON shape, keeps only known
+ * citizen ids (once each), strips emoji, and clips loomLine to 200 and each
+ * message to 140 characters. Throws when no usable Loom line remains.
+ */
+function validateNarration(result, knownIds = []) {
+  if (!result || typeof result !== 'object') throw new Error('narration: not an object');
+  const loomLine = clip(stripEmoji(result.loomLine), 200);
+  if (!loomLine) throw new Error('narration: missing loomLine');
+  const known = new Set(knownIds);
+  const seen = new Set();
+  const messages = [];
+  for (const m of Array.isArray(result.messages) ? result.messages : []) {
+    if (!m || typeof m !== 'object') continue;
+    const id = String(m.citizenId || '');
+    if ((known.size && !known.has(id)) || seen.has(id)) continue;
+    const text = clip(stripEmoji(m.text), 140);
+    if (!text) continue;
+    seen.add(id);
+    messages.push({ citizenId: id, text });
+    if (messages.length === 10) break;
+  }
+  return { loomLine, messages };
+}
 
 /**
  * Privacy: replace any known player name in free text with a neutral phrase,
@@ -405,4 +439,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
