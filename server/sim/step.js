@@ -4,6 +4,7 @@
 // buffer; randomness only from the PRNG passed in.
 
 const { clamp01 } = require('./state');
+const { randomNormal, randomUniform } = require('./prng');
 
 /**
  * Precompute everything a run needs from the config so stepMonth does no
@@ -98,9 +99,15 @@ function applyDrift(state, params) {
     for (const k of driftIdx) t[i * K + k] -= drift;
   }
 }
-function applyNoise() {}
+/** Step 3, noise: add N(0, (noiseSD * volatility)^2) to every cohort trait. */
+function applyNoise(state, params, rng) {
+  const sd = params.constants.noiseSD * params.volatility;
+  if (!(sd > 0)) return;
+  const t = state.traits;
+  for (let j = 0; j < t.length; j++) t[j] += randomNormal(rng, 0, sd);
+}
 function applyShocks() {}
 function applySpillover() {}
 function clampTraits() {}
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, clamp01 };
