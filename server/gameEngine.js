@@ -85,6 +85,37 @@ class GameState {
     this.scores = {};
     this.overridesUsed = {};
   }
+
+  /**
+   * Seat a joining phone in the first free NODE slot.
+   * The display name stays on the server (end screen only); logs use the node id.
+   * Returns { ok: true, node } or { ok: false, reason }.
+   */
+  addPlayer(socketId, name) {
+    const node = NODE_IDS.find((id) => !this.players[id]);
+    if (!node) return { ok: false, reason: 'ROOM_FULL' };
+
+    const cleanName = String(name || '').trim().slice(0, 24) || node;
+    this.players[node] = {
+      node,
+      socketId,
+      name: cleanName,
+      ready: false,
+      connected: true,
+      role: null,
+      joinedAt: Date.now()
+    };
+    this.scores[node] = 0;
+    this.overridesUsed[node] = false;
+    console.log(`[game ${this.roomCode}] ${node} joined`);
+    return { ok: true, node };
+  }
+
+  /** Find the node id a socket is seated at, or null. */
+  findNodeBySocket(socketId) {
+    const player = Object.values(this.players).find((p) => p.socketId === socketId);
+    return player ? player.node : null;
+  }
 }
 
 module.exports = {
