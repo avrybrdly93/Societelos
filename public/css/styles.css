@@ -78,6 +78,15 @@ body[data-world="AA"] { --theme-current: var(--theme-aa); }
 body[data-world="AB"] { --theme-current: var(--theme-ab); }
 body[data-world="BA"] { --theme-current: var(--theme-ba); }
 body[data-world="BB"] { --theme-current: var(--theme-bb); }
+body.world-aa { --theme-current: var(--theme-aa); }
+body.world-ab { --theme-current: var(--theme-ab); }
+body.world-ba { --theme-current: var(--theme-ba); }
+body.world-bb { --theme-current: var(--theme-bb); }
+/* Once a world exists, the host chrome takes its colour. */
+body.host[data-world] .topbar-brand,
+body.host[data-world] .loom-line { color: var(--theme-current); }
+body.host[data-world] .topbar { border-bottom-color: var(--theme-current); }
+body.host[data-world] .chamber-col { border-color: color-mix(in srgb, var(--theme-current) 45%, var(--border)); }
 
 /* Projector typography: legible from the back row of a classroom.
    Body text never drops below 24px; headers start at 48px. */

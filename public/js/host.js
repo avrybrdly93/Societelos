@@ -297,6 +297,24 @@
   }
   socket.on('phase', (payload) => { if (payload.phase === 'WORLD_REVEAL') renderWorldReveal(payload.world); });
 
+  // world:reveal { worldKey, name, ... }: title the world and apply its colour
+  // theme for the rest of the game (body.world-aa and body[data-world="AA"]).
+  const WORLD_KEYS = ['AA', 'AB', 'BA', 'BB'];
+  function applyWorldTheme(worldKey) {
+    WORLD_KEYS.forEach((k) => document.body.classList.toggle(`world-${k.toLowerCase()}`, k === worldKey));
+    if (WORLD_KEYS.includes(worldKey)) document.body.dataset.world = worldKey;
+    else delete document.body.dataset.world;
+    if (window.SocietelosMap && window.SocietelosMap.setWorld) window.SocietelosMap.setWorld(worldKey);
+  }
+  socket.on('world:reveal', (world) => {
+    if (!world || !world.worldKey) return;
+    state.worldKey = world.worldKey;
+    renderWorldReveal(world);
+    applyWorldTheme(world.worldKey);
+  });
+  // A new game (back in the lobby) drops the old world's theme.
+  socket.on('phase', (payload) => { if (payload.phase === 'LOBBY' && state.worldKey) { state.worldKey = null; applyWorldTheme(null); } });
+
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
     const set = new Set(voted || []);
@@ -427,5 +445,5 @@
   window.debugTriggerPhase = debugTriggerPhase;
   window.debugTriggerEvent = debugTriggerEvent;
 
-  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber, setGdw };
+  window.SocietelosHost = { socket, state, fetchQR, renderLobby, onPhase, showView, revealChamber, setGdw, applyWorldTheme };
 })();
