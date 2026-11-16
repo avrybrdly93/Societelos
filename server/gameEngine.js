@@ -990,7 +990,10 @@ class GameState extends EventEmitter {
       text: finale.enacted.map((e) => `${Math.round(e.weight * 100)}%: ${byId[e.id].text}`).join(' | '),
       summary: 'Three council-written policies enacted together at 50/25/25.'
     };
-    const result = { cycle: this.cycle, finale: true, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    // Public Borda tally (best first) and the enacted top three; no authors.
+    const tally = finale.rows.map((r) => ({ id: r.id, points: r.points, places: r.places.slice() }));
+    const enacted = finale.enacted.map((e) => ({ id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points }));
+    const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const scoreUpdates = Object.keys(this.players).map((node) => {
       const role = finale.awards.role[node] || 0;
       const author = finale.awards.author[node] || 0;

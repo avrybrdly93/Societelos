@@ -1037,3 +1037,25 @@ test('loom.narrate is called with the enacted 50/25/25 package and its simulatio
     loom.narrate = original;
   }
 });
+
+test('FINALE_ENACT broadcasts a resolution with the Borda tally, enacted 50/25/25 package, forecast, realized run and narration', async () => {
+  const game = await enactedFinale();
+  const sent = [];
+  game.on('resolution', (r) => sent.push(JSON.parse(JSON.stringify(r))));
+  await game.finale.narrated;
+  game.stop();
+  // The listener attached after the enact phase began; the stored payload is the broadcast one.
+  const r = sent[0] || JSON.parse(JSON.stringify(game.lastResolution));
+  assert.equal(r.result.finale, true);
+  assert.equal(r.result.tally.length, 5);
+  assert.equal(r.result.tally.reduce((a, t) => a + t.points, 0), 5 * (4 + 3 + 2 + 1), 'all 5 ballots counted');
+  assert.deepEqual(r.result.enacted.map((e) => [e.place, e.weight]), [['first', 0.5], ['second', 0.25], ['third', 0.25]]);
+  assert.deepEqual(r.result.enacted.map((e) => e.id), r.result.tally.slice(0, 3).map((t) => t.id));
+  for (const e of r.result.enacted) assert.ok(e.text.length > 0);
+  assert.equal(r.forecast.median.length, 13);
+  assert.equal(r.realized.gdw.length, 13);
+  assert.equal(r.districts.length, 13);
+  assert.ok(r.loomLine.length > 0);
+  assert.ok(Array.isArray(r.messages));
+  assert.ok(!JSON.stringify(r).includes('NODE-0'), 'no authors before game:end');
+});
