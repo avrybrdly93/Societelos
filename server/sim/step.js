@@ -80,8 +80,8 @@ function buildParams(state, opts = {}) {
     }
   }
 
-  let e = null;
-  if (opts.effects) {
+  let e = opts.effectVector || opts.e || null;
+  if (!e && opts.effects) {
     e = new Float64Array(K);
     for (let k = 0; k < K; k++) {
       const v = opts.effects[state.traitNames[k]];
@@ -124,8 +124,8 @@ function fastGdw(state, params) {
  * Advance the state by one month (monthIndex = 1..12) under effect vector
  * `effects` ({ trait: -1..1 }). Mutates state.traits; returns { shocks }.
  */
-function stepMonth(state, effects, monthIndex, params, rng) {
-  const shocks = [];
+function stepMonth(state, effects, monthIndex, params, rng, shocksOut) {
+  const shocks = shocksOut || (shocksOut === null ? null : []);
   applyAdoption(state, effects, monthIndex, params);
   applyDrift(state, params);
   applyNoise(state, params, rng);
@@ -133,7 +133,7 @@ function stepMonth(state, effects, monthIndex, params, rng) {
   applySpillover(state, params);
   clampTraits(state);
   state.month = monthIndex;
-  return { shocks };
+  return { shocks: shocks || [] };
 }
 
 /** Share of a policy applied by month t: 1 - exp(-t / tau). */
@@ -173,7 +173,15 @@ function applyNoise(state, params, rng) {
   const sd = params.constants.noiseSD * params.volatility;
   if (!(sd > 0)) return;
   const t = state.traits;
-  for (let j = 0; j < t.length; j++) t[j] += randomNormal(rng, 0, sd);
+  const len = t.length;
+  for (let j = 0; j < len; j += 2) {
+    const u1 = 1 - rng();
+    const u2 = rng();
+    const radius = sd * Math.sqrt(-2 * Math.log(u1));
+    const theta = 6.283185307179586 * u2;
+    t[j] += radius * Math.cos(theta);
+    if (j + 1 < len) t[j + 1] += radius * Math.sin(theta);
+  }
 }
 /**
  * Step 4, district shocks: each district has a (shockChance * volatility)
@@ -243,7 +251,7 @@ function runSingleSimulation(initialState, effects, seed, isForecast = false, op
   const c = initialState.config.constants;
   const rng = mulberry32(seed);
   const state = cloneState(initialState);
-  const paramOpts = { volatility: opts.volatility, effects };
+  const paramOpts = { volatility: opts.volatility, effects, effectVector: opts.effectVector };
   if (isForecast) {
     const a = randomNormal(rng, c.alpha, c.alphaSD);
     paramOpts.alpha = Math.min(c.alphaMax, Math.max(c.alphaMin, a));
@@ -252,18 +260,19 @@ function runSingleSimulation(initialState, effects, seed, isForecast = false, op
   const params = buildParams(state, paramOpts);
   // Forecast runs only need the GDW line; district snapshots are for the realized run's map.
   const trackDistricts = opts.trackDistricts !== undefined ? opts.trackDistricts : !isForecast;
+  const trackShocks = !isForecast || !!opts.trackShocks;
   const months = c.monthsPerCycle;
-  const gdw = [fastGdw(state, params)];
+  const gdw = new Float64Array(months + 1);
+  gdw[0] = fastGdw(state, params);
   const districts = trackDistricts ? [districtSnapshot(state, params.districtIds)] : [];
-  const shocks = [];
+  const shocks = trackShocks ? [] : null;
   for (let m = 1; m <= months; m++) {
-    const res = stepMonth(state, effects, m, params, rng);
-    if (res.shocks.length) shocks.push(...res.shocks);
-    gdw.push(fastGdw(state, params));
+    stepMonth(state, effects, m, params, rng, shocks);
+    gdw[m] = fastGdw(state, params);
     if (trackDistricts) districts.push(districtSnapshot(state, params.districtIds));
   }
   state.month = 0;
-  return { seed, gdw, districts, shocks, finalState: state };
+  return { seed, gdw, districts, shocks: shocks || [], finalState: state };
 }
 
 module.exports = {

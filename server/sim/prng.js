@@ -23,9 +23,9 @@ function mulberry32(seed) {
  * FNV-1a hash of a string (or anything String() can convert) to a 32-bit seed.
  * hashSeed('game:3') always returns the same number.
  */
-function hashSeed(str) {
+function hashSeed(str, baseHash = 0x811c9dc5) {
   const input = String(str);
-  let hash = 0x811c9dc5;
+  let hash = baseHash;
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193);

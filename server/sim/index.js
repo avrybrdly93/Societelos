@@ -95,13 +95,23 @@ function simulate(state, effects, opts = {}) {
   const seed = opts.seed >>> 0;
   const volatility = typeof opts.volatility === 'number' ? opts.volatility : 1;
   const months = c.monthsPerCycle;
+  const K = start.traitNames.length;
+  const effectVector = new Float64Array(K);
+  if (effects) {
+    for (let k = 0; k < K; k++) {
+      const v = effects[start.traitNames[k]];
+      effectVector[k] = typeof v === 'number' ? v : 0;
+    }
+  }
 
   // Forecast fan.
   const byMonth = Array.from({ length: months + 1 }, () => new Float64Array(runs));
   let collapses = 0;
   let unrest = 0;
+  const prefixHash = hashSeed(`${seed}:forecast:`);
   for (let r = 0; r < runs; r++) {
-    const run = runSingleSimulation(start, effects, hashSeed(`${seed}:forecast:${r}`), true, { volatility });
+    const runSeed = hashSeed(r, prefixHash);
+    const run = runSingleSimulation(start, effects, runSeed, true, { volatility, effectVector });
     for (let m = 0; m <= months; m++) byMonth[m][r] = run.gdw[m];
     const end = run.gdw[months];
     if (end <= 0) collapses++;
@@ -126,7 +136,7 @@ function simulate(state, effects, opts = {}) {
   };
 
   // What actually happens.
-  const realizedRun = runSingleSimulation(start, effects, seed, false, { volatility });
+  const realizedRun = runSingleSimulation(start, effects, seed, false, { volatility, effectVector });
   const startGdw = computeGDW(start);
   const finalGdw = realizedRun.gdw[months];
   const realized = {
