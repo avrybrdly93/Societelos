@@ -260,7 +260,7 @@ body.host .label {
   stroke: var(--slate-950);
   stroke-width: 3;
   stroke-linejoin: round;
-  transition: fill 0.6s ease;
+  transition: fill var(--district-transition, 0.6s) linear;
   cursor: pointer;
 }
 .district:hover polygon, .district:focus polygon { stroke: var(--accent); }

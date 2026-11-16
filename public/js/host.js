@@ -345,8 +345,10 @@
   }
 
   // Called as the realized line reaches each month (1-12).
+  const RESOLUTION_MONTH_MS = 1000; // 12 months play over 12 s
   function onResolutionMonth(month, gdw, payload) {
     state.resolutionMonth = month;
+    if (window.SocietelosMap) window.SocietelosMap.showMonth(month);
   }
 
   function renderResolution(payload) {
@@ -357,16 +359,14 @@
     // Reactions replace the incident posts in the feed column.
     resetFeed();
     (payload.messages || []).forEach((m) => addFeedItem(m));
-    // Final month's district wellbeing on the map (animated later by month).
-    const months = payload.districts || [];
-    const last = months[months.length - 1];
-    if (last && window.SocietelosMap) window.SocietelosMap.renderDistricts(last);
+    // The map replays the 12 months in step with the realized line.
+    if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS);
     renderForecastBanner(payload.forecast);
     const charts = window.SocietelosCharts;
     if (charts) {
       // Fan first, then the realized line plays month by month over 12 s.
       charts.drawForecastFan(payload.forecast, document.getElementById('forecast-chart'));
-      charts.animateRealizedLine(payload.realized, (month, gdw) => onResolutionMonth(month, gdw, payload));
+      charts.animateRealizedLine(payload.realized, (month, gdw) => onResolutionMonth(month, gdw, payload), { durationMs: RESOLUTION_MONTH_MS * 12 });
     }
   }
   socket.on('resolution', renderResolution);

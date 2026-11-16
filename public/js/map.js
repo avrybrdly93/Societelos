@@ -54,6 +54,31 @@
     });
   }
 
+  // Month-by-month playback during Resolution. `districtsByMonth` is the
+  // resolution payload's districts array: [{ D1: W, ... D5: W }, ...] for
+  // months 0-12. Fills transition smoothly (CSS) over one month's duration.
+  let playback = null;
+
+  /** Start a playback at month 0; later months come from onMonthTick. */
+  function startPlayback(districtsByMonth, msPerMonth = 1000) {
+    playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth };
+    const svg = document.getElementById('region-map');
+    if (svg) svg.style.setProperty('--district-transition', `${Math.max(200, msPerMonth * 0.9)}ms`);
+    showMonth(0);
+  }
+
+  /** onMonthTick(monthIndex): colour all 5 districts for that month. */
+  function showMonth(monthIndex) {
+    if (!playback) return;
+    const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
+    if (values) renderDistricts(values);
+  }
+
+  /** Stop playback (colours stay where they are). */
+  function stopPlayback() {
+    playback = null;
+  }
+
   // World accent colours (match the --theme-* tokens in styles.css).
   const WORLD_COLORS = { AA: '#2bc4a0', AB: '#3fd8e6', BA: '#f0a430', BB: '#c084fc' };
 
@@ -78,5 +103,5 @@
     if (color) svg.classList.add('is-recoloring');
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld };
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback };
 })();
