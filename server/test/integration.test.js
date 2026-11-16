@@ -262,3 +262,21 @@ test('full 5-cycle state machine on FAST_TIMERS: offline finale falls back to A/
   assert.equal(out.resolutions.length, 5);
   assert.ok(['A', 'B'].includes(out.resolutions[4].result.winner));
 });
+
+test('BA and BB world keys load their Cycle 3, 4 and 5 crises from data/crises.json', () => {
+  const data = engine.loadGameData();
+  const expected = {
+    BA: ['ba-shadow-elite', 'ba-status-wars', 'ba-vote-to-seize'],
+    BB: ['bb-scroll-extinction', 'bb-the-unplugged', 'bb-march-datacenter']
+  };
+  for (const [world, ids] of Object.entries(expected)) {
+    [3, 4, 5].forEach((cycle, i) => {
+      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles);
+      assert.equal(crisis.id, ids[i], `${world} cycle ${cycle}`);
+      assert.equal(crisis.world, world);
+      assert.equal(crisis.mode, cycle === 5 ? 'writein' : 'binary');
+      assert.ok(crisis.options.A && crisis.options.B);
+    });
+    assert.equal(data.crises.worlds[world].finale, ids[2], 'world points at its finale');
+  }
+});
