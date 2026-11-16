@@ -553,6 +553,9 @@ class GameState extends EventEmitter {
     const to = this.nextPhase();
     this.clearPhaseTimer();
     if (from === PHASES.END) return to;
+    if (process.env.LOG_PHASES === 'true' || from === PHASES.RESOLUTION || to === PHASES.END) {
+      console.log(`[game ${this.roomCode}] ${from} -> ${to} (cycle ${this.cycle})`);
+    }
     // A cycle begins at each INCIDENT reached from setup, a resolution or the world reveal.
     if (to === PHASES.INCIDENT && from !== PHASES.INCIDENT) {
       this.startCycle(from === PHASES.CHAMBER ? 1 : this.cycle + 1);
@@ -828,6 +831,8 @@ class GameState extends EventEmitter {
 
     this.enterPhase(PHASES.RESOLUTION);
 
+    // Trace: winning policy and realized GDW (no roles, no per-node votes).
+    console.log(`[game ${this.roomCode}] cycle ${this.cycle} resolved: ${winner} "${option.name}"${tie ? ' (tie-break)' : ''}; GDW ${previousGdw} -> ${this.gdw}`);
     const result = { cycle: this.cycle, winner, totals, tie, abstained, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens: this.data.citizens };
     return Promise.resolve()
