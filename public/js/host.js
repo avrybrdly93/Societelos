@@ -144,6 +144,22 @@
 
   socket.on('phase', onPhase);
 
+  // Breadcrumbs INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION: past steps
+  // dimmed-done, current lit; hidden outside a binary cycle.
+  const CRUMB_ORDER = ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
+  function renderCrumbs(payload) {
+    const crumbs = document.getElementById('phase-crumbs');
+    const idx = CRUMB_ORDER.indexOf(payload.phase);
+    crumbs.classList.toggle('is-idle', idx < 0);
+    crumbs.querySelectorAll('li').forEach((li, i) => {
+      li.classList.toggle('is-done', idx >= 0 && i < idx);
+      li.classList.toggle('is-current', i === idx);
+      if (i === idx) li.setAttribute('aria-current', 'step');
+      else li.removeAttribute('aria-current');
+    });
+  }
+  socket.on('phase', renderCrumbs);
+
   // One feed card: avatar badge (initials), name, age, district tag, message.
   function feedItemElement(item) {
     const name = item.name || item.citizenId || 'Citizen';

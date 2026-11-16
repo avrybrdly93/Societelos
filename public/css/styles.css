@@ -790,3 +790,16 @@ body.host .governance-line.gov-board {
   color: #f3d58a; background: linear-gradient(90deg, rgba(243, 213, 138, 0.16), transparent); border-left: 6px solid #c9a227;
 }
 body.host .governance-line.gov-board::before { content: "The Owners' Board \2014  "; font-style: normal; font-variant: small-caps; opacity: 0.8; }
+
+/* Host HUD breadcrumbs for the cycle's phases. */
+.topbar-brand { margin-right: 0; }
+.phase-crumbs { list-style: none; display: flex; align-items: center; gap: 4px; margin: 0 auto 0 24px; padding: 0; font-size: 17px; text-transform: uppercase; letter-spacing: 0.06em; }
+.phase-crumbs li { color: var(--slate-600); padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+.phase-crumbs li + li::before { content: "\203A"; margin-right: 8px; color: var(--slate-600); }
+.phase-crumbs li.is-done { color: var(--slate-400); }
+.phase-crumbs li.is-current { color: var(--slate-950); background: var(--theme-current, var(--accent)); font-weight: 700; }
+.phase-crumbs li.is-current::before { color: var(--slate-600); }
+.phase-crumbs.is-idle { visibility: hidden; }
+.topbar { gap: 36px; }
+body.host .phase-crumbs li { font-size: 20px; }
+.topbar-brand, .topbar-item, .topbar-value { white-space: nowrap; flex-shrink: 0; }
