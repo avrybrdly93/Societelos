@@ -64,9 +64,15 @@
     "cohort": "workers",
     "voice": "Woodworker who builds things nobody needs",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Sold my first chair in a decade. Traded it, actually, for honey. Best deal I ever made."
+      ],
+      "mixed": [
+        "Built a table nobody asked for. It wobbles. I like it more than anything the Loom has made."
+      ],
+      "bad": [
+        "The Loom printed a perfect copy of my workbench. Free. Same grain and all. I put my tools away."
+      ]
     }
   },
   {
