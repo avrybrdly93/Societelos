@@ -77,3 +77,23 @@ test('integration: gameEngine + server/loom.js (offline narration on every resol
     }
   }
 });
+
+test('integration: data/crises.json worlds AA and AB drive cycles 3-4', () => {
+  const data = engine.loadGameData();
+  const expected = { AA: ['aa-purpose-drift', 'aa-lost-knowledge'], AB: ['ab-the-pods', 'ab-mood-dial'] };
+  for (const [world, ids] of Object.entries(expected)) {
+    [3, 4].forEach((cycle, i) => {
+      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles);
+      assert.equal(crisis.id, ids[i]);
+      assert.equal(crisis.mode, 'binary');
+      assert.ok(crisis.incident && crisis.loomIntro, `${crisis.id} has incident and Loom intro`);
+      assert.deepEqual(Object.keys(crisis.intel).sort(), ['artisan', 'assimilator', 'catalyst', 'ghost', 'lotus'], `${crisis.id} intel`);
+      for (const key of ['A', 'B']) {
+        const o = crisis.options[key];
+        assert.ok(o.name && o.text && o.roles.length >= 1, `${crisis.id} ${key}`);
+        assert.equal(Object.keys(o.effects).length, 6);
+      }
+    });
+  }
+});
+
