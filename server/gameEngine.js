@@ -101,7 +101,8 @@ const PHASE_STARTERS = {
   INTEL: 'startIntelDropPhase',
   DEBATE: 'startDebatePhase',
   VOTE: 'startBlindVotePhase',
-  RESOLUTION: 'startResolutionPhase'
+  RESOLUTION: 'startResolutionPhase',
+  WORLD_REVEAL: 'startWorldRevealPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -741,6 +742,24 @@ class GameState extends EventEmitter {
         this.emit('resolution', this.lastResolution);
         return this.lastResolution;
       });
+  }
+
+  /** Public description of the current world: { worldKey, name, tagline, problemLeft }. */
+  worldInfo() {
+    const worlds = (this.data.crises && this.data.crises.worlds) || {};
+    const w = worlds[this.worldKey] || {};
+    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '' };
+  }
+
+  /**
+   * WORLD_REVEAL (10 s, after Cycle 2's RESOLUTION): name the world the first
+   * two votes built and the problem it leaves. Emits 'world:reveal'.
+   */
+  startWorldRevealPhase() {
+    const reveal = this.worldInfo();
+    this.enterPhase(PHASES.WORLD_REVEAL, { world: reveal });
+    this.emit('world:reveal', reveal);
+    console.log(`[game ${this.roomCode}] world revealed: ${reveal.worldKey} (${reveal.name})`);
   }
 
   /**
