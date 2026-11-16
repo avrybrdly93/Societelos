@@ -86,7 +86,8 @@ const PHASE_STARTERS = {
   ROLE_ASSIGN: 'startRoleAssignmentPhase',
   CHAMBER: 'startCouncilChamberPhase',
   INCIDENT: 'startIncidentPhase',
-  INTEL: 'startIntelDropPhase'
+  INTEL: 'startIntelDropPhase',
+  DEBATE: 'startDebatePhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -522,6 +523,22 @@ class GameState extends EventEmitter {
       this.emit('intel:drop', { node, text });
     }
     this.enterPhase(PHASES.INTEL);
+  }
+
+  /** Public view of policy options A and B (no effect vectors or role tags). */
+  publicOptions() {
+    const opts = (this.crisis && this.crisis.options) || {};
+    const view = {};
+    for (const key of ['A', 'B']) {
+      const o = opts[key];
+      if (o) view[key] = { key, name: o.name, text: o.text, summary: o.summary };
+    }
+    return view;
+  }
+
+  /** DEBATE: broadcast options A and B with the countdown's endsAt. */
+  startDebatePhase() {
+    this.enterPhase(PHASES.DEBATE, { options: this.publicOptions() });
   }
 
   /**
