@@ -1,92 +1,192 @@
 [
   {
-    "id": "hollis",
-    "name": "Hollis Sterling",
-    "handle": "@hollis_d1",
-    "district": "D1 Old Harbour",
-    "cohort": "Former Elite",
-    "avatar": "🏛️",
-    "bio": "Former shareholder in The Loom consortium. Lives on coastal estate."
+    "id": "mara",
+    "name": "Mara",
+    "age": 58,
+    "district": "D3",
+    "cohort": "workers",
+    "voice": "Retired nurse who misses being needed",
+    "lines": {
+      "good": [
+        "Three neighbours asked me to check on their kids today. I felt like a nurse again. I had forgotten that feeling."
+      ],
+      "mixed": [
+        "Some days I'm useful, some days I'm furniture. Today was a bit of both."
+      ],
+      "bad": [
+        "Nobody needs bandages anymore. Nobody needs me either, apparently."
+      ]
+    }
   },
   {
-    "id": "ruth",
-    "name": "Ruth Vance",
-    "handle": "@ruth_d4",
-    "district": "D4 Eastworks",
-    "cohort": "Elders",
-    "avatar": "⚓",
-    "bio": "Retired crane operator and union shop steward before automated cranes took over."
+    "id": "devon",
+    "name": "Devon",
+    "age": 17,
+    "district": "D3",
+    "cohort": "youth",
+    "voice": "Has never needed a job; mostly bored",
+    "lines": {
+      "good": [
+        "ok weirdly today was not boring. we built something at the guild and it almost worked"
+      ],
+      "mixed": [
+        "school says I can be anything. cool. what if I don't want to be anything"
+      ],
+      "bad": [
+        "day 400 of nothing happening. at least the snacks are free"
+      ]
+    }
+  },
+  {
+    "id": "hollis",
+    "name": "Hollis Grant",
+    "age": 61,
+    "district": "D1",
+    "cohort": "elite",
+    "voice": "Ex-CEO who lost his status but not his money",
+    "lines": {
+      "good": [
+        "Grudgingly: the district is calmer than I have seen it in years. Do not quote me on that."
+      ],
+      "mixed": [
+        "I still have the money. I simply no longer have anyone who has to listen to me."
+      ],
+      "bad": [
+        "Mark my words: when amateurs run the machine, the machine stops running. And then where are we?"
+      ]
+    }
+  },
+  {
+    "id": "priya",
+    "name": "Priya",
+    "age": 34,
+    "district": "D5",
+    "cohort": "workers",
+    "voice": "Woodworker who builds things nobody needs",
+    "lines": {
+      "good": [
+        "Sold my first chair in a decade. Traded it, actually, for honey. Best deal I ever made."
+      ],
+      "mixed": [
+        "Built a table nobody asked for. It wobbles. I like it more than anything the Loom has made."
+      ],
+      "bad": [
+        "The Loom printed a perfect copy of my workbench. Free. Same grain and all. I put my tools away."
+      ]
+    }
   },
   {
     "id": "kai",
-    "name": "Kai Chen",
-    "handle": "@kai_offline",
-    "district": "D2 The Grid",
-    "cohort": "Youth",
-    "avatar": "🎧",
-    "bio": "Spends 16 hours daily in sensory immersion pods. Ambivalent about physical world."
+    "name": "Kai",
+    "age": 22,
+    "district": "D2",
+    "cohort": "youth",
+    "voice": "VR streamer who rarely logs off",
+    "lines": {
+      "good": [
+        "logged off for six whole hours to meet people in person. they were fine. maybe better than fine"
+      ],
+      "mixed": [
+        "stream numbers are steady. outside numbers are steady too. i haven't checked those personally"
+      ],
+      "bad": [
+        "the feed glitched for ten minutes and nobody in my building knew what to do with their hands"
+      ]
+    }
   },
   {
-    "id": "maya",
-    "name": "Maya Lin",
-    "handle": "@maya_code",
-    "district": "D2 The Grid",
-    "cohort": "Former Workers",
-    "avatar": "💻",
-    "bio": "Former systems architect. Now watches The Loom autonomously compile code."
+    "id": "ruth",
+    "name": "Ruth",
+    "age": 79,
+    "district": "D4",
+    "cohort": "elders",
+    "voice": "Ran a union local; remembers strikes",
+    "lines": {
+      "good": [
+        "Packed hall, everybody shouting, nobody agreeing. Felt exactly like 1987. I have never been happier."
+      ],
+      "mixed": [
+        "They listened to us, then did what they planned to do anyway. Some things never change."
+      ],
+      "bad": [
+        "In my day you could strike. Who do you strike against when the boss is a server farm?"
+      ]
+    }
   },
   {
-    "id": "david",
-    "name": "David Morales",
-    "handle": "@david_teach",
-    "district": "D3 Riverside",
-    "cohort": "Former Workers",
-    "avatar": "📚",
-    "bio": "High school literature teacher wondering what students should learn when AI knows all."
+    "id": "tomas",
+    "name": "Tomás",
+    "age": 45,
+    "district": "D4",
+    "cohort": "workers",
+    "voice": "Ex-truck driver, angry and funny",
+    "lines": {
+      "good": [
+        "Drove a real truck today. Museum route, but still. Honked at a pigeon. Living the dream."
+      ],
+      "mixed": [
+        "The Loom says morale is up four percent. Funny, mine is exactly where I left it: in the garage."
+      ],
+      "bad": [
+        "Great. Another genius decision from people who have never parked anything bigger than a bike."
+      ]
+    }
   },
   {
-    "id": "linnea",
-    "name": "Linnea Berg",
-    "handle": "@linnea_drift",
-    "district": "D3 Riverside",
-    "cohort": "Youth",
-    "avatar": "🎨",
-    "bio": "Digital artist struggling to find motivation when The Loom generates symphonies."
+    "id": "lin",
+    "name": "Lin",
+    "age": 29,
+    "district": "D3",
+    "cohort": "youth",
+    "voice": "New parent unsure what to teach her kid",
+    "lines": {
+      "good": [
+        "My daughter fixed her own toy today instead of asking the house to. I cried a little. Proud parent."
+      ],
+      "mixed": [
+        "What do I teach her? Kindness, I suppose. The Loom has the rest covered. Or does it?"
+      ],
+      "bad": [
+        "She asked me what I do all day. I didn't have an answer. Neither did the Loom."
+      ]
+    }
   },
   {
-    "id": "marcus",
-    "name": "Marcus O'Connor",
-    "handle": "@marcus_east",
-    "district": "D4 Eastworks",
-    "cohort": "Former Workers",
-    "avatar": "🛠️",
-    "bio": "Third-generation machinist. Rebuilt manual wood lathe in abandoned warehouse."
+    "id": "ezra",
+    "name": "Ezra",
+    "age": 66,
+    "district": "D2",
+    "cohort": "elders",
+    "voice": "Retired engineer who once maintained the grid",
+    "lines": {
+      "good": [
+        "They asked an old engineer how the substation works. Taught twelve people. They took notes. On paper!"
+      ],
+      "mixed": [
+        "Grid's humming fine. I just wish someone besides the Loom knew why."
+      ],
+      "bad": [
+        "If that grid ever goes dark, there are maybe four people left who know where the breaker is. I'm one."
+      ]
+    }
   },
   {
-    "id": "sora",
-    "name": "Sora Takahashi",
-    "handle": "@sora_craft",
-    "district": "D4 Eastworks",
-    "cohort": "Youth",
-    "avatar": "🏺",
-    "bio": "Potter and ceramist refusing to use automated Kiln assistants."
-  },
-  {
-    "id": "aaron",
-    "name": "Aaron Thorne",
-    "handle": "@unplugged_aaron",
-    "district": "D5 Highlands",
-    "cohort": "Former Workers",
-    "avatar": "🌾",
-    "bio": "Highland homesteader practicing bio-farming with zero synth inputs."
-  },
-  {
-    "id": "elena",
-    "name": "Elena Rostova",
-    "handle": "@elena_highlands",
-    "district": "D5 Highlands",
-    "cohort": "Elders",
-    "avatar": "🌿",
-    "bio": "Herbalist and elder community leader skeptical of The Loom off-switch claims."
+    "id": "sol",
+    "name": "Sol",
+    "age": 19,
+    "district": "D5",
+    "cohort": "youth",
+    "voice": "Unplugged sympathiser",
+    "lines": {
+      "good": [
+        "Planted beans with twenty strangers on the ridge. No screens. Everyone stayed for dinner."
+      ],
+      "mixed": [
+        "They gave us a little more room to breathe. Still the Loom's room, though."
+      ],
+      "bad": [
+        "Every new sensor on the ridge is another reason to go further up the mountain."
+      ]
+    }
   }
 ]

@@ -1,0 +1,171 @@
+'use strict';
+
+// Societelos simulation: canonical interface for the game engine.
+// Pure functions, no I/O. The caller loads data/sim.json and passes it in
+// (via a state from createInitialState, or opts.config).
+
+/**
+ * @typedef {{ purpose: number, connection: number, health: number, trust: number, fairness: number, autonomy: number }} Effects
+ *   Effect vector, each trait in [-1, 1].
+ *
+ * @typedef {object} Forecast  The Loom's 500-run fan chart.
+ * @property {number} runs        number of forecast runs
+ * @property {number[]} median    median GDW per month (index 0 = start, 12 = end of cycle)
+ * @property {number[]} p5        5th percentile GDW per month
+ * @property {number[]} p95       95th percentile GDW per month
+ * @property {number} pCollapse   share of runs ending at GDW 0
+ * @property {number} pUnrest     share of runs ending below constants.unrestGdw (15)
+ *
+ * @typedef {object} Realized  What actually happens (base parameters, seed = hash(gameId, cycle)).
+ * @property {number} seed
+ * @property {number[]} gdw                    GDW per month (13 values)
+ * @property {number} finalGdw
+ * @property {Object<string, number>[]} districts  per month: { D1: wellbeing W, ... D5 } for the map
+ * @property {{ month, district, trait, amount }[]} shocks  shocks that fired
+ *
+ * @typedef {object} SimSummary  Facts passed to loom.narrate().
+ * @property {number} startGdw
+ * @property {number} realizedDelta
+ * @property {number} medianDelta
+ * @property {number} pCollapse
+ * @property {number} pUnrest
+ * @property {{ district, cohort, trait, change }[]} topMoves  3 biggest trait moves
+ * @property {object[]} shocks
+ *
+ * @typedef {object} SimResult
+ * @property {Forecast} forecast
+ * @property {Realized} realized
+ * @property {object} finalState   next cycle's starting sim state
+ * @property {SimSummary} summary
+ */
+
+const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
+const { runSingleSimulation } = require('./step');
+const { hashSeed } = require('./prng');
+
+/** Linear-interpolated percentile of a sorted numeric array (p in [0, 1]). */
+function percentile(sorted, p) {
+  if (!sorted.length) return 0;
+  const idx = (sorted.length - 1) * p;
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+/** Resolve the sim state from what the engine passes in. */
+function resolveState(state, opts) {
+  if (state && state.traits) return state;
+  if (state && state.simState && state.simState.traits) return state.simState;
+  const config = opts.config || (state && state.config);
+  if (!config) throw new Error('simulate: no sim state or config provided');
+  return createInitialState(config);
+}
+
+/** The 3 biggest trait moves between two states: { district, cohort, trait, change }. */
+function topMoves(before, after, count = 3) {
+  const K = before.traitNames.length;
+  const moves = [];
+  before.cohorts.forEach((c, i) => {
+    before.traitNames.forEach((t, k) => {
+      moves.push({ district: c.district, cohort: c.cohort, trait: t, change: after.traits[i * K + k] - before.traits[i * K + k] });
+    });
+  });
+  moves.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+  return moves.slice(0, count).map((m) => ({ ...m, change: Math.round(m.change * 1000) / 1000 }));
+}
+
+/**
+ * Run the cycle: `runs` forecast runs (each with its own seed and redrawn
+ * uncertain parameters) plus one realized run with the base parameters.
+ *
+ * @param {object} state sim state (or { simState }), from createInitialState
+ * @param {Effects} effects
+ * @param {{ runs?: number, seed?: number, volatility?: number, config?: object, mode?: 'stub' }} [opts]
+ *   runs defaults to constants.forecastRuns (500); volatility multiplies noise and shock odds.
+ * @returns {SimResult}
+ */
+function simulate(state, effects, opts = {}) {
+  // Stub mode, or a caller that has no sim state or config yet (the engine
+  // before it is wired to data/sim.json): flat-line stub, never a crash.
+  const hasState = !!(state && (state.traits || (state.simState && state.simState.traits) || state.config)) || !!opts.config;
+  if (opts.mode === 'stub' || !hasState) return simulateStub(state, opts);
+  const start = resolveState(state, opts);
+  const c = start.config.constants;
+  const runs = Number.isInteger(opts.runs) ? opts.runs : c.forecastRuns;
+  const seed = opts.seed >>> 0;
+  const volatility = typeof opts.volatility === 'number' ? opts.volatility : 1;
+  const months = c.monthsPerCycle;
+
+  // Forecast fan.
+  const byMonth = Array.from({ length: months + 1 }, () => new Float64Array(runs));
+  let collapses = 0;
+  let unrest = 0;
+  for (let r = 0; r < runs; r++) {
+    const run = runSingleSimulation(start, effects, hashSeed(`${seed}:forecast:${r}`), true, { volatility });
+    for (let m = 0; m <= months; m++) byMonth[m][r] = run.gdw[m];
+    const end = run.gdw[months];
+    if (end <= 0) collapses++;
+    if (end < c.unrestGdw) unrest++;
+  }
+  const median = [];
+  const p5 = [];
+  const p95 = [];
+  for (let m = 0; m <= months; m++) {
+    const sorted = Array.from(byMonth[m]).sort((a, b) => a - b);
+    median.push(percentile(sorted, 0.5));
+    p5.push(percentile(sorted, 0.05));
+    p95.push(percentile(sorted, 0.95));
+  }
+  const forecast = {
+    runs,
+    median,
+    p5,
+    p95,
+    pCollapse: runs ? collapses / runs : 0,
+    pUnrest: runs ? unrest / runs : 0
+  };
+
+  // What actually happens.
+  const realizedRun = runSingleSimulation(start, effects, seed, false, { volatility });
+  const startGdw = computeGDW(start);
+  const finalGdw = realizedRun.gdw[months];
+  const realized = {
+    seed,
+    gdw: realizedRun.gdw,
+    finalGdw,
+    districts: realizedRun.districts,
+    shocks: realizedRun.shocks
+  };
+
+  const summary = {
+    startGdw,
+    realizedDelta: finalGdw - startGdw,
+    medianDelta: runs ? median[months] - startGdw : 0,
+    pCollapse: forecast.pCollapse,
+    pUnrest: forecast.pUnrest,
+    topMoves: topMoves(start, realizedRun.finalState),
+    shocks: realizedRun.shocks
+  };
+
+  return { forecast, realized, finalState: realizedRun.finalState, summary };
+}
+
+/**
+ * Monday stub mode (opts.mode = 'stub'): same return shape, flat line at the
+ * current GDW + 5. Lets the engine and UI run before the model is tuned.
+ */
+function simulateStub(state, opts = {}) {
+  const sim = state && state.traits ? state : state && state.simState;
+  const startGdw = sim ? computeGDW(sim) : (state && typeof state.gdw === 'number' ? state.gdw : 25);
+  const endGdw = Math.min(100, Math.max(0, startGdw + 5));
+  const months = (sim && sim.config.constants.monthsPerCycle) || 12;
+  const line = Array.from({ length: months + 1 }, (_, m) => (m === 0 ? startGdw : endGdw));
+  return {
+    forecast: { runs: opts.runs || 0, median: line.slice(), p5: line.slice(), p95: line.slice(), pCollapse: 0, pUnrest: endGdw < 15 ? 1 : 0 },
+    realized: { seed: opts.seed >>> 0, gdw: line.slice(), finalGdw: endGdw, districts: [], shocks: [] },
+    finalState: sim ? cloneState(sim) : null,
+    summary: { startGdw, realizedDelta: endGdw - startGdw, medianDelta: endGdw - startGdw, pCollapse: 0, pUnrest: 0, topMoves: [], shocks: [], stub: true }
+  };
+}
+
+module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, percentile };

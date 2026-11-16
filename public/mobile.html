@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Societelos — Council Node</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="mobile">
+  <!-- Phone controller for one council node (NODE-01..NODE-05). -->
+  <header id="m-header" class="m-header" aria-label="Node status">
+    <span class="m-brand mono">SOCIETELOS</span>
+    <span id="m-node-label" class="m-node-label mono">NOT CONNECTED</span>
+    <div id="m-countdown" class="m-countdown" aria-hidden="true"><div id="m-countdown-fill" class="m-countdown-fill"></div></div>
+  </header>
+
+  <!-- Persistent role drawer: check your hidden agenda in any phase. -->
+  <details id="role-drawer" class="role-drawer" hidden>
+    <summary class="role-drawer-toggle mono">MY AGENDA <span id="drawer-role-name" class="muted"></span></summary>
+    <div class="role-drawer-body">
+      <p><span class="mono accent">WANT</span> <span id="drawer-goal"></span></p>
+      <p><span class="mono accent">+1 WHEN</span> <span id="drawer-win"></span></p>
+    </div>
+  </details>
+
+  <main id="m-main" class="m-main">
+    <section id="m-view-join" class="m-view is-active" aria-label="Join">
+      <p class="m-kicker mono">THE LOOM // SECURE CHANNEL</p>
+      <h1 class="m-title">Council Access</h1>
+      <p class="muted">Enter a name. Only the Loom will see it; the projector shows your node number.</p>
+      <form id="join-form" class="m-form" autocomplete="off">
+        <label for="join-name" class="m-label mono">Trustee name</label>
+        <input id="join-name" class="m-input" name="name" type="text" maxlength="24" required placeholder="First name" enterkeyhint="go">
+        <button id="join-submit" class="btn btn-primary m-btn" type="submit">CONNECT TO LOOM</button>
+        <p id="join-error" class="m-error danger" role="alert" hidden></p>
+      </form>
+    </section>
+    <section id="m-view-wait" class="m-view" aria-label="Waiting">
+      <div class="m-center">
+        <p class="m-kicker mono">CONNECTION ESTABLISHED</p>
+        <div id="wait-node" class="node-badge mono">NODE-0?</div>
+        <p id="wait-status" class="m-status">Waiting for the council to assemble…</p>
+        <p class="muted">Keep this screen open. The projector will start the session.</p>
+      </div>
+    </section>
+    <section id="m-view-role" class="m-view" aria-label="Secret role">
+      <p class="m-kicker mono">CLASSIFIED // EYES ONLY</p>
+      <article id="role-card" class="role-card shieldable">
+        <input type="checkbox" id="shield-role" class="shield-toggle" aria-label="Hide role card">
+        <label for="shield-role" class="shield-button mono">TAP TO HIDE</label>
+        <label for="shield-role" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
+        <div id="role-icon" class="role-icon" aria-hidden="true"></div>
+        <h2 id="role-title" class="role-title">Decrypting…</h2>
+        <p id="role-flavor" class="role-flavor muted"></p>
+        <h3 class="role-heading mono">What you want</h3>
+        <p id="role-goal" class="role-text"></p>
+        <h3 class="role-heading mono">+1 score when</h3>
+        <p id="role-win" class="role-text"></p>
+      </article>
+    </section>
+    <section id="m-view-intel" class="m-view" aria-label="Intel">
+      <p class="m-kicker mono">INTEL DROP // DECRYPTED</p>
+      <article id="intel-memo" class="intel-memo shieldable">
+        <input type="checkbox" id="shield-intel" class="shield-toggle" aria-label="Hide intel">
+        <label for="shield-intel" class="shield-button mono">TAP TO HIDE</label>
+        <label for="shield-intel" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
+        <header class="memo-head mono">
+          <span>LOOM ARCHIVE</span>
+          <span id="intel-ref">REF ----</span>
+        </header>
+        <p class="memo-meta mono">CLEARANCE: <span id="intel-node">NODE-0?</span> ONLY</p>
+        <p id="intel-text" class="memo-body">Awaiting decryption…</p>
+        <p class="memo-foot mono muted">Use it. Or bury it.</p>
+      </article>
+    </section>
+    <section id="m-view-debate" class="m-view" aria-label="Debate">
+      <div class="m-center">
+        <p class="m-kicker mono">DEBATE IN PERSON</p>
+        <h2 class="m-title">Look at the projector</h2>
+        <div id="debate-clock" class="m-clock mono">--:--</div>
+        <p class="muted">Argue. Persuade. Mislead if you must. The vote is blind.</p>
+      </div>
+    </section>
+    <section id="m-view-vote" class="m-view" aria-label="Vote">
+      <p class="m-kicker mono">BLIND VOTE</p>
+      <div id="vote-panel" class="vote-panel">
+        <button id="vote-a" class="btn vote-btn" type="button" data-choice="A">
+          <span class="vote-letter mono">A</span><span id="vote-a-name" class="vote-name">Policy A</span>
+        </button>
+        <button id="vote-b" class="btn vote-btn" type="button" data-choice="B">
+          <span class="vote-letter mono">B</span><span id="vote-b-name" class="vote-name">Policy B</span>
+        </button>
+        <label id="override-row" class="override-row">
+          <input id="vote-override" type="checkbox">
+          <span><span class="mono accent">OVERRIDE</span> — your vote counts double. Once per game. Nobody will know.</span>
+        </label>
+      </div>
+      <div id="vote-locked" class="vote-locked" hidden>
+        <div class="vote-lock-icon mono" aria-hidden="true">&#10003;</div>
+        <p class="vote-lock-title mono">VOTE RECORDED</p>
+        <p id="vote-lock-choice" class="muted"></p>
+        <p class="muted">Waiting for other nodes…</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/mobile.js"></script>
+</body>
+</html>

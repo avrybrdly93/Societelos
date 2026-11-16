@@ -1,0 +1,355 @@
+{
+  "_doc": "Every tunable number for the cohort Monte Carlo simulation lives here (no magic numbers in server/sim). Read by server/sim/state.js.",
+  "traits": [
+    "purpose",
+    "connection",
+    "health",
+    "trust",
+    "fairness",
+    "autonomy"
+  ],
+  "gdw": {
+    "scale": 125,
+    "floorWellbeing": 0.2,
+    "min": 0,
+    "max": 100,
+    "startingGdw": 25
+  },
+  "districts": [
+    {
+      "id": "D1",
+      "name": "Old Harbour",
+      "population": 30000,
+      "neighbours": [
+        "D2",
+        "D3"
+      ],
+      "character": "Coastal; most former owners live here"
+    },
+    {
+      "id": "D2",
+      "name": "The Grid",
+      "population": 55000,
+      "neighbours": [
+        "D1",
+        "D3",
+        "D4"
+      ],
+      "character": "Around the Loom infrastructure"
+    },
+    {
+      "id": "D3",
+      "name": "Riverside",
+      "population": 65000,
+      "neighbours": [
+        "D1",
+        "D2",
+        "D4",
+        "D5"
+      ],
+      "character": "Families and schools"
+    },
+    {
+      "id": "D4",
+      "name": "Eastworks",
+      "population": 60000,
+      "neighbours": [
+        "D2",
+        "D3",
+        "D5"
+      ],
+      "character": "Former warehouses and factories"
+    },
+    {
+      "id": "D5",
+      "name": "Highlands",
+      "population": 40000,
+      "neighbours": [
+        "D3",
+        "D4"
+      ],
+      "character": "Rural; sympathetic to the Unplugged"
+    }
+  ],
+  "cohorts": [
+    {
+      "id": "youth",
+      "name": "Youth",
+      "ages": "15-29",
+      "share": 0.25
+    },
+    {
+      "id": "workers",
+      "name": "Former workers",
+      "ages": "30-59",
+      "share": 0.45
+    },
+    {
+      "id": "elders",
+      "name": "Elders",
+      "ages": "60+",
+      "share": 0.29
+    },
+    {
+      "id": "elite",
+      "name": "Former elite",
+      "ages": "any",
+      "share": 0.01
+    }
+  ],
+  "cohortSharesByDistrict": {
+    "D1": {
+      "youth": 0.24,
+      "workers": 0.432,
+      "elders": 0.278,
+      "elite": 0.05
+    }
+  },
+  "weights": {
+    "purpose": 0.25,
+    "connection": 0.2,
+    "health": 0.15,
+    "fairness": 0.15,
+    "autonomy": 0.15,
+    "trust": 0.1
+  },
+  "baseline": 0.41340464,
+  "offsets": {
+    "districts": {
+      "D1": {
+        "fairness": 0.03,
+        "trust": 0.02,
+        "connection": -0.02
+      },
+      "D2": {
+        "trust": 0.05,
+        "autonomy": -0.04,
+        "connection": -0.03
+      },
+      "D3": {
+        "connection": 0.03,
+        "health": 0.02
+      },
+      "D4": {
+        "fairness": -0.08,
+        "trust": -0.04,
+        "purpose": -0.03
+      },
+      "D5": {
+        "trust": -0.06,
+        "autonomy": 0.05,
+        "connection": 0.03,
+        "health": -0.02
+      }
+    },
+    "cohorts": {
+      "youth": {
+        "purpose": -0.05,
+        "connection": -0.03,
+        "autonomy": 0.03,
+        "health": 0.06
+      },
+      "workers": {
+        "purpose": -0.06,
+        "fairness": -0.03
+      },
+      "elders": {
+        "health": -0.08,
+        "connection": 0.04,
+        "trust": 0.03
+      },
+      "elite": {
+        "fairness": 0.15,
+        "autonomy": 0.08,
+        "health": 0.05,
+        "trust": 0.04
+      }
+    }
+  },
+  "sensitivity": {
+    "D1:youth": {
+      "purpose": 1.2,
+      "connection": 1.3,
+      "health": 0.6,
+      "trust": 0.99,
+      "fairness": 0.64,
+      "autonomy": 1.2
+    },
+    "D1:workers": {
+      "purpose": 1.3,
+      "connection": 1.0,
+      "health": 0.9,
+      "trust": 1.1,
+      "fairness": 0.96,
+      "autonomy": 1.0
+    },
+    "D1:elders": {
+      "purpose": 0.8,
+      "connection": 1.2,
+      "health": 1.4,
+      "trust": 1.21,
+      "fairness": 0.72,
+      "autonomy": 0.7
+    },
+    "D1:elite": {
+      "purpose": 0.7,
+      "connection": 0.6,
+      "health": 0.7,
+      "trust": 0.88,
+      "fairness": -0.64,
+      "autonomy": 1.1
+    },
+    "D2:youth": {
+      "purpose": 1.2,
+      "connection": 1.17,
+      "health": 0.6,
+      "trust": 1.08,
+      "fairness": 0.8,
+      "autonomy": 1.2
+    },
+    "D2:workers": {
+      "purpose": 1.3,
+      "connection": 0.9,
+      "health": 0.9,
+      "trust": 1.2,
+      "fairness": 1.2,
+      "autonomy": 1.0
+    },
+    "D2:elders": {
+      "purpose": 0.8,
+      "connection": 1.08,
+      "health": 1.4,
+      "trust": 1.32,
+      "fairness": 0.9,
+      "autonomy": 0.7
+    },
+    "D2:elite": {
+      "purpose": 0.7,
+      "connection": 0.54,
+      "health": 0.7,
+      "trust": 0.96,
+      "fairness": -0.8,
+      "autonomy": 1.1
+    },
+    "D3:youth": {
+      "purpose": 1.2,
+      "connection": 1.43,
+      "health": 0.66,
+      "trust": 0.9,
+      "fairness": 0.8,
+      "autonomy": 1.2
+    },
+    "D3:workers": {
+      "purpose": 1.3,
+      "connection": 1.1,
+      "health": 0.99,
+      "trust": 1.0,
+      "fairness": 1.2,
+      "autonomy": 1.0
+    },
+    "D3:elders": {
+      "purpose": 0.8,
+      "connection": 1.32,
+      "health": 1.5,
+      "trust": 1.1,
+      "fairness": 0.9,
+      "autonomy": 0.7
+    },
+    "D3:elite": {
+      "purpose": 0.7,
+      "connection": 0.66,
+      "health": 0.77,
+      "trust": 0.8,
+      "fairness": -0.8,
+      "autonomy": 1.1
+    },
+    "D4:youth": {
+      "purpose": 1.32,
+      "connection": 1.3,
+      "health": 0.6,
+      "trust": 0.9,
+      "fairness": 1.0,
+      "autonomy": 1.2
+    },
+    "D4:workers": {
+      "purpose": 1.43,
+      "connection": 1.0,
+      "health": 0.9,
+      "trust": 1.0,
+      "fairness": 1.5,
+      "autonomy": 1.0
+    },
+    "D4:elders": {
+      "purpose": 0.88,
+      "connection": 1.2,
+      "health": 1.4,
+      "trust": 1.1,
+      "fairness": 1.12,
+      "autonomy": 0.7
+    },
+    "D4:elite": {
+      "purpose": 0.77,
+      "connection": 0.6,
+      "health": 0.7,
+      "trust": 0.8,
+      "fairness": -1.0,
+      "autonomy": 1.1
+    },
+    "D5:youth": {
+      "purpose": 1.2,
+      "connection": 1.3,
+      "health": 0.6,
+      "trust": 1.08,
+      "fairness": 0.8,
+      "autonomy": 1.44
+    },
+    "D5:workers": {
+      "purpose": 1.3,
+      "connection": 1.0,
+      "health": 0.9,
+      "trust": 1.2,
+      "fairness": 1.2,
+      "autonomy": 1.2
+    },
+    "D5:elders": {
+      "purpose": 0.8,
+      "connection": 1.2,
+      "health": 1.4,
+      "trust": 1.32,
+      "fairness": 0.9,
+      "autonomy": 0.84
+    },
+    "D5:elite": {
+      "purpose": 0.7,
+      "connection": 0.6,
+      "health": 0.7,
+      "trust": 0.96,
+      "fairness": -0.8,
+      "autonomy": 1.32
+    }
+  },
+  "constants": {
+    "alpha": 0.25,
+    "alphaSD": 0.05,
+    "alphaMin": 0.05,
+    "alphaMax": 0.5,
+    "sensitivityJitterMin": 0.8,
+    "sensitivityJitterMax": 1.2,
+    "adoptionTau": 3,
+    "hedonicDrift": 0.003,
+    "driftTraits": [
+      "purpose",
+      "connection"
+    ],
+    "noiseSD": 0.01,
+    "shockChance": 0.05,
+    "shockMin": 0.02,
+    "shockMax": 0.06,
+    "spilloverRate": 0.1,
+    "forecastRuns": 500,
+    "monthsPerCycle": 12,
+    "unrestGdw": 15
+  },
+  "_baselineNote": "baseline is set so the population-weighted wellbeing W of the starting state is exactly 0.40 (GDW 25%) given the offsets.",
+  "_sensitivityNote": "S(c,k): how strongly cohort c (key \"district:cohort\") feels an effect on trait k. Negative = the cohort loses when the trait improves for others (e.g. Former elite on fairness)."
+}

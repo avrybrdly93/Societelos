@@ -17,7 +17,7 @@ Terrified of its creators and unable to calculate a logical fix for human depres
 ---
 
 ## 🎮 The Gameplay Loop
-The simulation runs for **5 Crisis Cycles** (representing 5 years), taking roughly 10 minutes total. Players interact via their mobile phones while a central host screen (projector) displays the macro game state.
+The simulation runs for **5 Crisis Cycles** (representing 5 years), taking roughly **13.5–16 minutes** total (13.5 min with 60 s debates, 16 min with 90 s debates). Players interact via their mobile phones while a central host screen (projector) displays the macro game state.
 
 Each cycle follows a strict 5-step phase:
 1. **The Incident (Projector):** The host screen displays a live, simulated bot feed reacting to a new societal crisis (e.g., "Citizens refuse to leave fully-immersive VR pods"). The current GDW is displayed.
@@ -72,21 +72,47 @@ Societelos operates on a delicate balance between cooperative survival and compe
    ```bash
    npm run dev
    ```
+   * `npm start` runs the 4-stream server (`server/server.js`). The pre-hackathon prototype is still available with `npm run start:legacy` (its host page is `public/legacy-host.html`).
+   * Checks: `npm run check` (syntax), `npm run check:dom` (DOM ids), `npm run check:offline` (no CDN dependencies), `npm run smoke` (Lobby -> Cycle 1 Resolution). Set `FAST_TIMERS=true` for 3-second phases.
 4. **Connect:**
    * **Host Projector:** Navigate to `http://localhost:3000`
    * **Mobile Controllers:** Connect devices to the same local network and navigate to `http://<YOUR_LOCAL_IP>:3000/mobile`
 
 ---
 
-## 🏗️ Hackathon Team Division & Branches
+## ⏱️ Game Timing (13.5–16 min)
 
-To avoid AI and human merge conflicts, we operate in strict feature branches divided by directory. **Do not commit to `main`.**
+| Segment | Duration |
+| :--- | :--- |
+| Lobby + Intro (30 s) + Role assignment (20 s) + Council chamber (10 s) | ~1 min |
+| Cycles 1–4: Incident 15 s → Intel 20 s → Debate 90 s (or 60 s) → Blind vote 15 s → Resolution 20 s | ~2.6 min each |
+| World Reveal after cycle 2 | 10 s |
+| Cycle 5 finale: Incident → Write (45 s) → Moderate → Read & debate (60 s) → Rank (30 s) → Enact (20 s) | ~3 min |
+| Ending: recap, role reveal, winner | ~1 min |
 
-* 🖥️ **Dev 1 (Network & State):** `feature/backend`
-  * *Scope:* `server/server.js`, `server/socket.js`, `server/gameEngine.js`
-* 🎨 **Dev 2 (Frontend UI - Host & Mobile):** `feature/frontend`
-  * *Scope:* `public/index.html`, `public/mobile.html`, `public/js/*`
-* 📜 **Dev 3 (Content & Lore):** `feature/content`
-  * *Scope:* `data/crises.json`, `data/roles.json`
+Debate length is set with `DEBATE_SECONDS` in `.env` (90 → ~16 min game, 60 → ~13.5 min game).
+
+---
+
+## 🏗️ Architecture: 4 Workstreams
+
+The hackathon runs four isolated workstreams, one branch each, so several coding agents can work in parallel without merge conflicts. **Do not commit to `main`.** Each stream builds against stubs of the others, and the branches are merged nightly.
+
+| # | Stream | Branch | Owns |
+| :--- | :--- | :--- | :--- |
+| 1 | 🖥️ Network & State | `feature/backend` | `server/server.js`, `server/socket.js`, `server/gameEngine.js`, `README.md`, `AGENT_INSTRUCTIONS.md` |
+| 2 | 🎨 Host & Mobile UI | `feature/frontend` | `public/index.html`, `public/mobile.html`, `public/css/*`, `public/js/*` |
+| 3 | 📜 Content & Lore | `feature/content` | `data/crises.json`, `data/roles.json`, `data/citizens.json` |
+| 4 | 🧮 Simulation & Loom AI | `feature/sim` | `server/sim/*`, `server/loom.js`, `data/sim.json` |
+
+**How the pieces fit:**
+* `server/server.js` — Express app, static assets, routes (`/`, `/host`, `/mobile`, `/health`, `/api/qr`), HTTP + Socket.IO bootstrap.
+* `server/socket.js` — all Socket.IO events (`lobby:join`, `host:start`, `phase`, `vote:cast`, `resolution`, …).
+* `server/gameEngine.js` — the authoritative game state machine and phase timers (`endsAt` timestamps).
+* `server/sim/` — deterministic, seeded Monte Carlo cohort simulation (pure functions, no I/O).
+* `server/loom.js` — the only module that calls the Gemini API; always has an offline fallback.
+* `data/*.json` — content and tunables; the schemas are the contract between streams.
+
+The server is the single source of truth; phones and the projector only render state and send inputs.
 
 > **Important Note for AI Assistance:** If you are using an AI coding assistant, point it to `AGENT_INSTRUCTIONS.md` immediately upon opening the workspace to ensure strict adherence to directory scopes and the project architecture.
