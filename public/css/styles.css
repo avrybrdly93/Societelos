@@ -828,3 +828,11 @@ body.host .debate-nudge { font-size: 19px; line-height: 1.3; margin: 0; text-ali
 body.host .debate-hook .label { font-size: 18px; }
 body.host .debate-hook-text { font-size: 28px; }
 .incident-banner.is-compact > .label { display: none; }
+
+/* Mobile: screen-edge pulse when DEBATE hands over to the blind VOTE. */
+body.mobile.edge-pulse::after {
+  content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 48px var(--loom-glow);
+  animation: edge-pulse 0.8s ease-in-out 3;
+}
+@keyframes edge-pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }

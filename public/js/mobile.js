@@ -197,6 +197,19 @@
       if (navigator.vibrate) navigator.vibrate(pattern);
     } catch (e) { /* not allowed before a user gesture on some browsers */ }
   }
+  // Audio-free cue: the screen edges pulse when the in-person debate ends and
+  // the blind vote opens on the phone.
+  let previousPhase = null;
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    if (payload.phase === 'VOTE' && previousPhase !== 'VOTE') {
+      document.body.classList.remove('edge-pulse');
+      void document.body.offsetWidth; // restart the animation
+      document.body.classList.add('edge-pulse');
+      setTimeout(() => document.body.classList.remove('edge-pulse'), 2600);
+    }
+    previousPhase = payload.phase;
+  });
   let lastBuzzPhase = null;
   socket.on('phase', (payload) => {
     if (!payload || !state.node || payload.phase === lastBuzzPhase) return;
