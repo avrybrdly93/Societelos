@@ -12,10 +12,35 @@
   };
   const PAD = { left: 64, right: 24, top: 24, bottom: 48 };
 
+  /**
+   * High-DPI setup: size the backing store to the canvas's on-screen pixels
+   * (CSS size x devicePixelRatio x the projector stage scale applied by
+   * host.js) and scale the context so drawing code works in CSS pixels.
+   * Returns { ctx, w, h } in CSS pixels.
+   */
+  function fitCanvas(canvas) {
+    const cssW = canvas.offsetWidth || canvas.width;
+    const cssH = canvas.offsetHeight || canvas.height;
+    const rect = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const stageScale = rect && cssW ? rect.width / cssW : 1;
+    const ratio = Math.max(1, (window.devicePixelRatio || 1) * (stageScale || 1));
+    const pxW = Math.round(cssW * ratio);
+    const pxH = Math.round(cssH * ratio);
+    if (canvas.width !== pxW || canvas.height !== pxH) {
+      canvas.width = pxW;
+      canvas.height = pxH;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    canvas.cssWidth = cssW;
+    canvas.cssHeight = cssH;
+    return { ctx, w: cssW, h: cssH };
+  }
+
   /** Plot geometry for a canvas: GDW 0-100 on y, months 0-12 on x. */
   function geometry(canvas, months = 12) {
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.cssWidth || canvas.width;
+    const h = canvas.cssHeight || canvas.height;
     const plotW = w - PAD.left - PAD.right;
     const plotH = h - PAD.top - PAD.bottom;
     return {
@@ -62,7 +87,7 @@
    */
   function render(canvas, payload) {
     if (!canvas || !canvas.getContext || !payload) return;
-    const ctx = canvas.getContext('2d');
+    const { ctx } = fitCanvas(canvas);
     const forecast = payload.forecast || {};
     const realized = (payload.realized && payload.realized.gdw) || [];
     const months = Math.max(1, (forecast.median || realized).length - 1);
@@ -73,5 +98,5 @@
     line(ctx, g, realized, { color: COLORS.realized, width: 4 });
   }
 
-  window.SocietelosCharts = { COLORS, PAD, geometry, line, band, render };
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, line, band, render };
 })();
