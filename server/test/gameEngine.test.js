@@ -916,3 +916,16 @@ test('bordaCount awards 4/3/2/1 points by rank and counts places', () => {
   assert.deepEqual(tally.P3, { points: 6, places: [0, 2, 0, 0] });
   assert.deepEqual(tally.P5, { points: 2, places: [0, 0, 0, 2] });
 });
+
+test('rankBorda breaks ties on 1st places, then 2nd places, then forecast median', () => {
+  const t = (points, places) => ({ points, places });
+  const rows = engine.rankBorda({
+    A: t(10, [1, 1, 1, 1]),
+    B: t(10, [2, 0, 0, 2]),
+    C: t(12, [0, 4, 0, 0]),
+    D: t(10, [1, 2, 0, 0]),
+    E: t(10, [1, 2, 0, 0])
+  }, (id) => ({ D: 20, E: 30 }[id] || 0));
+  assert.deepEqual(rows.map((r) => r.id), ['C', 'B', 'E', 'D', 'A']);
+  assert.equal(rows.find((r) => r.id === 'E').median, 30);
+});

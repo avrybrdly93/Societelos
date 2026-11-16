@@ -446,6 +446,27 @@ function bordaCount(ranks, policyIds = []) {
   return tally;
 }
 
+/**
+ * Order policies by Borda result. Ties break on most 1st places, then most
+ * 2nd places, then the higher single-policy forecast median GDW
+ * (`medianOf(id)`, computed only when needed), then policy id for stability.
+ * Returns [{ id, points, places, median? }] best first.
+ */
+function rankBorda(tally, medianOf = () => 0) {
+  const medians = {};
+  const median = (id) => (id in medians ? medians[id] : (medians[id] = Number(medianOf(id)) || 0));
+  const rows = Object.entries(tally).map(([id, t]) => ({ id, points: t.points, places: t.places.slice() }));
+  rows.sort((a, b) => (
+    b.points - a.points ||
+    b.places[0] - a.places[0] ||
+    b.places[1] - a.places[1] ||
+    median(b.id) - median(a.id) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  ));
+  for (const r of rows) if (r.id in medians) r.median = medians[r.id];
+  return rows;
+}
+
 /** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
 function computeWorldKey(vote1, vote2) {
   const ok = (v) => v === 'A' || v === 'B';
@@ -1659,6 +1680,7 @@ module.exports = {
   computeWorldKey,
   catalystScores,
   bordaCount,
+  rankBorda,
   BORDA_POINTS,
   roundGdw,
   loomStub,
