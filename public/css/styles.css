@@ -329,3 +329,25 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
 .role-drawer[open] .role-drawer-toggle::after { content: "▴"; }
 .role-drawer-body { padding: 0 16px 12px; font-size: 15px; }
 .role-drawer-body p { margin: 6px 0; }
+
+/* Privacy shield: CSS-only toggle so it works even before scripts load.
+   Checking .shield-toggle covers the panel; tapping the cover reveals it. */
+.shieldable { position: relative; }
+.shield-toggle { position: absolute; opacity: 0; pointer-events: none; }
+.shield-button {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  font-size: 12px; letter-spacing: 0.1em;
+  padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-sunken); color: var(--text-muted);
+  cursor: pointer;
+}
+.shield-cover {
+  position: absolute; inset: 0; z-index: 3;
+  display: none; align-items: center; justify-content: center;
+  border-radius: inherit;
+  background: repeating-linear-gradient(45deg, var(--slate-900) 0 12px, var(--slate-800) 12px 24px);
+  color: var(--text-muted); font-size: 14px; letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.shield-toggle:checked ~ .shield-cover { display: flex; }

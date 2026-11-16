@@ -46,7 +46,10 @@
     </section>
     <section id="m-view-role" class="m-view" aria-label="Secret role">
       <p class="m-kicker mono">CLASSIFIED // EYES ONLY</p>
-      <article id="role-card" class="role-card">
+      <article id="role-card" class="role-card shieldable">
+        <input type="checkbox" id="shield-role" class="shield-toggle" aria-label="Hide role card">
+        <label for="shield-role" class="shield-button mono">TAP TO HIDE</label>
+        <label for="shield-role" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
         <div id="role-icon" class="role-icon" aria-hidden="true"></div>
         <h2 id="role-title" class="role-title">Decrypting…</h2>
         <p id="role-flavor" class="role-flavor muted"></p>
