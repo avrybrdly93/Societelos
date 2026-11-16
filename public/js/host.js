@@ -25,7 +25,7 @@
 
   const state = { roomCode: null, gameId: null, phase: 'LOBBY', cycle: 0, endsAt: null };
 
-  socket.on('connect', () => console.log('[host] connected'));
+  socket.on('connect', () => console.debug('[host] connected'));
   socket.on('disconnect', (reason) => console.warn('[host] disconnected:', reason));
 
   socket.on('host:room', (info) => {

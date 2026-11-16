@@ -28,7 +28,7 @@
 
   const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
 
-  socket.on('connect', () => console.log('[mobile] connected'));
+  socket.on('connect', () => console.debug('[mobile] connected'));
   socket.on('disconnect', (reason) => console.warn('[mobile] disconnected:', reason));
 
   // A stale token (server restarted, new game) means starting from the join form.
