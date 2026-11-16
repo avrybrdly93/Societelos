@@ -765,3 +765,18 @@ test('finale policy ids POLICY-1..5 follow a deterministic shuffle, not node ord
     restore();
   }
 });
+
+test('the policyId -> author map is stored server-side', async () => {
+  const restore = stubModerate(okModeration());
+  try {
+    const game = await moderatedFinale();
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    game.stop();
+    assert.equal(Object.keys(game.finale.authors).length, 5);
+    for (const p of game.finale.policies) assert.equal(game.finaleAuthor(p.id), p.node);
+    assert.deepEqual(Object.values(game.finale.authors).sort(), [...NODE_IDS]);
+    assert.equal(game.finaleAuthor('POLICY-9'), null);
+  } finally {
+    restore();
+  }
+});

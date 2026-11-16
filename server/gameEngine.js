@@ -797,7 +797,14 @@ class GameState extends EventEmitter {
         effects: m.effects || {}
       };
     });
+    // Secret policyId -> author map, revealed only on the end screen.
+    finale.authors = Object.fromEntries(finale.policies.map((p) => [p.id, p.node]));
     if (advance && this.phase === PHASES.FINALE_MOD) this.advancePhase();
+  }
+
+  /** Author of a finale policy (server-side only; null if unknown). */
+  finaleAuthor(policyId) {
+    return (this.finale && this.finale.authors[policyId]) || null;
   }
 
   /** Fall back to the authored A/B finale: FINALE_MOD -> DEBATE -> VOTE -> RESOLUTION -> END. */
