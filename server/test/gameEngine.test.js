@@ -177,3 +177,10 @@ test('Catalyst scores +1 on a -10 GDW drop (GDW > 0) and 0 on a -9.9 drop', () =
   assert.deepEqual(game.awardCatalystPoints(35, 25.1), {});
   assert.equal(game.scores[node], 1);
 });
+
+test('Catalyst scores 0 when a 15 point drop reaches GDW 0 (Loom shutdown)', () => {
+  assert.equal(engine.catalystScores(15, 0), false);
+  const { game, node } = catalystGame();
+  assert.deepEqual(game.awardCatalystPoints(15, 0), {});
+  assert.equal(game.scores[node], 0);
+});
