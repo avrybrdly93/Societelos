@@ -129,6 +129,16 @@ function initSockets(io, gameEngine) {
       return broadcastLobby(game);
     });
 
+    // vote:cast { choice: 'A' | 'B', override: bool } -> record a blind vote.
+    socket.on('vote:cast', (payload, ack) => {
+      const reply = typeof ack === 'function' ? ack : () => {};
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      if (!payload || typeof payload !== 'object') return reply({ ok: false, reason: 'BAD_PAYLOAD' });
+      const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
+      return reply(result);
+    });
+
     // lobby:ready { ready? } -> set or toggle this phone's ready flag.
     socket.on('lobby:ready', (payload) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
