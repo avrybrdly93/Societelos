@@ -107,8 +107,44 @@ function initSockets(io, gameEngine) {
     return code ? gameEngine.getRoom(code) : gameEngine.getLatestRoom();
   }
 
+  // Rebind a phone to its seat using its private token. Returns true on success.
+  function resumeSession(socket, token) {
+    const session = gameEngine.findSession(token);
+    if (!session) return false;
+    const { game, node } = session;
+    wireRoom(game);
+    game.reconnectPlayer(node, socket.id);
+    socket.data.roomCode = game.roomCode;
+    socket.data.node = node;
+    socket.join(roomChannel(game.roomCode));
+    const role = game.players[node].role;
+    socket.emit('session:resumed', {
+      node,
+      roomCode: game.roomCode,
+      cycle: game.cycle,
+      phase: game.phase,
+      endsAt: game.endsAt,
+      role: role ? roleCard(role) : null
+    });
+    broadcastLobby(game);
+    return true;
+  }
+
   function handlePhone(socket) {
     socket.emit('client:type', { clientType: 'phone' });
+
+    // Reconnect support: a phone that stored its token sends it in the handshake
+    // (auth.token) or later via session:resume { token }.
+    const handshakeToken = socket.handshake.auth && socket.handshake.auth.token;
+    if (handshakeToken && !resumeSession(socket, handshakeToken)) {
+      socket.emit('session:invalid', {});
+    }
+    socket.on('session:resume', (payload, ack) => {
+      const reply = typeof ack === 'function' ? ack : () => {};
+      const ok = !!(payload && resumeSession(socket, payload.token));
+      if (!ok) socket.emit('session:invalid', {});
+      reply({ ok });
+    });
 
     // lobby:join { name, room? } -> seat the phone in a NODE slot.
     socket.on('lobby:join', (payload, ack) => {
@@ -128,7 +164,7 @@ function initSockets(io, gameEngine) {
       socket.data.roomCode = game.roomCode;
       socket.data.node = seat.node;
       socket.join(roomChannel(game.roomCode));
-      const joined = { ok: true, node: seat.node, roomCode: game.roomCode };
+      const joined = { ok: true, node: seat.node, roomCode: game.roomCode, token: seat.token };
       socket.emit('lobby:joined', joined);
       reply(joined);
       return broadcastLobby(game);

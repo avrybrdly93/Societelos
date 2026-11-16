@@ -704,12 +704,13 @@ class GameState extends EventEmitter {
       ready: false,
       connected: true,
       role: null,
+      token: crypto.randomBytes(16).toString('hex'), // private reconnect token
       joinedAt: Date.now()
     };
     this.scores[node] = 0;
     this.overridesUsed[node] = false;
     console.log(`[game ${this.roomCode}] ${node} joined`);
-    return { ok: true, node };
+    return { ok: true, node, token: this.players[node].token };
   }
 
   /**
@@ -765,6 +766,23 @@ class GameState extends EventEmitter {
     return true;
   }
 
+  /** Find the node whose private reconnect token matches, or null. */
+  findNodeByToken(token) {
+    if (typeof token !== 'string' || !token) return null;
+    const player = Object.values(this.players).find((p) => p.token === token);
+    return player ? player.node : null;
+  }
+
+  /** Bind a reconnecting phone's new socket to its existing node. */
+  reconnectPlayer(node, socketId) {
+    const player = this.players[node];
+    if (!player) return false;
+    player.socketId = socketId;
+    player.connected = true;
+    console.log(`[game ${this.roomCode}] ${node} reconnected`);
+    return true;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);
@@ -799,6 +817,15 @@ function getLatestRoom() {
 }
 
 /** Remove a room and stop its timers. */
+/** Find the room and node holding a reconnect token: { game, node } or null. */
+function findSession(token) {
+  for (const game of rooms.values()) {
+    const node = game.findNodeByToken(token);
+    if (node) return { game, node };
+  }
+  return null;
+}
+
 function closeRoom(roomCode) {
   const game = getRoom(roomCode);
   if (!game) return false;
@@ -813,6 +840,7 @@ module.exports = {
   createRoom,
   getRoom,
   getLatestRoom,
+  findSession,
   closeRoom,
   loadGameData,
   selectCrisis,
