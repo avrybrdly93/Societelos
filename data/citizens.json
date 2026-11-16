@@ -45,9 +45,15 @@
     "cohort": "elite",
     "voice": "Ex-CEO who lost his status but not his money",
     "lines": {
-      "good": [],
-      "mixed": [],
-      "bad": []
+      "good": [
+        "Grudgingly: the district is calmer than I have seen it in years. Do not quote me on that."
+      ],
+      "mixed": [
+        "I still have the money. I simply no longer have anyone who has to listen to me."
+      ],
+      "bad": [
+        "Mark my words: when amateurs run the machine, the machine stops running. And then where are we?"
+      ]
     }
   },
   {
