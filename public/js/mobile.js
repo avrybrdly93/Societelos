@@ -154,6 +154,19 @@
 
   socket.on('phase', onPhase);
 
+  // Subtle haptics (Android Chrome; silently ignored where unsupported, e.g. iOS).
+  function buzz(pattern = 50) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) { /* not allowed before a user gesture on some browsers */ }
+  }
+  let lastBuzzPhase = null;
+  socket.on('phase', (payload) => {
+    if (!payload || !state.node || payload.phase === lastBuzzPhase) return;
+    lastBuzzPhase = payload.phase;
+    buzz(payload.phase === 'VOTE' ? [60, 60, 60] : 50);
+  });
+
   // Countdown bar (and the debate clock), recomputed each frame from the
   // server's endsAt so every phone stays in step with the projector.
   const countdownFill = document.getElementById('m-countdown-fill');
@@ -297,6 +310,7 @@
   function castVote(choice) {
     const override = document.getElementById('vote-override').checked;
     state.lastVote = { cycle: state.cycle, choice };
+    buzz(override ? [40, 40, 120] : 50);
     setVoteLocked(true, choice, override);
     socket.emit('vote:cast', { choice, override }, (res) => {
       if (res && res.ok) {
