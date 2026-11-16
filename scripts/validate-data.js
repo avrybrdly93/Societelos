@@ -17,6 +17,7 @@ const WORLDS = ['AA', 'AB', 'BA', 'BB'];
 const BANDS = ['good', 'mixed', 'bad'];
 
 const errors = [];
+const warnings = [];
 const err = (where, msg) => errors.push(`${where}: ${msg}`);
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
 
@@ -76,13 +77,15 @@ function checkOption(where, o, crisis) {
     if (roles.length > 2) err(where, 'at most 2 role tags');
     return roles.forEach((r) => { if (!TAGS.includes(r)) err(where, `unknown role tag "${r}"`); });
   });
-  if (o.effectsByWorld) {
+  if (o.draft === true && !o.effects && !o.effectsByWorld) {
+    warnings.push(`${where}: draft option, effect vector not authored yet`);
+  } else if (o.effectsByWorld) {
     for (const [k, e] of Object.entries(o.effectsByWorld)) checkEffects(`${where}.effectsByWorld.${k}`, e);
   } else {
     checkEffects(where, o.effects);
   }
   if (o.volatility !== undefined && (typeof o.volatility !== 'number' || o.volatility <= 0)) err(where, 'volatility must be a positive number');
-  if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld) err(where, 'finale fallback needs effects');
+  if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld && o.draft !== true) err(where, 'finale fallback needs effects');
   return undefined;
 }
 
@@ -144,6 +147,11 @@ if (crises) checkCrises(crises, new Set((citizens || []).map((c) => c.id)));
 
 for (const [name, data] of [['roles.json', roles], ['citizens.json', citizens], ['crises.json', crises]]) {
   if (data) checkStrings(name, data);
+}
+
+if (warnings.length) {
+  console.warn(`Warnings (${warnings.length}):`);
+  warnings.forEach((w) => console.warn(`  - ${w}`));
 }
 
 if (errors.length) {

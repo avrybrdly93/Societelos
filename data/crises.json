@@ -405,7 +405,7 @@
             "artisan",
             "ghost"
           ],
-          "effects": {}
+          "draft": true
         },
         "B": {
           "name": "The Noble Lie Protocol",
@@ -414,7 +414,7 @@
             "lotus",
             "assimilator"
           ],
-          "effects": {}
+          "draft": true
         }
       },
       "intel": {}
@@ -558,7 +558,7 @@
             "assimilator",
             "lotus"
           ],
-          "effects": {}
+          "draft": true
         },
         "B": {
           "name": "Biological Integrity Act",
@@ -567,7 +567,7 @@
             "ghost",
             "artisan"
           ],
-          "effects": {}
+          "draft": true
         }
       },
       "intel": {}
@@ -711,7 +711,7 @@
             "assimilator",
             "artisan"
           ],
-          "effects": {}
+          "draft": true
         },
         "B": {
           "name": "The Constitutional Settlement",
@@ -720,7 +720,7 @@
             "lotus",
             "ghost"
           ],
-          "effects": {}
+          "draft": true
         }
       },
       "intel": {}
@@ -864,7 +864,7 @@
             "ghost",
             "artisan"
           ],
-          "effects": {}
+          "draft": true
         },
         "B": {
           "name": "Acoustic Lockdown & Pacification",
@@ -873,7 +873,7 @@
             "assimilator",
             "lotus"
           ],
-          "effects": {}
+          "draft": true
         }
       },
       "intel": {}
