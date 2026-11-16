@@ -20,6 +20,18 @@ function detectClientType(socket) {
   return CLIENT_TYPES.includes(raw) ? raw : 'phone';
 }
 
+/** Role card fields a phone may see (accepts spec and legacy role schemas). */
+function roleCard(role) {
+  return {
+    key: role.key,
+    name: role.name || role.designation,
+    icon: role.icon || '',
+    goal: role.goal || role.agenda || '',
+    winCondition: role.winCondition || '',
+    cardText: role.cardText || role.archetype || ''
+  };
+}
+
 /**
  * Wire Socket.IO to the game engine.
  * @param {import('socket.io').Server} io
@@ -28,10 +40,21 @@ function detectClientType(socket) {
 function initSockets(io, gameEngine) {
   const wiredRooms = new WeakSet();
 
+  // Emit to the socket currently bound to `node`, if it is connected.
+  function emitToNode(game, node, event, payload) {
+    const player = game.players[node];
+    if (player && player.socketId) io.to(player.socketId).emit(event, payload);
+  }
+
   // Subscribe once per room to engine events and relay them to clients.
   function wireRoom(game) {
     if (wiredRooms.has(game)) return;
     wiredRooms.add(game);
+
+    // role:assigned { role } privately to the one phone that holds it.
+    game.on('role:assigned', ({ node, role }) => {
+      emitToNode(game, node, 'role:assigned', { role: roleCard(role) });
+    });
   }
 
   // lobby:update { players: [{ node, ready, connected }] } to everyone in the room.
@@ -116,4 +139,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard };
