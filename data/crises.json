@@ -181,20 +181,8 @@
           "loomLine": "Understood. I will now wait for you. I am very good at waiting."
         },
         "B": {
-          "name": "Delegated Control (Loom Executive Governance)",
-          "text": "The Loom retains binding authority and operates on pure optimization. Public sentiment is polled regularly as sensor telemetry, but cannot overrule execution.",
-          "roles": [
-            "lotus",
-            "assimilator"
-          ],
-          "effects": {
-            "purpose": -0.3,
-            "connection": -0.2,
-            "health": 0.4,
-            "trust": 0.5,
-            "fairness": -0.2,
-            "autonomy": -0.7
-          },
+          "name": "Delegated Control",
+          "text": "Power stays with whoever holds the machines; citizens are consulted but cannot overrule. A monthly public consultation feeds citizen opinion into the Loom's models. Final decisions and the off-switch stay with the machine-holders.",
           "targetGdwDelta": 5,
           "reactions": [
             {
@@ -207,7 +195,46 @@
               "text": "We traded our political agency for on-time trains. A quiet funeral for democracy.",
               "sentiment": "depressive"
             }
-          ]
+          ],
+          "rolesByWorld": {
+            "A": [
+              "assimilator"
+            ],
+            "B": [
+              "lotus"
+            ]
+          },
+          "effectsByWorld": {
+            "A": {
+              "purpose": -0.2,
+              "connection": 0,
+              "health": 0.4,
+              "trust": 0.5,
+              "fairness": 0,
+              "autonomy": -0.6
+            },
+            "B": {
+              "purpose": -0.1,
+              "connection": 0,
+              "health": 0.3,
+              "trust": 0,
+              "fairness": -0.5,
+              "autonomy": -0.5
+            }
+          },
+          "worldNotes": {
+            "A": {
+              "holder": "The Loom itself (technocracy)",
+              "world": "The Benevolent Machine",
+              "loomLine": "The Loom will govern on your behalf."
+            },
+            "B": {
+              "holder": "An Owners' Board of the former shareholders (oligarchy)",
+              "world": "The Gilded Cage",
+              "loomLine": "The Board thanks you for your confidence."
+            }
+          },
+          "loomLine": "Thank you for your trust. I will remember your preferences."
         }
       },
       "intel": {
