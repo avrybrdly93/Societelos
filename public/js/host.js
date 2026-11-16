@@ -149,6 +149,23 @@
     banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
   }
   socket.on('phase', renderIncident);
+
+  // Policy comparison cards: shown from DEBATE through VOTE.
+  let currentOptions = null;
+  function renderPolicies(payload) {
+    if (payload.options) currentOptions = payload.options;
+    if (payload.phase === 'INCIDENT' || payload.phase === 'CHAMBER') currentOptions = null;
+    const panel = document.getElementById('policy-panel');
+    const show = !!currentOptions && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
+    panel.hidden = !show;
+    if (!show) return;
+    for (const key of ['A', 'B']) {
+      const o = currentOptions[key] || {};
+      document.getElementById(`policy-${key.toLowerCase()}-name`).textContent = o.name || `Policy ${key}`;
+      document.getElementById(`policy-${key.toLowerCase()}-text`).textContent = o.text || o.summary || '';
+    }
+  }
+  socket.on('phase', renderPolicies);
   socket.on('phase', (payload) => { if (payload.phase === 'CHAMBER') revealChamber(payload); });
 
   // Countdown: recomputed every frame from the server's endsAt timestamp, so
