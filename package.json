@@ -18,6 +18,7 @@
     "check:sim": "node -e \"const fs=require('fs');const lines=fs.readdirSync('server/sim').filter(f=>f.endsWith('.js')).flatMap(f=>fs.readFileSync('server/sim/'+f,'utf8').split('\\n').map((l,i)=>[f,i+1,l.replace(/\\/\\/.*$/,'')])).filter(([,,l])=>!/^\\s*\\*/.test(l));const bad=[[/Math\\.random\\s*\\(/,'Math.random()'],[/require\\(['\\x22](fs|http|https|net|child_process|dgram|dns|tls)['\\x22]\\)|\\bfetch\\s*\\(|XMLHttpRequest|readFileSync|writeFileSync/,'I/O or network']];let n=0;for(const [f,i,l] of lines)for(const [re,what] of bad)if(re.test(l)){n++;console.error(f+':'+i+': '+what)}if(n)process.exit(1);console.log('server/sim: no Math.random(), no I/O, no network')\"",
     "bench:sim": "node server/sim/test/bench.js",
     "calibrate": "node server/sim/calibrate.js",
+    "test:stream4": "npm run -s check:sim && node --test server/sim/test/*.test.js server/test/loom.test.js server/test/contracts.test.js && npm run -s bench:sim && npm run -s calibrate",
     "check:mem": "node --expose-gc scripts/check-memory.js",
     "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\"",
     "e2e:ui": "node scripts/e2e-ui.js",
