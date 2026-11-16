@@ -44,3 +44,18 @@ test('data/sim.json passes validateSimConfig, and broken configs are caught', ()
   assert.ok(errors.some((e) => e.includes('D9')));
   assert.ok(errors.some((e) => e.includes('D3:elders')));
 });
+
+test('trait names in server/sim match the data/crises.json effect schema', () => {
+  const crises = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'data', 'crises.json'), 'utf8'));
+  const simTraits = [...simConfig.traits].sort();
+  assert.deepEqual(simTraits, ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust']);
+  assert.deepEqual(Object.keys(simConfig.weights).sort(), simTraits);
+  for (const row of Object.values(simConfig.sensitivity)) assert.deepEqual(Object.keys(row).sort(), simTraits);
+  for (const c of crises.crises) {
+    for (const key of ['A', 'B']) {
+      const o = c.options[key];
+      const vectors = o.effectsByWorld ? Object.values(o.effectsByWorld) : o.effects ? [o.effects] : [];
+      for (const e of vectors) assert.deepEqual(Object.keys(e).sort(), simTraits, `${c.id}.${key}`);
+    }
+  }
+});
