@@ -23,5 +23,27 @@
     document.getElementById('lobby-room-code').textContent = info.roomCode;
   });
 
-  window.SocietelosHost = { socket, state };
+  // Load the join QR code and LAN URL for the lobby.
+  async function fetchQR() {
+    const img = document.getElementById('qr-image');
+    const placeholder = document.getElementById('qr-placeholder');
+    const urlEl = document.getElementById('join-url');
+    try {
+      const res = await fetch('/api/qr');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { joinUrl, dataUrl } = await res.json();
+      img.src = dataUrl;
+      img.hidden = false;
+      placeholder.hidden = true;
+      urlEl.textContent = joinUrl;
+    } catch (err) {
+      console.error('[host] QR fetch failed', err);
+      placeholder.textContent = 'QR unavailable';
+      urlEl.textContent = `${location.protocol}//${location.host}/mobile`;
+    }
+  }
+
+  fetchQR();
+
+  window.SocietelosHost = { socket, state, fetchQR };
 })();
