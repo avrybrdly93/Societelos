@@ -460,6 +460,7 @@ class GameState extends EventEmitter {
 
     // Scoring.
     this.scores = {};
+    this.scoreLedger = []; // per cycle: { cycle, winner, role: { node: 1 }, catalyst: { node: 1 } }
     this.overridesUsed = {}; // node id -> true once its single Override is spent (whole game)
   }
 
@@ -726,6 +727,21 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * End-screen breakdown per node: { node: { total, perCycle: [{ cycle, role, catalyst }] } }.
+   * Server-side only: it reveals who scored, so it is never broadcast mid-game.
+   */
+  scoreBreakdown() {
+    const out = {};
+    for (const node of Object.keys(this.players)) {
+      out[node] = {
+        total: this.scores[node] || 0,
+        perCycle: this.scoreLedger.map((e) => ({ cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0 }))
+      };
+    }
+    return out;
+  }
+
+  /**
    * RESOLUTION: close voting, run the simulation (stub until server/sim is
    * merged) on the winning option and broadcast 'resolution' once the Loom's
    * narration is ready. The phase timer starts immediately so a slow Loom
@@ -759,6 +775,7 @@ class GameState extends EventEmitter {
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
     const roleAwards = this.cycle < TOTAL_CYCLES ? this.awardRolePoints(winner) : {};
     const catalystAwards = this.cycle < TOTAL_CYCLES ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
+    this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
 
     this.enterPhase(PHASES.RESOLUTION);
 
@@ -849,6 +866,8 @@ class GameState extends EventEmitter {
       this.volatility = 1.0;
       this.voteHistory = {};
       this.worldKey = null;
+      this.scoreLedger = [];
+      for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
     console.log(`[game ${this.roomCode}] cycle ${cycleNumber} begins (GDW ${this.gdw})`);
   }
