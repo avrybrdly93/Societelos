@@ -31,3 +31,20 @@ test('forecast percentiles are ordered p5 <= median <= p95 for every month 1-12'
     }
   }
 });
+
+test('simulate() is bit-for-bit reproducible for the same state, effects and seed', () => {
+  const state = createInitialState(simConfig);
+  const a = simulate(state, EFFECTS, { runs: 500, seed: 424242 });
+  const b = simulate(state, EFFECTS, { runs: 500, seed: 424242 });
+  const plain = (r) => JSON.parse(JSON.stringify({ forecast: r.forecast, realized: { ...r.realized, gdw: Array.from(r.realized.gdw) } }));
+  assert.deepEqual(plain(a), plain(b));
+  // Exact float equality, not just JSON-rounded.
+  for (let m = 0; m < 13; m++) {
+    assert.ok(Object.is(a.forecast.median[m], b.forecast.median[m]));
+    assert.ok(Object.is(a.realized.gdw[m], b.realized.gdw[m]));
+  }
+  assert.deepEqual(Array.from(a.finalState.traits), Array.from(b.finalState.traits));
+  // A different seed gives a different realized run.
+  const c = simulate(state, EFFECTS, { runs: 500, seed: 424243 });
+  assert.notDeepEqual(Array.from(a.realized.gdw), Array.from(c.realized.gdw));
+});
