@@ -524,3 +524,22 @@ test('idle or disconnected players get a neutral default policy when FINALE_WRIT
   assert.equal(game.finale.submissions['NODE-01'], 'Every district elects a repair council.');
   assert.equal(game.submitPolicy('NODE-02', 'late').reason, 'WRITING_CLOSED');
 });
+
+test('FINALE_WRITE advances to FINALE_MOD as soon as all 5 policies are in', async () => {
+  const game = finaleGame();
+  quiet(() => game.startFinaleWritePhase());
+  const log = console.log;
+  console.log = () => {};
+  try {
+    NODE_IDS.slice(0, 4).forEach((n, i) => game.submitPolicy(n, `Policy number ${i + 1} for the council.`));
+    await new Promise((r) => setImmediate(r));
+    assert.equal(game.phase, 'FINALE_WRITE', 'still writing with 4 of 5');
+    game.submitPolicy('NODE-05', 'Policy number 5 for the council.');
+    await new Promise((r) => setImmediate(r));
+    assert.equal(game.phase, 'FINALE_MOD');
+    assert.deepEqual(game.finale.defaulted, []);
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+});

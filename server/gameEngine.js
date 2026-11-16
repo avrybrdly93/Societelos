@@ -666,6 +666,11 @@ class GameState extends EventEmitter {
     const clean = String(text == null ? '' : text).replace(/\s+/g, ' ').trim().slice(0, FINALE_MAX_CHARS).trim();
     if (!clean) return { ok: false, reason: 'EMPTY' };
     this.finale.submissions[node] = clean;
+    // All five in: move on to FINALE_MOD now rather than waiting out the 45 s.
+    const seated = Object.keys(this.players);
+    if (seated.length && seated.every((n) => this.finale.submissions[n])) {
+      setImmediate(() => { if (this.phase === PHASES.FINALE_WRITE) this.advancePhase(); });
+    }
     return { ok: true, text: clean };
   }
 
