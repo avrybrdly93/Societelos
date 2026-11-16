@@ -54,6 +54,7 @@ function topMoves(before, after, count = 3) {
  * }}
  */
 function simulate(state, effects, opts = {}) {
+  if (opts.mode === 'stub') return simulateStub(state, opts);
   const start = resolveState(state, opts);
   const c = start.config.constants;
   const runs = Number.isInteger(opts.runs) ? opts.runs : c.forecastRuns;
@@ -115,4 +116,22 @@ function simulate(state, effects, opts = {}) {
   return { forecast, realized, finalState: realizedRun.finalState, summary };
 }
 
-module.exports = { simulate, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, percentile };
+/**
+ * Monday stub mode (opts.mode = 'stub'): same return shape, flat line at the
+ * current GDW + 5. Lets the engine and UI run before the model is tuned.
+ */
+function simulateStub(state, opts = {}) {
+  const sim = state && state.traits ? state : state && state.simState;
+  const startGdw = sim ? computeGDW(sim) : (state && typeof state.gdw === 'number' ? state.gdw : 25);
+  const endGdw = Math.min(100, Math.max(0, startGdw + 5));
+  const months = (sim && sim.config.constants.monthsPerCycle) || 12;
+  const line = Array.from({ length: months + 1 }, (_, m) => (m === 0 ? startGdw : endGdw));
+  return {
+    forecast: { runs: opts.runs || 0, median: line.slice(), p5: line.slice(), p95: line.slice(), pCollapse: 0, pUnrest: endGdw < 15 ? 1 : 0 },
+    realized: { seed: opts.seed >>> 0, gdw: line.slice(), finalGdw: endGdw, districts: [], shocks: [] },
+    finalState: sim ? cloneState(sim) : null,
+    summary: { startGdw, realizedDelta: endGdw - startGdw, medianDelta: endGdw - startGdw, pCollapse: 0, pUnrest: 0, topMoves: [], shocks: [], stub: true }
+  };
+}
+
+module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, percentile };
