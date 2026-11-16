@@ -58,4 +58,32 @@ function cloneState(state) {
   };
 }
 
-module.exports = { createInitialState, cloneState, clamp01 };
+/**
+ * Cohort wellbeing W = sum_k weight_k * trait_k.
+ * @param {object} traits { purpose, connection, health, trust, fairness, autonomy }
+ * @param {object} weights same keys (data/sim.json "weights")
+ */
+function computeCohortWellbeing(traits, weights) {
+  let w = 0;
+  for (const k of Object.keys(weights)) w += weights[k] * (traits[k] || 0);
+  return w;
+}
+
+/** Wellbeing of cohort index i read straight from the trait buffer. */
+function cohortWellbeingAt(state, i) {
+  const { traitNames, traits, config } = state;
+  const K = traitNames.length;
+  let w = 0;
+  for (let k = 0; k < K; k++) w += config.weights[traitNames[k]] * traits[i * K + k];
+  return w;
+}
+
+/** Traits of cohort index i as a plain object. */
+function cohortTraits(state, i) {
+  const K = state.traitNames.length;
+  const out = {};
+  state.traitNames.forEach((t, k) => { out[t] = state.traits[i * K + k]; });
+  return out;
+}
+
+module.exports = { createInitialState, cloneState, clamp01, computeCohortWellbeing, cohortWellbeingAt, cohortTraits };
