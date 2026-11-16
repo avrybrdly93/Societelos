@@ -360,7 +360,7 @@
     resetFeed();
     (payload.messages || []).forEach((m) => addFeedItem(m));
     // The map replays the 12 months in step with the realized line.
-    if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS);
+    if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS, (payload.realized && payload.realized.shocks) || []);
     renderForecastBanner(payload.forecast);
     const charts = window.SocietelosCharts;
     if (charts) {

@@ -59,9 +59,56 @@
   // months 0-12. Fills transition smoothly (CSS) over one month's duration.
   let playback = null;
 
+  // Shock alert badges: a crimson tag over a district for a couple of
+  // seconds when a monthly shock fires there during playback.
+  const SHOCK_LABELS = {
+    purpose: 'PURPOSE', connection: 'CONNECTION', health: 'HEALTH',
+    trust: 'TRUST', fairness: 'FAIRNESS', autonomy: 'AUTONOMY'
+  };
+  const SHOCK_BADGE_MS = 2600;
+  function districtCenter(group) {
+    const label = group.querySelector('.district-label');
+    if (label) return { x: Number(label.getAttribute('x')), y: Number(label.getAttribute('y')) };
+    const box = group.getBBox();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  }
+  function showShock(shock) {
+    const group = districtGroup(shock.district);
+    if (!group) return;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const { x, y } = districtCenter(group);
+    const badge = document.createElementNS(svgNS, 'g');
+    badge.setAttribute('class', 'shock-badge');
+    badge.setAttribute('transform', `translate(${x}, ${y - 46})`);
+    const text = `\u26A0 SHOCK: ${SHOCK_LABELS[shock.trait] || String(shock.trait || '').toUpperCase()}`;
+    const width = 14 + text.length * 8.2;
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('x', String(-width / 2));
+    rect.setAttribute('y', '-14');
+    rect.setAttribute('width', String(width));
+    rect.setAttribute('height', '24');
+    rect.setAttribute('rx', '6');
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('y', '3');
+    label.textContent = text;
+    badge.append(rect, label);
+    group.parentNode.appendChild(badge); // above every district
+    group.classList.add('is-shocked');
+    setTimeout(() => {
+      badge.remove();
+      group.classList.remove('is-shocked');
+    }, SHOCK_BADGE_MS);
+  }
+  function clearShocks() {
+    document.querySelectorAll('#region-map .shock-badge').forEach((b) => b.remove());
+    document.querySelectorAll('#region-map .is-shocked').forEach((g) => g.classList.remove('is-shocked'));
+  }
+
   /** Start a playback at month 0; later months come from onMonthTick. */
-  function startPlayback(districtsByMonth, msPerMonth = 1000) {
-    playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth };
+  function startPlayback(districtsByMonth, msPerMonth = 1000, shocks = []) {
+    clearShocks();
+    playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth, shocks: Array.isArray(shocks) ? shocks : [] };
     const svg = document.getElementById('region-map');
     if (svg) svg.style.setProperty('--district-transition', `${Math.max(200, msPerMonth * 0.9)}ms`);
     showMonth(0);
@@ -72,6 +119,7 @@
     if (!playback) return;
     const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
     if (values) renderDistricts(values);
+    playback.shocks.filter((sh) => sh.month === monthIndex).forEach(showShock);
   }
 
   /** Stop playback (colours stay where they are). */
@@ -103,5 +151,5 @@
     if (color) svg.classList.add('is-recoloring');
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback };
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks };
 })();
