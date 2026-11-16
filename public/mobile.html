@@ -10,7 +10,10 @@
 </head>
 <body class="mobile">
   <!-- Phone controller for one council node (NODE-01..NODE-05). -->
-  <header id="m-header" class="m-header" aria-label="Node status"></header>
+  <header id="m-header" class="m-header" aria-label="Node status">
+    <span class="m-brand mono">SOCIETELOS</span>
+    <span id="m-node-label" class="m-node-label mono">NOT CONNECTED</span>
+  </header>
 
   <main id="m-main" class="m-main">
     <section id="m-view-join" class="m-view is-active" aria-label="Join">
@@ -24,7 +27,14 @@
         <p id="join-error" class="m-error danger" role="alert" hidden></p>
       </form>
     </section>
-    <section id="m-view-wait" class="m-view" aria-label="Waiting"></section>
+    <section id="m-view-wait" class="m-view" aria-label="Waiting">
+      <div class="m-center">
+        <p class="m-kicker mono">CONNECTION ESTABLISHED</p>
+        <div id="wait-node" class="node-badge mono">NODE-0?</div>
+        <p id="wait-status" class="m-status">Waiting for the council to assemble…</p>
+        <p class="muted">Keep this screen open. The projector will start the session.</p>
+      </div>
+    </section>
     <section id="m-view-role" class="m-view" aria-label="Secret role"></section>
     <section id="m-view-intel" class="m-view" aria-label="Intel"></section>
     <section id="m-view-debate" class="m-view" aria-label="Debate"></section>
