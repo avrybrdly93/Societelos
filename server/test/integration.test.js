@@ -97,3 +97,20 @@ test('integration: data/crises.json worlds AA and AB drive cycles 3-4', () => {
   }
 });
 
+/** Assertions shared by the AA and AB playthroughs. */
+function checkWorldRun(out, world, crisisIds) {
+  const { game } = out;
+  assert.equal(game.worldKey, world);
+  assert.equal(out.reveals.length, 1);
+  assert.equal(out.reveals[0].worldKey, world);
+  const incidents = out.phases.filter((p) => p.phase === 'INCIDENT').map((p) => `${p.cycle}:${p.crisis && p.crisis.id}`);
+  assert.deepEqual(incidents.slice(2, 4), [`3:${crisisIds[0]}`, `4:${crisisIds[1]}`]);
+  assert.equal(out.resolutions.length, 4);
+  assert.ok(out.phases.findIndex((p) => p.phase === 'WORLD_REVEAL') > out.phases.findIndex((p) => p.cycle === 2 && p.phase === 'RESOLUTION'));
+}
+
+test('integration: headless 4-cycle playthrough on the AA (Commonwealth) branch', async () => {
+  const out = await playFourCycles({ gameId: 'playthroughAA', voteFor: () => ['A'] });
+  checkWorldRun(out, 'AA', ['aa-purpose-drift', 'aa-lost-knowledge']);
+  assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) made the rest of the game volatile');
+});
