@@ -9,6 +9,8 @@ const { EventEmitter } = require('events');
 const fs = require('fs');
 const path = require('path');
 
+const sim = require('./sim');
+
 const DATA_DIR = path.join(__dirname, '..', 'data');
 
 /** Read and parse one JSON file, returning `fallback` if missing or invalid. */
@@ -29,7 +31,8 @@ function loadGameData(dataDir = DATA_DIR) {
   return {
     crises: readJson(path.join(dataDir, 'crises.json'), { fixedCrises: [], worlds: {} }),
     roles: readJson(path.join(dataDir, 'roles.json'), []),
-    citizens: readJson(path.join(dataDir, 'citizens.json'), [])
+    citizens: readJson(path.join(dataDir, 'citizens.json'), []),
+    sim: readJson(path.join(dataDir, 'sim.json'), null)
   };
 }
 
@@ -65,6 +68,13 @@ const PHASES = Object.freeze({
 
 const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
+
+/** Clamp GDW to [0, 100] and round to one decimal place (e.g. 25.0%). */
+function roundGdw(value) {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return 0;
+  return Math.round(Math.max(0, Math.min(100, v)) * 10) / 10;
+}
 const FALLBACK_INTEL = 'The Loom archive returned no new research for your role this cycle. Argue from your agenda.';
 
 // The region revealed in the Council Chamber (250,000 citizens, 5 districts).
@@ -315,44 +325,24 @@ function sanitizeForBroadcast(value, allow = []) {
 }
 
 // ---------------------------------------------------------------------------
-// Stream 4 interface stubs. Until server/sim and server/loom.js expose the
-// agreed interfaces, the engine falls back to these so a cycle stays playable.
+// Stream 4 interfaces. The real simulate() from server/sim drives every
+// resolution; the Loom stub below remains only as a last-resort fallback.
 // ---------------------------------------------------------------------------
 
-const MONTHS_PER_CYCLE = 12;
-
-/**
- * Stub for simulate(state, effects, { runs, seed }).
- * Returns a flat line at current GDW + 5 for both forecast and realized run.
- */
-function simulateStub(state, effects, { runs = 500, seed = 0 } = {}) {
-  const startGdw = typeof state?.gdw === 'number' ? state.gdw : 25;
-  const endGdw = Math.max(0, Math.min(100, startGdw + 5));
-  const line = Array.from({ length: MONTHS_PER_CYCLE + 1 }, (_, m) => (m === 0 ? startGdw : endGdw));
-  return {
-    forecast: {
-      runs,
-      median: line.slice(),
-      p5: line.slice(),
-      p95: line.slice(),
-      pCollapse: 0,
-      pUnrest: endGdw < 15 ? 1 : 0
-    },
-    realized: { seed, gdw: line.slice(), finalGdw: endGdw, districts: [] },
-    finalState: { ...(state || {}), gdw: endGdw },
-    summary: { realizedDelta: endGdw - startGdw, medianDelta: endGdw - startGdw, pCollapse: 0, topMoves: [], shocks: [], stub: true }
-  };
+/** The simulation entry point used by the engine (server/sim/index.js). */
+function resolveSimulate() {
+  return sim.simulate;
 }
 
-/** Resolve the real simulate() from server/sim when it exists, else the stub. */
-function resolveSimulate() {
+/** Fresh cohort state from data/sim.json, or null if the config is missing. */
+function createSimState(simConfig) {
+  if (!simConfig) return null;
   try {
-    const sim = require('./sim');
-    if (sim && typeof sim.simulate === 'function') return sim.simulate;
+    return sim.createInitialState(simConfig);
   } catch (err) {
-    // server/sim/index.js not merged yet.
+    console.error(`[gameEngine] could not build sim state: ${err.message}`);
+    return null;
   }
-  return simulateStub;
 }
 
 /**
@@ -631,18 +621,19 @@ class GameState extends EventEmitter {
     const previousGdw = this.gdw;
 
     const simulate = resolveSimulate();
-    const sim = simulate({ gdw: this.gdw, simState: this.simState }, option.effects, {
+    const simResult = simulate({ gdw: this.gdw, simState: this.simState }, option.effects, {
       runs: 500,
       seed: hashSeed(this.gameId, this.cycle)
     });
-    this.gdw = Math.max(0, Math.min(100, Math.round(sim.realized.finalGdw)));
+    if (simResult.finalState) this.simState = simResult.finalState;
+    this.gdw = roundGdw(simResult.realized.finalGdw);
     this.gdwHistory.push(this.gdw);
     this.choices[this.cycle] = winner;
 
     this.enterPhase(PHASES.RESOLUTION);
 
-    const result = { cycle: this.cycle, winner, totals, tie, policy: option.name, previousGdw, gdwDelta: this.gdw - previousGdw };
-    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: sim.summary, summary: sim.summary, worldKey: this.worldKey };
+    const result = { cycle: this.cycle, winner, totals, tie, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, summary: simResult.summary, worldKey: this.worldKey };
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
       .catch((err) => {
@@ -653,9 +644,9 @@ class GameState extends EventEmitter {
         this.lastResolution = {
           result,
           gdw: this.gdw,
-          forecast: sim.forecast,
-          realized: sim.realized,
-          districts: sim.realized.districts || [],
+          forecast: simResult.forecast,
+          realized: simResult.realized,
+          districts: simResult.realized.districts || [],
           loomLine: narration.loomLine,
           messages: narration.messages || []
         };
@@ -702,8 +693,9 @@ class GameState extends EventEmitter {
     this.crisis = null;
     this.lastResolution = null;
     if (cycleNumber === 1) {
-      this.gdw = STARTING_GDW;
-      this.gdwHistory = [STARTING_GDW];
+      this.simState = createSimState(this.data.sim);
+      this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
+      this.gdwHistory = [this.gdw];
       this.volatility = 1.0;
       this.choices = {};
       this.worldKey = null;
@@ -946,8 +938,9 @@ module.exports = {
   createPrng,
   seededShuffle,
   roleKey,
-  simulateStub,
   resolveSimulate,
+  createSimState,
+  roundGdw,
   loomStub,
   resolveLoom,
   ROOM_CODE_ALPHABET,
