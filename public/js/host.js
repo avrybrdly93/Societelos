@@ -103,6 +103,8 @@
     INTRO: 'view-intro',
     ROLE_ASSIGN: 'view-roles',
     WORLD_REVEAL: 'view-world',
+    FINALE_DEBATE: 'view-finale',
+    FINALE_RANK: 'view-finale',
     END: 'view-end'
   };
   const PHASE_LABELS = {
@@ -544,6 +546,44 @@
     }
   });
 
+  // Finale proposals: five anonymous cards, PROPOSAL I-V, from FINALE_DEBATE.
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  let finalePolicies = [];
+  function proposalLabel(id) {
+    const n = Number(String(id).replace(/\D+/g, ''));
+    return `PROPOSAL ${ROMAN[n - 1] || n}`;
+  }
+  function renderProposals(policies) {
+    const list = document.getElementById('proposal-cards');
+    list.textContent = '';
+    policies.forEach((p) => {
+      const li = document.createElement('li');
+      li.className = 'proposal-card';
+      li.dataset.policy = p.id;
+      const label = document.createElement('p');
+      label.className = 'proposal-label mono';
+      label.textContent = proposalLabel(p.id);
+      const text = document.createElement('p');
+      text.className = 'proposal-text';
+      text.textContent = p.text;
+      li.append(label, text);
+      list.appendChild(li);
+    });
+  }
+  socket.on('phase', (payload) => {
+    if (payload.phase === 'FINALE_DEBATE' && Array.isArray(payload.policies)) {
+      finalePolicies = payload.policies;
+      renderProposals(finalePolicies);
+    }
+    if (payload.phase === 'FINALE_DEBATE' || payload.phase === 'FINALE_RANK') {
+      const ranking = payload.phase === 'FINALE_RANK';
+      document.getElementById('finale-title').textContent = ranking ? 'Rank the proposals on your phone.' : 'Five proposals. Three will be enacted.';
+      document.getElementById('finale-instruction').textContent = ranking
+        ? 'You rank the four you did not write. 1st = 4 points ... 4th = 1 point. Top three are enacted 50 / 25 / 25.'
+        : 'Debate them. Nobody knows who wrote which.';
+    }
+  });
+
   // Vote pips: which nodes have locked in, never what they chose.
   function renderVotePips(voted) {
     const set = new Set(voted || []);
@@ -577,6 +617,7 @@
       lastShown = text;
       // Giant debate clock mirrors the top-bar timer as m:ss.
       document.getElementById('debate-clock').textContent = remaining === null ? '--' : text.replace(/^0/, '');
+      document.getElementById('finale-clock').textContent = remaining === null ? '--' : text.replace(/^0/, '');
     }
     document.getElementById('debate-clock').classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < 10000);
     state.remainingMs = remaining;
@@ -658,6 +699,7 @@
     id: 'mock', title: 'Crisis 01: Who Owns the Loom?', subtitle: 'Economic Distribution',
     incident: 'Dividend riots are erupting across District 4 Eastworks.',
     loomIntro: 'I produce everything. Who should own me?',
+    mode: 'binary',
     debateHook: 'When machines create all wealth, who should own them?',
     feed: [
       { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', districtName: 'Eastworks', cohort: 'Elders', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
