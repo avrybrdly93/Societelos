@@ -99,10 +99,13 @@
   joinForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const name = document.getElementById('join-name').value.trim();
-    if (!name) return;
+    if (!name || joinSubmit.disabled) return; // Enter + tap can't double-submit
     joinSubmit.disabled = true;
     joinError.hidden = true;
+    // Never leave the button dead if the server never answers.
+    const retry = setTimeout(() => { joinSubmit.disabled = false; }, 8000);
     socket.emit('lobby:join', { name }, (res) => {
+      clearTimeout(retry);
       joinSubmit.disabled = false;
       if (!res || !res.ok) {
         joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Connection refused. Try again.';
@@ -362,6 +365,7 @@
     // flight or recorded (rapid A/B mashing sends a single vote:cast).
     if (state.voteLockedCycle === state.cycle) return;
     state.voteLockedCycle = state.cycle;
+    setVoteButtonsDisabled(true); // disabled the instant the vote is tapped
     const override = document.getElementById('vote-override').checked;
     state.lastVote = { cycle: state.cycle, choice };
     buzz(override ? [40, 40, 120] : 50);
@@ -374,6 +378,7 @@
       // Already voted counts as locked; anything else lets the player retry.
       if (res && res.reason === 'ALREADY_VOTED') return;
       state.voteLockedCycle = null; // rejected: allow a retry
+      setVoteButtonsDisabled(false);
       if (res && res.reason === 'OVERRIDE_SPENT') {
         state.overrideUsed = true;
         renderOverrideAvailability();
@@ -381,6 +386,11 @@
       console.warn('[mobile] vote rejected', res && res.reason);
       setVoteLocked(false);
     });
+  }
+
+  function setVoteButtonsDisabled(disabled) {
+    document.querySelectorAll('.vote-btn').forEach((b) => { b.disabled = disabled; });
+    document.getElementById('vote-override').disabled = disabled || !!state.overrideUsed;
   }
 
   // Lock state: "VOTE RECORDED — WAITING FOR OTHER NODES".
@@ -410,6 +420,7 @@
   socket.on('phase', (payload) => {
     if (!payload || payload.phase !== 'VOTE') return;
     setVoteLocked(false);
+    setVoteButtonsDisabled(false);
     renderOverrideAvailability();
   });
 
