@@ -86,4 +86,26 @@ function cohortTraits(state, i) {
   return out;
 }
 
-module.exports = { createInitialState, cloneState, clamp01, computeCohortWellbeing, cohortWellbeingAt, cohortTraits };
+/**
+ * District wellbeing: mean of its cohorts' W weighted by cohort population.
+ */
+function computeDistrictWellbeing(state, districtId) {
+  let sum = 0;
+  let pop = 0;
+  state.cohorts.forEach((c, i) => {
+    if (c.district !== districtId) return;
+    sum += cohortWellbeingAt(state, i) * c.population;
+    pop += c.population;
+  });
+  return pop > 0 ? sum / pop : 0;
+}
+
+module.exports = {
+  createInitialState,
+  cloneState,
+  clamp01,
+  computeCohortWellbeing,
+  cohortWellbeingAt,
+  cohortTraits,
+  computeDistrictWellbeing
+};
