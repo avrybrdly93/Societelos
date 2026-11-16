@@ -40,4 +40,22 @@ for (const { page, scripts } of PAIRS) {
     }
   }
 }
+// Script load order: each page must load its helpers before the controller
+// that uses them (host.js reads window.SocietelosMap and SocietelosCharts).
+const ORDER = [
+  { page: 'index.html', scripts: ['/socket.io/socket.io.js', '/js/map.js', '/js/charts.js', '/js/host.js'] },
+  { page: 'mobile.html', scripts: ['/socket.io/socket.io.js', '/js/mobile.js'] }
+];
+for (const { page, scripts } of ORDER) {
+  const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
+  const srcs = Array.from(html.matchAll(/<script\s+src="([^"]+)"/g), (m) => m[1].replace(/^(?!\/)/, '/'));
+  const positions = scripts.map((s) => srcs.indexOf(s));
+  const ok = positions.every((p) => p >= 0) && positions.every((p, i) => i === 0 || p > positions[i - 1]);
+  if (ok) console.log(`${page}: scripts load in order (${scripts.join(' -> ')})`);
+  else {
+    failed = true;
+    console.error(`${page}: expected script order ${scripts.join(' -> ')}, found ${srcs.join(', ')}`);
+  }
+}
+
 process.exit(failed ? 1 : 0);
