@@ -238,6 +238,7 @@ function normalizeOption(raw, key) {
     roles: Array.isArray(raw.roles) ? raw.roles : [],
     effects: raw.effects || {},
     effectsByWorld: raw.effectsByWorld || null,
+    rolesByWorld: raw.rolesByWorld || null,
     volatility: typeof raw.volatility === 'number' ? raw.volatility : null,
     loomLine: raw.loomLine || null,
     reactions: raw.reactions || []
@@ -305,7 +306,7 @@ function selectCrisis(crises, cycle, worldKey, roles = []) {
 // ---------------------------------------------------------------------------
 
 const SECRET_KEYS = new Set([
-  'effects', 'effectsByWorld', 'roles', 'role', 'roleAssignment', 'intel', 'intelDrops',
+  'effects', 'effectsByWorld', 'rolesByWorld', 'roles', 'role', 'roleAssignment', 'intel', 'intelDrops',
   'token', 'socketId', 'name', 'reactions', 'volatility',
   // Override secrecy: never reveal per-node votes or who spent an Override.
   'votes', 'override', 'overridesUsed'
@@ -638,9 +639,31 @@ class GameState extends EventEmitter {
     return (this.crisis && this.crisis.options && this.crisis.options[key]) || { key, name: `Policy ${key}`, effects: {}, roles: [] };
   }
 
-  /** Effect vector option `key` applies in this game. */
+  /**
+   * Look up a per-world variant (Fixed Crisis 2B): keyed by Cycle 1's winner,
+   * as 'A' / 'B' or '1A' / '1B'. Returns undefined when there is none.
+   */
+  byCycle1World(table) {
+    if (!table) return undefined;
+    const first = this.voteHistory[1] || 'A';
+    return table[first] || table[`1${first}`];
+  }
+
+  /**
+   * Effect vector option `key` applies in this game. Fixed Crisis 2B depends
+   * on Cycle 1: after 1A the Loom holds power (assimilator effects), after 1B
+   * the Owners' Board does (lotus effects).
+   */
   effectsFor(key) {
-    return this.optionFor(key).effects || {};
+    const option = this.optionFor(key);
+    return this.byCycle1World(option.effectsByWorld) || option.effects || {};
+  }
+
+  /** Role tags scored by option `key` (world-dependent for Crisis 2B). */
+  rolesFor(key) {
+    const option = this.optionFor(key);
+    const roles = this.byCycle1World(option.rolesByWorld) || option.roles;
+    return Array.isArray(roles) ? roles : [];
   }
 
   /** Run the cycle's simulation (500 forecasts + realized) for option `key`. */
