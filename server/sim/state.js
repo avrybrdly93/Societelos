@@ -100,7 +100,33 @@ function computeDistrictWellbeing(state, districtId) {
   return pop > 0 ? sum / pop : 0;
 }
 
+/** Population-weighted mean wellbeing W of the whole region. */
+function computeRegionWellbeing(state) {
+  let sum = 0;
+  let pop = 0;
+  state.cohorts.forEach((c, i) => {
+    sum += cohortWellbeingAt(state, i) * c.population;
+    pop += c.population;
+  });
+  return pop > 0 ? sum / pop : 0;
+}
+
+/**
+ * GDW = clamp(scale * (W - floor), min, max) = clamp(125 * (W - 0.20), 0, 100).
+ * Rounded to 1e-9 so the starting state reads exactly 25.
+ * Accepts a state, or a wellbeing number plus the gdw config.
+ */
+function computeGDW(stateOrW, gdwConfig) {
+  const cfg = gdwConfig || (stateOrW && stateOrW.config && stateOrW.config.gdw) || { scale: 125, floorWellbeing: 0.2, min: 0, max: 100 };
+  const w = typeof stateOrW === 'number' ? stateOrW : computeRegionWellbeing(stateOrW);
+  const raw = cfg.scale * (w - cfg.floorWellbeing);
+  const clamped = Math.min(cfg.max, Math.max(cfg.min, raw));
+  return Math.round(clamped * 1e9) / 1e9;
+}
+
 module.exports = {
+  computeRegionWellbeing,
+  computeGDW,
   createInitialState,
   cloneState,
   clamp01,
