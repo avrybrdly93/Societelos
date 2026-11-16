@@ -120,7 +120,8 @@
     ROLE_ASSIGN: 'm-view-role',
     INTEL: 'm-view-intel',
     DEBATE: 'm-view-debate',
-    VOTE: 'm-view-vote'
+    VOTE: 'm-view-vote',
+    RESOLUTION: 'm-view-result'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -200,9 +201,55 @@
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // Resolution: did my policy win, current GDW, and my private score update.
+  // ---------------------------------------------------------------------------
+  function resetResult(cycle) {
+    document.getElementById('result-cycle').textContent = cycle || state.cycle || 1;
+    document.getElementById('result-outcome').textContent = 'THE LOOM IS SIMULATING…';
+    document.getElementById('result-policy').textContent = '—';
+    document.getElementById('result-yours').textContent = '';
+    document.getElementById('result-card').className = 'result-card';
+    document.getElementById('result-score').hidden = true;
+  }
+  socket.on('phase', (payload) => { if (payload && payload.phase === 'RESOLUTION') resetResult(payload.cycle); });
+  socket.on('resolution', (payload) => {
+    if (!payload || !payload.result) return;
+    const r = payload.result;
+    const mine = state.lastVote && state.lastVote.cycle === r.cycle ? state.lastVote.choice : null;
+    const card = document.getElementById('result-card');
+    document.getElementById('result-cycle').textContent = r.cycle;
+    document.getElementById('result-policy').textContent = `Policy ${r.winner}: ${r.policy || ''}`;
+    if (!mine) {
+      document.getElementById('result-outcome').textContent = 'YOU ABSTAINED';
+      card.className = 'result-card is-neutral';
+    } else {
+      const won = mine === r.winner;
+      document.getElementById('result-outcome').textContent = won ? 'YOUR POLICY WON' : 'YOUR POLICY LOST';
+      document.getElementById('result-yours').textContent = `You voted ${mine}.${r.tie ? ' Tied vote: the Loom chose.' : ''}`;
+      card.className = `result-card ${won ? 'is-won' : 'is-lost'}`;
+    }
+    const gdw = typeof payload.gdw === 'number' ? payload.gdw : null;
+    document.getElementById('result-gdw').textContent = gdw === null ? '--%' : `${gdw.toFixed(1)}%`;
+    const delta = typeof r.gdwDelta === 'number' ? r.gdwDelta : null;
+    const deltaEl = document.getElementById('result-gdw-delta');
+    deltaEl.textContent = delta === null ? '' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+    deltaEl.className = `result-gdw-delta mono ${delta < 0 ? 'is-down' : 'is-up'}`;
+  });
+  // score:update { cycle, gained, total } arrives privately with the resolution.
+  socket.on('score:update', (payload) => {
+    if (!payload) return;
+    state.score = payload.total;
+    const el = document.getElementById('result-score');
+    el.hidden = !(payload.gained > 0);
+    el.textContent = `+${payload.gained} AGENDA POINT${payload.gained === 1 ? '' : 'S'}`;
+    document.getElementById('result-total').textContent = `Your agenda score: ${payload.total}`;
+  });
+
   // Tap A or B -> vote:cast { choice, override }
   function castVote(choice) {
     const override = document.getElementById('vote-override').checked;
+    state.lastVote = { cycle: state.cycle, choice };
     setVoteLocked(true, choice, override);
     socket.emit('vote:cast', { choice, override }, (res) => {
       if (res && res.ok) {
@@ -324,6 +371,7 @@
     return payload;
   }
   window.debugMobilePhase = debugMobilePhase;
+  window.debugMobileEvent = debugEmit;
 
   window.SocietelosMobile = { socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();

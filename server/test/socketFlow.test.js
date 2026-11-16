@@ -34,7 +34,7 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
     engine.getRoom(roomCode).gameId = 'socketflow01'; // fixed seeds: reproducible run
 
     const phones = [];
-    const privateEvents = { roles: 0, intel: 0, override: 0 };
+    const privateEvents = { roles: 0, intel: 0, override: 0, score: 0 };
     for (let i = 0; i < 5; i++) {
       const phone = connect({ clientType: 'phone' });
       await once(phone, 'connect');
@@ -44,6 +44,7 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
       phone.on('role:assigned', () => privateEvents.roles++);
       phone.on('intel:drop', () => privateEvents.intel++);
       phone.on('override:status', () => privateEvents.override++);
+      phone.on('score:update', () => privateEvents.score++);
       // Cycle 1: A wins 3-2; cycle 2: B wins -> world AB; cycles 3-4: A wins.
       phone.on('phase', (p) => {
         if (p.phase !== 'VOTE') return;
@@ -74,6 +75,7 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
     assert.equal(privateEvents.roles, 5);
     assert.equal(privateEvents.intel, 20, '5 phones x 4 cycles');
     assert.equal(privateEvents.override, 20);
+    assert.equal(privateEvents.score, 20, 'private score update per phone per cycle');
     const game = engine.getRoom(roomCode);
     assert.equal(game.worldKey, 'AB');
     assert.equal(game.cycle, 5);

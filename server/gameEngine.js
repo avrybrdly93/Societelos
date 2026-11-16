@@ -835,6 +835,13 @@ class GameState extends EventEmitter {
     const roleAwards = this.cycle < TOTAL_CYCLES ? this.awardRolePoints(winner) : {};
     const catalystAwards = this.cycle < TOTAL_CYCLES ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
     this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
+    // Private per-phone score updates (never broadcast: they would hint at
+    // roles), sent right after the resolution payload.
+    const scoreUpdates = Object.keys(this.players).map((node) => {
+      const role = roleAwards[node] || 0;
+      const catalyst = catalystAwards[node] || 0;
+      return { node, cycle: this.cycle, gained: role + catalyst, role, catalyst, total: this.scores[node] || 0 };
+    });
 
     // Safety timer: the Loom's own timeout plus the full animation, so even a
     // stalled narration can never hold the game in RESOLUTION.
@@ -878,6 +885,7 @@ class GameState extends EventEmitter {
           this.lastResolution.endsAt = this.startPhaseTimer(resolutionMs, () => this.advancePhase());
         }
         this.emit('resolution', this.lastResolution);
+        for (const update of scoreUpdates) this.emit('score:update', update);
         return this.lastResolution;
       })
       .catch((err) => {

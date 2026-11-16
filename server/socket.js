@@ -144,6 +144,11 @@ function initSockets(io, gameEngine) {
       emitToNode(game, node, 'override:status', { overrideAvailable: !!overrideAvailable });
     });
 
+    // score:update { cycle, gained, role, catalyst, total } privately to its phone.
+    game.on('score:update', ({ node, cycle, gained, role, catalyst, total }) => {
+      emitToNode(game, node, 'score:update', { cycle, gained, role, catalyst, total });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });

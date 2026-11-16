@@ -111,6 +111,21 @@
         <p class="muted">Waiting for other nodes…</p>
       </div>
     </section>
+    <section id="m-view-result" class="m-view" aria-label="Resolution">
+      <p class="m-kicker mono">RESOLUTION // CYCLE <span id="result-cycle">1</span></p>
+      <div id="result-card" class="result-card">
+        <p id="result-outcome" class="result-outcome mono">THE LOOM IS SIMULATING…</p>
+        <h2 id="result-policy" class="result-policy">—</h2>
+        <p id="result-yours" class="result-yours muted"></p>
+      </div>
+      <div class="result-gdw">
+        <span class="m-label mono">Gross Domestic Well-Being</span>
+        <span id="result-gdw" class="result-gdw-value mono">--%</span>
+        <span id="result-gdw-delta" class="result-gdw-delta mono"></span>
+      </div>
+      <p id="result-score" class="result-score mono" hidden>+1 AGENDA POINT</p>
+      <p id="result-total" class="result-total muted"></p>
+    </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
