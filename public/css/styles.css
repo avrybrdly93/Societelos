@@ -869,3 +869,8 @@ body.host .finale-callout-note { margin: 0; font-size: 24px; }
 
 /* Mobile finale write-in */
 .finale-text { resize: none; min-height: 132px; line-height: 1.4; -webkit-user-select: text; user-select: text; }
+.finale-goal { margin: 8px 0 4px; padding: 12px 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); }
+.finale-goal[hidden] { display: none; }
+.finale-goal .m-label { color: var(--amber); margin: 0; }
+.finale-goal-text { margin: 4px 0; font-size: 17px; }
+.finale-goal-hint { margin: 0; font-size: 13px; }

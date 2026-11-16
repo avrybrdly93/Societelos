@@ -391,6 +391,12 @@
       finaleError.hidden = true;
       finaleSubmit.disabled = false;
     }
+    // Secret agenda reminder above the textarea, so the policy serves it.
+    if (payload && payload.phase === 'FINALE_WRITE') {
+      const goal = state.role && (state.role.goal || state.role.winCondition);
+      document.getElementById('finale-goal').hidden = !goal;
+      document.getElementById('finale-goal-text').textContent = goal ? `${state.role.name}: ${state.role.goal}` : '';
+    }
   });
 
   // Tap A or B -> vote:cast { choice, override }
