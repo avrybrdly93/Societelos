@@ -297,3 +297,19 @@ body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
   box-shadow: 0 0 24px var(--loom-glow);
 }
 .m-status { font-size: 20px; margin: 8px 0 0; }
+
+/* Secret role card */
+.role-card {
+  position: relative;
+  margin-top: 12px;
+  padding: 24px 20px;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--accent);
+  background: linear-gradient(160deg, var(--slate-800), var(--slate-950));
+  box-shadow: 0 0 32px var(--loom-glow);
+}
+.role-icon { font-size: 56px; line-height: 1; }
+.role-title { font-size: 30px; margin: 12px 0 4px; }
+.role-flavor { font-size: 15px; margin: 0 0 16px; }
+.role-heading { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 16px 0 4px; }
+.role-text { margin: 0; font-size: 18px; }
