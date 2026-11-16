@@ -135,6 +135,7 @@
   // the display never drifts from the authoritative server timer.
   const timerEl = document.getElementById('phase-timer');
   let lastShown = '';
+  const LOW_TIME_MS = 5000;
   function formatClock(ms) {
     const total = Math.ceil(ms / 1000);
     const m = Math.floor(total / 60);
@@ -149,6 +150,7 @@
       lastShown = text;
     }
     state.remainingMs = remaining;
+    timerEl.classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < LOW_TIME_MS);
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);

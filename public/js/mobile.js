@@ -170,6 +170,9 @@
     const secs = Math.ceil(remaining / 1000);
     debateClock.textContent = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
     state.remainingMs = remaining;
+    const low = !!state.endsAt && remaining > 0 && remaining < 5000;
+    countdownFill.classList.toggle('is-low', low);
+    debateClock.classList.toggle('is-low', low);
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);

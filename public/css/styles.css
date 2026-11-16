@@ -413,3 +413,12 @@ body.mobile .shield-button { min-height: 44px; display: inline-flex; align-items
 body.mobile .btn:active { transform: scale(0.98); }
 body.mobile { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 body.mobile .m-input { -webkit-user-select: text; user-select: text; }
+
+/* Low-time warning (< 5 s): crimson pulse on host timer and phone countdown. */
+@keyframes low-time-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.timer.is-low,
+.m-clock.is-low { color: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
+.m-countdown-fill.is-low { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
