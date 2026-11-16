@@ -12,6 +12,9 @@ const path = require('path');
 const express = require('express');
 const { Server } = require('socket.io');
 
+const gameEngine = require('./gameEngine');
+const { initSockets } = require('./socket');
+
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
@@ -34,8 +37,8 @@ app.get('/mobile', (req, res) => sendPublicPage(res, ['mobile.html', 'player.htm
 // Host projector screen.
 app.get(['/', '/host'], (req, res) => sendPublicPage(res, ['index.html']));
 
-// Room counter used by /health. The game engine replaces this once it is attached.
-app.locals.getActiveRoomCount = () => 0;
+// Room counter used by /health.
+app.locals.getActiveRoomCount = () => gameEngine.rooms.size;
 
 // Liveness probe: uptime and number of active game rooms.
 app.get('/health', (req, res) => {
@@ -49,10 +52,13 @@ app.get('/health', (req, res) => {
 // HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
+initSockets(io, gameEngine);
 
 // Graceful shutdown: hooks (e.g. clearing game timers) run first, then sockets
 // and the HTTP server close. A hard exit after 3 s guards against hung sockets.
-const shutdownHooks = [];
+const shutdownHooks = [() => {
+  for (const code of Array.from(gameEngine.rooms.keys())) gameEngine.closeRoom(code);
+}];
 let shuttingDown = false;
 
 function shutdown(signal) {
