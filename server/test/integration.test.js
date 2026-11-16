@@ -147,3 +147,24 @@ test('integration: Override counts double, is spent once, and a 3-3 tie goes to 
   assert.deepEqual(r2.totals, { A: 0, B: 4 });
   assert.ok(!JSON.stringify(out.resolutions).includes('NODE-01'), 'no node named in any resolution');
 });
+
+test('integration: the Catalyst scores +1 exactly on cycles whose realized GDW swings by >= 10', async () => {
+  // The Charter (1B) has a +10 median target, so cycle 1 B usually swings >= 10.
+  let out = null;
+  for (const id of ['catalyst0001', 'catalyst0002', 'catalyst0003', 'catalyst0004']) {
+    out = await playFourCycles({ gameId: id, voteFor: (cycle) => [cycle === 1 ? 'B' : 'A'] });
+    if (out.resolutions.some((r) => Math.abs(r.result.gdwDelta) >= 10)) break;
+  }
+  const catalyst = Object.keys(out.roles).find((n) => out.roles[n] === 'catalyst');
+  let swings = 0;
+  out.resolutions.forEach((r) => {
+    const swing = Math.round(Math.abs(r.gdw - r.result.previousGdw) * 10) / 10;
+    const expected = swing >= 10 && r.gdw > 0 ? 1 : 0;
+    swings += expected;
+    const update = out.scores.find((s) => s.node === catalyst && s.cycle === r.result.cycle);
+    assert.equal(update.catalyst, expected, `cycle ${r.result.cycle}: swing ${swing}`);
+    // Nobody else ever gets a Catalyst point.
+    out.scores.filter((s) => s.cycle === r.result.cycle && s.node !== catalyst).forEach((s) => assert.equal(s.catalyst, 0));
+  });
+  assert.ok(swings >= 1, 'at least one >= 10 point swing was exercised');
+});
