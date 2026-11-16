@@ -42,6 +42,26 @@ const ROOM_CODE_LENGTH = 4;
 const NODE_IDS = Object.freeze(['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05']);
 const MAX_PLAYERS = NODE_IDS.length;
 
+// Phase state machine. These strings are part of the socket contract.
+const PHASES = Object.freeze({
+  LOBBY: 'LOBBY',
+  INTRO: 'INTRO',
+  ROLE_ASSIGN: 'ROLE_ASSIGN',
+  CHAMBER: 'CHAMBER',
+  INCIDENT: 'INCIDENT',
+  INTEL: 'INTEL',
+  DEBATE: 'DEBATE',
+  VOTE: 'VOTE',
+  RESOLUTION: 'RESOLUTION',
+  WORLD_REVEAL: 'WORLD_REVEAL',
+  FINALE_WRITE: 'FINALE_WRITE',
+  FINALE_MOD: 'FINALE_MOD',
+  FINALE_DEBATE: 'FINALE_DEBATE',
+  FINALE_RANK: 'FINALE_RANK',
+  FINALE_ENACT: 'FINALE_ENACT',
+  END: 'END'
+});
+
 /**
  * Generate a 4-letter room code not present in `taken` (a Set or Map of codes).
  */
@@ -324,5 +344,6 @@ module.exports = {
   resolveLoom,
   ROOM_CODE_ALPHABET,
   NODE_IDS,
-  MAX_PLAYERS
+  MAX_PLAYERS,
+  PHASES
 };
