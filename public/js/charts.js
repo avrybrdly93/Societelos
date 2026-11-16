@@ -213,15 +213,17 @@
 
     function drawUpTo(t) {
       // t in months (fractional): redraw the fan, then the line up to t.
-      drawForecastFan(chart.forecast, chart.canvas);
+      // Redraw the fan each frame; use its fresh geometry in case the
+      // canvas was resized mid-animation (layout changes, window resize).
+      const current = drawForecastFan(chart.forecast, chart.canvas) || chart;
       const whole = Math.floor(t);
       const partial = values.slice(0, whole + 1);
       if (whole < months) {
         const frac = t - whole;
         partial.push(values[whole] + (values[whole + 1] - values[whole]) * frac);
       }
-      const g = chart.g;
-      const ctx = chart.ctx;
+      const g = current.g;
+      const ctx = current.ctx;
       ctx.save();
       ctx.strokeStyle = COLORS.realized;
       ctx.lineWidth = 4;

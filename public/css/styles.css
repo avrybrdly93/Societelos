@@ -731,3 +731,9 @@ body.host .resolution-loom { font-size: 26px; min-height: calc(26px * 1.35 * 4);
 .res-badge[hidden] { display: none; }
 body.host .res-badge { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 6px; }
 .res-badge-tie { color: var(--slate-950); background: var(--theme-current, var(--accent)); }
+.res-badge-override { color: var(--slate-50); background: var(--danger); animation: low-time-pulse 1.4s ease-in-out 3; }
+.resolution-badges { flex-wrap: nowrap; flex-shrink: 0; }
+body.host .res-badge { font-size: 15px; letter-spacing: 0.04em; padding: 4px 10px; white-space: nowrap; }
+body.host .forecast-banner { flex-shrink: 0; }
+body.host .resolution-loom { min-height: calc(26px * 1.35 * 3); }
+.chart-wrap { min-height: 300px; }
