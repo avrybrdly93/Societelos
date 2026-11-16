@@ -230,60 +230,60 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 **Milestone:** Cycles 1–4 playable end-to-end with the real 500-run Monte Carlo simulation, Override mechanic, World Reveal beat, and live/fallback Loom narration.
 
 ### Agent 1: Network & State (`feature/backend` — 55 Tasks)
-- [ ] **TASK-201:** Replace Monday simulation stub in `server/gameEngine.js` with real `simulate()` imported from `server/sim/index.js`.
-- [ ] **TASK-202:** Replace Monday Loom stub in `server/gameEngine.js` with real `loom.narrate()` imported from `server/loom.js`.
-- [ ] **TASK-203:** Implement binary vote collection structure in `server/gameEngine.js` tracking `{ choice: "A" | "B", override: boolean }` per `NODE-01`..`NODE-05`.
-- [ ] **TASK-204:** Track per-player `overrideUsed` boolean across the entire game in `server/gameEngine.js` (1 Override max per player per game).
-- [ ] **TASK-205:** Reject `override: true` in `server/gameEngine.js` if the player has already spent their Override in an earlier cycle.
-- [ ] **TASK-206:** Calculate weighted vote totals in `server/gameEngine.js` where a normal vote counts as `1` and an Override vote counts as `2`.
-- [ ] **TASK-207:** Ensure Override usage remains completely secret in `server/gameEngine.js` (never broadcast which node spent an Override).
-- [ ] **TASK-208:** Implement tie-breaker logic in `server/gameEngine.js`: when weighted votes for A and B are equal (e.g., 3–3 after an Override), run forecast for both A and B and pick the option with the higher forecast median GDW.
-- [ ] **TASK-209:** Record winning binary option (`"A"` or `"B"`) for each cycle in `gameEngine.voteHistory`.
-- [ ] **TASK-210:** Implement Fixed Crisis 2B `effectsByWorld` resolution in `server/gameEngine.js`: if Cycle 1 won `"A"`, select `1A` effects and `assimilator` tag; if Cycle 1 won `"B"`, select `1B` effects and `lotus` tag.
-- [ ] **TASK-211:** Implement `volatility` state modifier in `server/gameEngine.js`: if Cycle 2 wins `"A"` (The Assembly), set `state.volatility = 1.5` for all remaining cycles.
-- [ ] **TASK-212:** Compute `worldKey = vote1 + vote2` (`"AA"`, `"AB"`, `"BA"`, or `"BB"`) at the conclusion of Cycle 2 in `server/gameEngine.js`.
-- [ ] **TASK-213:** Implement the 10-second `WORLD_REVEAL` phase beat in `server/gameEngine.js` immediately after Cycle 2 `RESOLUTION`.
-- [ ] **TASK-214:** Emit `world:reveal` socket event with `{ worldKey, name, problemLeft }` in `server/socket.js`.
-- [ ] **TASK-215:** Implement crisis lookup for Cycles 3 and 4 in `server/gameEngine.js` filtering `data/crises.json` by `world === state.worldKey` and `cycle === currentCycle`.
-- [ ] **TASK-216:** Implement Role Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to any player whose secret role is listed in the winning option's `roles` array.
-- [ ] **TASK-217:** Implement Catalyst Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to the Catalyst player if `Math.abs(realizedGDW - previousGDW) >= 10` AND `realizedGDW > 0`.
-- [ ] **TASK-218:** Maintain per-cycle score ledger in `server/gameEngine.js` for end-screen breakdown.
-- [ ] **TASK-219:** Update `state.simState` with `simResult.finalState` after each cycle's resolution in `server/gameEngine.js`.
-- [ ] **TASK-220:** Append monthly realized GDW trajectory to `state.gdwHistory` in `server/gameEngine.js`.
-- [ ] **TASK-221:** Implement immediate Loom Shutdown check in `server/gameEngine.js`: if `realizedGDW <= 0` at the end of any resolution, skip remaining cycles and transition straight to `END` (Shutdown Ending).
-- [ ] **TASK-222:** Assemble narration context object `{ crisis, winningOption, simSummary, worldKey }` in `server/gameEngine.js` and pass to `loom.narrate()`.
-- [ ] **TASK-223:** Run `loom.narrate()` in parallel with or immediately following the `<50ms` simulation run before emitting `resolution` in `server/gameEngine.js`.
-- [ ] **TASK-224:** Construct full `resolution` payload `{ result, gdw, forecast, realized, districts, loomLine, messages }` in `server/gameEngine.js`.
-- [ ] **TASK-225:** Implement optional `showForecastBeforeVote` config flag in `server/gameEngine.js` to pre-compute Option A and Option B forecasts during `DEBATE` if enabled.
-- [ ] **TASK-226:** Broadcast updated `overrideAvailable` boolean privately to each phone at the start of `VOTE` phase in `server/socket.js`.
-- [ ] **TASK-227:** Add vote validation in `server/socket.js` ignoring duplicate votes from the same node within the same cycle.
-- [ ] **TASK-228:** Handle default abstention in `server/gameEngine.js` if a phone disconnects and fails to vote before the 15s timer expires.
-- [ ] **TASK-229:** Implement deterministic tie-breaker fallback if both options have identical forecast medians (default to Option A).
-- [ ] **TASK-230:** Add cycle transition handler in `server/gameEngine.js` advancing from Cycle 1 -> 2 -> World Reveal -> 3 -> 4.
-- [ ] **TASK-231:** Verify `seed = hash(gameId, cycle)` is passed into `simulate()` so every cycle is 100% reproducible.
-- [ ] **TASK-232:** Add server log trace for cycle transitions, winning policies, and realized GDW (excluding secret role assignments).
-- [ ] **TASK-233:** Implement `/api/state` debug endpoint (disabled in production) to inspect non-secret server state during integration testing.
-- [ ] **TASK-234:** Write unit test in `server/` verifying weighted vote counting with 0, 1, and multiple Overrides.
-- [ ] **TASK-235:** Write unit test verifying Loom tie-breaker selects the option with higher forecast median GDW.
-- [ ] **TASK-236:** Write unit test verifying `worldKey` generation across all 4 combinations (`AA`, `AB`, `BA`, `BB`).
-- [ ] **TASK-237:** Write unit test verifying Crisis 2B applies `assimilator` in `AB` world and `lotus` in `BB` world.
-- [ ] **TASK-238:** Write unit test verifying Catalyst scores `+1` on a `-10` GDW drop (if GDW > 0) and `0` on a `-9.9` drop.
-- [ ] **TASK-239:** Write unit test verifying Catalyst scores `0` if GDW drops by `15` to reach `0` (Loom shutdown).
-- [ ] **TASK-240:** Write unit test verifying immediate transition to `END` when realized GDW hits `0` in Cycle 2.
-- [ ] **TASK-241:** Verify `intel:drop` delivers world-specific intel for Cycles 3 and 4.
-- [ ] **TASK-242:** Ensure `resolution` timer waits for month-by-month animation duration (20s) before starting next cycle's `INCIDENT`.
-- [ ] **TASK-243:** Add socket event rate-limiting per client in `server/socket.js` to prevent button-mashing floods.
-- [ ] **TASK-244:** Ensure `world:reveal` sets persistent `worldKey` on the game state for reconnecting clients.
-- [ ] **TASK-245:** Verify `gameEngine.resetGame()` cleanly resets all cycle counters, overrides, scores, and `volatility` for a new session.
-- [ ] **TASK-246:** Test Cycle 1 -> Cycle 4 automated state flow using `FAST_TIMERS=true`.
-- [ ] **TASK-247:** Verify `resolution` payload matches exact socket specification table.
-- [ ] **TASK-248:** Verify `districts` array in `resolution` includes per-month wellbeing for all 5 districts so the frontend map can animate month-by-month.
-- [ ] **TASK-249:** Handle promise rejections safely around `loom.narrate()` in `server/gameEngine.js`.
-- [ ] **TASK-250:** Verify memory usage remains flat across 4 consecutive cycles in `server/gameEngine.js`.
-- [ ] **TASK-251:** Check all `server/` files for linter and syntax compliance.
-- [ ] **TASK-252:** Verify zero references to `public/` or `data/` internal implementation details in `server/`.
-- [ ] **TASK-253:** Test 5-client simulated socket run through Cycles 1–4.
-- [ ] **TASK-254:** Confirm all Tuesday backend tasks complete.
+- [x] **TASK-201:** Replace Monday simulation stub in `server/gameEngine.js` with real `simulate()` imported from `server/sim/index.js`.
+- [x] **TASK-202:** Replace Monday Loom stub in `server/gameEngine.js` with real `loom.narrate()` imported from `server/loom.js`.
+- [x] **TASK-203:** Implement binary vote collection structure in `server/gameEngine.js` tracking `{ choice: "A" | "B", override: boolean }` per `NODE-01`..`NODE-05`.
+- [x] **TASK-204:** Track per-player `overrideUsed` boolean across the entire game in `server/gameEngine.js` (1 Override max per player per game).
+- [x] **TASK-205:** Reject `override: true` in `server/gameEngine.js` if the player has already spent their Override in an earlier cycle.
+- [x] **TASK-206:** Calculate weighted vote totals in `server/gameEngine.js` where a normal vote counts as `1` and an Override vote counts as `2`.
+- [x] **TASK-207:** Ensure Override usage remains completely secret in `server/gameEngine.js` (never broadcast which node spent an Override).
+- [x] **TASK-208:** Implement tie-breaker logic in `server/gameEngine.js`: when weighted votes for A and B are equal (e.g., 3–3 after an Override), run forecast for both A and B and pick the option with the higher forecast median GDW.
+- [x] **TASK-209:** Record winning binary option (`"A"` or `"B"`) for each cycle in `gameEngine.voteHistory`.
+- [x] **TASK-210:** Implement Fixed Crisis 2B `effectsByWorld` resolution in `server/gameEngine.js`: if Cycle 1 won `"A"`, select `1A` effects and `assimilator` tag; if Cycle 1 won `"B"`, select `1B` effects and `lotus` tag.
+- [x] **TASK-211:** Implement `volatility` state modifier in `server/gameEngine.js`: if Cycle 2 wins `"A"` (The Assembly), set `state.volatility = 1.5` for all remaining cycles.
+- [x] **TASK-212:** Compute `worldKey = vote1 + vote2` (`"AA"`, `"AB"`, `"BA"`, or `"BB"`) at the conclusion of Cycle 2 in `server/gameEngine.js`.
+- [x] **TASK-213:** Implement the 10-second `WORLD_REVEAL` phase beat in `server/gameEngine.js` immediately after Cycle 2 `RESOLUTION`.
+- [x] **TASK-214:** Emit `world:reveal` socket event with `{ worldKey, name, problemLeft }` in `server/socket.js`.
+- [x] **TASK-215:** Implement crisis lookup for Cycles 3 and 4 in `server/gameEngine.js` filtering `data/crises.json` by `world === state.worldKey` and `cycle === currentCycle`.
+- [x] **TASK-216:** Implement Role Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to any player whose secret role is listed in the winning option's `roles` array.
+- [x] **TASK-217:** Implement Catalyst Scoring for Cycles 1–4 in `server/gameEngine.js`: award `+1` point to the Catalyst player if `Math.abs(realizedGDW - previousGDW) >= 10` AND `realizedGDW > 0`.
+- [x] **TASK-218:** Maintain per-cycle score ledger in `server/gameEngine.js` for end-screen breakdown.
+- [x] **TASK-219:** Update `state.simState` with `simResult.finalState` after each cycle's resolution in `server/gameEngine.js`.
+- [x] **TASK-220:** Append monthly realized GDW trajectory to `state.gdwHistory` in `server/gameEngine.js`.
+- [x] **TASK-221:** Implement immediate Loom Shutdown check in `server/gameEngine.js`: if `realizedGDW <= 0` at the end of any resolution, skip remaining cycles and transition straight to `END` (Shutdown Ending).
+- [x] **TASK-222:** Assemble narration context object `{ crisis, winningOption, simSummary, worldKey }` in `server/gameEngine.js` and pass to `loom.narrate()`.
+- [x] **TASK-223:** Run `loom.narrate()` in parallel with or immediately following the `<50ms` simulation run before emitting `resolution` in `server/gameEngine.js`.
+- [x] **TASK-224:** Construct full `resolution` payload `{ result, gdw, forecast, realized, districts, loomLine, messages }` in `server/gameEngine.js`.
+- [x] **TASK-225:** Implement optional `showForecastBeforeVote` config flag in `server/gameEngine.js` to pre-compute Option A and Option B forecasts during `DEBATE` if enabled.
+- [x] **TASK-226:** Broadcast updated `overrideAvailable` boolean privately to each phone at the start of `VOTE` phase in `server/socket.js`.
+- [x] **TASK-227:** Add vote validation in `server/socket.js` ignoring duplicate votes from the same node within the same cycle.
+- [x] **TASK-228:** Handle default abstention in `server/gameEngine.js` if a phone disconnects and fails to vote before the 15s timer expires.
+- [x] **TASK-229:** Implement deterministic tie-breaker fallback if both options have identical forecast medians (default to Option A).
+- [x] **TASK-230:** Add cycle transition handler in `server/gameEngine.js` advancing from Cycle 1 -> 2 -> World Reveal -> 3 -> 4.
+- [x] **TASK-231:** Verify `seed = hash(gameId, cycle)` is passed into `simulate()` so every cycle is 100% reproducible.
+- [x] **TASK-232:** Add server log trace for cycle transitions, winning policies, and realized GDW (excluding secret role assignments).
+- [x] **TASK-233:** Implement `/api/state` debug endpoint (disabled in production) to inspect non-secret server state during integration testing.
+- [x] **TASK-234:** Write unit test in `server/` verifying weighted vote counting with 0, 1, and multiple Overrides.
+- [x] **TASK-235:** Write unit test verifying Loom tie-breaker selects the option with higher forecast median GDW.
+- [x] **TASK-236:** Write unit test verifying `worldKey` generation across all 4 combinations (`AA`, `AB`, `BA`, `BB`).
+- [x] **TASK-237:** Write unit test verifying Crisis 2B applies `assimilator` in `AB` world and `lotus` in `BB` world.
+- [x] **TASK-238:** Write unit test verifying Catalyst scores `+1` on a `-10` GDW drop (if GDW > 0) and `0` on a `-9.9` drop.
+- [x] **TASK-239:** Write unit test verifying Catalyst scores `0` if GDW drops by `15` to reach `0` (Loom shutdown).
+- [x] **TASK-240:** Write unit test verifying immediate transition to `END` when realized GDW hits `0` in Cycle 2.
+- [x] **TASK-241:** Verify `intel:drop` delivers world-specific intel for Cycles 3 and 4.
+- [x] **TASK-242:** Ensure `resolution` timer waits for month-by-month animation duration (20s) before starting next cycle's `INCIDENT`.
+- [x] **TASK-243:** Add socket event rate-limiting per client in `server/socket.js` to prevent button-mashing floods.
+- [x] **TASK-244:** Ensure `world:reveal` sets persistent `worldKey` on the game state for reconnecting clients.
+- [x] **TASK-245:** Verify `gameEngine.resetGame()` cleanly resets all cycle counters, overrides, scores, and `volatility` for a new session.
+- [x] **TASK-246:** Test Cycle 1 -> Cycle 4 automated state flow using `FAST_TIMERS=true`.
+- [x] **TASK-247:** Verify `resolution` payload matches exact socket specification table.
+- [x] **TASK-248:** Verify `districts` array in `resolution` includes per-month wellbeing for all 5 districts so the frontend map can animate month-by-month.
+- [x] **TASK-249:** Handle promise rejections safely around `loom.narrate()` in `server/gameEngine.js`.
+- [x] **TASK-250:** Verify memory usage remains flat across 4 consecutive cycles in `server/gameEngine.js`.
+- [x] **TASK-251:** Check all `server/` files for linter and syntax compliance.
+- [x] **TASK-252:** Verify zero references to `public/` or `data/` internal implementation details in `server/`.
+- [x] **TASK-253:** Test 5-client simulated socket run through Cycles 1–4.
+- [x] **TASK-254:** Confirm all Tuesday backend tasks complete.
 - [ ] **TASK-255:** Prepare `feature/backend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
