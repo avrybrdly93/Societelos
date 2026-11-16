@@ -344,3 +344,13 @@ test('resolution payload matches the socket specification table', async () => {
   const wire = JSON.stringify(resolution);
   for (const secret of ['"effects"', '"roles"', '"override"', '"votes"', '"token"']) assert.ok(!wire.includes(secret), secret);
 });
+
+test('resolution districts carry per-month wellbeing for all 5 districts', async () => {
+  const game = votingGame();
+  const { districts } = await resolveWith(game, 'A');
+  assert.equal(districts.length, 13, 'month 0 (start) through month 12');
+  for (const month of districts) {
+    assert.deepEqual(Object.keys(month).sort(), ['D1', 'D2', 'D3', 'D4', 'D5']);
+    for (const w of Object.values(month)) assert.ok(Number.isFinite(w) && w >= 0 && w <= 1);
+  }
+});
