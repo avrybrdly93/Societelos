@@ -872,3 +872,17 @@ test('rankPolicies records a ranking during FINALE_RANK only', async () => {
   game.phase = 'FINALE_ENACT';
   assert.equal(game.rankPolicies('NODE-02', game.finale.ballots['NODE-02']).reason, 'RANKING_CLOSED');
 });
+
+test('finale:rank must list exactly the 4 ballot policies, once each, never the voter\'s own', async () => {
+  const { game } = await rankingFinale();
+  game.stop();
+  const own = Object.keys(game.finale.authors).find((id) => game.finale.authors[id] === 'NODE-02');
+  const ballot = game.finale.ballots['NODE-02'];
+  assert.equal(game.rankPolicies('NODE-02', ballot.slice(0, 3)).reason, 'BAD_ORDER');
+  assert.equal(game.rankPolicies('NODE-02', [ballot[0], ballot[0], ballot[1], ballot[2]]).reason, 'DUPLICATE_POLICY');
+  assert.equal(game.rankPolicies('NODE-02', [own, ballot[0], ballot[1], ballot[2]]).reason, 'OWN_POLICY');
+  assert.equal(game.rankPolicies('NODE-02', ['POLICY-9', ballot[0], ballot[1], ballot[2]]).reason, 'UNKNOWN_POLICY');
+  assert.equal(game.rankPolicies('NODE-02', 'POLICY-1').reason, 'BAD_ORDER');
+  assert.equal(game.finale.ranks['NODE-02'], undefined);
+  assert.equal(game.rankPolicies('NODE-02', ballot.slice().reverse()).ok, true);
+});

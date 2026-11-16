@@ -844,6 +844,13 @@ class GameState extends EventEmitter {
   rankPolicies(node, order) {
     if (this.phase !== PHASES.FINALE_RANK || !this.finale || !this.finale.rankingOpen) return { ok: false, reason: 'RANKING_CLOSED' };
     if (!this.players[node]) return { ok: false, reason: 'UNKNOWN_NODE' };
+    // Exactly the 4 policies on this node's ballot, each once: never its own,
+    // never an unknown id, whatever a spoofed packet claims.
+    const ballot = this.finale.ballots[node] || [];
+    if (!Array.isArray(order) || order.length !== 4) return { ok: false, reason: 'BAD_ORDER' };
+    if (new Set(order).size !== 4) return { ok: false, reason: 'DUPLICATE_POLICY' };
+    if (order.some((id) => this.finale.authors[id] === node)) return { ok: false, reason: 'OWN_POLICY' };
+    if (!order.every((id) => ballot.includes(id))) return { ok: false, reason: 'UNKNOWN_POLICY' };
     this.finale.ranks[node] = order.slice();
     return { ok: true };
   }
