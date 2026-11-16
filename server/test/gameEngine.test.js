@@ -938,3 +938,9 @@ test('selectEnacted takes the top 3 policies at 50% / 25% / 25%', () => {
     { id: 'P5', place: 'third', weight: 0.25, points: 9 }
   ]);
 });
+
+test('packageEffects weights the top 3 at 0.50 / 0.25 / 0.25', () => {
+  const effects = { P1: { purpose: 0.8, autonomy: -0.4 }, P2: { purpose: 0.4, health: 1 }, P3: { purpose: -0.4, health: -1 } };
+  const pkg = engine.packageEffects(engine.selectEnacted([{ id: 'P1' }, { id: 'P2' }, { id: 'P3' }]), (id) => effects[id]);
+  assert.deepEqual(pkg, { purpose: 0.4, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: -0.2 });
+});

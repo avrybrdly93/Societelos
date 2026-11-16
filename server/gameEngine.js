@@ -476,6 +476,26 @@ function selectEnacted(rows) {
   return rows.slice(0, FINALE_WEIGHTS.length).map((r, i) => ({ id: r.id, place: FINALE_PLACES[i], weight: FINALE_WEIGHTS[i], points: r.points }));
 }
 
+const TRAITS = Object.freeze(['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy']);
+
+/**
+ * The finale package effect vector: e(k) = 0.50 e1(k) + 0.25 e2(k) + 0.25 e3(k)
+ * for each trait, so opposing policies cancel. `enacted` is selectEnacted()
+ * output; `effectsOf(id)` returns a policy's vector. Clamped to [-1, 1].
+ */
+function packageEffects(enacted, effectsOf) {
+  const out = {};
+  for (const t of TRAITS) {
+    let v = 0;
+    for (const { id, weight } of enacted) {
+      const e = effectsOf(id) || {};
+      v += weight * (typeof e[t] === 'number' ? e[t] : 0);
+    }
+    out[t] = Math.round(Math.max(-1, Math.min(1, v)) * 1e6) / 1e6;
+  }
+  return out;
+}
+
 /** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
 function computeWorldKey(vote1, vote2) {
   const ok = (v) => v === 'A' || v === 'B';
@@ -1691,6 +1711,7 @@ module.exports = {
   bordaCount,
   rankBorda,
   selectEnacted,
+  packageEffects,
   FINALE_WEIGHTS,
   BORDA_POINTS,
   roundGdw,
