@@ -389,6 +389,18 @@ function resolveLoom() {
   return loom;
 }
 
+const CATALYST_SWING = 10;
+
+/**
+ * Catalyst rule: a cycle "moves the needle" when realized GDW swings by at
+ * least 10 points either way, unless the swing shut the Loom down (GDW 0).
+ * The swing is compared at one decimal place, so -10.0 counts and -9.9 does not.
+ */
+function catalystScores(previousGdw, realizedGdw) {
+  const swing = Math.round(Math.abs(realizedGdw - previousGdw) * 10) / 10;
+  return swing >= CATALYST_SWING && realizedGdw > 0;
+}
+
 /** World key from the first two votes: 'AA' | 'AB' | 'BA' | 'BB' (null if incomplete). */
 function computeWorldKey(vote1, vote2) {
   const ok = (v) => v === 'A' || v === 'B';
@@ -700,6 +712,19 @@ class GameState extends EventEmitter {
     return awards;
   }
 
+  /** Catalyst scoring (cycles 1-4): +1 to the Catalyst on a >= 10 point GDW swing. */
+  awardCatalystPoints(previousGdw, realizedGdw) {
+    if (!catalystScores(previousGdw, realizedGdw)) return {};
+    const awards = {};
+    for (const [node, role] of Object.entries(this.roleAssignment || {})) {
+      if (role && role.key === 'catalyst') {
+        this.scores[node] = (this.scores[node] || 0) + 1;
+        awards[node] = 1;
+      }
+    }
+    return awards;
+  }
+
   /**
    * RESOLUTION: close voting, run the simulation (stub until server/sim is
    * merged) on the winning option and broadcast 'resolution' once the Loom's
@@ -733,6 +758,7 @@ class GameState extends EventEmitter {
     // Cycles 1 and 2 decide the world for cycles 3-5.
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
     const roleAwards = this.cycle < TOTAL_CYCLES ? this.awardRolePoints(winner) : {};
+    const catalystAwards = this.cycle < TOTAL_CYCLES ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
 
     this.enterPhase(PHASES.RESOLUTION);
 
@@ -1067,6 +1093,7 @@ module.exports = {
   breakTie,
   forecastMedianEnd,
   computeWorldKey,
+  catalystScores,
   roundGdw,
   loomStub,
   resolveLoom,
