@@ -32,6 +32,18 @@ app.get('/mobile', (req, res) => sendPublicPage(res, ['mobile.html', 'player.htm
 // Host projector screen.
 app.get(['/', '/host'], (req, res) => sendPublicPage(res, ['index.html']));
 
+// Room counter used by /health. The game engine replaces this once it is attached.
+app.locals.getActiveRoomCount = () => 0;
+
+// Liveness probe: uptime and number of active game rooms.
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptimeSeconds: Math.round(process.uptime()),
+    activeRooms: app.locals.getActiveRoomCount()
+  });
+});
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[server] Societelos listening on http://localhost:${PORT}`);
