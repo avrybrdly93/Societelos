@@ -71,7 +71,40 @@
       "character": "Rural; sympathetic to the Unplugged"
     }
   ],
-  "cohorts": [],
+  "cohorts": [
+    {
+      "id": "youth",
+      "name": "Youth",
+      "ages": "15-29",
+      "share": 0.25
+    },
+    {
+      "id": "workers",
+      "name": "Former workers",
+      "ages": "30-59",
+      "share": 0.45
+    },
+    {
+      "id": "elders",
+      "name": "Elders",
+      "ages": "60+",
+      "share": 0.29
+    },
+    {
+      "id": "elite",
+      "name": "Former elite",
+      "ages": "any",
+      "share": 0.01
+    }
+  ],
+  "cohortSharesByDistrict": {
+    "D1": {
+      "youth": 0.24,
+      "workers": 0.432,
+      "elders": 0.278,
+      "elite": 0.05
+    }
+  },
   "weights": {},
   "baseline": 0.4,
   "offsets": {},
