@@ -3,8 +3,8 @@
 // One simulated month for every cohort. Pure functions over the state's trait
 // buffer; randomness only from the PRNG passed in.
 
-const { clamp01 } = require('./state');
-const { randomNormal, randomUniform } = require('./prng');
+const { clamp01, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
+const { mulberry32, randomNormal, randomUniform } = require('./prng');
 
 /**
  * Precompute everything a run needs from the config so stepMonth does no
@@ -151,4 +151,46 @@ function clampTraits(state) {
   for (let j = 0; j < t.length; j++) t[j] = clamp01(t[j]);
 }
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01 };
+/** Snapshot of every district's wellbeing: { D1: w, ... }. */
+function districtSnapshot(state, districtIds) {
+  const out = {};
+  for (const id of districtIds) out[id] = computeDistrictWellbeing(state, id);
+  return out;
+}
+
+/**
+ * Run one 12-month simulation from `initialState` (left untouched).
+ * A forecast run redraws the model's uncertain parameters from the seed:
+ * alpha ~ N(alpha, alphaSD) clamped, and every sensitivity x U(0.8, 1.2).
+ * The realized run (isForecast = false) uses the base parameters.
+ * @returns {{ seed, gdw: number[], districts: object[], shocks: object[], finalState }}
+ *   gdw and districts have monthsPerCycle + 1 entries (month 0 = start).
+ */
+function runSingleSimulation(initialState, effects, seed, isForecast = false, opts = {}) {
+  const c = initialState.config.constants;
+  const rng = mulberry32(seed);
+  const state = cloneState(initialState);
+  const paramOpts = { volatility: opts.volatility };
+  if (isForecast) {
+    const a = randomNormal(rng, c.alpha, c.alphaSD);
+    paramOpts.alpha = Math.min(c.alphaMax, Math.max(c.alphaMin, a));
+    paramOpts.sensitivityScale = () => randomUniform(rng, c.sensitivityJitterMin, c.sensitivityJitterMax);
+  }
+  const params = buildParams(state, paramOpts);
+  const months = c.monthsPerCycle;
+  const gdw = [computeGDW(state)];
+  const districts = [districtSnapshot(state, params.districtIds)];
+  const shocks = [];
+  for (let m = 1; m <= months; m++) {
+    const res = stepMonth(state, effects, m, params, rng);
+    if (res.shocks.length) shocks.push(...res.shocks);
+    gdw.push(computeGDW(state));
+    districts.push(districtSnapshot(state, params.districtIds));
+  }
+  state.month = 0;
+  return { seed, gdw, districts, shocks, finalState: state };
+}
+
+module.exports = {
+  runSingleSimulation,
+  districtSnapshot, buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01 };
