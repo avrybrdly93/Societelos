@@ -44,4 +44,18 @@ function createInitialState(simConfig) {
   return { config: simConfig, traitNames, cohorts, traits, month: 0 };
 }
 
-module.exports = { createInitialState, clamp01 };
+/**
+ * Fast copy for Monte Carlo runs: config, trait names and cohort metadata are
+ * immutable and shared; only the trait buffer is copied.
+ */
+function cloneState(state) {
+  return {
+    config: state.config,
+    traitNames: state.traitNames,
+    cohorts: state.cohorts,
+    traits: new Float64Array(state.traits),
+    month: state.month
+  };
+}
+
+module.exports = { createInitialState, cloneState, clamp01 };
