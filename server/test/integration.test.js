@@ -122,3 +122,28 @@ test('integration: headless 4-cycle playthrough on the AB (Benevolent Machine) b
   // Crisis 2B after 1A: the Loom governs, with the assimilator tag.
   assert.deepEqual(out.resolutions[1].result.governance, { holder: 'loom', line: 'The Loom will govern on your behalf.' });
 });
+
+test('integration: Override counts double, is spent once, and a 3-3 tie goes to the higher forecast', async () => {
+  // Cycle 1: NODE-01 votes A with its Override, NODE-02 A, three B -> 3-3.
+  // Cycle 2: NODE-01 tries a second Override (rejected, so it abstains).
+  const out = await playFourCycles({
+    gameId: 'overridetie1',
+    voteFor: (cycle, i) => (cycle === 1 ? [i < 2 ? 'A' : 'B', i === 0] : cycle === 2 && i === 0 ? ['A', true] : ['B'])
+  });
+  const [r1, r2] = out.resolutions.map((r) => r.result);
+  assert.deepEqual(r1.totals, { A: 3, B: 3 });
+  assert.equal(r1.tie, true);
+  // Recompute the Loom's tie-break independently from the same seed and state.
+  const sim = require('../sim');
+  const data = engine.loadGameData();
+  const crisis = engine.selectCrisis(data.crises, 1, null, data.roles);
+  const start = sim.createInitialState(data.sim);
+  const seed = engine.hashSeed('overridetie1', 1);
+  const median = (key) => sim.simulate({ simState: start }, crisis.options[key].effects, { runs: 500, seed, volatility: 1 }).forecast.median[12];
+  assert.equal(r1.winner, median('B') > median('A') ? 'B' : 'A');
+  // The spent Override is refused next cycle: NODE-01 abstains, nobody learns why.
+  assert.equal(out.game.overrideAvailable('NODE-01'), false);
+  assert.equal(r2.abstained, 1);
+  assert.deepEqual(r2.totals, { A: 0, B: 4 });
+  assert.ok(!JSON.stringify(out.resolutions).includes('NODE-01'), 'no node named in any resolution');
+});
