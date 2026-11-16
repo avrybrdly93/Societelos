@@ -386,6 +386,23 @@ function resolveLoom() {
   return loom;
 }
 
+/** Final-month forecast median GDW of a simulate() result (NaN if missing). */
+function forecastMedianEnd(simResult) {
+  const median = simResult && simResult.forecast && simResult.forecast.median;
+  return Array.isArray(median) && median.length ? median[median.length - 1] : NaN;
+}
+
+/**
+ * The Loom's tie-breaker: on a weighted A/B tie it picks the option whose
+ * forecast median GDW ends higher. It is protecting itself.
+ * @returns {'A' | 'B'}
+ */
+function breakTie(simA, simB) {
+  const a = forecastMedianEnd(simA);
+  const b = forecastMedianEnd(simB);
+  return b > a ? 'B' : 'A';
+}
+
 /**
  * State for one game room (one projector + 5 phones).
  * Emits events ('phase', ...) that socket.js relays to clients.
@@ -605,7 +622,7 @@ class GameState extends EventEmitter {
 
   /**
    * Count the blind votes: a normal vote is worth 1, an Override 2.
-   * Ties go to A for now (the forecast tie-breaker arrives on Tuesday).
+   * `winner` is provisional on a tie; startResolutionPhase applies breakTie.
    */
   tallyVotes() {
     const totals = { A: 0, B: 0 };
@@ -616,6 +633,25 @@ class GameState extends EventEmitter {
     return { totals, winner, tie: totals.A === totals.B };
   }
 
+  /** Option `key` of the current crisis, or an empty placeholder. */
+  optionFor(key) {
+    return (this.crisis && this.crisis.options && this.crisis.options[key]) || { key, name: `Policy ${key}`, effects: {}, roles: [] };
+  }
+
+  /** Effect vector option `key` applies in this game. */
+  effectsFor(key) {
+    return this.optionFor(key).effects || {};
+  }
+
+  /** Run the cycle's simulation (500 forecasts + realized) for option `key`. */
+  runSimulation(key) {
+    const simulate = resolveSimulate();
+    return simulate({ gdw: this.gdw, simState: this.simState }, this.effectsFor(key), {
+      runs: 500,
+      seed: hashSeed(this.gameId, this.cycle)
+    });
+  }
+
   /**
    * RESOLUTION: close voting, run the simulation (stub until server/sim is
    * merged) on the winning option and broadcast 'resolution' once the Loom's
@@ -624,15 +660,21 @@ class GameState extends EventEmitter {
    */
   startResolutionPhase() {
     this.votingOpen = false;
-    const { totals, winner, tie } = this.tallyVotes();
-    const option = (this.crisis && this.crisis.options[winner]) || { key: winner, effects: {}, roles: [] };
+    const { totals, tie, winner: provisional } = this.tallyVotes();
+    let winner = provisional;
     const previousGdw = this.gdw;
 
-    const simulate = resolveSimulate();
-    const simResult = simulate({ gdw: this.gdw, simState: this.simState }, option.effects, {
-      runs: 500,
-      seed: hashSeed(this.gameId, this.cycle)
-    });
+    let simResult;
+    if (tie) {
+      // Tie (e.g. 3-3 after an Override): forecast both options, keep the
+      // one with the higher median GDW and reuse its run as the resolution.
+      const sims = { A: this.runSimulation('A'), B: this.runSimulation('B') };
+      winner = breakTie(sims.A, sims.B);
+      simResult = sims[winner];
+    } else {
+      simResult = this.runSimulation(winner);
+    }
+    const option = this.optionFor(winner);
     if (simResult.finalState) this.simState = simResult.finalState;
     this.gdw = roundGdw(simResult.realized.finalGdw);
     this.gdwHistory.push(this.gdw);
@@ -950,6 +992,8 @@ module.exports = {
   roleKey,
   resolveSimulate,
   createSimState,
+  breakTie,
+  forecastMedianEnd,
   roundGdw,
   loomStub,
   resolveLoom,
