@@ -113,8 +113,60 @@
     "autonomy": 0.15,
     "trust": 0.1
   },
-  "baseline": 0.4,
-  "offsets": {},
+  "baseline": 0.41340464,
+  "offsets": {
+    "districts": {
+      "D1": {
+        "fairness": 0.03,
+        "trust": 0.02,
+        "connection": -0.02
+      },
+      "D2": {
+        "trust": 0.05,
+        "autonomy": -0.04,
+        "connection": -0.03
+      },
+      "D3": {
+        "connection": 0.03,
+        "health": 0.02
+      },
+      "D4": {
+        "fairness": -0.08,
+        "trust": -0.04,
+        "purpose": -0.03
+      },
+      "D5": {
+        "trust": -0.06,
+        "autonomy": 0.05,
+        "connection": 0.03,
+        "health": -0.02
+      }
+    },
+    "cohorts": {
+      "youth": {
+        "purpose": -0.05,
+        "connection": -0.03,
+        "autonomy": 0.03,
+        "health": 0.06
+      },
+      "workers": {
+        "purpose": -0.06,
+        "fairness": -0.03
+      },
+      "elders": {
+        "health": -0.08,
+        "connection": 0.04,
+        "trust": 0.03
+      },
+      "elite": {
+        "fairness": 0.15,
+        "autonomy": 0.08,
+        "health": 0.05,
+        "trust": 0.04
+      }
+    }
+  },
   "sensitivity": {},
-  "constants": {}
+  "constants": {},
+  "_baselineNote": "baseline is set so the population-weighted wellbeing W of the starting state is exactly 0.40 (GDW 25%) given the offsets."
 }
