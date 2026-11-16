@@ -11,8 +11,8 @@
     "id": "lotus",
     "name": "The Lotus-Eater",
     "icon": "",
-    "goal": "Pushes for absolute, frictionless comfort, tranquility, and pleasure. Believes telos is achieved through painless leisure and ataraxia.",
-    "winCondition": "Wins if policies maximize immediate citizen comfort, sensory pleasure, and leisure.",
+    "goal": "Frictionless comfort and pleasure.",
+    "winCondition": "You score +1 each cycle the winning policy is tagged lotus.",
     "cardText": "Hedonic Optimization / Frictionless Leisure"
   },
   {
