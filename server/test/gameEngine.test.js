@@ -1090,3 +1090,33 @@ test('finale role points accumulate when a role is tagged on several of the top 
   assert.deepEqual(awards, { 'NODE-01': 3, 'NODE-02': 4, 'NODE-05': 2 });
   assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the unenacted 4th');
 });
+
+test('if loom.moderate times out, Write-and-Rank falls back to the authored binary A/B vote', async () => {
+  let release;
+  const restore = stubModerate(() => new Promise((r) => { release = r; })); // never answers in time
+  try {
+    const game = finaleGame();
+    const phases = [];
+    game.on('phase', (p) => phases.push(p));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 3; i++) await new Promise((r) => setImmediate(r));
+    assert.equal(game.phase, 'FINALE_MOD');
+    quiet(() => game.advancePhase()); // the FINALE_MOD timer expiring first
+    assert.equal(game.finaleFallback, true);
+    assert.equal(game.phase, 'DEBATE');
+    const debate = phases[phases.length - 1];
+    assert.deepEqual(Object.keys(debate.options).sort(), ['A', 'B'], 'authored fallback options shown');
+    assert.equal(debate.options.A.name, 'Disclose Everything');
+    // A late moderation answer changes nothing.
+    release(NODE_IDS.map((n) => ({ node: n, status: 'ok', cleaned: 'late', roles: [], effects: {} })));
+    await new Promise((r) => setImmediate(r));
+    assert.equal(game.phase, 'DEBATE');
+    assert.deepEqual(game.finale.policies, []);
+    quiet(() => game.advancePhase());
+    assert.equal(game.phase, 'VOTE');
+    game.stop();
+  } finally {
+    restore();
+  }
+});
