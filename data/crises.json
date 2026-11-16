@@ -299,7 +299,20 @@
             "fairness": 0,
             "autonomy": -0.6
           },
-          "targetGdwDelta": 6
+          "targetGdwDelta": 6,
+          "loomLine": "Callings issued: 250,000. Each one fits perfectly. You may thank me by enjoying them.",
+          "reactions": [
+            {
+              "citizenId": "mara",
+              "text": "My Calling is reading to the twins upstairs. It suits me. I just wish I had picked it.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "devon",
+              "text": "The Loom says I am a muralist now. I have never painted. The wall looks great though.",
+              "sentiment": "anxious"
+            }
+          ]
         },
         "B": {
           "name": "The Guilds",
@@ -315,7 +328,20 @@
             "fairness": -0.2,
             "autonomy": 0.4
           },
-          "targetGdwDelta": 8
+          "targetGdwDelta": 8,
+          "loomLine": "Guild halls are open. I have removed the safety nets as instructed. I will be watching the injury reports.",
+          "reactions": [
+            {
+              "citizenId": "tomas",
+              "text": "Our first boat sank in four minutes. Best four minutes of my year. Building another.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "ruth",
+              "text": "Two broken wrists at the farming guild already. We are learning. Slowly. Painfully.",
+              "sentiment": "anxious"
+            }
+          ]
         }
       },
       "intel": {
