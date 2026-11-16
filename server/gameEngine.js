@@ -752,6 +752,19 @@ class GameState extends EventEmitter {
     return assignment;
   }
 
+  /**
+   * Mark a node as disconnected. Its slot, role, votes and score are kept so
+   * the phone can reconnect into the same seat.
+   */
+  markDisconnected(node) {
+    const player = this.players[node];
+    if (!player) return false;
+    player.connected = false;
+    player.socketId = null;
+    console.log(`[game ${this.roomCode}] ${node} disconnected`);
+    return true;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);

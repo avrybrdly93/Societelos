@@ -147,6 +147,17 @@ function initSockets(io, gameEngine) {
       return undefined;
     });
 
+    // Disconnect: keep the seat and all game state; just flag it offline.
+    socket.on('disconnect', () => {
+      const game = gameEngine.getRoom(socket.data.roomCode);
+      if (!game || !socket.data.node) return;
+      const player = game.players[socket.data.node];
+      // Ignore if the node has already reconnected on a newer socket.
+      if (!player || player.socketId !== socket.id) return;
+      game.markDisconnected(socket.data.node);
+      broadcastLobby(game);
+    });
+
     // lobby:ready { ready? } -> set or toggle this phone's ready flag.
     socket.on('lobby:ready', (payload) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
