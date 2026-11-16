@@ -65,6 +65,7 @@ const PHASES = Object.freeze({
 
 const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
+const FALLBACK_INTEL = 'The Loom archive returned no new research for your role this cycle. Argue from your agenda.';
 
 // The region revealed in the Council Chamber (250,000 citizens, 5 districts).
 // Display data only; the simulation's tunables live in data/sim.json.
@@ -84,7 +85,8 @@ const PHASE_STARTERS = {
   INTRO: 'startIntroPhase',
   ROLE_ASSIGN: 'startRoleAssignmentPhase',
   CHAMBER: 'startCouncilChamberPhase',
-  INCIDENT: 'startIncidentPhase'
+  INCIDENT: 'startIncidentPhase',
+  INTEL: 'startIntelDropPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -506,6 +508,20 @@ class GameState extends EventEmitter {
     this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles);
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
     this.enterPhase(PHASES.INCIDENT);
+  }
+
+  /**
+   * INTEL: emit one private 'intel:drop' ({ node, text }) per node, chosen by
+   * that node's secret role.
+   */
+  startIntelDropPhase() {
+    const intel = (this.crisis && this.crisis.intel) || {};
+    for (const node of NODE_IDS) {
+      const role = this.roleAssignment && this.roleAssignment[node];
+      const text = (role && intel[role.key]) || FALLBACK_INTEL;
+      this.emit('intel:drop', { node, text });
+    }
+    this.enterPhase(PHASES.INTEL);
   }
 
   /**
