@@ -685,6 +685,22 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * Role scoring (cycles 1-4): +1 to every node whose secret role is tagged
+   * on the winning option. Returns { node: points } for the nodes scored.
+   */
+  awardRolePoints(winner) {
+    const tags = new Set(this.rolesFor(winner));
+    const awards = {};
+    for (const [node, role] of Object.entries(this.roleAssignment || {})) {
+      if (role && tags.has(role.key)) {
+        this.scores[node] = (this.scores[node] || 0) + 1;
+        awards[node] = 1;
+      }
+    }
+    return awards;
+  }
+
+  /**
    * RESOLUTION: close voting, run the simulation (stub until server/sim is
    * merged) on the winning option and broadcast 'resolution' once the Loom's
    * narration is ready. The phase timer starts immediately so a slow Loom
@@ -716,6 +732,7 @@ class GameState extends EventEmitter {
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
     // Cycles 1 and 2 decide the world for cycles 3-5.
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
+    const roleAwards = this.cycle < TOTAL_CYCLES ? this.awardRolePoints(winner) : {};
 
     this.enterPhase(PHASES.RESOLUTION);
 
