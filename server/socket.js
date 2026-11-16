@@ -231,6 +231,9 @@ function initSockets(io, gameEngine) {
     onValid(socket, 'vote:cast', voteSchema, (payload, reply) => {
       const game = gameEngine.getRoom(socket.data.roomCode);
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
+      // Duplicate vote from the same node this cycle: ignore it (no progress
+      // broadcast, no early advance); the first vote stands.
+      if (game.votes[socket.data.node]) return reply({ ok: false, reason: 'ALREADY_VOTED' });
       const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
       reply(result);
       // vote:progress { voted: [node] } -> who has locked in (never their choice).
