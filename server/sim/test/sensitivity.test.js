@@ -13,3 +13,12 @@ const mean = (trait) => Object.values(S).reduce((a, row) => a + row[trait], 0) /
 test('D1 elite has negative fairness sensitivity (loses out under redistribution)', () => {
   assert.ok(S['D1:elite'].fairness < 0, `D1:elite fairness ${S['D1:elite'].fairness}`);
 });
+
+test('D4 workers and elders are highly sensitive to autonomy and fairness', () => {
+  for (const key of ['D4:workers', 'D4:elders']) {
+    for (const trait of ['autonomy', 'fairness']) {
+      assert.ok(S[key][trait] >= 1.2, `${key} ${trait} ${S[key][trait]}`);
+      assert.ok(S[key][trait] > mean(trait), `${key} ${trait} above the regional mean ${mean(trait).toFixed(2)}`);
+    }
+  }
+});
