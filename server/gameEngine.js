@@ -64,6 +64,7 @@ const PHASES = Object.freeze({
 });
 
 const TOTAL_CYCLES = 5;
+const STARTING_GDW = 25;
 
 // The region revealed in the Council Chamber (250,000 citizens, 5 districts).
 // Display data only; the simulation's tunables live in data/sim.json.
@@ -302,7 +303,7 @@ class GameState extends EventEmitter {
     this.cycle = 0;
 
     // Society.
-    this.gdw = 25;
+    this.gdw = STARTING_GDW;
     this.gdwHistory = [];
     this.volatility = 1.0;
     this.worldKey = null;
@@ -447,10 +448,22 @@ class GameState extends EventEmitter {
     this.enterPhase(PHASES.CHAMBER, { region: REGION });
   }
 
-  /** Begin a cycle (stub until startCycle is fully implemented). */
+  /**
+   * Initialise per-cycle state. Cycle 1 also resets the society: GDW = 25.
+   */
   startCycle(cycleNumber) {
     this.cycle = cycleNumber;
     this.votes = {};
+    this.crisis = null;
+    this.lastResolution = null;
+    if (cycleNumber === 1) {
+      this.gdw = STARTING_GDW;
+      this.gdwHistory = [STARTING_GDW];
+      this.volatility = 1.0;
+      this.choices = {};
+      this.worldKey = null;
+    }
+    console.log(`[game ${this.roomCode}] cycle ${cycleNumber} begins (GDW ${this.gdw})`);
   }
 
   /** Crisis fields safe to show everyone (no effects, roles or intel). */
@@ -555,6 +568,7 @@ module.exports = {
   MAX_PLAYERS,
   PHASES,
   TOTAL_CYCLES,
+  STARTING_GDW,
   REGION,
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
