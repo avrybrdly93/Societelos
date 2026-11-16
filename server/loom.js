@@ -163,11 +163,24 @@ function narrateFallback(context = {}) {
 }
 
 /**
+ * Normalise a narration context: accepts { winningPolicy, summary } (task
+ * contract) as well as { winningOption, simSummary } (engine).
+ */
+function narrationContext(context = {}) {
+  return {
+    ...context,
+    winningOption: context.winningOption || context.winningPolicy || {},
+    simSummary: context.simSummary || context.summary || {}
+  };
+}
+
+/**
  * Narrate a resolution: one Loom line plus citizen messages.
- * @param {object} context { crisis, winningOption, simSummary, worldKey, citizens? }
+ * @param {object} context { crisis, winningPolicy | winningOption, summary | simSummary, worldKey, citizens? }
  * @returns {Promise<{ loomLine: string, messages: { citizenId: string, text: string }[], fallback?: boolean }>}
  */
-async function narrate(context = {}, opts = {}) {
+async function narrate(rawContext = {}, opts = {}) {
+  const context = narrationContext(rawContext);
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) return narrateFallback(context);
   try {
@@ -176,7 +189,7 @@ async function narrate(context = {}, opts = {}) {
     const prompt = [
       `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
       `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
-      `Simulation summary: ${JSON.stringify(context.simSummary || context.summary || {})}`,
+      `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
@@ -369,4 +382,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };

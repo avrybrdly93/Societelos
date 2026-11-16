@@ -104,3 +104,11 @@ test('narrateFallback prefers the option\'s authored loomLines for the outcome b
   assert.equal(loom.narrateFallback({ winningOption: option, simSummary: { realizedDelta: -8 } }).loomLine, 'bad line');
   assert.equal(loom.narrateFallback({ winningOption: { name: 'Y', loomLine: 'single line' }, simSummary: { realizedDelta: 8 } }).loomLine, 'single line');
 });
+
+test('narrate accepts { crisis, winningPolicy, summary, citizens } as well as the engine shape', async () => {
+  const policy = { name: 'P', loomLines: { good: 'good line', mixed: 'mixed line', bad: 'bad line' } };
+  const a = await loom.narrate({ crisis: { title: 'T' }, winningPolicy: policy, summary: { realizedDelta: -9 }, citizens }, { config: OFFLINE });
+  const b = await loom.narrate({ crisis: { title: 'T' }, winningOption: policy, simSummary: { realizedDelta: -9 }, citizens }, { config: OFFLINE });
+  assert.equal(a.loomLine, 'bad line');
+  assert.deepEqual(a, b);
+});
