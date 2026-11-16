@@ -637,3 +637,21 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 .override-copy { display: flex; flex-direction: column; gap: 2px; }
 .override-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; }
 .override-help { font-size: 14px; color: var(--text-muted); }
+
+/* Override switch: high-contrast warning styling; armed state turns crimson. */
+.override-switch {
+  border: 2px solid var(--amber); border-style: solid;
+  background: repeating-linear-gradient(-45deg, rgba(240, 164, 48, 0.12) 0 10px, transparent 10px 20px);
+}
+.override-switch .override-title { color: var(--amber); }
+.override-switch:has(input:checked) {
+  border-color: var(--danger);
+  background: repeating-linear-gradient(-45deg, rgba(229, 72, 77, 0.28) 0 10px, rgba(229, 72, 77, 0.08) 10px 20px);
+  box-shadow: 0 0 24px rgba(229, 72, 77, 0.45);
+}
+.override-switch:has(input:checked) .override-title { color: var(--slate-50); }
+.override-switch input:checked + .switch-track { background: var(--danger); border-color: var(--danger); }
+.override-switch input:checked + .switch-track .switch-thumb { background: var(--slate-50); }
+.override-switch.is-armed { border-color: var(--danger); }
+.override-switch:has(input:checked) .override-help,
+.override-switch.is-armed .override-help { color: var(--slate-200); }
