@@ -69,6 +69,7 @@ const PHASES = Object.freeze({
 
 const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
+const ASSEMBLY_VOLATILITY = 1.5;
 
 /** Clamp GDW to [0, 100] and round to one decimal place (e.g. 25.0%). */
 function roundGdw(value) {
@@ -671,7 +672,8 @@ class GameState extends EventEmitter {
     const simulate = resolveSimulate();
     return simulate({ gdw: this.gdw, simState: this.simState }, this.effectsFor(key), {
       runs: 500,
-      seed: hashSeed(this.gameId, this.cycle)
+      seed: hashSeed(this.gameId, this.cycle),
+      volatility: this.volatility
     });
   }
 
@@ -702,6 +704,9 @@ class GameState extends EventEmitter {
     this.gdw = roundGdw(simResult.realized.finalGdw);
     this.gdwHistory.push(this.gdw);
     this.voteHistory[this.cycle] = winner;
+    // The Assembly (2A) makes society volatile for every remaining cycle.
+    if (typeof option.volatility === 'number') this.volatility = option.volatility;
+    else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
 
     this.enterPhase(PHASES.RESOLUTION);
 
