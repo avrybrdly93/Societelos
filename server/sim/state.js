@@ -124,7 +124,56 @@ function computeGDW(stateOrW, gdwConfig) {
   return Math.round(clamped * 1e9) / 1e9;
 }
 
+/**
+ * Check a parsed data/sim.json has everything createInitialState and the
+ * monthly step need. Returns an array of error strings (empty = valid).
+ */
+function validateSimConfig(cfg) {
+  const errors = [];
+  const need = (cond, msg) => { if (!cond) errors.push(msg); };
+  if (!cfg || typeof cfg !== 'object') return ['config missing'];
+  need(Array.isArray(cfg.traits) && cfg.traits.length === 6, 'traits must list the 6 traits');
+  const traits = cfg.traits || [];
+  need(cfg.gdw && ['scale', 'floorWellbeing', 'min', 'max'].every((k) => typeof cfg.gdw[k] === 'number'), 'gdw needs scale, floorWellbeing, min, max');
+  need(Array.isArray(cfg.districts) && cfg.districts.length === 5, 'districts must have 5 entries');
+  const ids = (cfg.districts || []).map((d) => d.id);
+  (cfg.districts || []).forEach((d) => {
+    need(d.population > 0, `${d.id}: population must be > 0`);
+    (d.neighbours || []).forEach((n) => need(ids.includes(n), `${d.id}: unknown neighbour ${n}`));
+    (d.neighbours || []).forEach((n) => {
+      const other = cfg.districts.find((x) => x.id === n);
+      need(other && (other.neighbours || []).includes(d.id), `${d.id}-${n}: neighbours must be symmetric`);
+    });
+  });
+  need(Array.isArray(cfg.cohorts) && cfg.cohorts.length === 4, 'cohorts must have 4 entries');
+  const shareSum = (cfg.cohorts || []).reduce((a, c) => a + c.share, 0);
+  need(Math.abs(shareSum - 1) < 1e-9, `cohort shares sum to ${shareSum}, not 1`);
+  for (const [d, shares] of Object.entries(cfg.cohortSharesByDistrict || {})) {
+    const sum = Object.values(shares).reduce((a, b) => a + b, 0);
+    need(Math.abs(sum - 1) < 1e-9, `${d} cohort shares sum to ${sum}, not 1`);
+  }
+  const wSum = traits.reduce((a, t) => a + ((cfg.weights || {})[t] || 0), 0);
+  need(Math.abs(wSum - 1) < 1e-9, `trait weights sum to ${wSum}, not 1`);
+  need(typeof cfg.baseline === 'number', 'baseline must be a number');
+  for (const d of ids) {
+    for (const c of (cfg.cohorts || []).map((x) => x.id)) {
+      const row = (cfg.sensitivity || {})[`${d}:${c}`];
+      need(!!row, `sensitivity ${d}:${c} missing`);
+      if (row) traits.forEach((t) => need(typeof row[t] === 'number' && row[t] >= -1.5 && row[t] <= 1.5, `sensitivity ${d}:${c}.${t} must be in [-1.5, 1.5]`));
+    }
+  }
+  const k = cfg.constants || {};
+  ['alpha', 'alphaSD', 'adoptionTau', 'hedonicDrift', 'noiseSD', 'shockChance', 'shockMin', 'shockMax', 'spilloverRate', 'forecastRuns', 'monthsPerCycle']
+    .forEach((name) => need(typeof k[name] === 'number', `constants.${name} must be a number`));
+  if (!errors.length) {
+    const gdw = computeGDW(createInitialState(cfg));
+    need(Math.abs(gdw - cfg.gdw.startingGdw) < 1e-6, `starting GDW is ${gdw}, expected ${cfg.gdw.startingGdw}`);
+  }
+  return errors;
+}
+
 module.exports = {
+  validateSimConfig,
   computeRegionWellbeing,
   computeGDW,
   createInitialState,

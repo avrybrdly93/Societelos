@@ -145,6 +145,13 @@ if (roles) checkRoles(roles);
 if (citizens) checkCitizens(citizens);
 if (crises) checkCrises(crises, new Set((citizens || []).map((c) => c.id)));
 
+// data/sim.json is checked with the simulation's own loader.
+const simConfig = load('sim.json');
+if (simConfig) {
+  const { validateSimConfig } = require('../server/sim/state');
+  validateSimConfig(simConfig).forEach((e) => err('sim.json', e));
+}
+
 for (const [name, data] of [['roles.json', roles], ['citizens.json', citizens], ['crises.json', crises]]) {
   if (data) checkStrings(name, data);
 }

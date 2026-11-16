@@ -31,3 +31,16 @@ test('computeGDW clamps at 0 when W <= 0.20 and at 100 when W >= 1.00', () => {
   high.traits.fill(1);
   assert.equal(computeGDW(high), 100);
 });
+
+test('data/sim.json passes validateSimConfig, and broken configs are caught', () => {
+  const { validateSimConfig } = require('../state');
+  assert.deepEqual(validateSimConfig(simConfig), []);
+  const broken = JSON.parse(JSON.stringify(simConfig));
+  broken.weights.purpose = 0.5;
+  broken.districts[0].neighbours.push('D9');
+  delete broken.sensitivity['D3:elders'];
+  const errors = validateSimConfig(broken);
+  assert.ok(errors.some((e) => e.includes('weights')));
+  assert.ok(errors.some((e) => e.includes('D9')));
+  assert.ok(errors.some((e) => e.includes('D3:elders')));
+});
