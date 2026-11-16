@@ -258,3 +258,5 @@ body.host .label {
 .district:focus { outline: none; }
 .district-label { fill: var(--text); font-family: var(--font-mono); font-size: 15px; font-weight: 700; text-anchor: middle; pointer-events: none; }
 .district-pop { fill: var(--slate-200); font-family: var(--font-mono); font-size: 13px; text-anchor: middle; pointer-events: none; }
+.map-links { pointer-events: none; }
+.map-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6; opacity: 0.45; }

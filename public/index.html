@@ -87,7 +87,6 @@
           <div id="map-container" class="map-container">
             <svg id="region-map" class="region-map" viewBox="0 0 400 500" role="img" aria-label="Region map of five districts">
               <rect class="map-sea" x="0" y="0" width="400" height="500"/>
-              <g id="map-links" class="map-links"></g>
               <g id="map-districts" class="map-districts">
                 <g class="district" id="district-D1" data-district="D1" tabindex="0">
                   <title>D1 Old Harbour — 30,000 citizens</title>
@@ -119,6 +118,16 @@
                   <text class="district-label" x="205" y="405">D5 Highlands</text>
                   <text class="district-pop" x="205" y="423" data-pop="D5">40,000</text>
                 </g>
+              </g>
+              <!-- Spillover paths between neighbouring districts -->
+              <g id="map-links" class="map-links">
+                <line class="map-link" data-link="D1-D2" x1="68" y1="135" x2="195" y2="80"/>
+                <line class="map-link" data-link="D1-D3" x1="68" y1="135" x2="190" y2="235"/>
+                <line class="map-link" data-link="D2-D3" x1="195" y1="80" x2="190" y2="235"/>
+                <line class="map-link" data-link="D2-D4" x1="195" y1="80" x2="335" y2="135"/>
+                <line class="map-link" data-link="D3-D4" x1="190" y1="235" x2="335" y2="135"/>
+                <line class="map-link" data-link="D3-D5" x1="190" y1="235" x2="205" y2="385"/>
+                <line class="map-link" data-link="D4-D5" x1="335" y1="135" x2="205" y2="385"/>
               </g>
             </svg>
           </div>
