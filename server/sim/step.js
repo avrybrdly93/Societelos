@@ -67,7 +67,6 @@ function stepMonth(state, effects, monthIndex, params, rng) {
   return { shocks };
 }
 
-// Steps 1-6 are implemented one by one below.
 /** Share of a policy applied by month t: 1 - exp(-t / tau). */
 function adoptedShare(t, tau) {
   return 1 - Math.exp(-t / tau);
@@ -146,6 +145,10 @@ function applySpillover(state, params) {
     }
   }
 }
-function clampTraits() {}
+/** Step 6: clamp every trait to [0, 1]. */
+function clampTraits(state) {
+  const t = state.traits;
+  for (let j = 0; j < t.length; j++) t[j] = clamp01(t[j]);
+}
 
-module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clamp01 };
+module.exports = { buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01 };
