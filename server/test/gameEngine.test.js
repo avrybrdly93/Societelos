@@ -232,3 +232,12 @@ test('intel:drop delivers world-specific intel for Cycles 3 and 4', () => {
     }
   }
 });
+
+test('RESOLUTION waits the full animation duration after the payload is sent', async () => {
+  const game = votingGame();
+  const start = Date.now();
+  const resolution = await resolveWith(game, 'A');
+  const full = game.durations.RESOLUTION;
+  assert.ok(typeof resolution.endsAt === 'number');
+  assert.ok(resolution.endsAt - start >= full - 50, 'next INCIDENT not before the animation ends');
+});

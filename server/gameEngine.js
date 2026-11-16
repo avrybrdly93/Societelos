@@ -70,6 +70,9 @@ const PHASES = Object.freeze({
 const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
+// Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
+// RESOLUTION safety timer.
+const LOOM_BUDGET_MS = 10000;
 
 /** Clamp GDW to [0, 100] and round to one decimal place (e.g. 25.0%). */
 function roundGdw(value) {
@@ -573,9 +576,9 @@ class GameState extends EventEmitter {
    * Generic phase entry: set the phase, start its timer (expiry advances the
    * machine) and broadcast { cycle, phase, endsAt, crisis }.
    */
-  enterPhase(phase, extra = {}) {
+  enterPhase(phase, extra = {}, durationMs = this.durations[phase]) {
     this.phase = phase;
-    const endsAt = this.startPhaseTimer(this.durations[phase], () => this.advancePhase());
+    const endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
     // Option names are public, so 'name' is allowed; everything secret is stripped.
     const payload = sanitizeForBroadcast({ cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra }, ['name']);
     this.emit('phase', payload);
@@ -784,8 +787,9 @@ class GameState extends EventEmitter {
   /**
    * RESOLUTION: close voting, run the simulation (stub until server/sim is
    * merged) on the winning option and broadcast 'resolution' once the Loom's
-   * narration is ready. The phase timer starts immediately so a slow Loom
-   * never stalls the game.
+   * narration is ready. A safety timer starts immediately so a slow Loom
+   * never stalls the game; once the payload is out, the timer restarts for
+   * the full RESOLUTION duration so the 20 s month-by-month animation plays.
    */
   startResolutionPhase() {
     this.votingOpen = false;
@@ -829,7 +833,11 @@ class GameState extends EventEmitter {
     const catalystAwards = this.cycle < TOTAL_CYCLES ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
     this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
 
-    this.enterPhase(PHASES.RESOLUTION);
+    // Safety timer: the Loom's own timeout plus the full animation, so even a
+    // stalled narration can never hold the game in RESOLUTION.
+    const resolutionMs = this.durations.RESOLUTION;
+    this.enterPhase(PHASES.RESOLUTION, {}, resolutionMs + LOOM_BUDGET_MS);
+    const cycleAtStart = this.cycle;
 
     // Trace: winning policy and realized GDW (no roles, no per-node votes).
     console.log(`[game ${this.roomCode}] cycle ${this.cycle} resolved: ${winner} "${option.name}"${tie ? ' (tie-break)' : ''}; GDW ${previousGdw} -> ${this.gdw}`);
@@ -853,6 +861,11 @@ class GameState extends EventEmitter {
           loomLine: narration.loomLine,
           messages: narration.messages || []
         }, ['name']);
+        // The month-by-month animation starts when clients receive this
+        // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
+        if (this.phase === PHASES.RESOLUTION && this.cycle === cycleAtStart) {
+          this.lastResolution.endsAt = this.startPhaseTimer(resolutionMs, () => this.advancePhase());
+        }
         this.emit('resolution', this.lastResolution);
         return this.lastResolution;
       });
