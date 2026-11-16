@@ -72,6 +72,7 @@ const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
+const FINALE_RESUBMIT_MS = 25000; // one resubmit window for "revise" write-ins
 const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review them again next year.';
 // Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
 // RESOLUTION safety timer.
@@ -560,6 +561,8 @@ class GameState extends EventEmitter {
           this.finaleFallback = true;
           this.finale.closed = true;
         }
+        // The resubmit window ran out: settle whatever is still in revision.
+        if (this.finale && this.finale.moderationDone && !this.finale.closed) this.finishFinaleModeration({ advance: false });
         return this.finaleFallback ? P.DEBATE : P.FINALE_DEBATE;
       case P.FINALE_DEBATE: return P.FINALE_RANK;
       case P.FINALE_RANK: return P.FINALE_ENACT;
@@ -752,14 +755,25 @@ class GameState extends EventEmitter {
       this.switchFinaleToBinary('moderation unavailable');
       return;
     }
-    if (results.every((r) => r.status === 'ok')) this.finishFinaleModeration();
+    const revise = results.filter((r) => r.status === 'revise');
+    if (!revise.length) {
+      this.finishFinaleModeration();
+      return;
+    }
+    // "revise": tell only the author why (finale:feedback) and give everyone
+    // in revision one 25 s resubmit window, still inside FINALE_MOD.
+    for (const r of revise) {
+      this.finale.revise[r.node] = 'pending';
+      this.emit('finale:feedback', { node: r.node, status: 'revise', feedback: String(r.feedback || 'Please rephrase your policy as one clear, school-appropriate sentence.') });
+    }
+    this.enterPhase(PHASES.FINALE_MOD, { resubmit: true, revising: revise.length }, FINALE_RESUBMIT_MS);
   }
 
   /**
    * Moderation settled: turn each node's moderated write-in into a policy
    * { id, node, text, roles, effects } and move straight on to FINALE_DEBATE.
    */
-  finishFinaleModeration() {
+  finishFinaleModeration({ advance = true } = {}) {
     const finale = this.finale;
     if (finale.closed) return;
     finale.closed = true;
@@ -773,7 +787,7 @@ class GameState extends EventEmitter {
         effects: m.effects || {}
       };
     });
-    if (this.phase === PHASES.FINALE_MOD) this.advancePhase();
+    if (advance && this.phase === PHASES.FINALE_MOD) this.advancePhase();
   }
 
   /** Fall back to the authored A/B finale: FINALE_MOD -> DEBATE -> VOTE -> RESOLUTION -> END. */

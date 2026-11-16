@@ -627,3 +627,29 @@ test('when all 5 moderations come back ok, the finale moves straight to FINALE_D
     restore();
   }
 });
+
+test('"revise" sends private finale:feedback to that author and opens a 25 s resubmit window', async () => {
+  const restore = stubModerate(async (subs) => subs.map((s) => (s.node === 'NODE-02'
+    ? { node: s.node, status: 'revise', cleaned: '', feedback: 'Name a policy, not a person.', roles: [], effects: {} }
+    : { node: s.node, status: 'ok', cleaned: s.text, feedback: '', roles: [], effects: { purpose: 0.1 } })));
+  try {
+    const game = finaleGame();
+    const feedback = [];
+    const phases = [];
+    game.on('finale:feedback', (f) => feedback.push(f));
+    game.on('phase', (p) => phases.push(p));
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    assert.deepEqual(feedback, [{ node: 'NODE-02', status: 'revise', feedback: 'Name a policy, not a person.' }]);
+    const window = phases[phases.length - 1];
+    assert.equal(window.phase, 'FINALE_MOD');
+    assert.equal(window.resubmit, true);
+    assert.ok(window.endsAt - Date.now() > 24000 && window.endsAt - Date.now() <= 25000);
+    assert.ok(!JSON.stringify(window).includes('Name a policy'), 'feedback never broadcast');
+    assert.equal(game.finale.revise['NODE-02'], 'pending');
+    game.stop();
+  } finally {
+    restore();
+  }
+});

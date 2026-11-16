@@ -149,6 +149,11 @@ function initSockets(io, gameEngine) {
       emitToNode(game, node, 'score:update', { cycle, gained, role, catalyst, total });
     });
 
+    // finale:feedback { status, feedback } privately to the author asked to revise.
+    game.on('finale:feedback', ({ node, status, feedback }) => {
+      emitToNode(game, node, 'finale:feedback', { status, feedback });
+    });
+
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
