@@ -759,8 +759,48 @@ class GameState extends EventEmitter {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Room registry: one GameState per room code.
+// ---------------------------------------------------------------------------
+
+const rooms = new Map();
+
+/** Create a room with a fresh, unused 4-letter code. */
+function createRoom(options = {}) {
+  const roomCode = generateRoomCode(rooms);
+  const game = new GameState({ ...options, roomCode });
+  rooms.set(roomCode, game);
+  return game;
+}
+
+/** Look up a room by code (case-insensitive). */
+function getRoom(roomCode) {
+  return rooms.get(String(roomCode || '').toUpperCase()) || null;
+}
+
+/** The most recently created room still open (the classroom's projector). */
+function getLatestRoom() {
+  let latest = null;
+  for (const game of rooms.values()) latest = game;
+  return latest;
+}
+
+/** Remove a room and stop its timers. */
+function closeRoom(roomCode) {
+  const game = getRoom(roomCode);
+  if (!game) return false;
+  game.clearPhaseTimer();
+  game.removeAllListeners();
+  return rooms.delete(game.roomCode);
+}
+
 module.exports = {
   GameState,
+  rooms,
+  createRoom,
+  getRoom,
+  getLatestRoom,
+  closeRoom,
   loadGameData,
   selectCrisis,
   normalizeCrisis,
