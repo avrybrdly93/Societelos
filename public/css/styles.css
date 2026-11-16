@@ -121,7 +121,7 @@ body.host .label {
   border: 2px solid var(--loom-cyan-dim);
 }
 .gdw-badge.is-critical { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.12); }
-.host-main { height: calc(100vh - 96px); padding: 32px 40px; }
+.host-main { height: calc(1080px - 96px); padding: 32px 40px; }
 
 /* Host lobby */
 .lobby-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; height: 100%; align-items: center; }
@@ -256,8 +256,8 @@ body.host .label {
 }
 .district:hover polygon, .district:focus polygon { stroke: var(--accent); }
 .district:focus { outline: none; }
-.district-label { fill: var(--text); font-family: var(--font-mono); font-size: 15px; font-weight: 700; text-anchor: middle; pointer-events: none; }
-.district-pop { fill: var(--slate-200); font-family: var(--font-mono); font-size: 13px; text-anchor: middle; pointer-events: none; }
+.district-label { fill: var(--slate-950); font-family: var(--font-mono); font-size: 15px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+.district-pop { fill: var(--slate-800); font-family: var(--font-mono); font-size: 13px; text-anchor: middle; pointer-events: none; }
 .map-links { pointer-events: none; }
 .map-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6; opacity: 0.45; }
 
@@ -459,3 +459,16 @@ body.host .policy-text { font-size: 24px; margin: 0; color: var(--slate-200); }
   transition: all 0.25s;
 }
 .vote-pip.is-locked { border-style: solid; border-color: var(--accent); color: var(--slate-950); background: var(--accent); box-shadow: 0 0 20px var(--loom-glow); }
+
+/* Projector stage: the host screen is laid out at a fixed 1920x1080 and
+   scaled to fit any projector (e.g. 1280x720) by host.js, letterboxed. */
+html.host-stage { background: var(--bg-sunken); overflow: hidden; height: 100%; }
+body.host {
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+body.host .view.is-active { height: 100%; }

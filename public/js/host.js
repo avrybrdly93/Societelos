@@ -8,6 +8,19 @@
     try { return sessionStorage.getItem('societelos.hostRoom'); } catch (e) { return null; }
   })();
 
+  // Scale the fixed 1920x1080 stage to the projector, centred and letterboxed.
+  const STAGE_W = 1920;
+  const STAGE_H = 1080;
+  function fitStage() {
+    const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+    const x = (window.innerWidth - STAGE_W * scale) / 2;
+    const y = (window.innerHeight - STAGE_H * scale) / 2;
+    document.body.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  }
+  document.documentElement.classList.add('host-stage');
+  window.addEventListener('resize', fitStage);
+  fitStage();
+
   const socket = window.io({ auth: { clientType: 'host', roomCode: savedRoom || undefined } });
 
   const state = { roomCode: null, gameId: null, phase: 'LOBBY', cycle: 0, endsAt: null };
