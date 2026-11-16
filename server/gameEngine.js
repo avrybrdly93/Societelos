@@ -869,7 +869,65 @@ function closeRoom(roomCode) {
   return rooms.delete(game.roomCode);
 }
 
+// ---------------------------------------------------------------------------
+// Smoke test: node -e "require('./server/gameEngine').smokeTest()"
+// Drives a room from LOBBY to the cycle 1 RESOLUTION with real timers shrunk
+// to a few milliseconds, checking every transition and private event.
+// ---------------------------------------------------------------------------
+
+function smokeTest({ quiet = false } = {}) {
+  const expected = ['INTRO', 'ROLE_ASSIGN', 'CHAMBER', 'INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
+  const tiny = {};
+  for (const phase of Object.keys(DEFAULT_PHASE_SECONDS)) tiny[phase] = 0.02;
+  tiny.RESOLUTION = 60; // hold on RESOLUTION so the test can inspect it
+
+  const log = console.log;
+  if (quiet) console.log = () => {};
+  const game = new GameState({ roomCode: 'TEST', phaseSeconds: tiny });
+  const seen = [];
+  const roles = [];
+  const intel = [];
+
+  return new Promise((resolve, reject) => {
+    const fail = (msg) => { game.clearPhaseTimer(); console.log = log; reject(new Error(msg)); };
+    const guard = setTimeout(() => fail(`timed out; reached ${seen.join(' -> ')}`), 5000);
+
+    NODE_IDS.forEach((node, i) => {
+      game.addPlayer(`socket-${i}`, `Student ${i + 1}`);
+      game.setReady(node, true);
+    });
+    if (!game.allReady()) return fail('players not ready');
+
+    game.on('role:assigned', (e) => roles.push(e));
+    game.on('intel:drop', (e) => intel.push(e));
+    game.on('phase', (p) => {
+      seen.push(p.phase);
+      if (p.phase === 'VOTE') {
+        NODE_IDS.forEach((node, i) => game.castVote(node, i < 3 ? 'A' : 'B'));
+      }
+    });
+    game.on('resolution', (r) => {
+      clearTimeout(guard);
+      game.clearPhaseTimer();
+      console.log = log;
+      const problems = [];
+      if (seen.join() !== expected.join()) problems.push(`phases ${seen.join(' -> ')}`);
+      if (roles.length !== 5 || new Set(roles.map((e) => e.role.key)).size !== 5) problems.push('roles not dealt 1 per node');
+      if (intel.length !== 5) problems.push('intel not dropped to 5 nodes');
+      if (r.result.winner !== 'A') problems.push(`winner ${r.result.winner}, expected A`);
+      if (typeof r.gdw !== 'number' || !r.loomLine) problems.push('resolution payload incomplete');
+      if (problems.length) return reject(new Error(`smoke test failed: ${problems.join('; ')}`));
+      log(`[smoke] OK: LOBBY -> ${seen.join(' -> ')}; winner ${r.result.winner}; GDW ${r.result.previousGdw} -> ${r.gdw}`);
+      return resolve({ phases: seen, resolution: r });
+    });
+
+    if (!game.startIntroPhase()) fail('could not start');
+    return undefined;
+  });
+}
+
 module.exports = {
+  smokeTest,
   GameState,
   rooms,
   createRoom,

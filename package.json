@@ -5,7 +5,8 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "nodemon server/index.js"
+    "dev": "nodemon server/index.js",
+    "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\""
   },
   "dependencies": {
     "dotenv": "^18.0.10",
