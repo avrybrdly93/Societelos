@@ -822,3 +822,31 @@ test('FINALE_DEBATE (60 s) is followed by FINALE_RANK (30 s)', async () => {
     restore();
   }
 });
+
+/** A finale game advanced to FINALE_RANK with ok moderation; collects ballots. */
+async function rankingFinale(world = 'AA', moderation = okModeration()) {
+  const restore = stubModerate(moderation);
+  try {
+    const game = finaleGame(world);
+    const ballots = {};
+    game.on('finale:ballot', (b) => { ballots[b.node] = b.policies; });
+    quiet(() => game.startFinaleWritePhase());
+    NODE_IDS.forEach((n, i) => game.submitPolicy(n, `Write-in ${i + 1}`));
+    for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+    quiet(() => game.advancePhase()); // FINALE_DEBATE -> FINALE_RANK
+    return { game, ballots };
+  } finally {
+    restore();
+  }
+}
+
+test('each player gets a ballot of exactly the 4 policies they did not write', async () => {
+  const { game } = await rankingFinale();
+  game.stop();
+  assert.equal(game.phase, 'FINALE_RANK');
+  for (const node of NODE_IDS) {
+    const ballot = game.finale.ballots[node];
+    assert.equal(ballot.length, 4);
+    assert.ok(!ballot.includes(Object.keys(game.finale.authors).find((id) => game.finale.authors[id] === node)), `${node} never ranks its own`);
+  }
+});

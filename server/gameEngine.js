@@ -114,7 +114,8 @@ const PHASE_STARTERS = {
   WORLD_REVEAL: 'startWorldRevealPhase',
   FINALE_WRITE: 'startFinaleWritePhase',
   FINALE_MOD: 'startFinaleModPhase',
-  FINALE_DEBATE: 'startFinaleDebatePhase'
+  FINALE_DEBATE: 'startFinaleDebatePhase',
+  FINALE_RANK: 'startFinaleRankPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -813,6 +814,30 @@ class GameState extends EventEmitter {
   /** FINALE_DEBATE (60 s): the five anonymised policies go up on the projector. */
   startFinaleDebatePhase() {
     this.enterPhase(PHASES.FINALE_DEBATE, { policies: this.publicPolicies() });
+  }
+
+  /**
+   * Personal ballots: each node ranks only the four policies it did not
+   * write. Returns { node: [policyId x4] } in projector order.
+   */
+  buildBallots() {
+    const ballots = {};
+    for (const node of Object.keys(this.players)) {
+      ballots[node] = this.finale.policies.filter((p) => p.node !== node).map((p) => p.id);
+    }
+    this.finale.ballots = ballots;
+    return ballots;
+  }
+
+  /** FINALE_RANK (30 s): deal each phone its four-policy ballot privately. */
+  startFinaleRankPhase() {
+    const ballots = this.buildBallots();
+    this.finale.rankingOpen = true;
+    this.enterPhase(PHASES.FINALE_RANK);
+    const texts = Object.fromEntries(this.finale.policies.map((p) => [p.id, p.text]));
+    for (const [node, ids] of Object.entries(ballots)) {
+      this.emit('finale:ballot', { node, policies: ids.map((id) => ({ id, text: texts[id] })) });
+    }
   }
 
   /** Author of a finale policy (server-side only; null if unknown). */
