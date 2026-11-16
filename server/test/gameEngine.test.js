@@ -184,3 +184,24 @@ test('Catalyst scores 0 when a 15 point drop reaches GDW 0 (Loom shutdown)', () 
   assert.deepEqual(game.awardCatalystPoints(15, 0), {});
   assert.equal(game.scores[node], 0);
 });
+
+test('realized GDW hitting 0 in Cycle 2 transitions straight to END', async () => {
+  const game = votingGame({ cycle: 2, voteHistory: { 1: 'A' } });
+  const zero = { forecast: { median: [25, 0] }, realized: { gdw: [12, 6, 0], finalGdw: 0, districts: [] }, finalState: null, summary: { realizedDelta: -12 } };
+  game.runSimulation = () => zero;
+  const phases = [];
+  game.on('phase', (p) => phases.push(p.phase));
+  await resolveWith(game, 'A');
+  assert.equal(game.gdw, 0);
+  assert.equal(game.ending, 'shutdown');
+  const log = console.log;
+  console.log = () => {};
+  try {
+    assert.equal(game.advancePhase(), engine.PHASES.END);
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+  assert.deepEqual(phases, ['RESOLUTION', 'END'], 'no WORLD_REVEAL or further cycles');
+  assert.equal(game.phase, 'END');
+});
