@@ -75,7 +75,7 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.2,
+            "purpose": 0.17,
             "connection": -0.3,
             "health": -0.8,
             "trust": -0.6,
