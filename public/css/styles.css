@@ -841,3 +841,7 @@ body.host .feed-detail { margin: 0 0 4px; font-size: 18px; color: var(--text-mut
 /* Room for the one-decimal GDW badge next to the phase breadcrumbs. */
 .topbar { gap: 28px; padding: 0 32px; }
 .topbar-value, .gdw-badge { font-size: 38px; }
+/* Zero layout shift: the meter header never wraps, whatever the band label. */
+.gdw-meter-head { flex-wrap: nowrap; }
+body.host .gdw-meter .label { font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
+.gdw-status { white-space: nowrap; }
