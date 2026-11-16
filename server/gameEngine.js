@@ -429,9 +429,14 @@ function breakTie(simA, simB) {
  * Emits events ('phase', ...) that socket.js relays to clients.
  */
 class GameState extends EventEmitter {
-  constructor({ roomCode = null, phaseSeconds = {}, data = null } = {}) {
+  constructor({ roomCode = null, phaseSeconds = {}, data = null, showForecastBeforeVote = null } = {}) {
     super();
     this.roomCode = roomCode;
+    // Optional: show both options' forecast fans during DEBATE (SHOW_FORECAST_BEFORE_VOTE=true).
+    this.showForecastBeforeVote = typeof showForecastBeforeVote === 'boolean'
+      ? showForecastBeforeVote
+      : String(process.env.SHOW_FORECAST_BEFORE_VOTE).toLowerCase() === 'true';
+    this.simCache = {}; // option key -> simulate() result for the current cycle
     this.data = data || loadGameData();
     this.gameId = generateGameId();
     this.createdAt = Date.now();
@@ -604,7 +609,9 @@ class GameState extends EventEmitter {
 
   /** DEBATE: broadcast options A and B with the countdown's endsAt. */
   startDebatePhase() {
-    this.enterPhase(PHASES.DEBATE, { options: this.publicOptions() });
+    const extra = { options: this.publicOptions() };
+    if (this.showForecastBeforeVote && this.crisis) extra.forecasts = this.publicForecasts();
+    this.enterPhase(PHASES.DEBATE, extra);
   }
 
   /** VOTE: open blind vote collection for the vote timer (15 s). */
@@ -688,14 +695,29 @@ class GameState extends EventEmitter {
     return Array.isArray(roles) ? roles : [];
   }
 
-  /** Run the cycle's simulation (500 forecasts + realized) for option `key`. */
+  /**
+   * Run the cycle's simulation (500 forecasts + realized) for option `key`.
+   * Results are cached per cycle: the inputs (state, effects, seed) are fixed
+   * until resolution, so a DEBATE pre-forecast is reused, not recomputed.
+   */
   runSimulation(key) {
+    if (this.simCache[key]) return this.simCache[key];
     const simulate = resolveSimulate();
-    return simulate({ gdw: this.gdw, simState: this.simState }, this.effectsFor(key), {
+    return (this.simCache[key] = simulate({ gdw: this.gdw, simState: this.simState }, this.effectsFor(key), {
       runs: 500,
       seed: hashSeed(this.gameId, this.cycle),
       volatility: this.volatility
-    });
+    }));
+  }
+
+  /** Public forecast fans for options A and B (no effect vectors). */
+  publicForecasts() {
+    const view = {};
+    for (const key of ['A', 'B']) {
+      const { median, p5, p95, pCollapse, pUnrest } = this.runSimulation(key).forecast;
+      view[key] = { median, p5, p95, pCollapse, pUnrest };
+    }
+    return view;
   }
 
   /**
@@ -868,6 +890,7 @@ class GameState extends EventEmitter {
   startCycle(cycleNumber) {
     this.cycle = cycleNumber;
     this.votes = {};
+    this.simCache = {};
     this.crisis = null;
     this.lastResolution = null;
     if (cycleNumber === 1) {
