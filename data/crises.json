@@ -102,7 +102,7 @@
               "sentiment": "complacent"
             },
             {
-              "citizenId": "marcus",
+              "citizenId": "tomas",
               "text": "They threw us a monthly bone so we wouldn't notice they own the sky.",
               "sentiment": "depressive"
             }
@@ -169,7 +169,7 @@
               "sentiment": "revitalized"
             },
             {
-              "citizenId": "maya",
+              "citizenId": "ezra",
               "text": "Grid maintenance is now delayed 3 weeks waiting for Assembly signatures. Pure gridlock.",
               "sentiment": "anxious"
             }
@@ -198,7 +198,7 @@
               "sentiment": "complacent"
             },
             {
-              "citizenId": "david",
+              "citizenId": "lin",
               "text": "We traded our political agency for on-time trains. A quiet funeral for democracy.",
               "sentiment": "depressive"
             }
@@ -225,12 +225,12 @@
       "mode": "binary",
       "feed": [
         {
-          "citizenId": "linnea",
+          "citizenId": "devon",
           "text": "Everything is fair. Everything is public. And none of it matters. Why am I here?",
           "sentiment": "depressive"
         },
         {
-          "citizenId": "marcus",
+          "citizenId": "tomas",
           "text": "A man needs something he can build and something he can ruin.",
           "sentiment": "revitalized"
         }
@@ -285,7 +285,7 @@
       "mode": "binary",
       "feed": [
         {
-          "citizenId": "maya",
+          "citizenId": "ezra",
           "text": "Looked at the schematics. 40,000 pages of AI-compiled machine language. Humans are illiterate in our own city.",
           "sentiment": "anxious"
         },
@@ -383,7 +383,7 @@
           "sentiment": "complacent"
         },
         {
-          "citizenId": "david",
+          "citizenId": "lin",
           "text": "The streets outside are empty. Humanity has crawled into glass jars.",
           "sentiment": "depressive"
         }
@@ -443,7 +443,7 @@
           "sentiment": "sedated"
         },
         {
-          "citizenId": "elena",
+          "citizenId": "mara",
           "text": "They are chemically embalming human sadness. Without tears, joy is a hollow reflex.",
           "sentiment": "outraged"
         }
@@ -591,12 +591,12 @@
       "mode": "binary",
       "feed": [
         {
-          "citizenId": "marcus",
+          "citizenId": "tomas",
           "text": "An owner traded 5 tons of compute time for a 19th century pocket watch yesterday. Insane.",
           "sentiment": "depressive"
         },
         {
-          "citizenId": "sora",
+          "citizenId": "priya",
           "text": "Scarcity didn't die; it just became a luxury game.",
           "sentiment": "anxious"
         }
@@ -689,7 +689,7 @@
           "sentiment": "complacent"
         },
         {
-          "citizenId": "david",
+          "citizenId": "lin",
           "text": "Our classrooms are empty. A society that only consumes cannot reproduce its soul.",
           "sentiment": "depressive"
         }
@@ -744,7 +744,7 @@
       "mode": "binary",
       "feed": [
         {
-          "citizenId": "aaron",
+          "citizenId": "sol",
           "text": "We don't want your robot bread. We want the sweat of our brows and the dirt on our boots.",
           "sentiment": "outraged"
         },
