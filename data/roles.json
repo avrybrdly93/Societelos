@@ -27,8 +27,8 @@
     "id": "catalyst",
     "name": "The Catalyst",
     "icon": "",
-    "goal": "Injects chaotic crises to force human resilience. Believes calm breeds systemic fragility; only acute volatility sparks evolution.",
-    "winCondition": "Wins if policies create volatility, divide the council, or disrupt complacent status quo without hitting 0% GDW.",
+    "goal": "Resilience through crisis.",
+    "winCondition": "You score +1 each cycle GDW moves by 10 or more and stays above 0.",
     "cardText": "Anti-Fragility / Controlled Crisis"
   },
   {
