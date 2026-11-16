@@ -71,6 +71,8 @@ const TOTAL_CYCLES = 5;
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
+// Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
+const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review them again next year.';
 // Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
 // RESOLUTION safety timer.
 const LOOM_BUDGET_MS = 10000;
@@ -107,7 +109,8 @@ const PHASE_STARTERS = {
   VOTE: 'startBlindVotePhase',
   RESOLUTION: 'startResolutionPhase',
   WORLD_REVEAL: 'startWorldRevealPhase',
-  FINALE_WRITE: 'startFinaleWritePhase'
+  FINALE_WRITE: 'startFinaleWritePhase',
+  FINALE_MOD: 'startFinaleModPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -664,6 +667,30 @@ class GameState extends EventEmitter {
     if (!clean) return { ok: false, reason: 'EMPTY' };
     this.finale.submissions[node] = clean;
     return { ok: true, text: clean };
+  }
+
+  /**
+   * Close FINALE_WRITE: every seated node without a write-in (idle or
+   * disconnected) gets the neutral default policy. Returns the defaulted nodes.
+   */
+  closeFinaleWriting() {
+    if (!this.finale) return [];
+    this.finale.writingOpen = false;
+    const defaulted = [];
+    for (const node of Object.keys(this.players)) {
+      if (!this.finale.submissions[node]) {
+        this.finale.submissions[node] = DEFAULT_FINALE_POLICY;
+        defaulted.push(node);
+      }
+    }
+    this.finale.defaulted = defaulted;
+    return defaulted;
+  }
+
+  /** FINALE_MOD: writing closes (defaults filled) while the Loom moderates. */
+  startFinaleModPhase() {
+    this.closeFinaleWriting();
+    this.enterPhase(PHASES.FINALE_MOD);
   }
 
   /** Nodes that have submitted a finale policy (never the text). */
@@ -1375,5 +1402,6 @@ module.exports = {
   REGION,
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
+  DEFAULT_FINALE_POLICY,
   buildPhaseDurations
 };

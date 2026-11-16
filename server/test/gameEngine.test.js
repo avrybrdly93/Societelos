@@ -508,3 +508,19 @@ test('finale submissions are trimmed to 140 characters and must not be empty', (
   assert.ok(game.finale.submissions['NODE-02'].length <= 140);
   assert.ok(!/^\s|\s$|\s{2}/.test(game.finale.submissions['NODE-02']));
 });
+
+test('idle or disconnected players get a neutral default policy when FINALE_WRITE expires', () => {
+  const game = finaleGame();
+  quiet(() => game.startFinaleWritePhase());
+  game.submitPolicy('NODE-01', 'Every district elects a repair council.');
+  game.submitPolicy('NODE-03', 'Fund one public workshop per street.');
+  game.markDisconnected && quiet(() => game.markDisconnected('NODE-05'));
+  quiet(() => game.advancePhase()); // the 45 s timer expiring
+  game.clearPhaseTimer();
+  assert.equal(game.phase, 'FINALE_MOD');
+  assert.equal(game.finale.writingOpen, false);
+  assert.deepEqual(game.finale.defaulted.sort(), ['NODE-02', 'NODE-04', 'NODE-05']);
+  for (const n of ['NODE-02', 'NODE-04', 'NODE-05']) assert.equal(game.finale.submissions[n], engine.DEFAULT_FINALE_POLICY);
+  assert.equal(game.finale.submissions['NODE-01'], 'Every district elects a repair council.');
+  assert.equal(game.submitPolicy('NODE-02', 'late').reason, 'WRITING_CLOSED');
+});
