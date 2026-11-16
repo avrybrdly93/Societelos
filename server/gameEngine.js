@@ -281,6 +281,32 @@ function selectCrisis(crises, cycle, worldKey, roles = []) {
 }
 
 // ---------------------------------------------------------------------------
+// Broadcast sanitizer: phase payloads go to every phone, so they must never
+// carry secret role mappings, effect vectors, intel or connection secrets.
+// ---------------------------------------------------------------------------
+
+const SECRET_KEYS = new Set([
+  'effects', 'effectsByWorld', 'roles', 'role', 'roleAssignment', 'intel', 'intelDrops',
+  'token', 'socketId', 'name', 'reactions', 'volatility'
+]);
+
+/** Deep copy of `value` with every SECRET_KEYS field removed. */
+function sanitizeForBroadcast(value, allow = []) {
+  const allowed = new Set(allow);
+  const walk = (v) => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!v || typeof v !== 'object') return v;
+    const out = {};
+    for (const [k, inner] of Object.entries(v)) {
+      if (SECRET_KEYS.has(k) && !allowed.has(k)) continue;
+      out[k] = walk(inner);
+    }
+    return out;
+  };
+  return walk(value);
+}
+
+// ---------------------------------------------------------------------------
 // Stream 4 interface stubs. Until server/sim and server/loom.js expose the
 // agreed interfaces, the engine falls back to these so a cycle stays playable.
 // ---------------------------------------------------------------------------
@@ -499,7 +525,9 @@ class GameState extends EventEmitter {
   enterPhase(phase, extra = {}) {
     this.phase = phase;
     const endsAt = this.startPhaseTimer(this.durations[phase], () => this.advancePhase());
-    this.emit('phase', { cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra });
+    // Option names are public, so 'name' is allowed; everything secret is stripped.
+    const payload = sanitizeForBroadcast({ cycle: this.cycle, phase, endsAt, crisis: this.publicCrisis(), ...extra }, ['name']);
+    this.emit('phase', payload);
     return endsAt;
   }
 
@@ -844,6 +872,7 @@ module.exports = {
   closeRoom,
   loadGameData,
   selectCrisis,
+  sanitizeForBroadcast,
   normalizeCrisis,
   generateRoomCode,
   generateGameId,
