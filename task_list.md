@@ -344,97 +344,97 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-310:** Prepare `feature/frontend` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
-- [ ] **TASK-311:** Review and finalize `aa-purpose-drift` (World `AA` Cycle 3: Purpose Drift) in `data/crises.json` with Option A (`assimilator`) and Option B (`artisan`).
-- [ ] **TASK-312:** Author `aa-lost-knowledge` (World `AA` Cycle 4: Lost Knowledge) incident ("A grid fails in District 2 and no human knows how to fix it") and Loom intro in `data/crises.json`.
-- [ ] **TASK-313:** Author `aa-lost-knowledge` Option A ("Keeper Corps: every citizen learns a maintenance trade", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-314:** Author `aa-lost-knowledge` Option B ("The Loom builds self-repairing redundancy", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-315:** Author all 5 role-slanted secret intel drops for `aa-lost-knowledge` in `data/crises.json`.
-- [ ] **TASK-316:** Author `aa-fake-struggle` (World `AA` Cycle 5 Finale: The Fake Struggle Scandal, `mode: "writein"`) incident ("Leaks show the Loom secretly invented challenges to give people purpose") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-317:** Author `aa-fake-struggle` fallback Option A ("Disclose everything", tags `["artisan", "ghost"]`) and fallback Option B ("Keep the challenges secret; they work", tags `["lotus", "assimilator"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-318:** Author all 5 secret intel drops for `aa-fake-struggle` in `data/crises.json`.
-- [ ] **TASK-319:** Author `ab-the-pods` (World `AB` Cycle 3: The Pods) incident ("90% of citizens haven't left home in two months") and Loom intro in `data/crises.json`.
-- [ ] **TASK-320:** Author `ab-the-pods` Option A ("Ban full-immersion VR during daylight", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-321:** Author `ab-the-pods` Option B ("Make VR social and shared instead of solitary", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-322:** Author all 5 role-slanted secret intel drops for `ab-the-pods` in `data/crises.json`.
-- [ ] **TASK-323:** Author `ab-mood-dial` (World `AB` Cycle 4: The Mood Dial) incident ("The Loom can tune serotonin through food") and Loom intro in `data/crises.json`.
-- [ ] **TASK-324:** Author `ab-mood-dial` Option A ("Opt-out mood optimisation for everyone", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-325:** Author `ab-mood-dial` Option B ("Ban chemical happiness", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-326:** Author all 5 role-slanted secret intel drops for `ab-mood-dial` in `data/crises.json`.
-- [ ] **TASK-327:** Author `ab-merge-offer` (World `AB` Cycle 5 Finale: The Merge Offer, `mode: "writein"`) incident ("The Loom offers neural merging and 40% sign up") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-328:** Author `ab-merge-offer` fallback Option A ("Allow the merge", tags `["assimilator", "lotus"]`) and fallback Option B ("Ban it; humans stay human", tags `["ghost", "artisan"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-329:** Author all 5 secret intel drops for `ab-merge-offer` in `data/crises.json`.
-- [ ] **TASK-330:** Author pre-debate incident citizen feed lines (3 sample citizen reactions per crisis) for all `AA` and `AB` crises in `data/crises.json`.
-- [ ] **TASK-331:** Author 3 debate hooks per crisis for all `AA` and `AB` crises in `data/crises.json`.
-- [ ] **TASK-332:** Verify writing rule across all `AA` and `AB` crises: both Option A and Option B hurt at least one trait/cohort so neither choice is a free win.
-- [ ] **TASK-333:** Expand fallback Loom resolution lines in `data/crises.json` for `good`, `mixed`, and `bad` outcome bands across `fixed`, `AA`, and `AB` crises.
-- [ ] **TASK-334:** Review `data/citizens.json` template messages to ensure each citizen's voice matches their lore bio across all 3 outcome bands.
+- [x] **TASK-311:** Review and finalize `aa-purpose-drift` (World `AA` Cycle 3: Purpose Drift) in `data/crises.json` with Option A (`assimilator`) and Option B (`artisan`).
+- [x] **TASK-312:** Author `aa-lost-knowledge` (World `AA` Cycle 4: Lost Knowledge) incident ("A grid fails in District 2 and no human knows how to fix it") and Loom intro in `data/crises.json`.
+- [x] **TASK-313:** Author `aa-lost-knowledge` Option A ("Keeper Corps: every citizen learns a maintenance trade", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-314:** Author `aa-lost-knowledge` Option B ("The Loom builds self-repairing redundancy", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-315:** Author all 5 role-slanted secret intel drops for `aa-lost-knowledge` in `data/crises.json`.
+- [x] **TASK-316:** Author `aa-fake-struggle` (World `AA` Cycle 5 Finale: The Fake Struggle Scandal, `mode: "writein"`) incident ("Leaks show the Loom secretly invented challenges to give people purpose") and Loom prompt in `data/crises.json`.
+- [x] **TASK-317:** Author `aa-fake-struggle` fallback Option A ("Disclose everything", tags `["artisan", "ghost"]`) and fallback Option B ("Keep the challenges secret; they work", tags `["lotus", "assimilator"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-318:** Author all 5 secret intel drops for `aa-fake-struggle` in `data/crises.json`.
+- [x] **TASK-319:** Author `ab-the-pods` (World `AB` Cycle 3: The Pods) incident ("90% of citizens haven't left home in two months") and Loom intro in `data/crises.json`.
+- [x] **TASK-320:** Author `ab-the-pods` Option A ("Ban full-immersion VR during daylight", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-321:** Author `ab-the-pods` Option B ("Make VR social and shared instead of solitary", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-322:** Author all 5 role-slanted secret intel drops for `ab-the-pods` in `data/crises.json`.
+- [x] **TASK-323:** Author `ab-mood-dial` (World `AB` Cycle 4: The Mood Dial) incident ("The Loom can tune serotonin through food") and Loom intro in `data/crises.json`.
+- [x] **TASK-324:** Author `ab-mood-dial` Option A ("Opt-out mood optimisation for everyone", tags `["lotus", "assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-325:** Author `ab-mood-dial` Option B ("Ban chemical happiness", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-326:** Author all 5 role-slanted secret intel drops for `ab-mood-dial` in `data/crises.json`.
+- [x] **TASK-327:** Author `ab-merge-offer` (World `AB` Cycle 5 Finale: The Merge Offer, `mode: "writein"`) incident ("The Loom offers neural merging and 40% sign up") and Loom prompt in `data/crises.json`.
+- [x] **TASK-328:** Author `ab-merge-offer` fallback Option A ("Allow the merge", tags `["assimilator", "lotus"]`) and fallback Option B ("Ban it; humans stay human", tags `["ghost", "artisan"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-329:** Author all 5 secret intel drops for `ab-merge-offer` in `data/crises.json`.
+- [x] **TASK-330:** Author pre-debate incident citizen feed lines (3 sample citizen reactions per crisis) for all `AA` and `AB` crises in `data/crises.json`.
+- [x] **TASK-331:** Author 3 debate hooks per crisis for all `AA` and `AB` crises in `data/crises.json`.
+- [x] **TASK-332:** Verify writing rule across all `AA` and `AB` crises: both Option A and Option B hurt at least one trait/cohort so neither choice is a free win.
+- [x] **TASK-333:** Expand fallback Loom resolution lines in `data/crises.json` for `good`, `mixed`, and `bad` outcome bands across `fixed`, `AA`, and `AB` crises.
+- [x] **TASK-334:** Review `data/citizens.json` template messages to ensure each citizen's voice matches their lore bio across all 3 outcome bands.
 - [ ] **TASK-335:** Validate `data/crises.json` schema integrity and prepare `feature/content` Tuesday branch state for automated end-of-day merge.
 
 ### Agent 4: Simulation & Loom (`feature/sim` — 50 Tasks)
-- [ ] **TASK-336:** Implement the full 500-run Monte Carlo forecast engine in `server/sim/index.js`.
-- [ ] **TASK-337:** For each of the 500 forecast runs, derive a deterministic run seed `hashSeed(baseSeed + ":forecast:" + runIndex)` in `server/sim/index.js`.
-- [ ] **TASK-338:** In each forecast run, redraw uncertain parameter $\alpha \sim \mathcal{N}(0.25, 0.05^2)$ clamped to $[0.05, 0.50]$ in `server/sim/index.js`.
-- [ ] **TASK-339:** In each forecast run, multiply every sensitivity entry $s(c, k)$ by an independent uniform draw $U(0.8, 1.2)$ to model the Loom's uncertainty about human nature.
-- [ ] **TASK-340:** Collect the $500 \times 12$ matrix of monthly GDW values across all forecast runs in `server/sim/index.js`.
-- [ ] **TASK-341:** Compute monthly sorted percentiles for $t = 1 \dots 12$: `p5` (5th percentile), `median` (50th percentile), and `p95` (95th percentile) in `server/sim/index.js`.
-- [ ] **TASK-342:** Compute end-of-cycle probability $P(\text{collapse})$ as the fraction of the 500 forecast runs where Month 12 $GDW = 0$.
-- [ ] **TASK-343:** Compute end-of-cycle probability $P(\text{unrest})$ as the fraction of the 500 forecast runs where Month 12 $GDW < 15$.
-- [ ] **TASK-344:** Execute the single Realized Run using `seed = hashSeed(gameId + ":cycle:" + cycle)` and base parameters ($\alpha = 0.25$, unperturbed $S$) in `server/sim/index.js`.
-- [ ] **TASK-345:** Record monthly district-level wellbeing trajectories (`D1`..`D5` across Months 1..12) from the Realized Run for the projector map animation.
-- [ ] **TASK-346:** Compute the Simulation Summary object in `server/sim/index.js`: realized vs forecast median GDW change, $P(\text{collapse})$, $P(\text{unrest})$, top 3 largest cohort trait shifts `(district, cohort, trait, delta)`, and any shocks that fired during the realized run.
-- [ ] **TASK-347:** Optimize inner loop arrays in `server/sim/step.js` (using flat `Float64Array` or pre-allocated objects) so 501 runs (721,440 cohort-trait-month updates) complete in $< 50\text{ ms}$ in Node.
-- [ ] **TASK-348:** Implement full `loom.narrate(context)` prompt builder in `server/loom.js` taking `{ crisis, winningPolicy, summary, citizens }`.
-- [ ] **TASK-349:** Configure `loom.narrate` request with `temperature: 0.8` and structured `responseSchema` enforcing `{ loomLine: string, messages: [{ citizenId: string, text: string }] }`.
-- [ ] **TASK-350:** Instruct Gemini in `loom.narrate` to select 6–10 citizens from the 10 recurring citizens whose districts/cohorts experienced the biggest shifts in `summary`, voicing each in character.
-- [ ] **TASK-351:** Implement post-call validator for `loom.narrate` in `server/loom.js`: verify JSON schema, filter out unknown `citizenId`s, strip emojis, and truncate `loomLine` to 200 chars and `text` to 140 chars.
-- [ ] **TASK-352:** Implement outcome-band fallback generator in `server/loom.js` for `loom.narrate`: classify realized GDW delta into `good` ($\Delta \ge +3$), `mixed` ($-3 < \Delta < +3$), or `bad` ($\Delta \le -3$), and select matching template lines from `data/citizens.json` and `data/crises.json`.
-- [ ] **TASK-353:** Ensure `loom.narrate` fallback injects the actual realized shocks and top affected district into the template Loom line when Gemini is offline or times out after 8s.
-- [ ] **TASK-354:** Begin simulation calibration in `data/sim.json` against Fixed Crisis target medians: tune Fixed 1A ("The Commons") effect vector & sensitivities toward median GDW change of `-5`.
-- [ ] **TASK-355:** Tune Fixed 1B ("The Charter") effect vector & sensitivities toward median GDW change of `+10`.
-- [ ] **TASK-356:** Tune Fixed 2A ("The Assembly") effect vector & sensitivities toward median GDW change of `-5`.
-- [ ] **TASK-357:** Tune Fixed 2B ("Delegated Control") effect vectors in both Commons and Charter worlds toward median GDW change of `+5`.
-- [ ] **TASK-358:** Write calibration test runner script in `server/sim/calibrate.js` that runs 500 forecasts for each fixed option and prints median GDW deltas.
-- [ ] **TASK-359:** Verify that the comfortable `1B -> 2B` (Gilded Cage) path reaches ~40% GDW after Cycle 2 as specified in the design notes.
-- [ ] **TASK-360:** Verify that the turbulent `1A -> 2A` (Commonwealth) path drops to ~15% GDW after Cycle 2 without hitting 0% collapse prematurely.
-- [ ] **TASK-361:** Verify cohort mood lookup helper `getCitizenMood(state, citizen)` in `server/sim/state.js` accurately extracts the simulated wellbeing of each citizen's assigned `(district, cohort)`.
-- [ ] **TASK-362:** Pass each citizen's current simulated mood and top trait change into `loom.narrate` so Gemini's citizen messages reflect their cohort's numbers.
-- [ ] **TASK-363:** Write unit test verifying 500 forecast runs + 1 realized run execute in $< 50\text{ ms}$.
-- [ ] **TASK-364:** Write unit test verifying `p5 <= median <= p95` for every month $t \in [1, 12]$ in the forecast output.
-- [ ] **TASK-365:** Write unit test verifying reproducibility: calling `simulate()` twice with the same `state`, `effects`, and `seed` returns bit-for-bit identical `forecast` and `realized` objects.
-- [ ] **TASK-366:** Write unit test verifying `summary.topMoves` returns exactly the 3 largest magnitude `(district, cohort, trait)` changes.
-- [ ] **TASK-367:** Write unit test verifying `loom.narrate` times out cleanly at 8,000ms and returns fallback citizen messages when the network hangs.
-- [ ] **TASK-368:** Write unit test verifying `loom.narrate` strips emojis if the model outputs one despite system instructions.
-- [ ] **TASK-369:** Write unit test verifying `loom.narrate` truncates a 250-character citizen message to 140 characters cleanly.
-- [ ] **TASK-370:** Verify `data/sim.json` sensitivity table $S$ has negative fairness sensitivity for `D1` `elite` under redistributive fairness policies.
-- [ ] **TASK-371:** Verify `D4` `workers` and `elders` have high positive sensitivity to `autonomy` and `fairness`.
-- [ ] **TASK-372:** Verify `D2` `youth` have high sensitivity to `connection` and `trust`.
-- [ ] **TASK-373:** Verify `D5` cohorts have heightened sensitivity to `autonomy` (sympathetic to the Unplugged).
-- [ ] **TASK-374:** Check that hedonic drift (`-0.003/month` on `purpose` and `connection`) causes a zero-effect policy vector `{0,0,0,0,0,0}` to slowly erode GDW over 12 months.
-- [ ] **TASK-375:** Test `simulate()` behavior when initial GDW is near 5% to ensure $P(\text{collapse})$ accurately reflects the fraction of runs hitting 0%.
-- [ ] **TASK-376:** Verify realized run clamps GDW at 0% and records `collapsed: true` if $W \le 0.20$ at Month 12.
-- [ ] **TASK-377:** Ensure `loom.narrate` fallback selects distinct citizens (no duplicate `citizenId` in the same resolution feed).
+- [x] **TASK-336:** Implement the full 500-run Monte Carlo forecast engine in `server/sim/index.js`.
+- [x] **TASK-337:** For each of the 500 forecast runs, derive a deterministic run seed `hashSeed(baseSeed + ":forecast:" + runIndex)` in `server/sim/index.js`.
+- [x] **TASK-338:** In each forecast run, redraw uncertain parameter $\alpha \sim \mathcal{N}(0.25, 0.05^2)$ clamped to $[0.05, 0.50]$ in `server/sim/index.js`.
+- [x] **TASK-339:** In each forecast run, multiply every sensitivity entry $s(c, k)$ by an independent uniform draw $U(0.8, 1.2)$ to model the Loom's uncertainty about human nature.
+- [x] **TASK-340:** Collect the $500 \times 12$ matrix of monthly GDW values across all forecast runs in `server/sim/index.js`.
+- [x] **TASK-341:** Compute monthly sorted percentiles for $t = 1 \dots 12$: `p5` (5th percentile), `median` (50th percentile), and `p95` (95th percentile) in `server/sim/index.js`.
+- [x] **TASK-342:** Compute end-of-cycle probability $P(\text{collapse})$ as the fraction of the 500 forecast runs where Month 12 $GDW = 0$.
+- [x] **TASK-343:** Compute end-of-cycle probability $P(\text{unrest})$ as the fraction of the 500 forecast runs where Month 12 $GDW < 15$.
+- [x] **TASK-344:** Execute the single Realized Run using `seed = hashSeed(gameId + ":cycle:" + cycle)` and base parameters ($\alpha = 0.25$, unperturbed $S$) in `server/sim/index.js`.
+- [x] **TASK-345:** Record monthly district-level wellbeing trajectories (`D1`..`D5` across Months 1..12) from the Realized Run for the projector map animation.
+- [x] **TASK-346:** Compute the Simulation Summary object in `server/sim/index.js`: realized vs forecast median GDW change, $P(\text{collapse})$, $P(\text{unrest})$, top 3 largest cohort trait shifts `(district, cohort, trait, delta)`, and any shocks that fired during the realized run.
+- [x] **TASK-347:** Optimize inner loop arrays in `server/sim/step.js` (using flat `Float64Array` or pre-allocated objects) so 501 runs (721,440 cohort-trait-month updates) complete in $< 50\text{ ms}$ in Node.
+- [x] **TASK-348:** Implement full `loom.narrate(context)` prompt builder in `server/loom.js` taking `{ crisis, winningPolicy, summary, citizens }`.
+- [x] **TASK-349:** Configure `loom.narrate` request with `temperature: 0.8` and structured `responseSchema` enforcing `{ loomLine: string, messages: [{ citizenId: string, text: string }] }`.
+- [x] **TASK-350:** Instruct Gemini in `loom.narrate` to select 6–10 citizens from the 10 recurring citizens whose districts/cohorts experienced the biggest shifts in `summary`, voicing each in character.
+- [x] **TASK-351:** Implement post-call validator for `loom.narrate` in `server/loom.js`: verify JSON schema, filter out unknown `citizenId`s, strip emojis, and truncate `loomLine` to 200 chars and `text` to 140 chars.
+- [x] **TASK-352:** Implement outcome-band fallback generator in `server/loom.js` for `loom.narrate`: classify realized GDW delta into `good` ($\Delta \ge +3$), `mixed` ($-3 < \Delta < +3$), or `bad` ($\Delta \le -3$), and select matching template lines from `data/citizens.json` and `data/crises.json`.
+- [x] **TASK-353:** Ensure `loom.narrate` fallback injects the actual realized shocks and top affected district into the template Loom line when Gemini is offline or times out after 8s.
+- [x] **TASK-354:** Begin simulation calibration in `data/sim.json` against Fixed Crisis target medians: tune Fixed 1A ("The Commons") effect vector & sensitivities toward median GDW change of `-5`.
+- [x] **TASK-355:** Tune Fixed 1B ("The Charter") effect vector & sensitivities toward median GDW change of `+10`.
+- [x] **TASK-356:** Tune Fixed 2A ("The Assembly") effect vector & sensitivities toward median GDW change of `-5`.
+- [x] **TASK-357:** Tune Fixed 2B ("Delegated Control") effect vectors in both Commons and Charter worlds toward median GDW change of `+5`.
+- [x] **TASK-358:** Write calibration test runner script in `server/sim/calibrate.js` that runs 500 forecasts for each fixed option and prints median GDW deltas.
+- [x] **TASK-359:** Verify that the comfortable `1B -> 2B` (Gilded Cage) path reaches ~40% GDW after Cycle 2 as specified in the design notes.
+- [x] **TASK-360:** Verify that the turbulent `1A -> 2A` (Commonwealth) path drops to ~15% GDW after Cycle 2 without hitting 0% collapse prematurely.
+- [x] **TASK-361:** Verify cohort mood lookup helper `getCitizenMood(state, citizen)` in `server/sim/state.js` accurately extracts the simulated wellbeing of each citizen's assigned `(district, cohort)`.
+- [x] **TASK-362:** Pass each citizen's current simulated mood and top trait change into `loom.narrate` so Gemini's citizen messages reflect their cohort's numbers.
+- [x] **TASK-363:** Write unit test verifying 500 forecast runs + 1 realized run execute in $< 50\text{ ms}$.
+- [x] **TASK-364:** Write unit test verifying `p5 <= median <= p95` for every month $t \in [1, 12]$ in the forecast output.
+- [x] **TASK-365:** Write unit test verifying reproducibility: calling `simulate()` twice with the same `state`, `effects`, and `seed` returns bit-for-bit identical `forecast` and `realized` objects.
+- [x] **TASK-366:** Write unit test verifying `summary.topMoves` returns exactly the 3 largest magnitude `(district, cohort, trait)` changes.
+- [x] **TASK-367:** Write unit test verifying `loom.narrate` times out cleanly at 8,000ms and returns fallback citizen messages when the network hangs.
+- [x] **TASK-368:** Write unit test verifying `loom.narrate` strips emojis if the model outputs one despite system instructions.
+- [x] **TASK-369:** Write unit test verifying `loom.narrate` truncates a 250-character citizen message to 140 characters cleanly.
+- [x] **TASK-370:** Verify `data/sim.json` sensitivity table $S$ has negative fairness sensitivity for `D1` `elite` under redistributive fairness policies.
+- [x] **TASK-371:** Verify `D4` `workers` and `elders` have high positive sensitivity to `autonomy` and `fairness`.
+- [x] **TASK-372:** Verify `D2` `youth` have high sensitivity to `connection` and `trust`.
+- [x] **TASK-373:** Verify `D5` cohorts have heightened sensitivity to `autonomy` (sympathetic to the Unplugged).
+- [x] **TASK-374:** Check that hedonic drift (`-0.003/month` on `purpose` and `connection`) causes a zero-effect policy vector `{0,0,0,0,0,0}` to slowly erode GDW over 12 months.
+- [x] **TASK-375:** Test `simulate()` behavior when initial GDW is near 5% to ensure $P(\text{collapse})$ accurately reflects the fraction of runs hitting 0%.
+- [x] **TASK-376:** Verify realized run clamps GDW at 0% and records `collapsed: true` if $W \le 0.20$ at Month 12.
+- [x] **TASK-377:** Ensure `loom.narrate` fallback selects distinct citizens (no duplicate `citizenId` in the same resolution feed).
 - [ ] **TASK-378:** Test `loom.narrate` live API call with Fixed Crisis 1A summary data.
 - [ ] **TASK-379:** Test `loom.narrate` live API call with Fixed Crisis 2B summary data.
-- [ ] **TASK-380:** Verify zero memory leaks across 50 consecutive calls to `simulate()`.
-- [ ] **TASK-381:** Ensure `server/sim/calibrate.js` can be executed standalone without starting the Express server.
-- [ ] **TASK-382:** Verify all exported functions in `server/sim/index.js` match the contract expected by `server/gameEngine.js`.
-- [ ] **TASK-383:** Verify all exported functions in `server/loom.js` match the contract expected by `server/gameEngine.js`.
-- [ ] **TASK-384:** Run full Stream 4 test suite.
+- [x] **TASK-380:** Verify zero memory leaks across 50 consecutive calls to `simulate()`.
+- [x] **TASK-381:** Ensure `server/sim/calibrate.js` can be executed standalone without starting the Express server.
+- [x] **TASK-382:** Verify all exported functions in `server/sim/index.js` match the contract expected by `server/gameEngine.js`.
+- [x] **TASK-383:** Verify all exported functions in `server/loom.js` match the contract expected by `server/gameEngine.js`.
+- [x] **TASK-384:** Run full Stream 4 test suite.
 - [ ] **TASK-385:** Trigger Tuesday Night Automated Branch Merger (`feature/backend`, `feature/frontend`, `feature/content`, `feature/sim` -> `main`).
-- [ ] **TASK-386:** Verify post-merge integration of `server/gameEngine.js` + `server/sim/index.js`.
-- [ ] **TASK-387:** Verify post-merge integration of `server/gameEngine.js` + `server/loom.js`.
-- [ ] **TASK-388:** Verify post-merge integration of `public/js/charts.js` with real `forecast` and `realized` payloads.
-- [ ] **TASK-389:** Verify post-merge integration of `public/js/map.js` with real 12-month `districts` trajectory payloads.
-- [ ] **TASK-390:** Verify post-merge integration of `data/crises.json` Worlds `AA` and `AB` in Cycles 3–4.
-- [ ] **TASK-391:** Run automated 4-cycle headless playthrough test on `AA` branch.
-- [ ] **TASK-392:** Run automated 4-cycle headless playthrough test on `AB` branch.
-- [ ] **TASK-393:** Verify Override double-vote and Loom tie-breaker in integrated build.
-- [ ] **TASK-394:** Verify Catalyst +1 scoring when GDW swings by $\ge 10$ in integrated build.
-- [ ] **TASK-395:** Verify Role +1 scoring on binary votes in integrated build.
-- [ ] **TASK-396:** Verify World Reveal phase transition and map recoloring in integrated build.
-- [ ] **TASK-397:** Verify offline fallback narration when `GEMINI_API_KEY` is unset in integrated build.
-- [ ] **TASK-398:** Log Tuesday calibration metrics to build artifacts.
-- [ ] **TASK-399:** Clean temporary test artifacts before Wednesday tasks begin.
+- [x] **TASK-386:** Verify post-merge integration of `server/gameEngine.js` + `server/sim/index.js`.
+- [x] **TASK-387:** Verify post-merge integration of `server/gameEngine.js` + `server/loom.js`.
+- [x] **TASK-388:** Verify post-merge integration of `public/js/charts.js` with real `forecast` and `realized` payloads.
+- [x] **TASK-389:** Verify post-merge integration of `public/js/map.js` with real 12-month `districts` trajectory payloads.
+- [x] **TASK-390:** Verify post-merge integration of `data/crises.json` Worlds `AA` and `AB` in Cycles 3–4.
+- [x] **TASK-391:** Run automated 4-cycle headless playthrough test on `AA` branch.
+- [x] **TASK-392:** Run automated 4-cycle headless playthrough test on `AB` branch.
+- [x] **TASK-393:** Verify Override double-vote and Loom tie-breaker in integrated build.
+- [x] **TASK-394:** Verify Catalyst +1 scoring when GDW swings by $\ge 10$ in integrated build.
+- [x] **TASK-395:** Verify Role +1 scoring on binary votes in integrated build.
+- [x] **TASK-396:** Verify World Reveal phase transition and map recoloring in integrated build.
+- [x] **TASK-397:** Verify offline fallback narration when `GEMINI_API_KEY` is unset in integrated build.
+- [x] **TASK-398:** Log Tuesday calibration metrics to build artifacts.
+- [x] **TASK-399:** Clean temporary test artifacts before Wednesday tasks begin.
 - [ ] **TASK-400:** Lock Tuesday milestone (`main` branch tagged `milestone-tuesday`).
 
 ---
