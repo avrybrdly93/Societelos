@@ -2,23 +2,35 @@
   "worlds": {
     "AA": {
       "name": "The Commonwealth",
-      "tagline": "Shared Wealth & Shared Power (Remaining Challenge: Meaning)",
-      "color": "#3e654c"
+      "tagline": "Shared wealth, shared power",
+      "problemLeft": "meaning",
+      "finale": "aa-fake-struggle",
+      "vote1": "A",
+      "vote2": "A"
     },
     "AB": {
       "name": "The Benevolent Machine",
-      "tagline": "Public Wealth, Loom Governance (Remaining Challenge: Dependence)",
-      "color": "#3d6350"
+      "tagline": "Shared wealth, the Loom rules",
+      "problemLeft": "dependence",
+      "finale": "ab-merge-offer",
+      "vote1": "A",
+      "vote2": "B"
     },
     "BA": {
       "name": "The Uneasy Republic",
-      "tagline": "Private Capital, Democratic Veto (Remaining Challenge: Class Conflict)",
-      "color": "#8f7e56"
+      "tagline": "Rich owners, voting masses",
+      "problemLeft": "class conflict",
+      "finale": "ba-vote-to-seize",
+      "vote1": "B",
+      "vote2": "A"
     },
     "BB": {
       "name": "The Gilded Cage",
-      "tagline": "Private Owners & Loom Automation (Remaining Challenge: Pacification)",
-      "color": "#a84e32"
+      "tagline": "Owners rule, masses on stipends",
+      "problemLeft": "pacification",
+      "finale": "bb-march-datacenter",
+      "vote1": "B",
+      "vote2": "B"
     }
   },
   "crises": [
