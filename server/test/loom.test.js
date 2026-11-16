@@ -199,3 +199,20 @@ test('loom.narrate times out cleanly at 8,000 ms and returns fallback citizen me
     console.warn = warn;
   }
 });
+
+/** A fetch stub returning `payload` as Gemini's JSON text. */
+const geminiReturns = (payload) => async () => ({
+  ok: true,
+  json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] })
+});
+const ONLINE = { ...OFFLINE, enabled: true, apiKey: 'k' };
+
+test('loom.narrate strips emoji the model outputs despite instructions', async () => {
+  const out = await loom.narrate(
+    { winningOption: { name: 'P' }, simSummary: {}, citizens },
+    { config: ONLINE, fetchImpl: geminiReturns({ loomLine: 'The council has chosen \u{1F916} wisely.', messages: [{ citizenId: 'kai', text: 'best day ever \u{1F389}\u{1F389} \u{1F44D}\u{1F3FD}' }, { citizenId: 'ruth', text: '\u{1F600}' }] }) }
+  );
+  assert.equal(out.loomLine, 'The council has chosen wisely.');
+  assert.deepEqual(out.messages, [{ citizenId: 'kai', text: 'best day ever' }], 'emoji-only message dropped');
+  assert.ok(!/\p{Extended_Pictographic}/u.test(JSON.stringify(out)));
+});
