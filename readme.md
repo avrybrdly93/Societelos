@@ -72,6 +72,8 @@ Societelos operates on a delicate balance between cooperative survival and compe
    ```bash
    npm run dev
    ```
+   * The new 4-stream backend (`server/server.js`, `socket.js`, `gameEngine.js`) runs with `npm run start:next` (or `npm run dev:next`). `npm start` still runs the legacy `server/index.js` until the new `public/mobile.html` and host screen speak the new socket events; then `start` will switch over.
+   * Backend checks: `npm run check` (syntax) and `npm run smoke` (Lobby -> Cycle 1 Resolution). Set `FAST_TIMERS=true` for 3-second phases.
 4. **Connect:**
    * **Host Projector:** Navigate to `http://localhost:3000`
    * **Mobile Controllers:** Connect devices to the same local network and navigate to `http://<YOUR_LOCAL_IP>:3000/mobile`
