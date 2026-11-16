@@ -449,3 +449,13 @@ body.host .incident-text { font-size: 28px; margin: 0 0 12px; }
 body.host .policy-name { font-size: 36px; margin: 12px 0 8px; }
 body.host .policy-text { font-size: 24px; margin: 0; color: var(--slate-200); }
 .policy-vs { align-self: center; font-size: 28px; color: var(--text-muted); }
+
+/* Host vote pips */
+.vote-status { margin-top: 16px; }
+.vote-pips { list-style: none; padding: 0; margin: 8px 0 0; display: flex; gap: 16px; }
+.vote-pip {
+  flex: 1; text-align: center; padding: 14px 0; font-size: 28px; font-weight: 700;
+  border-radius: var(--radius); border: 2px dashed var(--slate-600); color: var(--text-muted);
+  transition: all 0.25s;
+}
+.vote-pip.is-locked { border-style: solid; border-color: var(--accent); color: var(--slate-950); background: var(--accent); box-shadow: 0 0 20px var(--loom-glow); }

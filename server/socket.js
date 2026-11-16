@@ -223,6 +223,8 @@ function initSockets(io, gameEngine) {
       if (!game || !socket.data.node) return reply({ ok: false, reason: 'NOT_JOINED' });
       const result = game.castVote(socket.data.node, payload.choice, payload.override === true);
       reply(result);
+      // vote:progress { voted: [node] } -> who has locked in (never their choice).
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('vote:progress', { voted: Object.keys(game.votes) });
       // Early advance: end VOTE as soon as all 5 nodes have voted.
       if (result.ok && game.phase === 'VOTE' && game.allVotesIn()) game.advancePhase();
       return undefined;

@@ -166,6 +166,19 @@
     }
   }
   socket.on('phase', renderPolicies);
+
+  // Vote pips: which nodes have locked in, never what they chose.
+  function renderVotePips(voted) {
+    const set = new Set(voted || []);
+    document.querySelectorAll('.vote-pip').forEach((pip) => pip.classList.toggle('is-locked', set.has(pip.dataset.node)));
+    document.getElementById('vote-count').textContent = `${set.size}/5`;
+  }
+  socket.on('phase', (payload) => {
+    const voting = payload.phase === 'VOTE';
+    document.getElementById('vote-status').hidden = !voting;
+    if (voting) renderVotePips([]);
+  });
+  socket.on('vote:progress', (payload) => renderVotePips(payload && payload.voted));
   socket.on('phase', (payload) => { if (payload.phase === 'CHAMBER') revealChamber(payload); });
 
   // Countdown: recomputed every frame from the server's endsAt timestamp, so
