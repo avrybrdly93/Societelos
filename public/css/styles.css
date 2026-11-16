@@ -775,3 +775,18 @@ body.host.alarm-flash::before {
 .district-delta.is-up { fill: #064d3b; }
 .district-delta.is-down { fill: #7a1418; }
 .district-delta.is-flat { fill: var(--slate-800); }
+
+/* Fixed Crisis 2B: the Loom governs (cold machine) vs the Owners' Board (gilded). */
+.governance-line[hidden] { display: none; }
+body.host .governance-line { margin: 0; padding: 10px 16px; font-size: 26px; border-radius: var(--radius); flex-shrink: 0; }
+body.host .governance-line.gov-loom {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--loom-cyan); background: rgba(63, 216, 230, 0.08); border: 2px solid var(--loom-cyan);
+  box-shadow: 0 0 24px var(--loom-glow);
+}
+body.host .governance-line.gov-loom::before { content: "\25C9  LOOM // "; opacity: 0.7; }
+body.host .governance-line.gov-board {
+  font-family: Georgia, "Times New Roman", serif; font-style: italic;
+  color: #f3d58a; background: linear-gradient(90deg, rgba(243, 213, 138, 0.16), transparent); border-left: 6px solid #c9a227;
+}
+body.host .governance-line.gov-board::before { content: "The Owners' Board \2014  "; font-style: normal; font-variant: small-caps; opacity: 0.8; }

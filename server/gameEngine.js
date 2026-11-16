@@ -247,6 +247,7 @@ function normalizeOption(raw, key) {
     effects: raw.effects || {},
     effectsByWorld: raw.effectsByWorld || null,
     rolesByWorld: raw.rolesByWorld || null,
+    worldNotes: raw.worldNotes || null,
     volatility: typeof raw.volatility === 'number' ? raw.volatility : null,
     loomLine: raw.loomLine || null,
     reactions: raw.reactions || []
@@ -852,7 +853,13 @@ class GameState extends EventEmitter {
 
     // Trace: winning policy and realized GDW (no roles, no per-node votes).
     console.log(`[game ${this.roomCode}] cycle ${this.cycle} resolved: ${winner} "${option.name}"${tie ? ' (tie-break)' : ''}; GDW ${previousGdw} -> ${this.gdw}`);
-    const result = { cycle: this.cycle, winner, totals, tie, abstained, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    // Fixed Crisis 2B: who now holds power depends on Cycle 1 (the Loom after
+    // 1A, the Owners' Board after 1B), with its own projector line.
+    const worldNote = this.byCycle1World(option.worldNotes);
+    const governance = worldNote
+      ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
+      : null;
+    const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens: this.data.citizens };
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))

@@ -327,6 +327,7 @@
     document.getElementById('resolution-panel').hidden = !resolving;
     if (resolving) {
       document.querySelectorAll('.res-badge').forEach((b) => { b.hidden = true; });
+      document.getElementById('governance-line').hidden = true;
       document.getElementById('resolution-policy').textContent = 'The Loom is simulating 12 months';
       document.getElementById('resolution-loom').textContent = '…';
     }
@@ -382,6 +383,11 @@
   function renderResolution(payload) {
     if (!payload || !payload.result) return;
     const r = payload.result;
+    // Fixed Crisis 2B: the new power holder speaks in its own style.
+    const gov = document.getElementById('governance-line');
+    gov.hidden = !(r.governance && r.governance.line);
+    gov.className = `governance-line ${r.governance ? `gov-${r.governance.holder}` : ''}`;
+    gov.textContent = r.governance ? r.governance.line : '';
     // Tied vote: the Loom stepped in and picked the higher forecast median.
     document.getElementById('badge-tie').hidden = !r.tie;
     // Override detected: total vote weight exceeds the number of votes cast
