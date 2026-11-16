@@ -426,3 +426,26 @@ test('WORLD_REVEAL lasts 10 seconds and then advances to the Cycle 3 incident', 
   const m = css.match(/\.view-world\.is-active \.world-name \{ animation: world-in ([\d.]+)s/);
   assert.ok(m && Number(m[1]) < 10, 'world-in animation shorter than the beat');
 });
+
+test('Cycle 5 detects a writein crisis and starts the write-and-rank finale', () => {
+  const game = votingGame();
+  game.worldKey = 'AA';
+  game.cycle = 5;
+  const log = console.log;
+  console.log = () => {};
+  try {
+    game.startIncidentPhase();
+    game.clearPhaseTimer();
+  } finally {
+    console.log = log;
+  }
+  assert.equal(game.crisis.mode, 'writein');
+  assert.equal(game.finaleFallback, false);
+  assert.equal(game.isFinaleWriteIn(), true);
+  assert.deepEqual(game.finale.submissions, {});
+  // A cycle-5 crisis that is not a write-in plays as a binary vote.
+  game.crisis = { ...game.crisis, mode: 'binary' };
+  console.log = () => {};
+  try { game.initFinale(); } finally { console.log = log; }
+  assert.equal(game.isFinaleWriteIn(), false);
+});

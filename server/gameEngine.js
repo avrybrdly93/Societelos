@@ -547,9 +547,12 @@ class GameState extends EventEmitter {
     }
   }
 
-  /** True when the current cycle is the write-and-rank finale. */
+  /**
+   * True when the current cycle is the write-and-rank finale: cycle 5 with a
+   * crisis in mode "writein" that has not fallen back to its authored A/B.
+   */
   isFinaleWriteIn() {
-    return this.cycle === TOTAL_CYCLES && !this.finaleFallback;
+    return this.cycle === TOTAL_CYCLES && !this.finaleFallback && !!this.crisis && this.crisis.mode === 'writein';
   }
 
   /**
@@ -598,6 +601,7 @@ class GameState extends EventEmitter {
   startIncidentPhase() {
     this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles);
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
+    if (this.cycle === TOTAL_CYCLES) this.initFinale();
     this.enterPhase(PHASES.INCIDENT);
   }
 
@@ -613,6 +617,27 @@ class GameState extends EventEmitter {
       this.emit('intel:drop', { node, text });
     }
     this.enterPhase(PHASES.INTEL);
+  }
+
+  /**
+   * Cycle 5 set-up. A "writein" crisis starts the write-and-rank finale
+   * (INCIDENT shows no options, then FINALE_WRITE); any other crisis, or a
+   * missing one, plays as a normal binary vote on its authored A/B.
+   */
+  initFinale() {
+    this.finaleFallback = !(this.crisis && this.crisis.mode === 'writein');
+    this.finale = {
+      submissions: {}, // node -> raw text (trimmed)
+      moderation: {}, // node -> loom.moderate result
+      revise: {}, // node -> 'pending' | 'resubmitted' | 'done'
+      policies: [], // [{ id, node, text, roles, effects }] after moderation
+      authors: {}, // policyId -> node (secret until game:end)
+      ballots: {}, // node -> [policyId x4]
+      ranks: {}, // node -> [policyId x4]
+      tally: null,
+      enacted: null
+    };
+    console.log(`[game ${this.roomCode}] finale: ${this.finaleFallback ? 'binary A/B' : 'write-and-rank'} (${this.crisis ? this.crisis.id : 'no crisis'})`);
   }
 
   /** Public view of policy options A and B (no effect vectors or role tags). */
