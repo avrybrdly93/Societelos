@@ -46,6 +46,59 @@ const SYSTEM_PROMPT = [
   'Council members are only ever identified as NODE-01 to NODE-05.'
 ].join('\n');
 
+// ---------------------------------------------------------------------------
+// Transport: fetch with a hard 8-second AbortController timeout.
+// ---------------------------------------------------------------------------
+
+/** fetch() that aborts after `timeoutMs`. Rejects with an AbortError on timeout. */
+async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl = globalThis.fetch) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * One structured-JSON call to Gemini. Throws on any failure (no key, HTTP
+ * error, timeout, unparseable output); callers catch and fall back.
+ * @param {string} userPrompt
+ * @param {object} [opts] { schema, temperature = 0.2, maxOutputTokens = 1024, config, fetchImpl }
+ */
+async function callGemini(userPrompt, opts = {}) {
+  const cfg = opts.config || getConfig();
+  if (!cfg.enabled) throw new Error('Loom offline: GEMINI_API_KEY not set');
+  const body = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig: {
+      temperature: typeof opts.temperature === 'number' ? opts.temperature : 0.2,
+      maxOutputTokens: opts.maxOutputTokens || 1024,
+      responseMimeType: 'application/json'
+    }
+  };
+  if (opts.schema) body.generationConfig.responseSchema = opts.schema;
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/${encodeURIComponent(cfg.model)}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.apiKey },
+      body: JSON.stringify(body)
+    },
+    cfg.timeoutMs,
+    opts.fetchImpl
+  );
+  if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+  const data = await res.json();
+  const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
+    data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('');
+  if (!text) throw new Error('Gemini returned no content');
+  return JSON.parse(text);
+}
+
 /**
  * Narrate a resolution: one Loom line plus citizen messages.
  * @param {object} context { crisis, winningOption, simSummary, worldKey, citizens? }
@@ -74,4 +127,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, narrate, moderate, narrateResolution, moderateAndScorePolicies };
+module.exports = { getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, narrateResolution, moderateAndScorePolicies };
