@@ -449,6 +449,19 @@ function gradeFor(gdw) {
   return 'Thriving';
 }
 
+/**
+ * End-of-game winners. GDW <= 0: the Loom shut down and everyone loses
+ * (null). Otherwise every node tied on the top total score wins together.
+ * `scores` is { node: total }; returns a sorted node array or null.
+ */
+function determineWinners(scores = {}, finalGdw = 0) {
+  if (!(Number(finalGdw) > 0)) return null;
+  const entries = Object.entries(scores).filter(([, v]) => Number.isFinite(v));
+  if (!entries.length) return null;
+  const top = Math.max(...entries.map(([, v]) => v));
+  return entries.filter(([, v]) => v === top).map(([node]) => node).sort();
+}
+
 const CATALYST_SWING = 10;
 
 /**
@@ -800,6 +813,8 @@ class GameState extends EventEmitter {
     const shutdown = this.ending === 'shutdown' || finalGdw <= 0;
     const world = this.worldInfo();
     const grade = shutdown ? 'SHUTDOWN' : gradeFor(finalGdw);
+    const scores = Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]));
+    const winners = shutdown ? null : determineWinners(scores, finalGdw);
     return {
       gameId: this.gameId,
       cyclesPlayed: this.cycle,
@@ -813,7 +828,11 @@ class GameState extends EventEmitter {
       ...this.endGdwHistory(),
       roles: this.endRoles(),
       authors: this.endAuthors(),
-      scores: Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]))
+      scores,
+      // winner: null on a shutdown (everyone loses); otherwise every node
+      // tied on the top score, so a shared win is an array of 2+ nodes.
+      winner: winners,
+      sharedWin: !!winners && winners.length > 1
     };
   }
 
@@ -2097,6 +2116,7 @@ module.exports = {
   catalystScores,
   gradeFor,
   GRADE_TEXT,
+  determineWinners,
   bordaCount,
   rankBorda,
   selectEnacted,

@@ -154,3 +154,17 @@ test('a new game never reveals the previous game\'s finale authors', async () =>
     assert.deepEqual(out.game.endAuthors(), []);
   });
 });
+
+// TASK-606 ------------------------------------------------------------------
+
+test('game:end winner is every top-scoring node, or null when the Loom shut down', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-winner', world: 'AA' });
+    const { winner, scores, sharedWin } = out.gameEnd;
+    const top = Math.max(...Object.values(scores));
+    assert.deepEqual(winner, NODE_IDS.filter((n) => scores[n] === top));
+    assert.equal(sharedWin, winner.length > 1);
+  });
+  assert.deepEqual(engine.determineWinners({ 'NODE-01': 3, 'NODE-02': 5, 'NODE-03': 1 }, 40), ['NODE-02']);
+  assert.equal(engine.determineWinners({ 'NODE-01': 3, 'NODE-02': 5 }, 0), null, 'shutdown: nobody wins');
+});
