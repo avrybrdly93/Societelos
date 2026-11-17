@@ -1,0 +1,22 @@
+# Render Blueprint: the Express + Socket.IO game server for The Loom.
+# The static frontend is served by Vercel at https://avesstudios.com/the-loom
+# and connects here directly (WebSockets), via LOOM_SOCKET_URL in its build.
+services:
+  - type: web
+    name: the-loom
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      # Join QR code points phones here (+ /mobile.html).
+      - key: PUBLIC_URL
+        value: https://avesstudios.com/the-loom
+      # Set in the Render dashboard; never committed.
+      - key: GEMINI_API_KEY
+        sync: false
