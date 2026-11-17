@@ -97,6 +97,17 @@ const FINALE_SCHEMAS = Object.freeze({
 });
 
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
+// Polite refusals for a phone that cannot take a seat (e.g. a 6th student).
+// The seated five are never touched; the phone may still watch the projector.
+const JOIN_REFUSALS = Object.freeze({
+  GAME_IN_PROGRESS: 'GAME IN PROGRESS. This council already has its five trustees. Watch the projector; you can join the next game.',
+  ROOM_FULL: 'COUNCIL FULL. All five nodes are taken. Watch the projector; you can join the next game.'
+});
+
+function joinRefusal(reason) {
+  return { ok: false, reason, message: JOIN_REFUSALS[reason] || 'Could not join this council.' };
+}
+
 /** The game:end broadcast: the spec's keys first, then End Screen extras. */
 const GAME_END_KEYS = Object.freeze([
   'gdwHistory', 'finalGdw', 'grade', 'worldKey', 'worldName', 'closingMessage',
@@ -457,7 +468,7 @@ function initSockets(io, gameEngine) {
       if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
       if (game.phase !== 'LOBBY') {
         const node = game.findReconnectSeat({ name: payload.name, node: payload.node });
-        if (!node) return reply({ ok: false, reason: 'GAME_IN_PROGRESS' });
+        if (!node) return reply(joinRefusal('GAME_IN_PROGRESS'));
         bindPhone(socket, game, node);
         const rejoined = { ok: true, node, roomCode: game.roomCode, token: game.players[node].token, resumed: true };
         socket.emit('lobby:joined', rejoined);
@@ -465,7 +476,7 @@ function initSockets(io, gameEngine) {
       }
 
       const seat = game.addPlayer(socket.id, payload.name);
-      if (!seat.ok) return reply(seat);
+      if (!seat.ok) return reply(joinRefusal(seat.reason));
 
       wireRoom(game);
       socket.data.roomCode = game.roomCode;
@@ -569,4 +580,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, gameEndPayload, GAME_END_KEYS, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
+module.exports = { initSockets, joinRefusal, JOIN_REFUSALS, detectClientType, roomChannel, hostChannel, roleCard, gameEndPayload, GAME_END_KEYS, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };

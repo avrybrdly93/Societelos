@@ -12,6 +12,7 @@ delete process.env.GEMINI_API_KEY;
 const { io: ioClient } = require('socket.io-client');
 const { server, io } = require('../server');
 const engine = require('../gameEngine');
+const socketModule = require('../socket');
 
 const once = (socket, event) => new Promise((resolve) => socket.once(event, resolve));
 const until = async (fn, ms = 3000) => {
@@ -92,7 +93,8 @@ test('without a token, the same name reclaims only its own offline seat', { time
   const thief = connect({ clientType: 'phone' });
   await once(thief, 'connect');
   const stolen = await thief.emitWithAck('lobby:join', { name: 'Student 1', room: roomCode });
-  assert.deepEqual(stolen, { ok: false, reason: 'GAME_IN_PROGRESS' });
+  assert.equal(stolen.ok, false);
+  assert.equal(stolen.reason, 'GAME_IN_PROGRESS');
   assert.notEqual(game.players['NODE-01'].socketId, thief.id);
 
   // The wrong saved node id with the right name is refused too.
@@ -376,4 +378,41 @@ test('all 5 phones reconnect at once after a sleep/wake cycle and the game carri
   await until(() => `${game.cycle}:${game.phase}` !== phaseBefore, 5000);
   const next = await once(woken[0], 'phase');
   assert.ok(next.phase);
+});
+
+// TASK-632 ------------------------------------------------------------------
+
+test('a 6th phone gets a polite GAME IN PROGRESS / COUNCIL FULL message and the five seats are untouched', { timeout: 15000 }, async () => {
+  for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
+  const host = connect({ clientType: 'host' });
+  const { roomCode } = await once(host, 'host:room');
+  const game = engine.getRoom(roomCode);
+  for (let i = 0; i < 5; i++) {
+    const phone = connect({ clientType: 'phone' });
+    await once(phone, 'connect');
+    await phone.emitWithAck('lobby:join', { name: `Seat ${i}`, room: roomCode });
+    await phone.emitWithAck('lobby:ready', { ready: true });
+  }
+  const seatsBefore = JSON.stringify(Object.values(game.players).map((p) => [p.node, p.name, p.socketId, p.token]));
+
+  // In the lobby with five seated: COUNCIL FULL.
+  const sixth = connect({ clientType: 'phone' });
+  await once(sixth, 'connect');
+  const full = await sixth.emitWithAck('lobby:join', { name: 'Sixth student', room: roomCode });
+  assert.equal(full.ok, false);
+  assert.equal(full.reason, 'ROOM_FULL');
+  assert.match(full.message, /^COUNCIL FULL\./);
+
+  // After the start: GAME IN PROGRESS, and the sixth never joins the room channel.
+  await host.emitWithAck('host:start', {});
+  let leaked = 0;
+  sixth.on('phase', () => leaked++);
+  const late = await sixth.emitWithAck('lobby:join', { name: 'Sixth student', room: roomCode });
+  assert.deepEqual(late, { ok: false, reason: 'GAME_IN_PROGRESS', message: socketModule.JOIN_REFUSALS.GAME_IN_PROGRESS });
+  assert.match(late.message, /^GAME IN PROGRESS\./);
+  await until(() => game.cycle >= 1, 5000);
+  assert.equal(leaked, 0, 'no phase events reach the refused phone');
+  assert.equal(JSON.stringify(Object.values(game.players).map((p) => [p.node, p.name, p.socketId, p.token])), seatsBefore);
+  // A vote from the refused phone is not counted.
+  assert.equal((await sixth.emitWithAck('vote:cast', { choice: 'A' })).reason, 'NOT_JOINED');
 });
