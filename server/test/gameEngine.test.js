@@ -1164,3 +1164,22 @@ test('when moderation settles each author is told privately: ok, or reject (plac
     restore();
   }
 });
+
+test('END broadcasts the closing citizen for the End Screen (name, district, words, change)', async () => {
+  const game = await enactedFinale();
+  const phases = [];
+  game.on('phase', (p) => phases.push(p));
+  await game.finale.narrated;
+  quiet(() => game.advancePhase()); // FINALE_ENACT -> END
+  game.stop();
+  const end = phases[phases.length - 1];
+  assert.equal(end.phase, 'END');
+  assert.ok(end.closing, 'closing citizen present');
+  const citizens = require('../../data/citizens.json');
+  const c = citizens.find((x) => x.id === end.closing.citizenId);
+  assert.ok(c, 'a real citizen');
+  assert.equal(end.closing.name, c.name);
+  assert.equal(end.closing.text, c.lines[end.closing.band][0]);
+  assert.equal(typeof end.closing.change, 'number');
+  assert.equal(end.endsAt, null, 'END has no timer');
+});

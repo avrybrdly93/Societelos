@@ -154,3 +154,25 @@ test('getForecastMedian(state, effects, seed) matches simulate()\'s month-12 med
     assert.equal(getForecastMedian({ gdw: 25, simState: start }, effects, seed, { volatility: vol }), full, `seed ${seed}`);
   }
 });
+
+test('closingCitizen picks the citizen whose cohort changed most over the game, with their own line', () => {
+  const { closingCitizen } = require('../index');
+  const citizens = require('../../../data/citizens.json');
+  const start = createInitialState(simConfig);
+  // Four cycles that favour fairness hard: D4's former workers gain most.
+  let end = start;
+  for (let i = 0; i < 4; i++) end = simulate(end, { fairness: 0.9, purpose: 0.3 }, { runs: 20, seed: i }).finalState;
+  const pick = closingCitizen(start, end, citizens);
+  const changes = citizens.map((c) => {
+    const { getCitizenMood } = require('../index');
+    return { id: c.id, d: Math.abs(getCitizenMood(end, c).wellbeing - getCitizenMood(start, c).wellbeing) };
+  });
+  const max = Math.max(...changes.map((x) => x.d));
+  assert.equal(pick.citizenId, changes.find((x) => x.d === max).id);
+  assert.equal(pick.band, pick.change >= 2 ? 'good' : pick.change <= -2 ? 'bad' : 'mixed');
+  const c = citizens.find((x) => x.id === pick.citizenId);
+  assert.equal(pick.text, c.lines[pick.band][0]);
+  assert.ok(Math.abs(pick.wellbeingEnd - pick.wellbeingStart - pick.change) < 0.11);
+  assert.equal(closingCitizen(null, end, citizens), null);
+  assert.equal(closingCitizen(start, end, []), null);
+});

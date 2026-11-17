@@ -118,7 +118,8 @@ const PHASE_STARTERS = {
   FINALE_MOD: 'startFinaleModPhase',
   FINALE_DEBATE: 'startFinaleDebatePhase',
   FINALE_RANK: 'startFinaleRankPhase',
-  FINALE_ENACT: 'startFinaleEnactPhase'
+  FINALE_ENACT: 'startFinaleEnactPhase',
+  END: 'startEndPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -678,6 +679,23 @@ class GameState extends EventEmitter {
       this.enterPhase(to);
     }
     return to;
+  }
+
+  /**
+   * END: broadcast the closing citizen for the End Screen - the citizen whose
+   * cohort changed most over the whole game, with their own words.
+   */
+  startEndPhase() {
+    const extra = {};
+    try {
+      const pick = sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
+      if (pick && pick.text) {
+        extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text: pick.text, sentiment: pick.band }), change: pick.change, band: pick.band };
+      }
+    } catch (err) {
+      console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
+    }
+    this.enterPhase(PHASES.END, extra);
   }
 
   /**
@@ -1545,6 +1563,7 @@ class GameState extends EventEmitter {
     this.lastResolution = null;
     if (cycleNumber === 1) {
       this.simState = createSimState(this.data.sim);
+      this.simStateStart = this.simState; // for the End Screen's closing citizen
       this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
       this.gdwHistory = [this.gdw];
       this.volatility = 1.0;
