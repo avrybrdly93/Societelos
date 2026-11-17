@@ -1304,3 +1304,25 @@ body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .w
   body.host .topbar-brand, body.host .loom-line, body.host .topbar, body.host .chamber-col,
   body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .world-card { transition: none; }
 }
+
+/* The Loom's active computation: a faint cyan grid drifting behind the
+   projector UI (transform-only, so it stays on the compositor). It speeds up
+   while the Loom is simulating or moderating. */
+.loom-grid { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.loom-grid::before {
+  content: ""; position: absolute; inset: -64px;
+  background-image:
+    linear-gradient(rgba(63, 216, 230, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 216, 230, 0.09) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
+  opacity: 0.7;
+  animation: loom-grid-drift 16s linear infinite;
+  will-change: transform;
+}
+body.host[data-phase="RESOLUTION"] .loom-grid::before,
+body.host[data-phase="FINALE_MOD"] .loom-grid::before,
+body.host[data-phase="FINALE_ENACT"] .loom-grid::before { animation-duration: 5s; opacity: 1; }
+@keyframes loom-grid-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(64px, 64px, 0); } }
+@media (prefers-reduced-motion: reduce) { .loom-grid::before { animation: none; } }
