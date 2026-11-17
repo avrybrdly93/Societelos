@@ -1662,3 +1662,59 @@ body.is-reconnecting .m-main { opacity: 0.6; pointer-events: none; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Lobby / QR screen: the council seated beneath the Loom, full-bleed, with
+   no game-state readouts (GDW, cycle, timer, breadcrumbs, drifting grid).
+   The join and node panels sit at the edges so the centre of the picture
+   (the Loom's core and the council's chairs) stays clear.
+   ------------------------------------------------------------------------- */
+body.host:has(#view-lobby.is-active) {
+  background-image:
+    linear-gradient(90deg, rgba(8, 11, 16, 0.78) 0%, rgba(8, 11, 16, 0.18) 30%, rgba(8, 11, 16, 0.05) 50%, rgba(8, 11, 16, 0.18) 70%, rgba(8, 11, 16, 0.78) 100%),
+    linear-gradient(180deg, var(--slate-950) 0%, var(--slate-950) 13%, rgba(8, 11, 16, 0.4) 20%, transparent 30%, transparent 80%, rgba(8, 11, 16, 0.6) 100%),
+    url('../img/lobby-council.jpg');
+  /* Fit the full width so all of the council shows (the picture is wider
+     than 16:9); the dark page colour fills the strip under the top bar. */
+  background-size: 100% 100%, 100% 100%, 100% auto;
+  background-position: center bottom;
+}
+body.host:has(#view-lobby.is-active) .loom-grid,
+body.host:has(#view-lobby.is-active) .phase-crumbs,
+body.host:has(#view-lobby.is-active) .topbar-item:has(#cycle-indicator),
+body.host:has(#view-lobby.is-active) .topbar-item:has(#phase-timer),
+body.host:has(#view-lobby.is-active) .topbar-item:has(#gdw-badge) { display: none; }
+body.host:has(#view-lobby.is-active) .topbar-brand { margin-right: auto; }
+body.host:has(#view-lobby.is-active) .topbar { background: rgba(8, 11, 16, 0.72); }
+
+#view-lobby .lobby-grid { grid-template-columns: 540px 1fr 520px; gap: 0; align-items: stretch; }
+#view-lobby .lobby-join { grid-column: 1; }
+#view-lobby .lobby-nodes { grid-column: 3; display: flex; flex-direction: column; justify-content: center; }
+#view-lobby .lobby-join,
+#view-lobby .lobby-nodes {
+  padding: 24px 28px;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: var(--radius-lg);
+  background: rgba(8, 11, 16, 0.66);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+#view-lobby .lobby-join h1 { font-size: 52px; margin-bottom: 6px; }
+#view-lobby .lobby-join > p.muted { font-size: 24px; margin: 0; }
+#view-lobby .lobby-join .qr-container { width: 260px; height: 260px; margin: 16px 0 10px; box-shadow: 0 0 32px rgba(240, 200, 120, 0.25); }
+#view-lobby .lobby-join .qr-container img { width: 236px; height: 236px; }
+#view-lobby .lobby-join .join-url,
+#view-lobby .lobby-join .join-room { font-size: 22px; margin: 4px 0; overflow-wrap: anywhere; }
+#view-lobby .lobby-config { max-width: none; padding: 10px 14px; gap: 8px; }
+#view-lobby .config-name { min-width: 76px; font-size: 14px; }
+#view-lobby .config-seg span { padding: 5px 10px; font-size: 15px; }
+#view-lobby .node-cards { gap: 10px; margin-top: 12px; }
+#view-lobby .node-card { padding: 12px 20px; background: rgba(8, 11, 16, 0.45); }
+#view-lobby .node-card .node-id { font-size: 26px; }
+#view-lobby .node-card .node-status { font-size: 20px; }
+#view-lobby .dev-controls { margin: 12px 0 8px; padding: 10px 14px; }
+#view-lobby .dev-toggle-text { font-size: 15px; }
+#view-lobby .btn-start { margin-top: 8px; font-size: 30px; padding: 18px; }
+#view-lobby #start-hint { font-size: 20px; margin: 8px 0 0; }
