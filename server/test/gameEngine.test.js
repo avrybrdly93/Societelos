@@ -1052,6 +1052,8 @@ test('FINALE_ENACT broadcasts a resolution with the Borda tally, enacted 50/25/2
   assert.deepEqual(r.result.enacted.map((e) => [e.place, e.weight]), [['first', 0.5], ['second', 0.25], ['third', 0.25]]);
   assert.deepEqual(r.result.enacted.map((e) => e.id), r.result.tally.slice(0, 3).map((t) => t.id));
   for (const e of r.result.enacted) assert.ok(e.text.length > 0);
+  // Role tags are revealed on the enacted policies (TASK-493), under roleTags.
+  for (const e of r.result.enacted) assert.deepEqual(e.roleTags, ['artisan']);
   assert.equal(r.forecast.median.length, 13);
   assert.equal(r.realized.gdw.length, 13);
   assert.equal(r.districts.length, 13);

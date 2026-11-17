@@ -1019,7 +1019,12 @@ class GameState extends EventEmitter {
     };
     // Public Borda tally (best first) and the enacted top three; no authors.
     const tally = finale.rows.map((r) => ({ id: r.id, points: r.points, places: r.places.slice() }));
-    const enacted = finale.enacted.map((e) => ({ id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points }));
+    // roleTags: the agendas each enacted policy serves (the Loom's role tags),
+    // revealed only now that the ballots are locked; still no authors.
+    const enacted = finale.enacted.map((e) => ({
+      id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points,
+      roleTags: ((byId[e.id] && byId[e.id].roles) || []).filter((r) => typeof r === 'string').slice(0, 2)
+    }));
     const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const scoreUpdates = Object.keys(this.players).map((node) => {
       const role = finale.awards.role[node] || 0;

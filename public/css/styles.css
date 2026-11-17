@@ -1354,3 +1354,21 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
   position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2;
   box-shadow: 0 -12px 24px 8px var(--bg, #0d1117);
 }
+
+/* Finale enactment: role tag badges revealed on the three enacted policies. */
+.enact-roles { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.role-badge {
+  padding: 3px 10px; border-radius: 999px; font-size: 16px; letter-spacing: 0.08em; white-space: nowrap;
+  color: var(--slate-950); background: var(--theme-current, var(--accent));
+  animation: role-badge-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.role-badge.is-none { color: var(--slate-400); background: transparent; border: 1px solid var(--slate-700); animation-delay: 1.2s; }
+@keyframes role-badge-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .role-badge { animation: none; } }
+.resolution-enacted { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.resolution-enacted[hidden] { display: none; }
+.resolution-enacted-item { display: flex; align-items: center; gap: 10px; }
+body.host .resolution-enacted-item { font-size: 18px; }
+.resolution-enacted-label { color: var(--slate-200); letter-spacing: 0.06em; }
+.resolution-enacted .enact-roles { margin: 0; }
+.resolution-enacted .role-badge { font-size: 14px; padding: 2px 8px; }

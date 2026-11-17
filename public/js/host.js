@@ -1092,6 +1092,7 @@
     const weight = (totals.A || 0) + (totals.B || 0);
     const cast = NODE_IDS.length - (typeof r.abstained === 'number' ? r.abstained : 0);
     document.getElementById('badge-override').hidden = !(weight > cast);
+    renderResolutionEnacted(r.finale ? r.enacted : null);
     document.getElementById('resolution-policy').textContent = r.finale ? (r.policy || 'The Council Package') : `Policy ${r.winner}: ${r.policy || ''}`;
     typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
     // Reactions replace the incident posts and appear one by one, spread
@@ -1242,6 +1243,48 @@
 
   // Finale enactment reveal: the top three by Borda score with their weights.
   const PLACE_LABELS = { first: '1ST PLACE', second: '2ND PLACE', third: '3RD PLACE' };
+  // Role tag reveal: once rankings are locked and the package enacted, each
+  // enacted policy shows which agendas it served (badges pop in one by one).
+  const ROLE_TAG_LABELS = {
+    artisan: '\u25B3 THE ARTISAN', lotus: '\u273A THE LOTUS-EATER', assimilator: '\u232C THE ASSIMILATOR',
+    ghost: '\u2641 THE GHOST', catalyst: '\u2042 THE CATALYST'
+  };
+  function roleTagRow(tags) {
+    const row = document.createElement('p');
+    row.className = 'enact-roles';
+    const list = Array.isArray(tags) ? tags.filter((t) => ROLE_TAG_LABELS[t]) : [];
+    if (!list.length) {
+      const none = document.createElement('span');
+      none.className = 'role-badge is-none mono';
+      none.textContent = 'SERVES NO AGENDA';
+      row.appendChild(none);
+      return row;
+    }
+    list.forEach((t, i) => {
+      const badge = document.createElement('span');
+      badge.className = `role-badge role-${t} mono`;
+      badge.style.animationDelay = `${1.2 + i * 0.25}s`;
+      badge.textContent = ROLE_TAG_LABELS[t];
+      row.appendChild(badge);
+    });
+    return row;
+  }
+  // Resolution panel (finale only): the three enacted proposals, their
+  // weights and role tag badges, under the Council Package headline.
+  function renderResolutionEnacted(enacted) {
+    const list = document.getElementById('resolution-enacted');
+    list.textContent = '';
+    list.hidden = !(Array.isArray(enacted) && enacted.length);
+    (enacted || []).forEach((e) => {
+      const li = document.createElement('li');
+      li.className = `resolution-enacted-item is-${e.place}`;
+      const label = document.createElement('span');
+      label.className = 'resolution-enacted-label mono';
+      label.textContent = `${proposalLabel(e.id)} \u00B7 ${Math.round(e.weight * 100)}%`;
+      li.append(label, roleTagRow(e.roleTags));
+      list.appendChild(li);
+    });
+  }
   function renderEnacted(enacted) {
     const list = document.getElementById('enact-cards');
     list.textContent = '';
@@ -1257,7 +1300,7 @@
       const text = document.createElement('p');
       text.className = 'enact-text';
       text.textContent = e.text;
-      li.append(head, name, text);
+      li.append(head, name, text, roleTagRow(e.roleTags));
       list.appendChild(li);
     });
     document.getElementById('enact-wait').hidden = !!(enacted && enacted.length);
