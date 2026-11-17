@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Societelos — Council Projector</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/cinematic.css">
 </head>
 <body class="host">
   <!-- Host projector screen, designed for a 1920x1080 classroom projector. -->
@@ -401,10 +402,225 @@
     </section>
   </main>
 
+  <!-- Cinematic layer (public/js/cinematic.js): the opening title sequence on
+       load, then a title card at the start of every crisis. -->
+  <div id="cinematic" class="cine mode-intro" hidden>
+    <div id="cine-rig" class="cine-rig">
+      <div id="cine-bg" class="cine-bg"></div>
+      <div class="cine-bloom"></div>
+      <div class="cine-wash"></div>
+      <canvas id="cine-motes" class="cine-motes" width="1920" height="1080"></canvas>
+    </div>
+    <div class="cine-vignette"></div>
+    <div class="cine-letterbox top"></div>
+    <div class="cine-letterbox bottom"></div>
+
+    <div id="cine-logo" class="cine-logo" role="img" aria-label="The Loom">
+        <svg
+          viewBox="0 0 920 315"
+                    fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <defs>
+            <!-- Warm Metallic Gold Gradient matching 'TheLoom_Text.jpg' & 'The Loom_ A Perfect World.png' -->
+            <linearGradient id="cine-gold-grad" x1="0%" y1="0%" x2="100%" y2="90%">
+              <stop offset="0%" stop-color="#FFF7DF" />
+              <stop offset="28%" stop-color="#F6DFB0" />
+              <stop offset="62%" stop-color="#E4C180" />
+              <stop offset="100%" stop-color="#FDF0CE" />
+            </linearGradient>
+
+            <!-- Luminous Core Glow for the Intertwined O's -->
+            <filter id="cine-gold-glow" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="3.2" result="blur1" />
+              <feGaussianBlur stdDeviation="9" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <!-- Intense Starburst Flare Filter -->
+            <radialGradient id="cine-flare-radial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="22%" stop-color="#FFF3C4" stop-opacity="0.92" />
+              <stop offset="55%" stop-color="#E8B858" stop-opacity="0.38" />
+              <stop offset="100%" stop-color="#E8B858" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+
+          <!-- ============================================================
+               DELICATE GOLDEN LOOM LIGHT THREADS (Radiating in background)
+          ============================================================= -->
+          <g opacity="0.58">
+            <!-- Sweeping upper-right to lower-left golden thread through the intertwined O's -->
+            <path
+              class="cine-thread"
+              d="M 195 276 C 242 260, 290 128, 356 128 C 412 128, 422 238, 365 245 C 310 250, 326 112, 412 96"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="1.65"
+              fill="none"
+            />
+            <!-- Secondary gossamer arc echoing the celestial planetary rings -->
+            <path
+              class="cine-thread"
+              d="M 225 256 C 282 222, 318 140, 372 138 C 405 137, 405 224, 358 232"
+              stroke="#FFF6DC"
+              stroke-width="0.95"
+              stroke-opacity="0.7"
+              fill="none"
+            />
+          </g>
+
+          <!-- ============================================================
+               "T H E" — Centered Above in Wide-Tracked Geometric Sans
+          ============================================================= -->
+          <g filter="url(#cine-gold-glow)" stroke="url(#cine-gold-grad)" stroke-width="3.6" stroke-linecap="square" stroke-linejoin="miter">
+            <!-- T -->
+            <path class="cine-letter" d="M 332 24 H 366 M 349 24 V 68" />
+            <!-- H -->
+            <path class="cine-letter" d="M 426 24 V 68 M 458 24 V 68 M 426 46 H 458" />
+            <!-- E -->
+            <path class="cine-letter" d="M 548 24 H 520 V 68 H 548 M 520 46 H 544" />
+          </g>
+
+          <!-- ============================================================
+               "L   O O   M" — Exact Cutout Geometry from Reference Images
+          ============================================================= -->
+          <g filter="url(#cine-gold-glow)">
+            <!-- LETTER 'L' (Far Left, thin architectural stroke) -->
+            <path
+              class="cine-letter"
+              d="M 62 110 V 242 H 136"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="6.5"
+              stroke-linecap="butt"
+              stroke-linejoin="miter"
+            />
+
+            <!-- FIRST 'O' (Left Ring of the Intertwined Infinity Loom) -->
+            <!-- Has the subtle lower-right gap/weave where the inner thread crosses -->
+            <path
+              class="cine-letter"
+              d="M 342 152 A 69 69 0 1 0 326 226"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="6.8"
+              stroke-linecap="round"
+            />
+
+            <!-- INTERTWINED INNER FIGURE-EIGHT GOLDEN WEAVE -->
+            <path
+              class="cine-thread"
+              d="M 272 242 C 322 242, 344 122, 384 122 C 418 122, 420 226, 382 228 C 344 230, 336 122, 294 122"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="2.6"
+              fill="none"
+              opacity="0.92"
+            />
+
+            <!-- SECOND 'O' (Right Ring overlapping the First 'O') -->
+            <circle
+              class="cine-letter"
+              cx="464"
+              cy="176"
+              r="67"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="6.8"
+            />
+
+            <!-- LETTER 'M' (Sharp Geometric Peaks on Right) -->
+            <path
+              class="cine-letter"
+              d="M 604 242 L 620 112 L 672 232 L 724 112 L 740 242"
+              stroke="url(#cine-gold-grad)"
+              stroke-width="6.5"
+              stroke-linecap="butt"
+              stroke-linejoin="miter"
+            />
+          </g>
+
+          <!-- ============================================================
+               WARM GOLDEN LENS-FLARE SPARKLE ON LOWER-LEFT OF FIRST 'O'
+          ============================================================= -->
+          <g class="cine-flare">
+            <!-- Soft radial golden halo -->
+            <circle cx="272" cy="238" r="36" fill="url(#cine-flare-radial)" />
+            <!-- Long horizontal & vertical needle rays -->
+            <path
+              d="M 218 238 L 326 238 M 272 198 L 272 278"
+              stroke="#FFFDF7"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              opacity="0.9"
+            />
+            <!-- Diagonal sparkle rays -->
+            <path
+              d="M 248 216 L 296 260 M 248 260 L 296 216"
+              stroke="#FFF6D6"
+              stroke-width="1.1"
+              stroke-linecap="round"
+              opacity="0.75"
+            />
+            <!-- Bright star core -->
+            <circle cx="272" cy="238" r="4.2" fill="#FFFFFF" />
+          </g>
+        </svg>
+      <div class="cine-tagline">
+        <div>A PERFECT WORLD.</div>
+        <div>A QUESTION WITHOUT AN ANSWER.</div>
+      </div>
+    </div>
+
+    <div id="cine-cta-wrap" class="cine-cta-wrap">
+      <button id="cine-cta" class="cine-cta" type="button">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="12" cy="16" r="7" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="20" cy="16" r="7" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="9.5" cy="21.5" r="2" fill="#FFF8E7"/>
+        </svg>
+        <span>Initiate New Council</span>
+        <svg class="cine-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <div id="cine-crisis" class="cine-crisis" aria-live="polite">
+      <p id="cine-crisis-kicker" class="cine-kicker"></p>
+      <h2 id="cine-crisis-title" class="cine-crisis-title"></h2>
+      <div class="cine-rule"></div>
+      <p id="cine-crisis-subtitle" class="cine-crisis-sub"></p>
+    </div>
+
+    <div class="cine-controls">
+      <button id="cine-mute" class="cine-btn" type="button" aria-pressed="false">Sound: On</button>
+      <button id="cine-skip" class="cine-btn" type="button" hidden>Skip &rsaquo;</button>
+    </div>
+
+    <div id="cine-gate" class="cine-gate" role="button" tabindex="0" aria-label="Enter The Loom and start the intro with sound">
+      <svg class="cine-gate-emblem" viewBox="0 0 240 120" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="cine-pre-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFF4D4"/><stop offset="50%" stop-color="#E5C17B"/><stop offset="100%" stop-color="#B8873D"/>
+          </linearGradient>
+        </defs>
+        <circle cx="82" cy="60" r="38" stroke="url(#cine-pre-gold)" stroke-width="2.5" opacity="0.9"/>
+        <circle cx="158" cy="60" r="38" stroke="url(#cine-pre-gold)" stroke-width="2.5" opacity="0.9"/>
+        <path d="M 65 88 C 95 95, 112 28, 142 32 C 166 36, 166 84, 142 88 C 112 92, 98 25, 68 35" stroke="#FFF6DF" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.85"/>
+        <circle cx="72" cy="94" r="3.5" fill="#FFFDF5"/>
+      </svg>
+      <p class="cine-gate-kicker">A Classroom Council Simulation</p>
+      <p class="cine-gate-title">The Loom</p>
+      <span class="cine-gate-pill"><span class="cine-gate-dot"></span>Click to begin (with sound)</span>
+      <p class="cine-gate-hint">Best on the projector &middot; fullscreen with F11</p>
+    </div>
+  </div>
+
   <script src="config.js"></script>
   <script src="vendor/socket.io.min.js"></script>
   <script src="js/map.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/cinematic.js"></script>
   <script src="js/host.js"></script>
 </body>
 </html>

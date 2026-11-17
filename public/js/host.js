@@ -59,6 +59,24 @@
 
   const state = { roomCode: null, gameId: null, phase: 'LOBBY', cycle: 0, endsAt: null };
 
+  // Opening title sequence (public/js/cinematic.js). A fresh projector page
+  // plays it straight away, which also covers the socket server waking up; a
+  // refresh into a running game skips it. Played once per page load.
+  const Cine = window.LoomCinematic || null;
+  // ?intro=off skips it (repeat classes, automated UI runs).
+  let introDecided = /[?&]intro=off\b/.test(window.location.search);
+  function decideIntro(phase) {
+    if (!Cine) return;
+    if (!introDecided) {
+      introDecided = true;
+      if (phase === 'LOBBY') Cine.playIntro();
+    } else if (phase && phase !== 'LOBBY' && Cine.isActive() && !document.getElementById('cinematic').classList.contains('mode-crisis')) {
+      Cine.dismiss(); // the room turned out to be mid-game
+    }
+  }
+  if (!savedRoom) decideIntro('LOBBY');
+  socket.on('host:room', (info) => decideIntro(info && info.phase));
+
   socket.on('connect', () => console.debug('[host] connected'));
   socket.on('disconnect', (reason) => console.warn('[host] disconnected:', reason));
 
@@ -905,6 +923,28 @@
     list.scrollTop = 0;
   }
 
+  // Crisis title card: each new crisis opens with a cinematic card over the
+  // chamber. The Loom's spoken line and the citizen feed wait for it to end.
+  // A projector refreshed late in INCIDENT skips the card.
+  const CARD_MIN_REMAINING_MS = 9000;
+  let cardCrisisId = null;
+  let incidentCard = Promise.resolve();
+  function playCrisisCard(payload) {
+    const crisis = payload.crisis;
+    if (payload.phase === 'LOBBY' || payload.phase === 'END') { cardCrisisId = null; return; }
+    if (payload.phase !== 'INCIDENT' || !crisis || crisis.id === cardCrisisId) return;
+    cardCrisisId = crisis.id;
+    const remaining = payload.endsAt ? payload.endsAt - Date.now() : Infinity;
+    if (!Cine || remaining < CARD_MIN_REMAINING_MS) { incidentCard = Promise.resolve(); return; }
+    const label = payload.sessionTimerEnabled ? `Policy ${payload.cycle}` : `Cycle ${payload.cycle}`;
+    const worldName = (state.worldName || '').trim();
+    const kicker = payload.isFinale ? `${label}  ·  The final question` : [label, worldName].filter(Boolean).join('  ·  ');
+    incidentCard = Cine.playCrisis({ crisis, cycle: payload.cycle, kicker, worldKey: state.worldKey });
+  }
+  socket.on('phase', playCrisisCard);
+  socket.on('world:reveal', (world) => { if (world && world.name) state.worldName = world.name; });
+  socket.on('phase', (payload) => { if (payload.phase === 'LOBBY') state.worldName = null; });
+
   // Incident banner: crisis title and the Loom's intro line.
   function renderIncident(payload) {
     const banner = document.getElementById('incident-banner');
@@ -922,7 +962,10 @@
     banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
     if (payload.phase === 'INCIDENT' && crisis.loomIntro && LoomVoice.isEnabled()) {
       loom.hidden = false;
-      LoomVoice.speakLoomLine(loom, crisis.loomIntro);
+      loom.textContent = '';
+      incidentCard.then(() => {
+        if (state.phase === 'INCIDENT' && cardCrisisId === crisis.id) LoomVoice.speakLoomLine(loom, crisis.loomIntro);
+      });
     } else {
       loom.textContent = crisis.loomIntro ? `"${crisis.loomIntro}"` : '';
       loom.hidden = !crisis.loomIntro;
@@ -946,8 +989,12 @@
     feedCrisisId = crisis.id;
     clearFeedTimers();
     resetFeed();
-    (crisis.feed || []).forEach((item, i) => {
-      feedTimers.push(setTimeout(() => addFeedItem(item), 400 + i * FEED_STAGGER_MS));
+    const crisisId = crisis.id;
+    incidentCard.then(() => {
+      if (feedCrisisId !== crisisId) return;
+      (crisis.feed || []).forEach((item, i) => {
+        feedTimers.push(setTimeout(() => addFeedItem(item), 400 + i * FEED_STAGGER_MS));
+      });
     });
   }
   socket.on('phase', playIncidentFeed);

@@ -11,7 +11,7 @@ const ROOT = path.join(__dirname, '..', 'public');
 
 // script(s) -> page they run on
 const PAIRS = [
-  { page: 'index.html', scripts: ['js/host.js', 'js/map.js', 'js/charts.js'] },
+  { page: 'index.html', scripts: ['js/host.js', 'js/map.js', 'js/charts.js', 'js/cinematic.js'] },
   { page: 'mobile.html', scripts: ['js/mobile.js'] }
 ];
 

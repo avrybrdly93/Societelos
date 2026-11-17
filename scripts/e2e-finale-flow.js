@@ -77,7 +77,7 @@ const POLICIES = [
   const watch = (page, name) => page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
   const host = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   watch(host, 'host');
-  await host.goto(`${base}/`);
+  await host.goto(`${base}/?intro=off`);
   await host.waitForTimeout(500);
   const game = engine.getLatestRoom();
   game.gameId = 'e2efinale001';

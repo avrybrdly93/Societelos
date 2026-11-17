@@ -38,7 +38,7 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   };
   const host = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   watch(host, 'host');
-  await host.goto(base + '/');
+  await host.goto(base + '/?intro=off');
   await host.waitForTimeout(500);
   const game = engine.getLatestRoom();
   game.gameId = process.env.GAME_ID || 'e2eflow00001';

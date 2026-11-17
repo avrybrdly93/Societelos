@@ -161,7 +161,7 @@ async function hostChecks(browser, shot) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(`${server.base}/`);
+  await page.goto(`${server.base}/?intro=off`);
   await page.waitForFunction(() => typeof window.debugTriggerPhase === 'function');
   const activeView = () => page.evaluate(() => (document.querySelector('#host-main > .view.is-active') || {}).id);
   const visible = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return !!e && !e.hidden && e.getClientRects().length > 0; }, sel);

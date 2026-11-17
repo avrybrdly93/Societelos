@@ -29,7 +29,7 @@ const { io } = require('socket.io-client');
   const URL = `http://localhost:${server.address().port}`;
   const browser = await chromium.launch();
   const host = await browser.newPage();
-  await host.goto(URL + '/');
+  await host.goto(URL + '/?intro=off');
   await host.waitForFunction(() => window.SocietelosHost && window.SocietelosHost.state.roomCode);
   const room = await host.evaluate(() => window.SocietelosHost.state.roomCode);
   const game = engine.getRoom(room);
