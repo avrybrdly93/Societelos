@@ -82,3 +82,23 @@ test('World AA: cycle 3-4 crises hinge on purpose and autonomy, with real GDW te
     assert.ok(gap >= 4, `${c.id}: options ${gap.toFixed(1)} GDW apart`);
   }
 });
+
+test('World BA: cycle 3-4 crises split the D1 elite from the D4 workers', () => {
+  const { getCitizenMood } = require('../sim');
+  const { state, volatility } = cycle2State('BA');
+  const wb = (st, district, cohort) => getCitizenMood(st, { district, cohort }).wellbeing;
+  for (const c of worldCrises('BA')) {
+    const splits = ['A', 'B'].map((k) => {
+      const after = simulate(state, c.options[k].effects, { runs: RUNS, seed: SEED + 2, volatility }).finalState;
+      const elite = (wb(after, 'D1', 'elite') - wb(state, 'D1', 'elite')) * 100;
+      const workers = (wb(after, 'D4', 'workers') - wb(state, 'D4', 'workers')) * 100;
+      return { k, elite, workers, divergence: workers - elite };
+    });
+    // At least one option is a class fight: the two cohorts move in opposite
+    // directions and end 5+ wellbeing points apart.
+    const fight = splits.find((x) => Math.sign(x.elite) !== Math.sign(x.workers) && Math.abs(x.divergence) >= 5);
+    assert.ok(fight, `${c.id}: ${JSON.stringify(splits.map((x) => [x.k, x.elite.toFixed(1), x.workers.toFixed(1)]))}`);
+    // And the authored options carry fairness/trust trade-offs (|fairness| >= 0.3 somewhere).
+    assert.ok(['A', 'B'].some((k) => Math.abs(c.options[k].effects.fairness) >= 0.3), `${c.id}: fairness at stake`);
+  }
+});
