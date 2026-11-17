@@ -583,10 +583,12 @@ html:has(body.mobile) { overscroll-behavior-y: contain; }
   color: #1b1f24;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
 }
-.memo-head { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.12em; border-bottom: 2px solid #1b1f24; padding-bottom: 8px; padding-right: 128px; gap: 8px; }
-.memo-meta { font-size: 12px; color: #8c2a2e; margin: 10px 0 12px; letter-spacing: 0.1em; }
+.memo-head { display: flex; justify-content: space-between; font-size: 13px; letter-spacing: 0.12em; border-bottom: 2px solid #1b1f24; padding-bottom: 8px; padding-right: 128px; gap: 8px; }
+.memo-head { flex-wrap: wrap; row-gap: 2px; }
+.memo-head > * { white-space: nowrap; }
+.memo-meta { font-size: 13px; color: #7a1f23; margin: 10px 0 12px; letter-spacing: 0.1em; }
 .memo-body { font-family: var(--font-mono); font-size: 17px; line-height: 1.5; margin: 0; }
-.memo-foot { font-size: 12px; margin: 16px 0 0; color: #5a6270; }
+.memo-foot { font-size: 14px; margin: 16px 0 0; color: #3d4450; }
 .intel-memo .shield-button { background: #1b1f24; color: #eae6dc; border-color: #1b1f24; }
 .m-clock { font-size: 72px; font-weight: 700; color: var(--accent); margin: 8px 0; }
 
@@ -1155,11 +1157,11 @@ body.host .proposal-label { margin: 0; font-size: 24px; font-weight: 700; letter
 body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
 
 /* Mobile finale ballot */
-.rank-help { margin: 0 0 12px; font-size: 15px; }
+.rank-help { margin: 0 0 12px; font-size: 16px; color: var(--slate-200); }
 .rank-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .rank-cards[hidden] { display: none; }
 .rank-card { position: relative; padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-raised); }
-.rank-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.rank-name { margin: 0 0 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
 .rank-text { margin: 0; font-size: 16px; line-height: 1.4; }
 .rank-card { cursor: pointer; padding-right: 72px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 56px; }
 .rank-card.is-ranked { border-color: var(--accent); box-shadow: 0 0 16px var(--loom-glow); }
@@ -1169,9 +1171,9 @@ body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
   border-radius: 50%; background: var(--accent); color: var(--slate-950);
   font-family: var(--font-mono); font-size: 22px; font-weight: 700;
 }
-.borda-legend { list-style: none; display: flex; gap: 6px; margin: 0 0 12px; padding: 0; font-size: 12px; }
-.borda-legend li { flex: 1; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--bg-raised); color: var(--text-muted); }
-.borda-legend span { display: block; color: var(--accent); font-weight: 700; font-size: 14px; }
+.borda-legend { list-style: none; display: flex; gap: 6px; margin: 0 0 12px; padding: 0; font-size: 14px; }
+.borda-legend li { flex: 1; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--bg-raised); color: var(--slate-200); }
+.borda-legend span { display: block; color: var(--accent); font-weight: 700; font-size: 16px; }
 .rank-card.is-ranked::before {
   content: attr(data-points); position: absolute; top: 8px; right: 70px;
   font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
@@ -1465,6 +1467,10 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
   position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2;
   box-shadow: 0 -12px 24px 8px var(--bg, #0d1117);
 }
+/* Disabled until all four are ranked: an opaque button, not a 40%-opacity
+   one, so ballot text scrolling underneath never shows through it and the
+   label stays readable on a phone under bright classroom lights. */
+#rank-submit:disabled { opacity: 1; background: var(--slate-800); border-color: var(--slate-600); color: var(--slate-200); box-shadow: 0 -12px 24px 8px var(--bg, #0d1117); }
 
 /* Finale enactment: role tag badges revealed on the three enacted policies. */
 .enact-roles { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
