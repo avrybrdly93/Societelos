@@ -513,6 +513,7 @@ class GameState extends EventEmitter {
     this.volatility = 1.0;
     this.worldKey = null;
     this.ending = null; // 'shutdown' once GDW reaches 0
+    this.endData = null; // End Screen data, compiled when END starts
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
     // Current cycle.
@@ -695,7 +696,33 @@ class GameState extends EventEmitter {
     } catch (err) {
       console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
     }
+    // Compile the End Screen data before END is broadcast, so a host that
+    // asks for it on the END phase already finds it.
+    this.endData = this.compileEndData(extra.closing || null);
     this.enterPhase(PHASES.END, extra);
+    this.emit('game:end', this.endData);
+  }
+
+  /**
+   * END data compiler: everything the End Screen reveals, gathered once
+   * after Cycle 5's FINALE_ENACT / RESOLUTION, or straight after the cycle
+   * whose realized GDW hit 0. Stored as this.endData and emitted as
+   * 'game:end'. Server-side until the game is over: it reveals scores.
+   */
+  compileEndData(closingMessage = null) {
+    const finalGdw = roundGdw(this.gdw);
+    const shutdown = this.ending === 'shutdown' || finalGdw <= 0;
+    const world = this.worldInfo();
+    return {
+      gameId: this.gameId,
+      cyclesPlayed: this.cycle,
+      finalGdw,
+      shutdown,
+      worldKey: this.worldKey || null,
+      worldName: world.name || null,
+      closingMessage,
+      scores: Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]))
+    };
   }
 
   /**
@@ -1570,6 +1597,7 @@ class GameState extends EventEmitter {
       this.voteHistory = {};
       this.worldKey = null;
       this.ending = null;
+      this.endData = null;
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
@@ -1598,6 +1626,7 @@ class GameState extends EventEmitter {
     this.volatility = 1.0;
     this.worldKey = null;
     this.ending = null;
+    this.endData = null;
     this.voteHistory = {};
     this.scoreLedger = [];
     this.roleAssignment = null;
