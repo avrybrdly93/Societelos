@@ -696,6 +696,10 @@ body.host .view.is-active { height: 100%; }
 /* Host GDW meter: animated readout, stability label and 0-100% bar. */
 .gdw-meter { display: flex; flex-direction: column; gap: 6px; }
 .gdw-meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gdw-delta-pill { display: inline-block; padding: 4px 10px; border-radius: 999px; opacity: 0; transform: translateY(6px); transition: opacity 220ms ease, transform 220ms ease; }
+.gdw-delta-pill.is-visible { opacity: 1; transform: none; }
+.gdw-delta-pill.is-up { color: #062f28; background: var(--teal); }
+.gdw-delta-pill.is-down { color: #fff; background: var(--danger); }
 body.host .gdw-meter .label { font-size: 20px; }
 .gdw-status { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--gdw-color, var(--amber)); }
 .gdw-readout { font-size: 64px; font-weight: 700; line-height: 1; color: var(--gdw-color, var(--amber)); }
@@ -1577,6 +1581,7 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .view-end.beat-3 .end-winner-title { animation: end-winner-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes end-winner-in { from { opacity: 0; transform: scale(0.92); letter-spacing: 0.2em; } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
+  .gdw-delta-pill { transition: none; transform: none; }
   .view-end .end-beat { transition: none; transform: none; }
   .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title { animation: none; }
 }

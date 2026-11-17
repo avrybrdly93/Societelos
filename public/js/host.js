@@ -1183,6 +1183,16 @@
   }
   function playResolution(payload) {
     const r = payload.result;
+    const deltaPill = document.getElementById('gdw-delta-pill');
+    if (deltaPill && typeof r.gdwDelta === 'number') {
+      deltaPill.hidden = false;
+      deltaPill.textContent = `${r.gdwDelta >= 0 ? '+' : ''}${r.gdwDelta.toFixed(1)}%`;
+      deltaPill.classList.toggle('is-up', r.gdwDelta >= 0);
+      deltaPill.classList.toggle('is-down', r.gdwDelta < 0);
+      deltaPill.classList.remove('is-visible');
+      requestAnimationFrame(() => deltaPill.classList.add('is-visible'));
+      setTimeout(() => { deltaPill.classList.remove('is-visible'); }, 4200);
+    }
     // Fixed Crisis 2B: the new power holder speaks in its own style.
     const gov = document.getElementById('governance-line');
     gov.hidden = !(r.governance && r.governance.line);
