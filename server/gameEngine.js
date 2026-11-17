@@ -845,8 +845,16 @@ class GameState extends EventEmitter {
         place: placeOf[p.id] || null,
         weight: weightOf[p.id] || 0,
         roles: (p.roles || []).filter((r) => typeof r === 'string').slice(0, 2),
-        placeholder: !!p.placeholder
+        placeholder: !!p.placeholder,
+        fallback: false
       }));
+  }
+
+  /** 'writein' | 'fallback' | 'none': how (or whether) Cycle 5 was decided. */
+  endFinaleMode() {
+    if (!this.finale) return 'none'; // created only when the finale cycle starts
+    if (this.finaleFallback) return 'fallback';
+    return Array.isArray(this.finale.rows) ? 'writein' : 'none';
   }
 
   /**
@@ -862,6 +870,7 @@ class GameState extends EventEmitter {
     const grade = shutdown ? 'SHUTDOWN' : gradeFor(finalGdw);
     const scores = Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]));
     const winners = shutdown ? null : determineWinners(scores, finalGdw);
+    const finaleMode = this.endFinaleMode();
     return {
       gameId: this.gameId,
       // Replay: every run in the game is seeded from the game id, so
@@ -880,6 +889,12 @@ class GameState extends EventEmitter {
       ...this.endGdwHistory(),
       roles: this.endRoles(),
       authors: this.endAuthors(),
+      // How Cycle 5 was decided: 'writein' (authors above), 'fallback' (the
+      // Loom was unavailable, so the authored A/B finale was voted and there
+      // are no write-in authors to reveal) or 'none' (the game ended before
+      // Cycle 5, e.g. a shutdown).
+      finaleMode,
+      finaleFallback: finaleMode === 'fallback',
       scores,
       // winner: null on a shutdown (everyone loses); otherwise every node
       // tied on the top score, so a shared win is an array of 2+ nodes.

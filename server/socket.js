@@ -112,7 +112,7 @@ function joinRefusal(reason) {
 const GAME_END_KEYS = Object.freeze([
   'gdwHistory', 'finalGdw', 'grade', 'worldKey', 'worldName', 'closingMessage',
   'roles', 'authors', 'scores', 'winner', 'shutdown', 'seed',
-  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin'
+  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin', 'finaleMode', 'finaleFallback'
 ]);
 
 function gameEndPayload(data = {}) {

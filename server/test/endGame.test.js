@@ -292,3 +292,31 @@ test('replaying a fixed seed with identical votes gives identical final scores, 
     assert.notDeepEqual(other.gameEnd.gdwHistory, a.gdwHistory);
   });
 });
+
+// TASK-637 ------------------------------------------------------------------
+
+test('game:end authors reveal says when Cycle 5 fell back to the authored A/B finale', async () => {
+  // Offline (no key, no mock): moderation is unavailable, so the finale falls back.
+  const fallback = await playGame({ gameId: 'authors-fallback', world: 'BB' });
+  assert.equal(fallback.gameEnd.finaleMode, 'fallback');
+  assert.equal(fallback.gameEnd.finaleFallback, true);
+  assert.deepEqual(fallback.gameEnd.authors, [], 'no unmoderated write-ins are revealed');
+
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const writein = await playGame({ gameId: 'authors-writein', world: 'BB' });
+    assert.equal(writein.gameEnd.finaleMode, 'writein');
+    assert.equal(writein.gameEnd.finaleFallback, false);
+    assert.equal(writein.gameEnd.authors.length, 5);
+    assert.ok(writein.gameEnd.authors.every((a) => a.fallback === false));
+  });
+
+  // A shutdown before Cycle 5: no finale at all.
+  const game = new engine.GameState({ roomCode: 'NOFIN' });
+  game.cycle = 3;
+  game.gdw = 0;
+  game.ending = 'shutdown';
+  const end = game.compileEndData();
+  assert.equal(end.finaleMode, 'none');
+  assert.equal(end.finaleFallback, false);
+  assert.deepEqual(end.authors, []);
+});
