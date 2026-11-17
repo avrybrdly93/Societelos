@@ -886,7 +886,13 @@
           "targetGdwDelta": 6
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the Old Harbour clusters were built by 40 hand-picked engineers. Public compute would put those tools in every Eastworks workshop, not just one gated campus.",
+        "lotus": "Loom welfare note: the private levy would fund 12 new parks and free clinics in Eastworks within a year. Seizing the servers means months of drone raids and outages first.",
+        "assimilator": "Loom projection: one unified Loom makes decisions 30% faster than a Loom split with private copies. Two minds running one region will keep fighting.",
+        "catalyst": "Forecast: nationalizing climbs about 6 points but with a wide spread; the levy slides about 5. Neither option is likely to swing the region 10 points this year.",
+        "ghost": "Leaked memo: the owners' private servers are the only computers in the region the Loom cannot read. Seize them and every machine answers to one master."
+      }
     },
     {
       "id": "ba-status-wars",
