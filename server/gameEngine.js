@@ -742,6 +742,26 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * End Screen role reveal: NODE-01..NODE-05 in order with the player's
+   * display name (shown only now, on the local projector; never sent to the
+   * Loom), their secret role and their per-cycle score breakdown.
+   */
+  endRoles() {
+    const breakdown = this.scoreBreakdown();
+    return Object.keys(this.players).sort().map((node) => {
+      const role = (this.roleAssignment && this.roleAssignment[node]) || null;
+      const { total, perCycle } = breakdown[node];
+      return {
+        node,
+        name: this.players[node].name,
+        role: role ? { key: role.key, name: role.name || role.designation || role.key, icon: role.icon || '' } : null,
+        total,
+        perCycle
+      };
+    });
+  }
+
+  /**
    * END data compiler: everything the End Screen reveals, gathered once
    * after Cycle 5's FINALE_ENACT / RESOLUTION, or straight after the cycle
    * whose realized GDW hit 0. Stored as this.endData and emitted as
@@ -763,6 +783,7 @@ class GameState extends EventEmitter {
       worldName: world.name || null,
       closingMessage,
       ...this.endGdwHistory(),
+      roles: this.endRoles(),
       scores: Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]))
     };
   }
@@ -1444,7 +1465,9 @@ class GameState extends EventEmitter {
     for (const node of Object.keys(this.players)) {
       out[node] = {
         total: this.scores[node] || 0,
-        perCycle: this.scoreLedger.map((e) => ({ cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0 }))
+        perCycle: this.scoreLedger.map((e) => ({
+          cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0, author: (e.author && e.author[node]) || 0
+        }))
       };
     }
     return out;

@@ -95,3 +95,23 @@ test('on a shutdown, gdwHistory stops at the month GDW hit 0', () => {
   assert.equal(gdwHistory.at(-1), 0);
   assert.deepEqual(cycleMarkers, [{ cycle: 1, index: 12, gdw: 13 }, { cycle: 2, index: 15, gdw: 0 }]);
 });
+
+// TASK-604 ------------------------------------------------------------------
+
+test('game:end roles reveal maps NODE-01..05 to name, secret role and per-cycle scores', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-roles', world: 'AB' });
+    const { roles, scores } = out.gameEnd;
+    assert.deepEqual(roles.map((r) => r.node), NODE_IDS);
+    assert.deepEqual(roles.map((r) => r.name), ['P0', 'P1', 'P2', 'P3', 'P4']);
+    assert.deepEqual(roles.map((r) => r.role.key).sort(), ['artisan', 'assimilator', 'catalyst', 'ghost', 'lotus']);
+    for (const r of roles) {
+      assert.equal(r.role.key, out.roles[r.node], `${r.node} reveals the role it was dealt`);
+      assert.ok(r.role.name && r.role.icon, 'role title and icon');
+      assert.deepEqual(r.perCycle.map((c) => c.cycle), [1, 2, 3, 4, 5]);
+      const sum = r.perCycle.reduce((t, c) => t + c.role + c.catalyst + c.author, 0);
+      assert.equal(sum, r.total, `${r.node} breakdown adds up`);
+      assert.equal(r.total, scores[r.node]);
+    }
+  });
+});
