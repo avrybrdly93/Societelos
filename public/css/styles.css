@@ -1566,6 +1566,17 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-seed-badge:empty { display: none; }
 .btn-end { font-size: 20px; padding: 10px 22px; letter-spacing: 0.08em; }
 .end-action-hint { font-size: 15px; }
+/* Shared win (TASK-673): a tie for the top score gets a teal/amber banner,
+   and every co-winner row in the reveal table wears the same accent. */
+.end-winner.is-shared { border-color: var(--amber); background: linear-gradient(90deg, rgba(43, 196, 160, 0.14), rgba(240, 164, 48, 0.14), rgba(43, 196, 160, 0.14)); box-shadow: 0 0 32px rgba(240, 164, 48, 0.25); }
+.end-winner.is-shared .label { color: var(--amber); letter-spacing: 0.18em; }
+.end-winner.is-shared .end-winner-title { color: var(--amber); }
+.end-table tbody.is-shared tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--amber); }
+.end-table tbody.is-shared tr.is-winner td { background: rgba(240, 164, 48, 0.10); }
+.view-end.beat-3 .end-winner.is-shared { animation: shared-glow 2.4s ease-in-out 1.4s 2 both; }
+@keyframes shared-glow { 0%, 100% { box-shadow: 0 0 32px rgba(240, 164, 48, 0.25); } 50% { box-shadow: 0 0 56px rgba(240, 164, 48, 0.55); } }
+.result-card.end-card.is-shared { border-color: var(--amber); box-shadow: 0 0 24px rgba(240, 164, 48, 0.35), inset 0 0 0 1px rgba(43, 196, 160, 0.5); }
+.result-card.end-card.is-shared .result-outcome { color: var(--amber); }
 .view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
 .view-end.is-shutdown .end-winner-title { color: var(--danger); }
 
@@ -1587,7 +1598,7 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 @media (prefers-reduced-motion: reduce) {
   .gdw-delta-pill { transition: none; transform: none; }
   .view-end .end-beat { transition: none; transform: none; }
-  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title { animation: none; }
+  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title, .view-end.beat-3 .end-winner.is-shared { animation: none; }
 }
 
 /* Mobile End Screen. */

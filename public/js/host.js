@@ -1522,6 +1522,10 @@
     const sub = document.getElementById('end-winner-sub');
     const names = {};
     for (const r of data.roles || []) names[r.node] = r.name;
+    // Two or more players tied for the top score: celebrate the shared win.
+    const shared = !data.shutdown && Array.isArray(data.winner) && data.winner.length > 1;
+    document.getElementById('end-winner').classList.toggle('is-shared', shared);
+    document.getElementById('end-roles-body').classList.toggle('is-shared', shared);
     if (data.shutdown || !data.winner) {
       label.textContent = 'Total loss';
       title.textContent = 'THE LOOM HAS SHUT DOWN';

@@ -558,7 +558,7 @@
       headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
     } else {
       outcome.textContent = 'NOT THIS TIME';
-      headline.textContent = 'Another agenda shaped the future.';
+      headline.textContent = winners.length > 1 ? `${winners.length} players shared the win.` : 'Another agenda shaped the future.';
     }
     document.getElementById('end-role').textContent = me && me.role ? `You were ${me.role.name || me.role.key}.` : '';
     document.getElementById('end-score').textContent = me ? String(me.total) : '—';
