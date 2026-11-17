@@ -228,9 +228,14 @@ test('payload keys for all 14 events match the spec table character-for-characte
   const clients = ['public/js/host.js', 'public/js/mobile.js'].map((f) => fs.readFileSync(path.join(__dirname, '..', '..', f), 'utf8')).join('\n');
   for (const { event, direction, payload } of rows) {
     if (!direction.endsWith('→ server')) continue;
+    const keys = specKeys(payload).map((k) => k.key);
+    if (!keys.length) {
+      // e.g. host:start {}: any payload object will do (extras like seed are optional).
+      assert.ok(clients.includes(`emit('${event}',`), `a client sends '${event}'`);
+      continue;
+    }
     const sends = [...clients.matchAll(new RegExp(`emit\\('${event}', \\{([^}]*)\\}`, 'g'))].map((m) => m[1]);
     assert.ok(sends.length, `a client sends '${event}'`);
-    const keys = specKeys(payload).map((k) => k.key);
     for (const body of sends) {
       const sent = body.split(',').map((x) => x.trim().split(':')[0].trim()).filter(Boolean);
       for (const key of keys) assert.ok(sent.includes(key), `client '${event}' sends "${key}" (sent: ${sent.join(', ') || 'nothing'})`);
