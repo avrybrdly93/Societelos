@@ -104,6 +104,24 @@ async function phoneChecks(browser, shot) {
   check('phone ballot shows Borda badges', /\+4 PTS/.test(await page.evaluate(() => [...document.querySelectorAll('.rank-card')].map((c) => c.dataset.points).join(' '))));
   await shot(page, 'phone-3-ballot');
 
+  // LOCK IN RANKINGS emits finale:rank { order: [rank1Id, rank2Id, rank3Id, rank4Id] }:
+  // exactly the 4 ballot ids, best first, in the order they were tapped.
+  await page.evaluate(() => {
+    const s = window.SocietelosMobile.socket;
+    window.__emitted = [];
+    s.emit = (event, payload, ack) => { window.__emitted.push({ event, payload: JSON.parse(JSON.stringify(payload)) }); if (typeof ack === 'function') ack({ ok: true }); return s; };
+  });
+  for (const i of [1, 0, 2, 3]) await cards.nth(i).click(); // clear all four ...
+  const tapOrder = [3, 0, 2, 1];
+  for (const i of tapOrder) await cards.nth(i).click(); // ... then rank IV-card 1st, etc.
+  const ids = await page.evaluate(() => [...document.querySelectorAll('.rank-card')].map((c) => c.dataset.policy));
+  await page.click('#rank-submit');
+  const sent = await page.evaluate(() => window.__emitted.filter((e) => e.event === 'finale:rank'));
+  const order = sent.length === 1 && sent[0].payload && sent[0].payload.order;
+  check('phone finale:rank sends exactly one payload { order }', sent.length === 1 && Object.keys(sent[0].payload).join() === 'order', JSON.stringify(sent));
+  check('phone finale:rank order is [rank1Id, rank2Id, rank3Id, rank4Id]', JSON.stringify(order) === JSON.stringify(tapOrder.map((i) => ids[i])), JSON.stringify(order));
+  check('phone ballot locks after a successful finale:rank', await visible('#rank-locked') && !(await visible('#rank-submit')));
+
   // XSS: policies, private feedback and the player's own text render as text.
   await page.evaluate((x) => {
     debugMobileEvent('finale:ballot', { policies: [1, 2, 3, 4].map((n) => ({ id: `POLICY-${n}`, text: x })) });
