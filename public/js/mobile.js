@@ -303,7 +303,9 @@
     const on = !!state.endsAt;
     finaleTimers.forEach((el) => {
       el.querySelector('.finale-timer-fill').style.transform = `scaleX(${on ? fraction.toFixed(4) : 0})`;
-      el.querySelector('.finale-timer-secs').textContent = on ? String(secs) : '--';
+      const secsEl = el.querySelector('.finale-timer-secs');
+      const secsText = on ? String(secs) : '--';
+      if (secsEl.textContent !== secsText) secsEl.textContent = secsText;
       el.classList.toggle('is-warn', on && remaining > 0 && remaining < 15000);
       el.classList.toggle('is-low', on && remaining > 0 && remaining < 5000);
     });
@@ -318,7 +320,10 @@
     const fraction = phaseDurationMs > 0 ? remaining / phaseDurationMs : 0;
     countdownFill.style.transform = `scaleX(${fraction.toFixed(4)})`;
     const secs = Math.ceil(remaining / 1000);
-    debateClock.textContent = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    // Text is written only when it changes (a same-value write still forces
+    // a layout every frame on the phone).
+    const clockText = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    if (debateClock.textContent !== clockText) debateClock.textContent = clockText;
     state.remainingMs = remaining;
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
     countdownFill.classList.toggle('is-low', low);
@@ -331,7 +336,8 @@
         mSessionTimer.hidden = false;
         const sRem = Math.max(0, state.sessionEndsAt - Date.now());
         const sSecs = Math.ceil(sRem / 1000);
-        mSessionTimer.textContent = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
+        const sessionText = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
+        if (mSessionTimer.textContent !== sessionText) mSessionTimer.textContent = sessionText;
         mSessionTimer.classList.toggle('is-low', sRem > 0 && sRem < 30000);
       } else {
         mSessionTimer.hidden = true;

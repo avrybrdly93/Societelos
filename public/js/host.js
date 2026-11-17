@@ -1432,7 +1432,10 @@
     const sessionRemaining = state.sessionEndsAt ? Math.max(0, state.sessionEndsAt - Date.now()) : null;
     const sessionTimerEl = document.getElementById('session-timer-display');
     if (sessionTimerEl) {
-      sessionTimerEl.textContent = sessionRemaining === null ? '--:--' : formatClock(sessionRemaining);
+      // Write text only when it changes: a same-value textContent write still
+      // forces a layout every frame.
+      const sessionText = sessionRemaining === null ? '--:--' : formatClock(sessionRemaining);
+      if (sessionTimerEl.textContent !== sessionText) sessionTimerEl.textContent = sessionText;
       sessionTimerEl.classList.toggle('is-low', sessionRemaining !== null && sessionRemaining > 0 && sessionRemaining < 30000);
     }
     requestAnimationFrame(tick);
