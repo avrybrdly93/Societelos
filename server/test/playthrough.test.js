@@ -128,3 +128,36 @@ test('post-merge: Cycle 5 write-and-rank flows FINALE_WRITE -> FINALE_MOD -> FIN
     }
   });
 });
+
+// TASK-575 ------------------------------------------------------------------
+
+test('post-merge: Worlds BA and BB play their own crises, intel and finale across Cycles 3-5', async () => {
+  const { crises } = engine.loadGameData();
+  const byId = Object.fromEntries(crises.crises.map((c) => [c.id, c]));
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    for (const world of ['BA', 'BB']) {
+      const out = await playGame({ gameId: `latecycles-${world}`, world });
+      assert.equal(out.game.worldKey, world);
+      assert.equal(out.reveals.length, 1, 'one world reveal after Cycle 2');
+      assert.equal(out.reveals[0].worldKey, world);
+
+      const incidents = incidentsByCycle(out);
+      assert.deepEqual([incidents[3], incidents[4], incidents[5]], WORLD_CRISES[world], `${world} cycles 3-5`);
+
+      // Cycles 3 and 4: every node gets the intel authored for its secret role.
+      for (const cycle of [3, 4]) {
+        const crisis = byId[WORLD_CRISES[world][cycle - 3]];
+        const drops = out.intel.filter((d) => d.cycle === cycle);
+        assert.equal(drops.length, 5, `${world} cycle ${cycle} intel drops`);
+        for (const d of drops) assert.equal(d.text, crisis.intel[out.roles[d.node]], `${world} c${cycle} ${d.node} gets ${out.roles[d.node]} intel`);
+      }
+
+      // Cycles 3 and 4 resolve as normal binary votes, Cycle 5 as the finale.
+      assert.equal(out.resolutions.length, 5);
+      assert.ok(['A', 'B'].includes(out.resolutions[2].result.winner));
+      assert.ok(['A', 'B'].includes(out.resolutions[3].result.winner));
+      assert.equal(out.resolutions[4].result.finale, true);
+      assert.deepEqual(out.phases.filter((p) => p.startsWith('5:')), FINALE_FLOW);
+    }
+  });
+});
