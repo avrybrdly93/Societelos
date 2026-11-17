@@ -535,6 +535,7 @@ class GameState extends EventEmitter {
     this.worldKey = null;
     this.ending = null; // 'shutdown' once GDW reaches 0
     this.endData = null; // End Screen data, compiled when END starts
+    this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
     // Current cycle.
@@ -762,6 +763,33 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * End Screen authors reveal: each Cycle 5 write-in (POLICY-1..5, in id
+   * order) with its author, Borda points, rank placement (1-5), enacted
+   * weight and the Loom's role tags. Empty if no write-in finale was ranked.
+   */
+  endAuthors() {
+    const finale = this.finale;
+    if (!finale || !Array.isArray(finale.policies) || !Array.isArray(finale.rows)) return [];
+    const placeOf = Object.fromEntries(finale.rows.map((r, i) => [r.id, i + 1]));
+    const pointsOf = Object.fromEntries(finale.rows.map((r) => [r.id, r.points]));
+    const weightOf = Object.fromEntries((finale.enacted || []).map((e) => [e.id, e.weight]));
+    return finale.policies
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))
+      .map((p) => ({
+        id: p.id,
+        text: p.text,
+        node: p.node,
+        name: (this.players[p.node] && this.players[p.node].name) || p.node,
+        points: pointsOf[p.id] || 0,
+        place: placeOf[p.id] || null,
+        weight: weightOf[p.id] || 0,
+        roles: (p.roles || []).filter((r) => typeof r === 'string').slice(0, 2),
+        placeholder: !!p.placeholder
+      }));
+  }
+
+  /**
    * END data compiler: everything the End Screen reveals, gathered once
    * after Cycle 5's FINALE_ENACT / RESOLUTION, or straight after the cycle
    * whose realized GDW hit 0. Stored as this.endData and emitted as
@@ -784,6 +812,7 @@ class GameState extends EventEmitter {
       closingMessage,
       ...this.endGdwHistory(),
       roles: this.endRoles(),
+      authors: this.endAuthors(),
       scores: Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]))
     };
   }
@@ -1666,6 +1695,7 @@ class GameState extends EventEmitter {
       this.worldKey = null;
       this.ending = null;
       this.endData = null;
+      this.finale = null;
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
@@ -1696,6 +1726,7 @@ class GameState extends EventEmitter {
     this.worldKey = null;
     this.ending = null;
     this.endData = null;
+    this.finale = null;
     this.voteHistory = {};
     this.scoreLedger = [];
     this.roleAssignment = null;

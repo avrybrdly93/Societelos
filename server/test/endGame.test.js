@@ -115,3 +115,42 @@ test('game:end roles reveal maps NODE-01..05 to name, secret role and per-cycle 
     }
   });
 });
+
+// TASK-605 ------------------------------------------------------------------
+
+test('game:end authors reveal maps POLICY-1..5 to author, Borda points, placement and tags', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-authors', world: 'BA' });
+    const { authors } = out.gameEnd;
+    assert.deepEqual(authors.map((a) => a.id), ['POLICY-1', 'POLICY-2', 'POLICY-3', 'POLICY-4', 'POLICY-5']);
+    assert.deepEqual(authors.map((a) => a.node).sort(), NODE_IDS, 'one policy per node');
+    assert.deepEqual(authors.map((a) => a.place).sort(), [1, 2, 3, 4, 5]);
+    assert.equal(authors.reduce((t, a) => t + a.points, 0), 50, '5 ballots x (4+3+2+1)');
+    const finale = out.resolutions[4].result;
+    for (const a of authors) {
+      assert.equal(a.node, out.game.finaleAuthor(a.id));
+      assert.equal(a.name, out.game.players[a.node].name);
+      const row = finale.tally.find((t) => t.id === a.id);
+      assert.equal(a.points, row.points);
+      const enacted = finale.enacted.find((e) => e.id === a.id);
+      assert.equal(a.weight, enacted ? enacted.weight : 0);
+      assert.ok(a.roles.length <= 2);
+    }
+    // Places follow the public tally order.
+    assert.deepEqual(finale.tally.map((t) => authors.find((a) => a.id === t.id).place), [1, 2, 3, 4, 5]);
+  });
+});
+
+test('a new game never reveals the previous game\'s finale authors', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-stale', world: 'AA' });
+    assert.equal(out.gameEnd.authors.length, 5);
+    const log = console.log;
+    console.log = () => {};
+    out.game.resetGame();
+    console.log = log;
+    out.game.clearPhaseTimer();
+    assert.equal(out.game.finale, null);
+    assert.deepEqual(out.game.endAuthors(), []);
+  });
+});
