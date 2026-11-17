@@ -252,9 +252,14 @@
   // Cycle 5 fallback: if Gemini fails during moderation the server sends the
   // write-in crisis through DEBATE with authored A/B options. The phone has
   // already switched to the debate screen (PHASE_SCREENS); explain why.
+  // The server reports the crisis as "binary" once it falls back, so a cycle
+  // that went through FINALE_WRITE / FINALE_MOD and then reaches DEBATE is it.
+  let writeinCycle = null;
   socket.on('phase', (payload) => {
     if (!payload) return;
-    const fallback = !!(payload.crisis && payload.crisis.mode === 'writein') && ['DEBATE', 'VOTE'].includes(payload.phase);
+    if (['LOBBY', 'INCIDENT'].includes(payload.phase)) writeinCycle = null;
+    if (['FINALE_WRITE', 'FINALE_MOD'].includes(payload.phase)) writeinCycle = payload.cycle;
+    const fallback = writeinCycle !== null && payload.cycle === writeinCycle && ['DEBATE', 'VOTE'].includes(payload.phase);
     document.getElementById('m-finale-fallback').hidden = !(fallback && payload.phase === 'DEBATE');
   });
 

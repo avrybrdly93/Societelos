@@ -24,6 +24,8 @@ const path = require('path');
 const { server } = require(path.join(__dirname, '..', 'server', 'server.js'));
 
 const WRITEIN = { id: 'mock-finale', title: 'The Vote to Seize', mode: 'writein', incident: 'A ballot measure would confiscate the owners’ stakes.' };
+// After a Gemini failure the server reports the same crisis as "binary".
+const FELL_BACK = { ...WRITEIN, mode: 'binary' };
 const LONG = (s) => (s + ' '.repeat(140)).slice(0, 140).trimEnd().padEnd(140, '.');
 
 // Player-written text that would run script if it were ever parsed as HTML.
@@ -119,10 +121,10 @@ async function phoneChecks(browser, shot) {
   check('phone renders hostile lobby names and intel as text', !(await pwned(page)));
 
   // Fallback: Gemini failed during moderation -> authored A/B debate and vote.
-  await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'DEBATE', crisis, endsAt: Date.now() + 60000, options: { A: { key: 'A', name: 'Pass it' }, B: { key: 'B', name: 'Reject it' } } }), WRITEIN);
+  await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'DEBATE', crisis, endsAt: Date.now() + 60000, options: { A: { key: 'A', name: 'Pass it' }, B: { key: 'B', name: 'Reject it' } } }), FELL_BACK);
   await page.waitForTimeout(100);
   check('phone fallback DEBATE shows the debate screen and notice', (await active()) === 'm-view-debate' && await visible('#m-finale-fallback'));
-  await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'VOTE', crisis, endsAt: Date.now() + 15000 }), WRITEIN);
+  await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'VOTE', crisis, endsAt: Date.now() + 15000 }), FELL_BACK);
   await page.waitForTimeout(100);
   check('phone fallback VOTE shows the authored options', (await active()) === 'm-view-vote' && (await text('#vote-a-name')) === 'Pass it');
 
@@ -243,7 +245,8 @@ async function hostChecks(browser, shot) {
   check('host intro crawl re-tokenizes cleanly on replay', first > 20 && (await words()) === first, `${first} vs ${await words()}`);
 
   // Fallback: Gemini failed -> binary DEBATE with the authored options.
-  await phase('DEBATE', { seconds: 60, options: { A: { key: 'A', name: 'Pass it', text: 'Seize the stakes.' }, B: { key: 'B', name: 'Reject it', text: 'Property rights stand.' } } });
+  await phase('FINALE_MOD', { seconds: 10 });
+  await phase('DEBATE', { seconds: 60, crisis: FELL_BACK, options: { A: { key: 'A', name: 'Pass it', text: 'Seize the stakes.' }, B: { key: 'B', name: 'Reject it', text: 'Property rights stand.' } } });
   await page.waitForTimeout(150);
   check('host fallback DEBATE shows A/B and the fallback notice', await visible('#policy-panel') && await visible('#finale-fallback-notice'));
   check('host fallback restores the cycle breadcrumbs', await page.evaluate(() => !document.getElementById('phase-crumbs').classList.contains('is-idle')));

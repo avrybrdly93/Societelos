@@ -98,6 +98,7 @@ const POLICIES = [
   let lastKey = null;
   let finaleTimed = false;
   const acted = new Set();
+  const fallbackSeen = { host: false, phones: false, options: false };
   const deadline = Date.now() + 240000;
   while (Date.now() < deadline && game.phase !== 'END') {
     const key = `${game.cycle}:${game.phase}`;
@@ -135,6 +136,13 @@ const POLICIES = [
       const settled = game.phase === phase;
       if (settled && HOST_VIEWS[phase] && !HOST_VIEWS[phase].includes(hv)) problems.push(`host on ${hv} during ${phase}`);
       pv.forEach((v, i) => { if (settled && PHONE_VIEWS[phase] && !PHONE_VIEWS[phase].includes(v)) problems.push(`phone${i + 1} on ${v} during ${phase}`); });
+      // Fallback debate: projector and phones say why the A/B options are back.
+      if (phase === 'DEBATE' && settled) {
+        const shown = (page, sel) => page.evaluate((x) => { const e = document.querySelector(x); return !!e && !e.hidden; }, sel).catch(() => false);
+        fallbackSeen.host = fallbackSeen.host || await shown(host, '#finale-fallback-notice');
+        fallbackSeen.phones = fallbackSeen.phones || (await Promise.all(phones.map((p) => shown(p, '#m-finale-fallback')))).every(Boolean);
+        fallbackSeen.options = fallbackSeen.options || await shown(host, '#policy-panel');
+      }
     }
     await host.waitForTimeout(100);
   }
@@ -147,6 +155,8 @@ const POLICIES = [
   const expected = FALLBACK ? ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'DEBATE', 'VOTE', 'RESOLUTION'] : ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'FINALE_DEBATE', 'FINALE_RANK', 'FINALE_ENACT'];
   if (finale.join(' ') !== expected.join(' ')) real.push(`finale ran ${finale.join(' -> ')}; expected ${expected.join(' -> ')}`);
   if (game.phase !== 'END') real.push(`game stopped at ${game.cycle}:${game.phase}`);
+  if (FALLBACK && !(fallbackSeen.host && fallbackSeen.phones && fallbackSeen.options)) real.push(`fallback debate not explained on screen: ${JSON.stringify(fallbackSeen)}`);
+  if (FALLBACK && game.voteHistory[5] !== 'A' && game.voteHistory[5] !== 'B') real.push(`fallback vote did not resolve A/B: ${JSON.stringify(game.voteHistory)}`);
   if (!FALLBACK && !(game.finale && game.finale.enacted && game.finale.enacted.length === 3)) real.push('no 50/25/25 package enacted');
   real.push(...errors);
   await browser.close();

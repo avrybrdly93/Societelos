@@ -714,11 +714,16 @@
   socket.on('phase', renderCrumbs);
 
   // Cycle 5 fallback: Gemini failed during moderation, so the server sent the
-  // write-in crisis back through the binary DEBATE -> VOTE -> RESOLUTION flow
-  // with its authored A/B options. The projector says so above the debate.
+  // write-in finale back through the binary DEBATE -> VOTE -> RESOLUTION flow
+  // with its authored A/B options (and now reports the crisis as "binary").
+  // A cycle that went through FINALE_WRITE / FINALE_MOD and then reaches
+  // DEBATE is that fallback. The projector says so above the debate.
+  let writeinCycle = null;
   function isFinaleFallbackPhase(payload) {
-    const writein = !!(payload && payload.crisis && payload.crisis.mode === 'writein');
-    return writein && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
+    if (!payload) return false;
+    if (['LOBBY', 'INCIDENT'].includes(payload.phase)) writeinCycle = null;
+    if (['FINALE_WRITE', 'FINALE_MOD'].includes(payload.phase)) writeinCycle = payload.cycle;
+    return writeinCycle !== null && payload.cycle === writeinCycle && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
   }
   socket.on('phase', (payload) => {
     document.getElementById('finale-fallback-notice').hidden = !(isFinaleFallbackPhase(payload) && payload.phase === 'DEBATE');
