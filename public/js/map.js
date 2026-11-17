@@ -20,7 +20,7 @@
   const STOPS = [
     { w: 0.20, rgb: [229, 72, 77] },
     { w: 0.40, rgb: [240, 164, 48] },
-    { w: 0.68, rgb: [43, 196, 160] }
+    { w: 0.68, rgb: [181, 204, 120] }
   ];
 
   /** Interpolate a wellbeing value W in [0, 1] to an rgb() colour string. */
@@ -218,7 +218,7 @@
   }
 
   // World accent colours (match the --theme-* tokens in styles.css).
-  const WORLD_COLORS = { AA: '#2bc4a0', AB: '#3fd8e6', BA: '#f0a430', BB: '#c084fc' };
+  const WORLD_COLORS = { AA: '#b5cc78', AB: '#e8dcc2', BA: '#f0a430', BB: '#c084fc' };
 
   /**
    * Recolour the map border, spillover links and HUD accents for the world

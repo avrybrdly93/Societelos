@@ -4,13 +4,13 @@
 
 :root {
   /* Surfaces */
-  --slate-950: #070c0b;
-  --slate-900: #0c1513;
-  --slate-800: #14211e;
-  --slate-700: #24332e;
-  --slate-600: #3b4a43;
-  --slate-400: #a89f88;
-  --slate-200: #e3d8bf;
+  --slate-950: #0b0a08;
+  --slate-900: #14120e;
+  --slate-800: #1c1914;
+  --slate-700: #2e2920;
+  --slate-600: #4d4535;
+  --slate-400: #b8aa8a;
+  --slate-200: #ecdfc2;
   --slate-50: #fff3d6;
 
   /* Accents */
@@ -20,7 +20,7 @@
   --alert-crimson: #e5484d;
   --alert-crimson-dim: #8c2a2e;
   --amber: #f0a430;
-  --teal: #2bc4a0;
+  --teal: #b5cc78; /* "good" — warm sage, not blue */
 
   /* Semantic */
   --bg: var(--slate-900);
@@ -68,8 +68,8 @@ body {
 
 /* World themes: applied after the World Reveal via body[data-world]. */
 :root {
-  --theme-aa: #2bc4a0; /* The Commonwealth — shared wealth, shared power */
-  --theme-ab: #3fd8e6; /* The Benevolent Machine — the Loom rules */
+  --theme-aa: #b5cc78; /* The Commonwealth — shared wealth, shared power */
+  --theme-ab: #e8dcc2; /* The Benevolent Machine — the Loom rules */
   --theme-ba: #f0a430; /* The Uneasy Republic — class conflict */
   --theme-bb: #c084fc; /* The Gilded Cage — pacification */
   --theme-current: var(--accent);
@@ -95,8 +95,8 @@ body.host {
   overflow: hidden;
   background-color: var(--slate-950);
   background-image:
-    radial-gradient(ellipse at 50% 35%, rgba(7, 12, 11, 0.74) 0%, rgba(7, 12, 11, 0.92) 100%),
-    url('../img/The%20Loom_%20A%20Perfect%20World.png');
+    radial-gradient(ellipse at 50% 30%, rgba(30, 20, 8, 0.35) 0%, rgba(14, 11, 7, 0.78) 100%),
+    url('../img/Council.png');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -122,7 +122,7 @@ body.host .label {
   gap: 48px;
   height: 96px;
   padding: 0 40px;
-  background: rgba(7, 12, 11, 0.88);
+  background: rgba(14, 11, 7, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--border);
@@ -182,7 +182,7 @@ body.host .label {
   border-style: dotted;
   border-color: var(--teal);
   color: var(--teal);
-  background: rgba(43, 196, 160, 0.08);
+  background: rgba(181, 204, 120, 0.08);
 }
 .node-card.is-disconnected { border-style: solid; border-color: var(--alert-crimson-dim); color: var(--danger); }
 
@@ -463,7 +463,7 @@ body.host .label {
 
 /* Region map (SVG). District fills are driven by map.js via --district-fill. */
 .region-map { width: 100%; height: 100%; max-height: 100%; }
-.map-sea { fill: #0a1a24; }
+.map-sea { fill: #17120b; }
 .district polygon {
   fill: var(--district-fill, var(--slate-700));
   stroke: var(--slate-950);
@@ -711,11 +711,11 @@ body.host .gdw-meter .label { font-size: 20px; }
 
 /* Citizen feed cards: slide in from above, colour-coded by district. */
 :root {
-  --district-d1: #5b8def; /* Old Harbour */
+  --district-d1: #d98c6a; /* Old Harbour */
   --district-d2: #e6c687; /* The Grid */
-  --district-d3: #2bc4a0; /* Riverside */
+  --district-d3: #b5cc78; /* Riverside */
   --district-d4: #f0a430; /* Eastworks */
-  --district-d5: #c084fc; /* Highlands */
+  --district-d5: #c9a6dc; /* Highlands */
 }
 .feed-item {
   --district-color: var(--slate-600);
@@ -884,7 +884,7 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 
 /* Mobile resolution */
 .result-card { margin-top: 12px; padding: 20px; border-radius: var(--radius-lg); border: 2px solid var(--border); background: var(--bg-raised); }
-.result-card.is-won { border-color: var(--teal); box-shadow: 0 0 24px rgba(43, 196, 160, 0.35); }
+.result-card.is-won { border-color: var(--teal); box-shadow: 0 0 24px rgba(181, 204, 120, 0.35); }
 .result-card.is-lost { border-color: var(--alert-crimson-dim); }
 .result-outcome { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.14em; color: var(--text-muted); }
 .result-card.is-won .result-outcome { color: var(--teal); }
@@ -919,7 +919,7 @@ body.host .forecast-banner {
   margin: 0; padding: 6px 12px; font-size: 18px; font-weight: 700; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   border-radius: var(--radius); border: 2px solid var(--border); color: var(--text-muted);
 }
-body.host .forecast-banner.is-ok { color: var(--teal); border-color: rgba(43, 196, 160, 0.5); }
+body.host .forecast-banner.is-ok { color: var(--teal); border-color: rgba(181, 204, 120, 0.5); }
 body.host .forecast-banner.is-warn { color: var(--amber); border-color: rgba(240, 164, 48, 0.5); }
 body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(--alert-crimson-dim); background: rgba(229, 72, 77, 0.1); }
 
@@ -1121,7 +1121,7 @@ body.host .finale-callout-note { margin: 0; font-size: 24px; }
 .finale-revise {
   position: fixed; inset: 0; z-index: 50; overflow-y: auto;
   padding: calc(56px + env(safe-area-inset-top)) 16px 24px;
-  background: rgba(7, 12, 11, 0.96);
+  background: rgba(14, 11, 7, 0.96);
 }
 .finale-revise .m-kicker { color: var(--amber); }
 .finale-feedback { padding: 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); font-size: 17px; margin: 8px 0 0; }
@@ -1285,7 +1285,7 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .map-container { position: relative; }
 .map-month {
   position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 18px; letter-spacing: 0.12em;
-  color: var(--map-accent, var(--loom-cyan, #e6c687)); background: rgba(7, 12, 11, 0.82);
+  color: var(--map-accent, var(--loom-cyan, #e6c687)); background: rgba(14, 11, 7, 0.82);
   border: 1px solid currentColor; border-radius: var(--radius); pointer-events: none;
 }
 .map-month[hidden] { display: none; }
@@ -1323,7 +1323,7 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .finale-timer.is-warn .finale-timer-secs { color: var(--amber); }
 .finale-timer.is-low .finale-timer-fill { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
 .finale-timer.is-low .finale-timer-secs { color: var(--danger); }
-.finale-revise .finale-timer { background: rgba(7, 12, 11, 0.96); }
+.finale-revise .finale-timer { background: rgba(14, 11, 7, 0.96); }
 
 /* World BA, The Uneasy Republic: amber/brass (the owners' polish) against
    industrial rust (the workers' districts). Brass stays the text accent
@@ -1337,7 +1337,7 @@ body[data-world="BA"] {
 body.host[data-world="BA"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(26, 14, 8, 0.72) 0%, rgba(10, 8, 6, 0.93) 100%),
-    url('../img/The%20Loom_%20A%20Perfect%20World.png');
+    url('../img/Council.png');
 }
 body[data-world="BA"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-brass), var(--theme-rust) 55%, var(--theme-brass-deep)) 1;
@@ -1370,7 +1370,7 @@ body[data-world="BB"] {
 body.host[data-world="BB"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(30, 10, 44, 0.70) 0%, rgba(12, 6, 18, 0.93) 100%),
-    url('../img/The%20Loom_%20A%20Perfect%20World.png');
+    url('../img/Council.png');
 }
 body[data-world="BB"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-gold), var(--theme-bb) 50%, var(--theme-gold)) 1;
@@ -1545,7 +1545,7 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
 .end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
 .end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
-.end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
+.end-table tr.is-winner td { background: rgba(181, 204, 120, 0.10); }
 .end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
 .view-end.no-writein .col-author { display: none; }
 .end-winner { text-align: center; padding-top: 8px; padding-bottom: 8px; }
@@ -1770,3 +1770,139 @@ body.host .seat-quote { font-family: 'Cormorant Garamond', serif !important; fon
 @media (prefers-reduced-motion: reduce) { .chamber-orbits ellipse { animation: none; } }
 body.host .gdw-meter-head { flex-wrap: wrap; row-gap: 4px; }
 body.host .gdw-meter-head .label { font-size: 18px; }
+
+/* ===========================================================================
+   THE CONCLAVE — warm council-chamber look (matches the conclave mock-up):
+   painted chamber behind translucent glass panels, gold hairlines, Cinzel
+   titles, Cormorant italic for everything the Loom says, amber primary CTA.
+=========================================================================== */
+:root {
+  --glass: rgba(18, 15, 11, 0.74);
+  --glass-strong: rgba(14, 12, 9, 0.88);
+  --gold-line: rgba(235, 198, 125, 0.38);
+  --gold-line-strong: rgba(235, 198, 125, 0.7);
+  --gold: #e6c687;
+  --gold-bright: #f5d998;
+  --cream: #fcefc8;
+  --ember-1: #b8791a;
+  --ember-2: #8f4c0c;
+  --border: var(--gold-line);
+}
+
+/* Titles: Cinzel, as in the mock-up. */
+body.host h1, body.host h2, body.host h3, body .policy-name, body .incident-title,
+body.host .topbar-brand, body.mobile h1, body.mobile h2, body.mobile h3 {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.12em !important;
+  color: var(--cream);
+}
+
+/* The Loom's voice: Cormorant Garamond italic, never uppercase. */
+.incident-text, .incident-text *, .loom-line, .loom-line *, .debate-hook-text, .debate-hook-text *,
+.incident-subtitle, .policy-text, .policy-text *, .world-tagline, .awakens-quote, .seat-quote,
+body.host .feed-package-verdict, .proposal-text, .enact-text, .rank-text {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-style: italic;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Top bar: dark warm glass with a gold hairline. */
+body.host .topbar {
+  background: linear-gradient(180deg, rgba(20, 14, 7, 0.92), rgba(14, 11, 7, 0.78));
+  border-bottom: 1px solid var(--gold-line);
+}
+body.host .topbar-brand { color: var(--cream); }
+body.host .topbar .label { color: var(--gold); }
+body.host .gdw-badge { border-color: var(--gold-line-strong); color: var(--gold-bright); background: rgba(40, 28, 10, 0.5); }
+body.host .phase-crumbs li.is-current { background: linear-gradient(180deg, var(--ember-1), var(--ember-2)); color: var(--cream); }
+
+/* Panels: translucent glass over the painted chamber. */
+.chamber-col, .lobby-config, .node-card, .lock-card, .feed-item, .result-card, .world-card, .proposal-card, .rank-card {
+  background: var(--glass) !important;
+  border: 1px solid var(--gold-line) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.chamber-col { border-radius: 26px !important; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 0 50px rgba(255, 225, 155, 0.04); }
+.node-card, .lock-card, .feed-item, .policy-card { border-radius: 16px !important; }
+.node-card.is-connected, .node-card.is-ready { border-color: var(--gold-line-strong) !important; }
+
+/* Centre column = Voice of the Loom card. */
+.chamber-center { text-align: center; background: linear-gradient(180deg, rgba(36, 30, 20, 0.62), rgba(16, 13, 9, 0.8)) !important; }
+.incident-banner { border: 0 !important; background: none !important; padding: 0 !important; box-shadow: none !important; display: flex; flex-direction: column; align-items: center; }
+.incident-banner::before, .incident-banner::after { display: none !important; }
+.chronicle-pill {
+  display: inline-flex; align-items: center; gap: 18px; margin: 0 0 18px; padding: 8px 26px;
+  border: 1px solid var(--gold-line-strong); border-radius: 999px; background: rgba(20, 14, 7, 0.85);
+}
+body.host .chronicle-tag { font-family: 'Cinzel', serif !important; font-weight: 600 !important; letter-spacing: 0.16em !important; font-size: 17px; color: var(--cream); }
+body.host .chronicle-cycle { font-size: 15px; color: var(--gold); }
+.voice-heading { display: block; margin: 0 0 10px; font-size: 18px; color: var(--gold); text-align: center; letter-spacing: 0.42em !important; }
+.voice-heading::before, .voice-heading::after {
+  content: ''; display: inline-block; vertical-align: middle; width: 90px; height: 1px; margin: 0 22px;
+  background: linear-gradient(90deg, transparent, var(--gold-line-strong), transparent);
+}
+body.host .incident-title { font-size: 46px; margin: 4px 0 6px; text-align: center; }
+body.host .incident-subtitle { font-size: 26px; color: var(--gold); margin: 0 0 14px; }
+body.host .incident-text { font-size: 31px; line-height: 1.42; color: var(--cream); text-shadow: 0 0 16px rgba(255, 230, 170, 0.12); margin: 0 0 16px; }
+body.host .loom-line { font-size: 30px; line-height: 1.4; color: var(--gold-bright); text-shadow: 0 0 18px rgba(255, 215, 130, 0.25); }
+body.host .incident-text, body.host .loom-line { text-align: center; }
+.chamber-center .label.danger, .incident-banner.is-alert .chronicle-pill { border-color: rgba(229, 140, 77, 0.8); }
+
+/* Debate: the Loom's question in the glass card. */
+.debate-hook { border: 1px solid var(--gold-line) !important; border-radius: 20px !important; background: rgba(20, 15, 9, 0.6) !important; }
+.debate-hook::after { display: none; }
+body.host .debate-hook-text { font-size: 32px; line-height: 1.4; color: var(--cream); }
+.debate-clock { color: var(--gold-bright) !important; }
+
+/* Policies: seat-card style, Cinzel name, italic description. */
+.policy-card {
+  background: linear-gradient(180deg, rgba(24, 19, 12, 0.88), rgba(14, 11, 7, 0.92)) !important;
+  border: 1px solid var(--gold-line) !important; text-align: left;
+}
+body.host .policy-name { font-size: 30px; }
+body.host .policy-text { font-size: 25px; line-height: 1.35; color: var(--slate-200); }
+.policy-letter { color: var(--cream) !important; background: linear-gradient(180deg, var(--ember-1), var(--ember-2)) !important; border-color: var(--gold-line-strong) !important; }
+.policy-vs { color: var(--gold) !important; }
+
+/* Resolution: the Loom's account, italic. */
+.resolution-panel .voice-heading { letter-spacing: 0.3em !important; }
+
+/* Citizen feed: glass cards with a warm edge. */
+body.host .feed-item { border-left: 3px solid var(--gold-line-strong) !important; }
+
+/* Primary actions: ember button, like "Weave Answer". */
+.btn-primary, .btn-start, .m-btn-primary, button.btn-primary {
+  background: linear-gradient(180deg, var(--ember-1) 0%, var(--ember-2) 100%) !important;
+  border: 1px solid rgba(255, 210, 140, 0.55) !important;
+  border-radius: 14px !important;
+  color: var(--cream) !important;
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 26px rgba(214, 140, 40, 0.35), inset 0 1px 0 rgba(255, 230, 180, 0.3) !important;
+}
+.btn-primary:disabled { opacity: 0.45; filter: saturate(0.6); }
+
+/* Phones share the chamber: warm glass over a dimmed painting. */
+body.mobile {
+  background: linear-gradient(180deg, rgba(14, 11, 7, 0.82), rgba(10, 8, 6, 0.94)), url('../img/Council.png') center / cover fixed;
+}
+.debate-panel { grid-template-columns: minmax(0, 1fr) 200px !important; }
+body.host .debate-clock { font-size: 88px; }
+.debate-hook .voice-heading, .resolution-panel .voice-heading { font-size: 15px; letter-spacing: 0.26em !important; }
+.debate-hook .voice-heading::before, .debate-hook .voice-heading::after { width: 36px; margin: 0 12px; }
+.resolution-panel .voice-heading::before, .resolution-panel .voice-heading::after { display: none; }
+body.host .debate-hook-text { font-size: 27px !important; line-height: 1.32; }
+body.host .policy-text { font-size: 23px; }
+body.host .debate-clock { letter-spacing: 0.04em !important; font-size: 80px; }
+.vote-btn { border-radius: 18px !important; text-align: left; background: var(--glass) !important; border: 1px solid var(--gold-line) !important; }
+.vote-btn .vote-name { font-family: 'Cinzel', serif !important; font-weight: 600 !important; letter-spacing: 0.1em !important; color: var(--cream); }
+.vote-btn .vote-text { font-family: 'Cormorant Garamond', serif !important; font-style: italic; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0.01em !important; font-size: 1.15em; color: var(--slate-200); }
+.vote-letter { color: var(--cream) !important; background: linear-gradient(180deg, var(--ember-1), var(--ember-2)) !important; border-color: var(--gold-line-strong) !important; }
+body.host .topbar { gap: 12px; }
+body.host .topbar-value, body.host .gdw-badge { font-size: 24px; }
+body.host .cycle-finale-tag { letter-spacing: 0.15em !important; }

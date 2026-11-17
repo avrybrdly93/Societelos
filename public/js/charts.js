@@ -235,7 +235,7 @@
     // Left of the endpoint; above it unless that would leave the plot.
     const bx = Math.max(PAD.left + 4, x - 18 - boxW);
     const by = y - 22 - boxH < PAD.top ? y + 22 : y - 22 - boxH;
-    const color = verdict.beat ? '#2bc4a0' : COLORS.danger;
+    const color = verdict.beat ? '#b5cc78' : COLORS.danger;
     ctx.fillStyle = 'rgba(8, 11, 16, 0.88)';
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -406,7 +406,7 @@
 
   // Class-grade bands for the five-year chart (final GDW thresholds).
   const GRADE_BANDS = [
-    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(43, 196, 160, 0.10)', text: '#2bc4a0' },
+    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(181, 204, 120, 0.10)', text: '#b5cc78' },
     { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(230, 198, 135, 0.07)', text: '#e6c687' },
     { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(240, 164, 48, 0.08)', text: '#f0a430' },
     { from: 0, to: 1, label: '0 SHUTDOWN', fill: 'rgba(229, 72, 77, 0.35)', text: '#e5484d' }
