@@ -378,6 +378,26 @@ const MODERATION_SCHEMA = {
 };
 
 /**
+ * Strict post-call sanitizer for one moderation result from Gemini:
+ * - each of the 6 traits clamped to [-1.0, +1.0], missing or non-numeric -> 0;
+ * - roles filtered to artisan / lotus / assimilator / ghost, at most 2;
+ * - emoji stripped, then cleaned cut to 140 and feedback to 200 characters;
+ * - status kept only if ok / revise / reject (else "revise"); node only if NODE-0X.
+ * @returns {{ node, status, cleaned, feedback, roles, effects }}
+ */
+function sanitizeModerationResult(item) {
+  const r = item && typeof item === 'object' ? item : {};
+  return {
+    node: safeNode(r.node),
+    status: STATUSES.includes(r.status) ? r.status : 'revise',
+    cleaned: clip(stripEmoji(r.cleaned), 140),
+    feedback: clip(stripEmoji(r.feedback), 200),
+    roles: cleanRoles(r.roles),
+    effects: cleanEffects(r.effects)
+  };
+}
+
+/**
  * Few-shot calibration for moderate(): authored policies with their exact
  * 6-trait effect vectors and role tags from data/crises.json, so Gemini
  * scores write-ins on the same scale as the designed options. Uses the
@@ -453,15 +473,10 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
     return list.map((s) => {
       const r = result.find((x) => x && x.node === s.node);
       if (!r) return moderateFallback([s])[0];
-      return {
-        node: s.node,
-        // A revision gets one chance: anything but "ok" is final.
-        status: STATUSES.includes(r.status) ? (opts.revision && r.status === 'revise' ? 'reject' : r.status) : (opts.revision ? 'reject' : 'revise'),
-        cleaned: truncate(r.cleaned, 140),
-        feedback: truncate(r.feedback, 200),
-        roles: cleanRoles(r.roles),
-        effects: cleanEffects(r.effects)
-      };
+      const clean = sanitizeModerationResult(r);
+      // A revision gets one chance: anything but "ok" is final.
+      const status = opts.revision && clean.status !== 'ok' ? 'reject' : clean.status;
+      return { ...clean, node: s.node, status };
     });
   } catch (err) {
     console.warn(`[loom] moderate fell back: ${err.message}`);
@@ -529,4 +544,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

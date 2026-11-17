@@ -342,3 +342,13 @@ test('loom.moderateOne marks the call as a revision: ok or reject only, a second
   assert.equal(ok.status, 'ok');
   assert.equal(ok.effects.purpose, 0.3);
 });
+
+test('loom.moderate runs every Gemini result through sanitizeModerationResult (emoji, lengths, roles, traits)', async () => {
+  const messy = (list) => list.map((s) => ({ node: s.node, status: 'ok', cleaned: `Free \u{1F355} pizza ${'for all '.repeat(40)}`, feedback: '', roles: ['catalyst', 'ghost', 'artisan', 'lotus'], effects: { purpose: 3, trust: -2, health: 'lots' } }));
+  const out = await loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl: recordingFetch((body) => messy(JSON.parse(body.contents[0].parts[0].text.split('\n\n').pop()))).fetchImpl });
+  for (const r of out) {
+    assert.ok(r.cleaned.length <= 140 && !/\p{Extended_Pictographic}/u.test(r.cleaned));
+    assert.deepEqual(r.roles, ['ghost', 'artisan']);
+    assert.deepEqual(r.effects, { purpose: 1, connection: 0, health: 0, trust: -1, fairness: 0, autonomy: 0 });
+  }
+});
