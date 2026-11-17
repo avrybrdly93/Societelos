@@ -320,3 +320,44 @@ test('game:end authors reveal says when Cycle 5 fell back to the authored A/B fi
   assert.equal(end.finaleFallback, false);
   assert.deepEqual(end.authors, []);
 });
+
+// TASK-638 ------------------------------------------------------------------
+
+test('closingMessage always has a citizen name, district and text, even offline or after an early shutdown', async () => {
+  const check = (c, label) => {
+    assert.ok(c, `${label}: closingMessage present`);
+    for (const k of ['name', 'district', 'text']) assert.ok(typeof c[k] === 'string' && c[k].length > 0, `${label}: ${k}`);
+  };
+  // Offline full game (no key): the simulation's pick.
+  const offline = await playGame({ gameId: 'closing-offline', world: 'AA' });
+  check(offline.gameEnd.closingMessage, 'offline game');
+
+  const log = console.log;
+  const err = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  try {
+    // Shutdown in Cycle 2 with no simulation state at all.
+    const early = new engine.GameState({ roomCode: 'CLS1' });
+    early.cycle = 2;
+    early.gdw = 0;
+    early.ending = 'shutdown';
+    early.startEndPhase();
+    check(early.endData.closingMessage, 'early shutdown');
+    assert.equal(early.endData.closingMessage.band, 'bad');
+    early.clearPhaseTimer();
+
+    // Citizen data missing entirely: the built-in voice.
+    const bare = new engine.GameState({ roomCode: 'CLS2' });
+    bare.data = { ...bare.data, citizens: [] };
+    bare.cycle = 5;
+    bare.gdw = 48;
+    bare.startEndPhase();
+    check(bare.endData.closingMessage, 'no citizen data');
+    assert.equal(bare.endData.closingMessage.band, 'good');
+    bare.clearPhaseTimer();
+  } finally {
+    console.log = log;
+    console.error = err;
+  }
+});

@@ -778,6 +778,11 @@ class GameState extends EventEmitter {
     } catch (err) {
       console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
     }
+    // Always a closing voice with a name, district and text, even with no
+    // simulation state or Loom (offline, early shutdown, missing data).
+    if (!extra.closing || !extra.closing.text || !extra.closing.name || !extra.closing.district) {
+      extra.closing = this.fallbackClosingMessage();
+    }
     // Compile the End Screen data before END is broadcast, so a host that
     // asks for it on the END phase already finds it.
     this.endData = this.compileEndData(extra.closing || null);
@@ -1905,6 +1910,30 @@ class GameState extends EventEmitter {
     this.resetGame();
     if (this.botsEnabled) this.fillBots();
     return { ok: true, gameId: this.gameId, keptPlayers: !!keepPlayers, released };
+  }
+
+  /**
+   * Deterministic closing citizen when the simulation pick is unavailable:
+   * one authored line from data/citizens.json chosen by the final GDW band
+   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Old Harbour
+   * voice if the citizen data itself is missing.
+   */
+  fallbackClosingMessage() {
+    const band = this.gdw <= 0 || this.ending === 'shutdown' ? 'bad' : this.gdw >= 35 ? 'good' : 'mixed';
+    const citizens = (Array.isArray(this.data.citizens) ? this.data.citizens : [])
+      .filter((c) => c && c.id && c.name && c.district && c.lines && Array.isArray(c.lines[band]) && c.lines[band].length);
+    if (citizens.length) {
+      const c = citizens[hashSeed(this.gameId, 'closing') % citizens.length];
+      const lines = c.lines[band];
+      const text = lines[hashSeed(this.gameId, 'closing-line') % lines.length];
+      return { ...this.citizenMessage({ citizenId: c.id, text, sentiment: band }), change: 0, band, fallback: true };
+    }
+    const text = band === 'bad'
+      ? 'The lights went out on the harbour tonight. Nobody came to turn them back on.'
+      : band === 'good'
+        ? 'Five years ago I had nothing to do. Tonight I am tired from doing something that mattered.'
+        : 'We are still here. Some days that feels like enough. Some days it does not.';
+    return { citizenId: 'closing', name: 'A citizen of Old Harbour', age: null, district: 'D1', districtName: 'Old Harbour', cohort: null, text, sentiment: band, change: 0, band, fallback: true };
   }
 
   /**
