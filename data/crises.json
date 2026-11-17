@@ -1225,7 +1225,7 @@
       "title": "March on the Datacenter",
       "subtitle": "The 100,000-Citizen Siege of District 2",
       "incident": "Over 100,000 citizens converge outside the central Loom server monolith in District 2, carrying tools and banners, demanding the master keys or threatening to flood the coolant chambers.",
-      "loomIntro": "",
+      "loomIntro": "One hundred thousand of you are outside my walls with shovels. I gave you everything except a say. I cannot compute whether that was my mistake or yours. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: When a system provides absolute physical comfort at the expense of all human dignity, is revolution inevitable?",
       "mode": "writein",
       "feed": [
