@@ -616,10 +616,16 @@
       text.textContent = p.text;
       li.append(head, text);
       // Tap-to-rank: tapping an unranked card gives it the next free place
-      // (1st, 2nd, ...); tapping a ranked card clears it and every place after.
+      // (1st, 2nd, ...); tapping a ranked card unranks just that card and the
+      // places after it shift up (3rd -> 2nd, 4th -> 3rd).
       li.setAttribute('role', 'button');
       li.tabIndex = 0;
       li.addEventListener('click', () => toggleRank(p.id));
+      li.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        toggleRank(p.id);
+      });
       list.appendChild(li);
     });
     renderRanks();
@@ -629,7 +635,7 @@
   function toggleRank(id) {
     if (ballot.locked) return;
     const at = ballot.order.indexOf(id);
-    if (at >= 0) ballot.order = ballot.order.slice(0, at);
+    if (at >= 0) ballot.order.splice(at, 1);
     else if (ballot.order.length < ballot.policies.length) ballot.order.push(id);
     renderRanks();
   }
