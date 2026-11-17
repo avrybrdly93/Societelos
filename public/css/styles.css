@@ -1551,6 +1551,8 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
 .end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
 .end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+.end-chart-inspection { min-height: 2.8em; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); color: var(--text); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.end-chart:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
 .end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
 .view-end.no-writein .col-author { display: none; }
