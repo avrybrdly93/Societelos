@@ -180,6 +180,12 @@
     const players = (payload && payload.players) || [];
     const me = players.find((p) => p.node === state.node);
     if (me) setNodeLabel(me.node);
+    else if (state.phase === 'LOBBY' && state.node) {
+      state.node = null;
+      clearSession();
+      setNodeLabel(null);
+      showView('m-view-join');
+    }
     const status = document.getElementById('wait-status');
     if (status && state.phase === 'LOBBY') {
       status.textContent = players.length >= 5
@@ -274,6 +280,27 @@
 
   function onPhase(payload) {
     if (!payload || !payload.phase) return;
+    const previousPhase = state.phase;
+    if (previousPhase === 'END' && payload.phase === 'LOBBY') {
+      state.score = 0;
+      state.endData = null;
+      state.lastVote = null;
+      state.voteLockedCycle = null;
+      state.overrideUsed = false;
+      state.finaleSubmitted = null;
+      state.finaleCycle = null;
+      state.sync = null;
+      document.getElementById('role-drawer').hidden = true;
+      document.getElementById('intel-drawer').hidden = true;
+      document.getElementById('shield-role').checked = false;
+      document.getElementById('shield-intel').checked = false;
+      resetResult(0);
+      document.getElementById('result-gdw').textContent = '--%';
+      document.getElementById('result-gdw-delta').textContent = '';
+      document.getElementById('result-total').textContent = '';
+      document.getElementById('end-score').textContent = '—';
+      document.getElementById('end-breakdown').textContent = '';
+    }
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
