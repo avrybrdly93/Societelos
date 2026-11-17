@@ -210,6 +210,47 @@
     ctx.restore();
   }
 
+  /**
+   * Month-12 verdict beside the realized endpoint: "BEAT FORECAST BY +X%"
+   * (teal) or "MISSED FORECAST BY -X%" (crimson), X = realized minus the
+   * forecast median at the last month, in GDW points.
+   */
+  function forecastVerdict(realizedEnd, medianEnd) {
+    if (typeof realizedEnd !== 'number' || typeof medianEnd !== 'number') return null;
+    const diff = Math.round((realizedEnd - medianEnd) * 10) / 10;
+    const beat = diff >= 0;
+    return { beat, diff, text: beat ? `BEAT FORECAST BY +${diff.toFixed(1)}%` : `MISSED FORECAST BY ${diff.toFixed(1)}%` };
+  }
+  function drawForecastCallout(ctx, g, m, realizedEnd, medianEnd) {
+    const verdict = forecastVerdict(realizedEnd, medianEnd);
+    if (!verdict) return null;
+    const x = g.x(m);
+    const y = g.y(realizedEnd);
+    ctx.save();
+    ctx.font = '700 20px ui-monospace, Menlo, Consolas, monospace';
+    const measured = ctx.measureText ? ctx.measureText(verdict.text) : null;
+    const tw = (measured && measured.width) || verdict.text.length * 12;
+    const boxW = tw + 24;
+    const boxH = 34;
+    // Left of the endpoint; above it unless that would leave the plot.
+    const bx = Math.max(PAD.left + 4, x - 18 - boxW);
+    const by = y - 22 - boxH < PAD.top ? y + 22 : y - 22 - boxH;
+    const color = verdict.beat ? '#2bc4a0' : COLORS.danger;
+    ctx.fillStyle = 'rgba(8, 11, 16, 0.88)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(bx, by, boxW, boxH);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(verdict.text, bx + 12, by + boxH / 2 + 1);
+    ctx.restore();
+    return verdict;
+  }
+
   // Running realized-line animation (one at a time).
   let animation = null;
 
@@ -307,6 +348,10 @@
       if (collapseAt > 0) {
         drawCollapse();
         if (typeof onCollapse === 'function') onCollapse(endMonth);
+      } else {
+        const current = active || chart;
+        const median = current.forecast && current.forecast.median;
+        drawForecastCallout(current.ctx, current.g, months, values[months], median && median[months]);
       }
     }
     state.frame = requestAnimationFrame(frame);
@@ -321,8 +366,12 @@
     if (!canvas || !canvas.getContext || !payload) return;
     const chart = drawForecastFan(payload.forecast, canvas);
     const realized = (payload.realized && payload.realized.gdw) || [];
-    if (chart) line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
+    if (!chart) return;
+    line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
+    const last = realized.length - 1;
+    const median = payload.forecast && payload.forecast.median;
+    if (last > 0 && realized.every((v, m) => m === 0 || v > 0)) drawForecastCallout(chart.ctx, chart.g, last, realized[last], median && median[last]);
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render };
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict };
 })();

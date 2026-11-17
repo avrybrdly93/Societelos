@@ -172,3 +172,11 @@ test('integration: charts.js draws real forecast and realized payloads from the 
   assert.ok(Math.abs(ticks[11][1] - payload.realized.finalGdw) < 1e-9, 'last tick is the realized final GDW');
   for (const p of canvas.ctx.points) assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
 });
+
+test('forecastVerdict: month-12 callout beats or misses the forecast median', () => {
+  const { charts } = loadCharts();
+  assert.equal(charts.forecastVerdict(40, 37).text, 'BEAT FORECAST BY +3.0%');
+  assert.equal(charts.forecastVerdict(20, 37).text, 'MISSED FORECAST BY -17.0%');
+  assert.equal(charts.forecastVerdict(30, 30).beat, true);
+  assert.equal(charts.forecastVerdict(30, undefined), null);
+});
