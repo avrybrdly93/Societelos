@@ -952,7 +952,13 @@
           "targetGdwDelta": 9
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: in the 2032 Riverside trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
+        "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
+        "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
+        "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
+        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbours with paper ledgers."
+      }
     },
     {
       "id": "ba-vote-to-seize",
