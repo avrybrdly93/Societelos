@@ -367,8 +367,10 @@ function initSockets(io, gameEngine) {
       return reply(result);
     });
 
-    // host:start {} -> begin the phase flow once all 5 nodes have joined.
-    onValid(socket, 'host:start', {}, (payload, reply) => {
+    // host:start { seed? } -> begin the phase flow once all 5 nodes have
+    // joined. `seed` (a past game:end seed) replays that game's runs exactly.
+    onValid(socket, 'host:start', { seed: 'string?' }, (payload, reply) => {
+      if (payload.seed !== undefined && !gameEngine.isValidSeed(payload.seed)) return reply({ ok: false, reason: 'BAD_SEED' });
       const joined = Object.keys(game.players).length;
       const humanCount = Object.values(game.players).filter((p) => !p.isBot).length;
       if (joined < gameEngine.MAX_PLAYERS || (game.botsEnabled && humanCount < 1)) {
@@ -376,8 +378,10 @@ function initSockets(io, gameEngine) {
         socket.emit('host:error', { reason, joined, humanCount });
         return reply({ ok: false, reason, joined });
       }
+      if (game.phase !== 'LOBBY') return reply({ ok: false, reason: 'ALREADY_STARTED' });
+      if (payload.seed !== undefined) game.setSeed(payload.seed);
       if (!game.startIntroPhase()) return reply({ ok: false, reason: 'ALREADY_STARTED' });
-      return reply({ ok: true });
+      return reply({ ok: true, seed: game.gameId });
     });
   }
 

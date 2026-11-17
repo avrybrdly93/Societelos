@@ -190,6 +190,11 @@ function generateGameId() {
   return crypto.randomBytes(6).toString('hex');
 }
 
+/** A replay seed (game id): 1-64 letters, digits, '-' or '_'. */
+function isValidSeed(seed) {
+  return typeof seed === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(seed);
+}
+
 /**
  * Deterministic 32-bit seed from a game id and any extra parts (e.g. cycle),
  * using FNV-1a. hashSeed(gameId, 3) is always the same number.
@@ -1784,6 +1789,18 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * Replay a historical game: every seeded run (realized months, forecasts,
+   * shuffles) derives from the game id, so the same seed and the same votes
+   * reproduce the same game. Lobby only. Returns true if applied.
+   */
+  setSeed(seed) {
+    if (this.phase !== PHASES.LOBBY || !isValidSeed(seed)) return false;
+    this.gameId = seed;
+    console.log(`[game ${this.roomCode}] replaying seed ${seed}`);
+    return true;
+  }
+
+  /**
    * Teacher settings from the host lobby (host:config). Only in LOBBY, so a
    * running game never changes pace mid-cycle. debateSeconds is 60 (~13.5
    * min game) or 90 (~16 min game). Returns { ok, config } or a reason.
@@ -2242,6 +2259,7 @@ module.exports = {
   normalizeCrisis,
   generateRoomCode,
   generateGameId,
+  isValidSeed,
   hashSeed,
   createPrng,
   seededShuffle,

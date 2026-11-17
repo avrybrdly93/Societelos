@@ -99,3 +99,41 @@ test('host:config toggles showForecastBeforeVote, and DEBATE carries forecasts o
   assert.ok(debates[0].forecasts && debates[0].forecasts.A && debates[0].forecasts.B, 'forecast fans shown before the vote');
   assert.equal(debates[1].forecasts, undefined, 'hidden when the toggle is off');
 });
+
+// TASK-615 ------------------------------------------------------------------
+
+test('setSeed replays a historical game id in the lobby only; bad seeds are refused', () => {
+  const game = lobbyGame();
+  assert.equal(engine.isValidSeed('enddata-seed_01'), true);
+  for (const bad of ['', 'has space', 'x'.repeat(65), 42, null, '../etc']) assert.equal(engine.isValidSeed(bad), false, String(bad));
+  const log = console.log;
+  console.log = () => {};
+  try {
+    assert.equal(game.setSeed('bad seed'), false);
+    assert.equal(game.setSeed('class3-replay'), true);
+    assert.equal(game.gameId, 'class3-replay');
+    NODE_IDS.forEach((n, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(n, true); });
+    game.startIntroPhase();
+    assert.equal(game.setSeed('too-late'), false);
+    assert.equal(game.gameId, 'class3-replay');
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+});
+
+test('the same seed deals the same secret roles', () => {
+  const deal = () => {
+    const game = lobbyGame();
+    const log = console.log;
+    console.log = () => {};
+    try {
+      game.setSeed('same-roles');
+      NODE_IDS.forEach((n, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(n, true); });
+      return NODE_IDS.map((n) => game.assignRoles(game.data.roles)[n].key);
+    } finally {
+      console.log = log;
+    }
+  };
+  assert.deepEqual(deal(), deal());
+});

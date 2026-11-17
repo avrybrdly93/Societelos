@@ -271,3 +271,22 @@ test('host:config over Socket.IO: ack and room broadcast in the lobby, refused m
   assert.deepEqual(await broadcast, res.config);
   assert.equal((await host.emitWithAck('host:config', { debateSeconds: 'x' })).reason, 'BAD_PAYLOAD');
 });
+
+// TASK-615 (socket) ---------------------------------------------------------
+
+test('host:start { seed } starts the game on that seed; a malformed seed is refused', { timeout: 15000 }, async () => {
+  for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
+  const host = connect({ clientType: 'host' });
+  const { roomCode } = await once(host, 'host:room');
+  for (let i = 0; i < 5; i++) {
+    const phone = connect({ clientType: 'phone' });
+    await once(phone, 'connect');
+    await phone.emitWithAck('lobby:join', { name: `Seed ${i}`, room: roomCode });
+    await phone.emitWithAck('lobby:ready', { ready: true });
+  }
+  assert.deepEqual(await host.emitWithAck('host:start', { seed: 'no spaces allowed' }), { ok: false, reason: 'BAD_SEED' });
+  assert.equal(engine.getRoom(roomCode).phase, 'LOBBY');
+  assert.deepEqual(await host.emitWithAck('host:start', { seed: 'period3-tuesday' }), { ok: true, seed: 'period3-tuesday' });
+  assert.equal(engine.getRoom(roomCode).gameId, 'period3-tuesday');
+  assert.equal((await host.emitWithAck('host:start', { seed: 'again' })).reason, 'ALREADY_STARTED');
+});
