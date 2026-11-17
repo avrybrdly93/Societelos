@@ -179,3 +179,40 @@ test('game:end carries the game id seed and the per-cycle realized-run seeds', a
     for (const s of out.gameEnd.cycleSeeds) assert.ok(Number.isInteger(s) && s >= 0 && s < 2 ** 32);
   });
 });
+
+// TASK-620 ------------------------------------------------------------------
+
+/** A seated game at END-time with hand-set scores and final GDW. */
+function finishedGame(scores, gdw, ending = null) {
+  const log = console.log;
+  console.log = () => {};
+  const game = new engine.GameState({ roomCode: 'WIN' });
+  NODE_IDS.forEach((n, i) => game.addPlayer(`s${i}`, `P${i}`));
+  console.log = log;
+  game.cycle = 5;
+  game.scores = { ...scores };
+  game.gdw = gdw;
+  game.ending = ending;
+  return game.compileEndData();
+}
+
+test('game:end winner: a single top scorer wins alone', () => {
+  const end = finishedGame({ 'NODE-01': 2, 'NODE-02': 6, 'NODE-03': 3, 'NODE-04': 1, 'NODE-05': 0 }, 44.2);
+  assert.deepEqual(end.winner, ['NODE-02']);
+  assert.equal(end.sharedWin, false);
+  assert.equal(end.shutdown, false);
+});
+
+test('game:end winner: a 2-way tie on the top score is a shared win', () => {
+  const end = finishedGame({ 'NODE-01': 5, 'NODE-02': 3, 'NODE-03': 5, 'NODE-04': 1, 'NODE-05': 4 }, 61);
+  assert.deepEqual(end.winner, ['NODE-01', 'NODE-03']);
+  assert.equal(end.sharedWin, true);
+});
+
+test('game:end winner: GDW 0% shutdown means nobody wins, whatever the scores', () => {
+  const end = finishedGame({ 'NODE-01': 9, 'NODE-02': 3, 'NODE-03': 1, 'NODE-04': 1, 'NODE-05': 0 }, 0, 'shutdown');
+  assert.equal(end.winner, null);
+  assert.equal(end.sharedWin, false);
+  assert.equal(end.shutdown, true);
+  assert.equal(end.grade, 'SHUTDOWN');
+});
