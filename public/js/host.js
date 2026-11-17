@@ -18,7 +18,19 @@
     document.body.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   }
   document.documentElement.classList.add('host-stage');
-  window.addEventListener('resize', fitStage);
+  // Fullscreen (F11 or the corner button) and window resizes change the
+  // stage scale: refit, then repaint the chart at the new resolution once
+  // the layout has settled (a finished chart is otherwise left stretched).
+  let redrawFrame = null;
+  function onStageResize() {
+    fitStage();
+    cancelAnimationFrame(redrawFrame);
+    redrawFrame = requestAnimationFrame(() => {
+      if (window.SocietelosCharts && window.SocietelosCharts.redraw) window.SocietelosCharts.redraw();
+    });
+  }
+  window.addEventListener('resize', onStageResize);
+  document.addEventListener('fullscreenchange', onStageResize);
   fitStage();
 
   const socket = window.io({ auth: { clientType: 'host', roomCode: savedRoom || undefined } });

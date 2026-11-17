@@ -251,8 +251,31 @@
     return verdict;
   }
 
+  /** Crimson X and "LOOM SHUTDOWN // MONTH c" where the realized line hit 0. */
+  function drawCollapseMark(chart, endMonth, months) {
+    const { ctx, g } = chart;
+    ctx.save();
+    ctx.strokeStyle = COLORS.danger;
+    ctx.lineWidth = 3;
+    const x = g.x(endMonth);
+    const y = g.y(0);
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12);
+    ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
+    ctx.stroke();
+    ctx.fillStyle = COLORS.danger;
+    ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
+    ctx.restore();
+  }
+
   // Running realized-line animation (one at a time).
   let animation = null;
+  // The last realized line that finished drawing, so redraw() can repaint
+  // it after a resize: { chart, values, months, endMonth, collapsed }.
+  let finished = null;
 
   /** Stop the running realized-line animation, if any. */
   function cancelAnimation() {
@@ -269,6 +292,7 @@
    */
   function animateRealizedLine(realized, onMonthTick, { durationMs = 12000, canvas, onCollapse } = {}) {
     cancelAnimation();
+    finished = null;
     const values = Array.from((realized && (realized.gdw || realized)) || []);
     // Collapse: if GDW reaches 0 mid-cycle the line halts there (month c).
     const collapseAt = values.findIndex((v, m) => m > 0 && v <= 0);
@@ -313,23 +337,7 @@
     }
 
     function drawCollapse() {
-      const current = active || chart;
-      const { ctx, g } = current;
-      ctx.save();
-      ctx.strokeStyle = COLORS.danger;
-      ctx.lineWidth = 3;
-      const x = g.x(endMonth);
-      const y = g.y(0);
-      ctx.beginPath();
-      ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12);
-      ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
-      ctx.stroke();
-      ctx.fillStyle = COLORS.danger;
-      ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
-      ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
-      ctx.restore();
+      drawCollapseMark(active || chart, endMonth, months);
     }
 
     function frame(now) {
@@ -345,6 +353,7 @@
         return;
       }
       animation = null;
+      finished = { chart: active || chart, values, months, endMonth, collapsed: collapseAt > 0, drawUpTo };
       if (collapseAt > 0) {
         drawCollapse();
         if (typeof onCollapse === 'function') onCollapse(endMonth);
@@ -356,6 +365,28 @@
     }
     state.frame = requestAnimationFrame(frame);
     return { cancel: () => { if (animation === state) cancelAnimation(); } };
+  }
+
+  /**
+   * Repaint the chart on screen at the canvas's current size, e.g. after the
+   * projector window is resized or the teacher toggles fullscreen (F11). A
+   * running animation needs nothing (every frame refits the canvas); a
+   * finished one is redrawn in full, with its callout or shutdown mark.
+   */
+  function redraw() {
+    if (animation || !active) return;
+    if (!finished || finished.chart.canvas !== active.canvas) {
+      drawForecastFan(active.forecast, active.canvas);
+      return;
+    }
+    const f = finished;
+    f.drawUpTo(f.endMonth);
+    const current = active;
+    if (f.collapsed) drawCollapseMark(current, f.endMonth, f.months);
+    else {
+      const median = current.forecast && current.forecast.median;
+      drawForecastCallout(current.ctx, current.g, f.months, f.values[f.months], median && median[f.months]);
+    }
   }
 
   /**
@@ -373,5 +404,5 @@
     if (last > 0 && realized.every((v, m) => m === 0 || v > 0)) drawForecastCallout(chart.ctx, chart.g, last, realized[last], median && median[last]);
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict };
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw };
 })();
