@@ -144,3 +144,19 @@ test('simulate() forecasts a single write-in policy (sparse, unscaled effects) f
   // An empty (placeholder) vector is a valid input too.
   assert.ok(Number.isFinite(simulate(start, {}, { runs: 50, seed: 1 }).forecast.median[12]));
 });
+
+test('getForecastMedian(state, effects, seed) matches simulate()\'s month-12 median, with no extra work', () => {
+  const { getForecastMedian } = require('../index');
+  const start = createInitialState(simConfig);
+  const effects = { purpose: 0.4, autonomy: 0.3, trust: -0.1 };
+  for (const [seed, vol] of [[99, 1], [12345, 1.5]]) {
+    const full = simulate({ gdw: 25, simState: start }, effects, { runs: 200, seed, volatility: vol }).forecast.median[12];
+    assert.equal(getForecastMedian({ gdw: 25, simState: start }, effects, seed, { volatility: vol }), full, `seed ${seed}`);
+  }
+  const t0 = process.hrtime.bigint();
+  for (let i = 0; i < 5; i++) simulate(start, effects, { runs: 200, seed: i });
+  const t1 = process.hrtime.bigint();
+  for (let i = 0; i < 5; i++) getForecastMedian(start, effects, i);
+  const t2 = process.hrtime.bigint();
+  assert.ok(t2 - t1 <= t1 - t0, 'no slower than the full simulate()');
+});

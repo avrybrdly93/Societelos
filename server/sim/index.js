@@ -169,6 +169,34 @@ function simulate(state, effects, opts = {}) {
  * Monday stub mode (opts.mode = 'stub'): same return shape, flat line at the
  * current GDW + 5. Lets the engine and UI run before the model is tuned.
  */
+/**
+ * Fast forecast median for tie-breakers: the median end-of-cycle GDW over
+ * `runs` forecast runs (default 200), seeded exactly like simulate()'s
+ * forecast fan, without the realized run, district snapshots or percentile
+ * fan. Same state, effects and seed give the same number as
+ * simulate(...).forecast.median at month 12.
+ * @param {object} state  sim state, or { simState } as the engine passes it
+ * @param {object} effects  { trait: -1..1 } (missing traits are 0)
+ * @param {number} seed
+ * @param {{ runs?: number, volatility?: number, config?: object }} [opts]
+ * @returns {number}
+ */
+function getForecastMedian(state, effects, seed, opts = {}) {
+  const start = resolveState(state, opts);
+  const runs = Number.isInteger(opts.runs) && opts.runs > 0 ? opts.runs : 200;
+  const volatility = typeof opts.volatility === 'number' ? opts.volatility : 1;
+  const K = start.traitNames.length;
+  const effectVector = new Float64Array(K);
+  if (effects) for (let k = 0; k < K; k++) { const v = effects[start.traitNames[k]]; effectVector[k] = typeof v === 'number' ? v : 0; }
+  const ends = new Float64Array(runs);
+  const prefixHash = hashSeed(`${seed >>> 0}:forecast:`);
+  for (let r = 0; r < runs; r++) {
+    const run = runSingleSimulation(start, effects, hashSeed(r, prefixHash), true, { volatility, effectVector });
+    ends[r] = run.gdw[run.gdw.length - 1];
+  }
+  return percentile(ends.sort(), 0.5);
+}
+
 function simulateStub(state, opts = {}) {
   const sim = state && state.traits ? state : state && state.simState;
   const startGdw = sim ? computeGDW(sim) : (state && typeof state.gdw === 'number' ? state.gdw : 25);
@@ -204,4 +232,4 @@ function citizenMoods(before, after, citizens = []) {
   });
 }
 
-module.exports = { simulate, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };
+module.exports = { simulate, getForecastMedian, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };

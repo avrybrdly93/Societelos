@@ -978,10 +978,13 @@ class GameState extends EventEmitter {
   /** Forecast median end GDW of one finale policy on its own (Borda tie-breaker). */
   finaleMedianOf(policyId) {
     const policy = this.finale.policies.find((p) => p.id === policyId);
-    const r = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, (policy && policy.effects) || {}, {
-      runs: 200, seed: hashSeed(this.gameId, this.cycle, policyId), volatility: this.volatility
-    });
-    return forecastMedianEnd(r);
+    const effects = (policy && policy.effects) || {};
+    const seed = hashSeed(this.gameId, this.cycle, policyId);
+    // sim.getForecastMedian: forecast runs only (no realized run or fan).
+    if (this.simState && typeof sim.getForecastMedian === 'function') {
+      return sim.getForecastMedian({ gdw: this.gdw, simState: this.simState }, effects, seed, { runs: 200, volatility: this.volatility });
+    }
+    return forecastMedianEnd(resolveSimulate()({ gdw: this.gdw, simState: this.simState }, effects, { runs: 200, seed, volatility: this.volatility }));
   }
 
   /**
