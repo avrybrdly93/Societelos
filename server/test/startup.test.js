@@ -77,3 +77,31 @@ test('Socket.IO uses classroom Wi-Fi heartbeat settings (pingInterval 5 s, pingT
   assert.deepEqual(io.engine.opts.cors, { origin: '*' });
   io.close();
 });
+
+// TASK-640 ------------------------------------------------------------------
+
+test('static files and pages revalidate on reload: Cache-Control no-cache, ETag and 304s', { timeout: 15000 }, async () => {
+  const { app } = require('../server');
+  const http = require('http');
+  const srv = http.createServer(app);
+  await new Promise((resolve) => srv.listen(0, resolve));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    for (const route of ['/', '/mobile', '/css/styles.css', '/js/host.js', '/js/mobile.js']) {
+      const first = await fetch(base + route);
+      assert.equal(first.status, 200, route);
+      assert.equal(first.headers.get('cache-control'), 'no-cache', `${route} cache-control`);
+      const etag = first.headers.get('etag');
+      assert.ok(etag, `${route} has an ETag`);
+      await first.arrayBuffer();
+      // Raw http.get: fetch() adds Cache-Control: no-cache to conditional
+      // requests (Fetch spec), which a browser reload does not.
+      const status = await new Promise((resolve, reject) => {
+        http.get(base + route, { headers: { 'If-None-Match': etag } }, (res) => { res.resume(); resolve(res.statusCode); }).on('error', reject);
+      });
+      assert.equal(status, 304, `${route} reload is a 304`);
+    }
+  } finally {
+    await new Promise((resolve) => srv.close(resolve));
+  }
+});

@@ -48,14 +48,19 @@ function getJoinUrl(port = PORT) {
 }
 
 // Serve /public static assets (host screen, mobile controller, css, js).
-app.use(express.static(PUBLIC_DIR));
+// Cache-Control: no-cache + ETag: browsers keep a copy but revalidate on
+// every load, so a reload during a demo is instant (304, no body) and an
+// edited file is picked up at once, never a stale cached version.
+const STATIC_CACHE_CONTROL = 'no-cache';
+const noCache = (res) => res.setHeader('Cache-Control', STATIC_CACHE_CONTROL);
+app.use(express.static(PUBLIC_DIR, { etag: true, lastModified: true, setHeaders: noCache }));
 
 // Send the first page in `candidates` that exists in /public.
 // Lets new pages (mobile.html) replace legacy ones (player.html) without breaking routes.
 function sendPublicPage(res, candidates) {
   const file = candidates.map((name) => path.join(PUBLIC_DIR, name)).find((p) => fs.existsSync(p));
   if (!file) return res.status(404).send('Page not found');
-  return res.sendFile(file);
+  return res.sendFile(file, { headers: { 'Cache-Control': STATIC_CACHE_CONTROL } });
 }
 
 // Mobile controller for the 5 phones.
