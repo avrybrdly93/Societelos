@@ -556,6 +556,8 @@ class GameState extends EventEmitter {
     this.worldKey = null;
     this.ending = null; // 'shutdown' once GDW reaches 0
     this.endData = null; // End Screen data, compiled when END starts
+    this.isTransitioning = false; // a Loom call for RESOLUTION / FINALE_MOD / FINALE_ENACT is in flight
+    this.transition = null; // { phase, cycle, promise } of that call
     this.lastPhasePayload = null; // last 'phase' broadcast, for reconnects
     this.intelByNode = {}; // node -> { cycle, text }: this cycle's private intel
     this.finale = null;
@@ -706,11 +708,46 @@ class GameState extends EventEmitter {
    * Phase-specific starters (start*Phase) are looked up in PHASE_STARTERS;
    * any phase without one just gets its timer and a broadcast.
    */
+  /**
+   * isTransitioning lock around the asynchronous transitions (RESOLUTION
+   * and FINALE_ENACT narration, FINALE_MOD moderation). While it is held,
+   * a second start of the same phase returns the in-flight promise instead
+   * of re-running the simulation, scoring or Loom call; the lock is
+   * released when the call settles, or dropped when the game moves on.
+   */
+  beginTransition(phase, work) {
+    if (this.isTransitioning && this.transition && this.transition.phase === phase && this.transition.cycle === this.cycle && this.transition.gameId === this.gameId) {
+      return this.transition.promise;
+    }
+    const transition = { phase, cycle: this.cycle, gameId: this.gameId, promise: null };
+    this.isTransitioning = true;
+    this.transition = transition;
+    const release = () => {
+      if (this.transition === transition) {
+        this.isTransitioning = false;
+        this.transition = null;
+      }
+    };
+    transition.promise = Promise.resolve().then(work).finally(release);
+    return transition.promise;
+  }
+
+  /** True while `phase`'s async transition for this cycle is still in flight. */
+  transitionPending(phase) {
+    return this.isTransitioning && !!this.transition && this.transition.phase === phase && this.transition.cycle === this.cycle;
+  }
+
   advancePhase() {
     const from = this.phase;
     const to = this.nextPhase();
     this.clearPhaseTimer();
     if (from === PHASES.END) return to;
+    // Leaving the phase abandons its in-flight Loom call: whatever it
+    // returns later is ignored (see narrateAndBroadcast / onFinaleModeration).
+    if (this.transition && this.transition.phase === from) {
+      this.isTransitioning = false;
+      this.transition = null;
+    }
     if (process.env.LOG_PHASES === 'true' || from === PHASES.RESOLUTION || to === PHASES.END) {
       console.log(`[game ${this.roomCode}] ${from} -> ${to} (cycle ${this.cycle})`);
     }
@@ -974,9 +1011,10 @@ class GameState extends EventEmitter {
 
   /** FINALE_MOD: writing closes (defaults filled) while the Loom moderates. */
   startFinaleModPhase() {
+    if (this.phase === PHASES.FINALE_MOD && this.transitionPending(PHASES.FINALE_MOD)) return this.transition.promise;
     this.closeFinaleWriting();
     this.enterPhase(PHASES.FINALE_MOD);
-    return this.runFinaleModeration();
+    return this.beginTransition(PHASES.FINALE_MOD, () => this.runFinaleModeration());
   }
 
   /**
@@ -1165,6 +1203,7 @@ class GameState extends EventEmitter {
    * and their 50/25/25 package is simulated as cycle 5's realized run.
    */
   startFinaleEnactPhase() {
+    if (this.phase === PHASES.FINALE_ENACT && this.transitionPending(PHASES.FINALE_ENACT)) return this.transition.promise;
     this.closeRanking();
     const finale = this.finale;
     const byId = Object.fromEntries(finale.policies.map((p) => [p.id, p]));
@@ -1210,7 +1249,7 @@ class GameState extends EventEmitter {
       const catalyst = finale.awards.catalyst[node] || 0;
       return { node, cycle: this.cycle, gained: role + author + catalyst, role, author, catalyst, total: this.scores[node] || 0 };
     });
-    finale.narrated = this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates });
+    finale.narrated = this.beginTransition(PHASES.FINALE_ENACT, () => this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates }));
     return finale.narrated;
   }
 
@@ -1546,6 +1585,8 @@ class GameState extends EventEmitter {
    * the full RESOLUTION duration so the 20 s month-by-month animation plays.
    */
   startResolutionPhase() {
+    // Re-entrancy: never simulate, score or narrate the same cycle twice.
+    if (this.phase === PHASES.RESOLUTION && this.transitionPending(PHASES.RESOLUTION)) return this.transition.promise;
     this.votingOpen = false;
     const { totals, tie, abstained, winner: provisional } = this.tallyVotes();
     let winner = provisional;
@@ -1603,7 +1644,7 @@ class GameState extends EventEmitter {
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
     const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
-    return this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates });
+    return this.beginTransition(PHASES.RESOLUTION, () => this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates }));
   }
 
   /**
@@ -1636,6 +1677,13 @@ class GameState extends EventEmitter {
         }
         // Stale: the game was reset or moved on while the Loom was thinking.
         if (this.gameId !== gameIdAtStart || this.cycle !== cycleAtStart) return null;
+        // Same cycle but the phase already moved on (e.g. RESOLUTION ->
+        // WORLD_REVEAL / END): a late resolution would repaint the wrong
+        // screen, so only the private score updates still go out.
+        if (this.phase !== phase) {
+          for (const update of scoreUpdates) this.emit('score:update', update);
+          return null;
+        }
         // Only aggregate totals leave the server; sanitizing strips any
         // per-node vote or Override field that might slip into the payload.
         this.lastResolution = sanitizeForBroadcast({
@@ -1650,9 +1698,7 @@ class GameState extends EventEmitter {
         }, ['name']);
         // The month-by-month animation starts when clients receive this
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
-        if (this.phase === phase && this.cycle === cycleAtStart) {
-          this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
-        }
+        this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
         this.emit('resolution', this.lastResolution);
         for (const update of scoreUpdates) this.emit('score:update', update);
         return this.lastResolution;
@@ -1766,6 +1812,8 @@ class GameState extends EventEmitter {
     this.finale = null;
     this.intelByNode = {};
     this.lastPhasePayload = null;
+    this.isTransitioning = false;
+    this.transition = null;
     this.voteHistory = {};
     this.scoreLedger = [];
     this.roleAssignment = null;

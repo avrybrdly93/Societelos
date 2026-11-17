@@ -96,3 +96,57 @@ test('late finale writes, ranks and votes after their phase closes are refused i
   assert.deepEqual(late.write, { ok: false, reason: 'WRITING_CLOSED' });
   assert.deepEqual(late.rank, { ok: false, reason: 'RANKING_CLOSED' });
 });
+
+// TASK-617 ------------------------------------------------------------------
+
+test('isTransitioning is held while the RESOLUTION narration is in flight and released after', async (t) => {
+  const { game } = gameAtVote(t);
+  t.mock.timers.reset();
+  for (const n of NODE_IDS) game.castVote(n, 'A');
+  const p = game.advancePhase() && game.transition && game.transition.promise;
+  assert.equal(game.phase, 'RESOLUTION');
+  assert.equal(game.isTransitioning, true);
+  await p;
+  assert.equal(game.isTransitioning, false);
+  game.clearPhaseTimer();
+});
+
+test('a second RESOLUTION start while transitioning re-uses the in-flight call: no double scoring', async (t) => {
+  const { game } = gameAtVote(t);
+  t.mock.timers.reset();
+  const resolutions = [];
+  game.on('resolution', (r) => resolutions.push(r));
+  for (const n of NODE_IDS) game.castVote(n, 'A');
+  game.advancePhase();
+  const first = game.transition.promise;
+  const scores = { ...game.scores };
+  const ledger = game.scoreLedger.length;
+  assert.equal(game.startResolutionPhase(), first, 'same promise');
+  assert.deepEqual(game.scores, scores);
+  assert.equal(game.scoreLedger.length, ledger);
+  await first;
+  assert.equal(resolutions.length, 1);
+  game.clearPhaseTimer();
+});
+
+test('a narration that returns after its phase moved on is not broadcast, but the lock is released', async (t) => {
+  const { game } = gameAtVote(t);
+  t.mock.timers.reset();
+  const loom = require('../loom');
+  const realNarrate = loom.narrate;
+  let finish;
+  loom.narrate = () => new Promise((resolve) => { finish = resolve; });
+  t.after(() => { loom.narrate = realNarrate; });
+  const resolutions = [];
+  game.on('resolution', (r) => resolutions.push(r));
+  for (const n of NODE_IDS) game.castVote(n, 'A');
+  game.advancePhase();
+  const pending = game.transition.promise;
+  await new Promise((r) => setImmediate(r));
+  game.advancePhase(); // e.g. the safety timer or a debug skip: RESOLUTION -> INCIDENT (cycle 2)
+  assert.equal(game.isTransitioning, false, 'leaving the phase drops the lock');
+  finish({ loomLine: 'Too late.', messages: [] });
+  await pending;
+  assert.equal(resolutions.length, 0, 'no stale resolution repaints the screen');
+  game.clearPhaseTimer();
+});
