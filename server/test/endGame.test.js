@@ -361,3 +361,44 @@ test('closingMessage always has a citizen name, district and text, even offline 
     console.error = err;
   }
 });
+
+// TASK-648 ------------------------------------------------------------------
+
+/** Play a game whose Cycle 3 realized run collapses to GDW 0. */
+async function collapseInCycle3(gameId) {
+  const sim = require('../sim');
+  const realSimulate = sim.simulate;
+  let collapse = false;
+  sim.simulate = (...args) => {
+    const r = realSimulate(...args);
+    if (!collapse) return r;
+    const start = r.realized.gdw[0];
+    const gdw = Array.from(r.realized.gdw, (_, m) => Math.max(0, Math.round((start - (start / 6) * m) * 10) / 10));
+    return { ...r, realized: { ...r.realized, gdw, finalGdw: 0 } };
+  };
+  try {
+    return await playGame({
+      gameId,
+      world: 'AB',
+      onEvent: (type, ev) => { if (type === 'phase' && ev.phase === 'VOTE') collapse = ev.cycle === 3; }
+    });
+  } finally {
+    sim.simulate = realSimulate;
+  }
+}
+
+test('Shutdown Ending: the collapsed cycle\'s RESOLUTION goes straight to END and game:end', async () => {
+  const out = await collapseInCycle3('shutdown-648');
+  const after = out.phases.slice(out.phases.indexOf('3:RESOLUTION'));
+  assert.deepEqual(after, ['3:RESOLUTION', '3:END'], 'no Cycle 4, no finale');
+  assert.equal(out.resolutions.length, 3);
+  assert.equal(out.resolutions[2].gdw, 0);
+  const end = out.gameEnd;
+  assert.equal(end.shutdown, true);
+  assert.equal(end.grade, 'SHUTDOWN');
+  assert.equal(end.winner, null, 'everyone loses');
+  assert.equal(end.cyclesPlayed, 3);
+  assert.equal(end.finaleMode, 'none');
+  assert.equal(end.gdwHistory.at(-1), 0);
+  assert.ok(end.gdwHistory.length < 37, 'the line stops at the shutdown month');
+});
