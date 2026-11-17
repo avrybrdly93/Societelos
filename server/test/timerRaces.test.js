@@ -206,3 +206,50 @@ test('RESOLUTION waits for a slow loom.narrate, then runs the full playback time
   const total = cycle1.nextAt - cycle1.phaseAt;
   assert.ok(total >= DELAY + 1000 - 30, `the animation was never cut short (${total} ms in RESOLUTION)`);
 });
+
+// TASK-636 ------------------------------------------------------------------
+
+test('rapid phase skipping through a whole game leaves exactly one live timer and no stragglers', { timeout: 30000 }, async () => {
+  const saved = { fast: process.env.FAST_TIMERS, key: process.env.GEMINI_API_KEY };
+  delete process.env.FAST_TIMERS; // real (long) timers: only the skips move the game
+  delete process.env.GEMINI_API_KEY;
+  const game = new GameState({ roomCode: 'SKIP' });
+  if (saved.fast !== undefined) process.env.FAST_TIMERS = saved.fast;
+  if (saved.key !== undefined) process.env.GEMINI_API_KEY = saved.key;
+  const log = console.log;
+  const err = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  const unhandled = [];
+  const onUnhandled = (e) => unhandled.push(e);
+  process.on('unhandledRejection', onUnhandled);
+  const phases = [];
+  try {
+    NODE_IDS.forEach((n, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(n, true); });
+    game.on('phase', (p) => phases.push(`${p.cycle}:${p.phase}`));
+    game.startIntroPhase();
+    let skips = 0;
+    while (game.phase !== 'END' && skips < 300) {
+      // Debug skip: every phase is cut short the moment it starts, sometimes
+      // twice in the same tick, sometimes after async work had a chance to run.
+      game.advancePhase();
+      skips++;
+      assert.ok(game.phase === 'END' || game.phaseTimer || game.endsAt === null, `one live timer after skip ${skips}`);
+      if (skips % 3 === 0) await new Promise((r) => setImmediate(r));
+    }
+    assert.equal(game.phase, 'END', `reached END after ${skips} skips`);
+    assert.equal(game.phaseTimer, null, 'END has no timer');
+    const count = phases.length;
+    // Give any stale timer or late Loom call time to misfire.
+    await new Promise((r) => setTimeout(r, 300));
+    assert.equal(phases.length, count, `no phase events after END (${phases.slice(count).join(' ')})`);
+    assert.equal(game.phase, 'END');
+    assert.ok(phases.includes('5:END'), 'played to the end of Cycle 5');
+    assert.deepEqual(unhandled, []);
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+    game.stop();
+    console.log = log;
+    console.error = err;
+  }
+});
