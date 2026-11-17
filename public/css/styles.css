@@ -1192,3 +1192,13 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .map-month.is-final { color: var(--slate-50, #eef2f6); }
 @keyframes map-month-tick { from { transform: translateY(-4px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .map-month.is-tick #map-month-num { animation: none; } }
+
+/* District pulse ring: a large one-month wellbeing shift (map.js PULSE_THRESHOLD). */
+.district-pulse {
+  fill: none; stroke-width: 4; pointer-events: none; transform-box: fill-box; transform-origin: center;
+  animation: district-pulse 1.4s ease-out forwards;
+}
+.district-pulse.is-up { stroke: var(--teal, #2bc4a0); }
+.district-pulse.is-down { stroke: var(--alert-crimson, #e5484d); }
+@keyframes district-pulse { from { transform: scale(0.6); opacity: 0.95; } to { transform: scale(4.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .district-pulse { animation-duration: 0.01s; } }
