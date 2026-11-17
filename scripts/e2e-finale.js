@@ -176,7 +176,7 @@ async function hostChecks(browser, shot) {
   await page.waitForTimeout(150);
   check('host finale INCIDENT shows the Loom cannot compute callout', await visible('#finale-callout'));
   check('host finale INCIDENT shows no A/B options', !(await visible('#policy-panel')));
-  check('host top bar reads CYCLE 5/5 and stays on stage', /5\/5/.test(await text('#cycle-indicator')) && await onStage());
+  check('host top bar reads CYCLE 5/5 — FINALE and stays on stage', (await text('#cycle-indicator')) === 'CYCLE 5/5 \u2014 FINALE' && await onStage(), await text('#cycle-indicator'));
 
   await phase('FINALE_WRITE', { seconds: 45 });
   await page.evaluate(() => debugTriggerEvent('finale:progress', { submitted: ['NODE-01', 'NODE-04'] }));

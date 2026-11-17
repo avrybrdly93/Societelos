@@ -1415,3 +1415,10 @@ body.host .topbar.is-crowded .phase-crumbs li { font-size: 16px; padding: 3px 5p
 .rank-locked-order li { display: block; padding: 4px 0; font-size: 15px; letter-spacing: 0.06em; color: var(--slate-200); white-space: pre; }
 .rank-locked-order li + li { border-top: 1px solid var(--slate-800); }
 .rank-locked-order li:first-child { color: var(--accent); font-weight: 700; }
+
+/* Finale: "CYCLE 5/5 — FINALE" in the top bar. */
+.cycle-finale-tag { color: var(--theme-current, var(--accent)); text-shadow: 0 0 18px color-mix(in srgb, var(--theme-current, var(--accent)) 55%, transparent); }
+.topbar.is-finale { gap: 28px; }
+.topbar.is-finale .phase-crumbs { margin-left: 12px; }
+body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px; }
+.topbar.is-finale .topbar-brand .muted { display: none; }

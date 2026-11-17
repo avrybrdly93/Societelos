@@ -642,10 +642,17 @@
     state.isFinale = !!payload.isFinale;
     showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
     document.body.dataset.phase = payload.phase;
-    const cycleText = state.sessionTimerEnabled
-      ? `POLICY ${state.cycle}${state.isFinale ? ' (FINALE)' : ''}`
-      : `CYCLE ${state.cycle}/5`;
-    document.getElementById('cycle-indicator').textContent = cycleText;
+    const cycleText = state.sessionTimerEnabled ? `POLICY ${state.cycle}` : `CYCLE ${state.cycle}/5`;
+    // Finale: "CYCLE 5/5 — FINALE", the tag in the theme accent.
+    const cycleEl = document.getElementById('cycle-indicator');
+    cycleEl.textContent = cycleText;
+    if (state.isFinale && payload.phase !== 'END') {
+      const tag = document.createElement('span');
+      tag.className = 'cycle-finale-tag';
+      tag.textContent = ' \u2014 FINALE';
+      cycleEl.appendChild(tag);
+    }
+    document.getElementById('host-topbar').classList.toggle('is-finale', !!state.isFinale);
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
     updateSessionControls();
 
