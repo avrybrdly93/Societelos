@@ -102,3 +102,15 @@ test('World BA: cycle 3-4 crises split the D1 elite from the D4 workers', () => 
     assert.ok(['A', 'B'].some((k) => Math.abs(c.options[k].effects.fairness) >= 0.3), `${c.id}: fairness at stake`);
   }
 });
+
+test('World BB: in every late crisis the complacent (lotus/assimilator) option scores worse than resisting', () => {
+  const { state, volatility } = cycle2State('BB');
+  const finale = crises.crises.find((c) => c.id === crises.worlds.BB.finale);
+  for (const c of [...worldCrises('BB'), finale]) {
+    const comfortKey = ['A', 'B'].find((k) => (c.options[k].roles || []).some((r) => r === 'lotus' || r === 'assimilator'));
+    const resistKey = comfortKey === 'A' ? 'B' : 'A';
+    const comfort = medianDelta(state, c.options[comfortKey].effects, volatility);
+    const resist = medianDelta(state, c.options[resistKey].effects, volatility);
+    assert.ok(comfort < resist - 3, `${c.id}: comfort ${comfort.toFixed(1)} vs resist ${resist.toFixed(1)}`);
+  }
+});
