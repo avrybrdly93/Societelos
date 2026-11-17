@@ -40,3 +40,15 @@ test('server/sim/calibrate.js runs standalone without starting Express', () => {
   assert.equal(out.options.length, 5, '1A, 1B, 2A, 2B after 1A, 2B after 1B');
   assert.deepEqual(out.paths.map((p) => p.path), ['AA', 'AB', 'BA', 'BB']);
 });
+
+test('trajectory sweep: deterministic, every game lands in exactly one final-GDW band', () => {
+  const { sweepGames, SWEEP_BANDS } = require('../calibrate');
+  const simConfig = require('../../../data/sim.json');
+  const crisesData = require('../../../data/crises.json');
+  const a = sweepGames(simConfig, crisesData, { games: 60 });
+  const b = sweepGames(simConfig, crisesData, { games: 60 });
+  assert.deepEqual(a.counts, b.counts, 'same seed, same result');
+  assert.equal(Object.values(a.counts).reduce((x, y) => x + y, 0), 60);
+  assert.deepEqual(Object.keys(a.counts), SWEEP_BANDS.map((x) => x.key));
+  assert.ok(a.finals.every((g) => g >= 0 && g <= 100));
+});
