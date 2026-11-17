@@ -1530,13 +1530,15 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 /* ------------------------------------------------------------------ */
 /* End Screen: three beats (recap, roles & authors reveal, winner).    */
 /* ------------------------------------------------------------------ */
-.view-end { display: none; padding: 18px 48px; gap: 14px; flex-direction: column; overflow: hidden; }
+.view-end { display: none; padding: 4px 48px 8px; gap: 10px; flex-direction: column; overflow: hidden; }
 .view-end.is-active { display: flex; }
+/* Reclaim most of #host-main's padding: the End Screen needs every row of the 1080p projector. */
+.view-end { margin-top: -24px; height: calc(100% + 48px); }
 .end-beat { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 22px; }
 .end-beat > .label { margin: 0 0 8px; }
 .end-recap-grid { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 20px; align-items: stretch; }
-.end-chart-wrap { position: relative; min-height: 230px; }
-.end-chart { display: block; width: 100%; height: 230px; }
+.end-chart-wrap { position: relative; min-height: 200px; }
+.end-chart { display: block; width: 100%; height: 200px; }
 .end-badges { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; }
 .end-badges .end-closing { grid-column: 1 / -1; }
 .end-badge { display: flex; flex-direction: column; gap: 0; padding: 6px 14px; border-radius: var(--radius); background: var(--bg-sunken); border-left: 4px solid var(--theme-current, var(--accent)); }
@@ -1551,13 +1553,21 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-closing footer { font-size: 16px; }
 .end-table { width: 100%; border-collapse: collapse; font-size: 22px; }
 .end-table th { text-align: left; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
-.end-table td { padding: 5px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
+.end-table td { padding: 3px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
 .end-table td.col-points, .end-table th.col-points { text-align: right; font-family: var(--font-mono); }
 .end-table .end-role { white-space: nowrap; }
 .end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
 .end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
-.end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+.end-table .end-policy-rank { display: inline-block; margin-left: 10px; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); white-space: nowrap; }
+.end-table td:first-child, .end-table td:nth-child(2) { white-space: nowrap; }
 .end-chart-inspection { min-height: 2.8em; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); color: var(--text); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+/* body.host p (28 px) would otherwise win and push the winner beat below
+   the bottom of a 1080p projector; this secondary readout stays compact. */
+/* The End Screen holds three beats on one 1080p projector screen, so its
+   secondary copy is sized here rather than by body.host p (28 px). */
+body.host .end-closing p { font-size: 22px; }
+body.host .end-winner-sub { font-size: 22px; }
+body.host .end-chart-inspection { font-size: 18px; line-height: 1.35; min-height: 1.35em; margin-top: 6px; padding: 4px 10px; }
 .end-chart:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
 .end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
@@ -1567,7 +1577,7 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-winner-title { font-size: 44px; line-height: 1.1; margin: 0; color: var(--teal); }
 .end-winner-sub { font-size: 20px; margin: 0; display: inline; }
 /* Seed badge and the teacher's next-game buttons. */
-.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }
 .end-seed-badge { font-size: 16px; letter-spacing: 0.08em; padding: 6px 12px; border: 1px dashed var(--slate-600); border-radius: var(--radius); color: var(--text-muted); }
 .end-seed-badge:empty { display: none; }
 .btn-end { font-size: 20px; padding: 10px 22px; letter-spacing: 0.08em; }
