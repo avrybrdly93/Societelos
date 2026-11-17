@@ -49,6 +49,7 @@ Array of the 10 recurring citizens:
 }
 ```
 - `mode` is `binary` (cycles 1-4) or `writein` (cycle 5 finale; options A/B are the offline fallback).
+- **Crisis sets:** a world's binary crises carry `set` (1, 2, ...; missing means 1). Each set needs exactly one cycle 3 and one cycle 4 crisis (AA1, AA2, ...). A game plays one set per world, picked from the game id or forced by the host (`host:config { crisisSet }`). Blitz cycles past 4 borrow the world's other sets. The `writein` finale is shared by every set and has no `set`. Fixed crises have no `set`.
 - An option may carry `effectsByWorld` (`{ "A": effects, "B": effects }`, keyed by the cycle 1 result) instead of `effects`, plus `rolesByWorld` the same way. Fixed Crisis 2B uses this.
 - An option may set `volatility` (a multiplier on simulation noise and shock odds for the rest of the game; 2A uses 1.5).
 - Optional per option: `targetGdwDelta` (tuning target), `loomLine`, `reactions` (citizen lines), and `loomLines` (`{ "good", "mixed", "bad" }`, max 200 chars each): the offline Loom line for each outcome band, preferred over `loomLine` when Gemini is unavailable.

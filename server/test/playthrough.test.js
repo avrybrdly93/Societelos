@@ -68,7 +68,7 @@ test('post-merge: Worlds BA and BB play their own crises, intel and finale acros
   const byId = Object.fromEntries(crises.crises.map((c) => [c.id, c]));
   await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
     for (const world of ['BA', 'BB']) {
-      const out = await playGame({ gameId: `latecycles-${world}`, world });
+      const out = await playGame({ gameId: `latecycles-${world}`, world, crisisSet: 1 });
       assert.equal(out.game.worldKey, world);
       assert.equal(out.reveals.length, 1, 'one world reveal after Cycle 2');
       assert.equal(out.reveals[0].worldKey, world);
@@ -108,7 +108,7 @@ function expectedOfflinePhases() {
 
 /** Shared checks for an offline (no GEMINI_API_KEY) 5-cycle headless game. */
 async function headlessOfflineRun(world) {
-  const out = await playGame({ gameId: `headless-${world}`, world });
+  const out = await playGame({ gameId: `headless-${world}`, world, crisisSet: 1 });
   const phases = out.phases.filter((p, i, a) => p !== a[i - 1]); // a resubmit/extension re-broadcast is one phase
   const expected = expectedOfflinePhases();
   // Cycle 0 lead-in phases may be numbered 0 or 1 depending on when the
@@ -125,7 +125,7 @@ async function headlessOfflineRun(world) {
   assert.ok(out.game.gdw > 0, `${world} survived to the end`);
   for (const node of NODE_IDS) assert.ok(Number.isInteger(out.game.scores[node]), `${node} has an integer score`);
   // Same game id, same choices: the exact same realized GDW line.
-  const again = await playGame({ gameId: `headless-${world}`, world });
+  const again = await playGame({ gameId: `headless-${world}`, world, crisisSet: 1 });
   assert.deepEqual(again.game.gdwHistory, out.game.gdwHistory, `${world} replays deterministically`);
   return out;
 }

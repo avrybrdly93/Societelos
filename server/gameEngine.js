@@ -86,6 +86,7 @@ const PHASES = Object.freeze({
 });
 
 const TOTAL_CYCLES = 5;
+const MAX_CRISIS_SETS = 9; // host may force crisis set 1..9 (AA1 ... AA9)
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
@@ -330,23 +331,41 @@ function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
 }
 
 /**
- * Pick the crisis for a cycle: cycles 1-2 are fixed, 3+ come from the
- * world (vote1 + vote2), and the finale is the world's write-in finale.
+ * Crisis sets available for a world: the distinct `set` numbers of its binary
+ * crises (a crisis with no `set` is set 1). [1] when the data has no sets.
  */
-function selectCrisis(crises, cycle, worldKey, roles = [], isFinale = (cycle === TOTAL_CYCLES)) {
+function worldSets(crises, worldKey) {
+  const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : [];
+  const sets = new Set(list.filter((c) => c.world === worldKey && c.mode === 'binary').map((c) => c.set || 1));
+  return sets.size ? [...sets].sort((a, b) => a - b) : [1];
+}
+
+/**
+ * Pick the crisis for a cycle: cycles 1-2 are fixed, 3+ come from the
+ * world (vote1 + vote2) and its crisis set (AA1, AA2, ...), and the finale
+ * is the world's write-in finale (shared by every set). Blitz cycles past
+ * a set's own crises borrow the world's other sets in order.
+ */
+function selectCrisis(crises, cycle, worldKey, roles = [], isFinale = (cycle === TOTAL_CYCLES), set = 1) {
   const world = cycle <= 2 ? 'fixed' : worldKey;
   const mode = isFinale ? 'writein' : 'binary';
   let raw = null;
   const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : null;
+  const setOf = (c) => c.set || 1;
   if (isFinale) {
     const finaleId = crises && crises.worlds && crises.worlds[worldKey] && crises.worlds[worldKey].finale;
     raw = (list && list.find((c) => c.id === finaleId))
        || (list && list.find((c) => c.world === world && c.mode === 'writein'))
        || null;
   } else if (list) {
-    raw = list.find((c) => c.world === world && c.cycle === cycle && c.mode === 'binary');
+    raw = cycle <= 2
+      ? list.find((c) => c.world === world && c.cycle === cycle && c.mode === 'binary')
+      : list.find((c) => c.world === world && c.cycle === cycle && c.mode === 'binary' && setOf(c) === set);
     if (!raw && cycle > 2) {
-      const worldBinary = list.filter((c) => c.world === world && c.mode === 'binary');
+      // Chosen set first, then the other sets, each in cycle order.
+      const rank = (c) => (setOf(c) === set ? 0 : 1);
+      const worldBinary = list.filter((c) => c.world === world && c.mode === 'binary')
+        .sort((a, b) => rank(a) - rank(b) || setOf(a) - setOf(b) || a.cycle - b.cycle);
       if (worldBinary.length > 0) {
         raw = worldBinary[(cycle - 3) % worldBinary.length];
       }
@@ -561,6 +580,8 @@ class GameState extends EventEmitter {
     this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
     this.worldKey = null;
+    this.worldSet = 1; // which crisis set of the world plays (AA1, AA2, ...)
+    this.crisisSet = 'random'; // host setting: 'random' or a set number to force
     this.ending = null; // 'shutdown' once GDW reaches 0
     this.endData = null; // End Screen data, compiled when END starts
     this.isTransitioning = false; // a Loom call for RESOLUTION / FINALE_MOD / FINALE_ENACT is in flight
@@ -947,7 +968,7 @@ class GameState extends EventEmitter {
       this.sessionEndsAt = Date.now() + (this.sessionDurationSec * 1000);
     }
     const isFinale = this.isFinaleCycle();
-    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale);
+    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale, this.worldSet);
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
     if (isFinale) this.initFinale();
     this.enterPhase(PHASES.INCIDENT);
@@ -1643,7 +1664,10 @@ class GameState extends EventEmitter {
     if (typeof option.volatility === 'number') this.volatility = option.volatility;
     else if (this.cycle === 2 && winner === 'A') this.volatility = ASSEMBLY_VOLATILITY;
     // Cycles 1 and 2 decide the world for cycles 3-5.
-    if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
+    if (this.cycle === 2) {
+      this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
+      this.worldSet = this.pickWorldSet(this.worldKey);
+    }
     // Binary scoring before the finale, and in a finale that fell back to A/B.
     const binaryScoring = !this.isFinaleCycle() || this.finaleFallback;
     const roleAwards = binaryScoring ? this.awardRolePoints(winner) : {};
@@ -1741,7 +1765,8 @@ class GameState extends EventEmitter {
   worldInfo() {
     const worlds = (this.data.crises && this.data.crises.worlds) || {};
     const w = worlds[this.worldKey] || {};
-    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '' };
+    const variant = this.worldKey ? `${this.worldKey}${this.worldSet}` : null;
+    return { worldKey: this.worldKey, variant, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '' };
   }
 
   /**
@@ -1752,7 +1777,7 @@ class GameState extends EventEmitter {
     const reveal = this.worldInfo();
     this.enterPhase(PHASES.WORLD_REVEAL, { world: reveal });
     this.emit('world:reveal', reveal);
-    console.log(`[game ${this.roomCode}] world revealed: ${reveal.worldKey} (${reveal.name})`);
+    console.log(`[game ${this.roomCode}] world revealed: ${reveal.variant} (${reveal.name})`);
   }
 
   /**
@@ -1802,6 +1827,7 @@ class GameState extends EventEmitter {
       this.volatility = 1.0;
       this.voteHistory = {};
       this.worldKey = null;
+      this.worldSet = 1;
       this.ending = null;
       this.endData = null;
       this.finale = null;
@@ -1834,6 +1860,7 @@ class GameState extends EventEmitter {
     this.cycleMarkers = [];
     this.volatility = 1.0;
     this.worldKey = null;
+    this.worldSet = 1;
     this.ending = null;
     this.endData = null;
     this.finale = null;
@@ -1890,12 +1917,28 @@ class GameState extends EventEmitter {
       if (typeof settings.showForecastBeforeVote !== 'boolean') return { ok: false, reason: 'BAD_SHOW_FORECAST' };
       this.showForecastBeforeVote = settings.showForecastBeforeVote;
     }
+    if (settings.crisisSet !== undefined) {
+      const ok = settings.crisisSet === 'random' || (Number.isInteger(settings.crisisSet) && settings.crisisSet >= 1 && settings.crisisSet <= MAX_CRISIS_SETS);
+      if (!ok) return { ok: false, reason: 'BAD_CRISIS_SET' };
+      this.crisisSet = settings.crisisSet;
+    }
     return { ok: true, config: this.getConfig() };
   }
 
-  /** Current teacher settings: { debateSeconds, showForecastBeforeVote }. */
+  /** Current teacher settings: { debateSeconds, showForecastBeforeVote, crisisSet }. */
   getConfig() {
-    return { debateSeconds: Math.round(this.durations.DEBATE / 1000), showForecastBeforeVote: !!this.showForecastBeforeVote };
+    return { debateSeconds: Math.round(this.durations.DEBATE / 1000), showForecastBeforeVote: !!this.showForecastBeforeVote, crisisSet: this.crisisSet };
+  }
+
+  /**
+   * Which crisis set of `worldKey` this game plays. The host can force one
+   * (falls back to set 1 if that world lacks it); otherwise it is picked
+   * from the game id, so each new game varies but a replay seed repeats.
+   */
+  pickWorldSet(worldKey) {
+    const sets = worldSets(this.data.crises, worldKey);
+    if (this.crisisSet !== 'random') return sets.includes(this.crisisSet) ? this.crisisSet : sets[0];
+    return sets[hashSeed(this.gameId, 'world-set') % sets.length];
   }
 
   /**
@@ -2354,6 +2397,7 @@ module.exports = {
   closeRoom,
   loadGameData,
   selectCrisis,
+  worldSets,
   sanitizeForBroadcast,
   normalizeCrisis,
   generateRoomCode,

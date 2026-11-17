@@ -136,9 +136,28 @@ function checkCrises(data, citizenIds) {
     });
     if (c.intel) for (const k of Object.keys(c.intel)) if (!ROLE_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
   });
+  data.crises.forEach((c, i) => {
+    const where = `crises.json[${c.id || i}]`;
+    if (c.set !== undefined) {
+      if (c.world === 'fixed') err(where, 'fixed crises have no set');
+      else if (c.mode === 'writein') err(where, 'finales are shared by every set; remove "set"');
+      else if (!Number.isInteger(c.set) || c.set < 1 || c.set > 9) err(where, 'set must be an integer 1-9');
+    }
+  });
   for (const w of ['fixed', ...WORLDS]) {
     const cycles = w === 'fixed' ? [1, 2] : [3, 4];
-    for (const cy of cycles) if (!data.crises.some((c) => c.world === w && c.cycle === cy)) err('crises.json', `no crisis for ${w} cycle ${cy}`);
+    const sets = w === 'fixed' ? [undefined]
+      : [...new Set(data.crises.filter((c) => c.world === w && c.mode === 'binary').map((c) => c.set || 1))];
+    if (!sets.length) sets.push(1);
+    for (const set of sets) {
+      for (const cy of cycles) {
+        const matches = data.crises.filter((c) => c.world === w && c.cycle === cy && c.mode === 'binary'
+          && (set === undefined || (c.set || 1) === set));
+        const label = set === undefined ? w : `${w}${set}`;
+        if (!matches.length) err('crises.json', `no crisis for ${label} cycle ${cy}`);
+        else if (matches.length > 1) err('crises.json', `${label} cycle ${cy} has ${matches.length} crises (${matches.map((c) => c.id).join(', ')})`);
+      }
+    }
     if (w !== 'fixed') {
       const finaleId = worlds[w] && worlds[w].finale;
       if (!finaleId || !data.crises.some((c) => c.id === finaleId && c.mode === 'writein')) {
@@ -149,17 +168,19 @@ function checkCrises(data, citizenIds) {
   return undefined;
 }
 
-// Completeness of the 14 core crises a standard game can reach: the 2 fixed
-// crises, each world's cycle 3 and 4 crises and its write-in finale. Each
-// needs an incident, a Loom intro, options A and B with effects and role
-// tags, a role-slanted intel drop for all 5 roles, citizen feed lines and
-// debate hooks. Blitz-only extras (cycles 5-6) are not held to this.
+// Completeness of the core crises a standard game can reach: the 2 fixed
+// crises, each world set's cycle 3 and 4 crises (AA1, AA2, ...) and each
+// world's write-in finale. Each needs an incident, a Loom intro, options A
+// and B with effects and role tags, a role-slanted intel drop for all 5
+// roles, citizen feed lines and debate hooks.
 function checkCoreCrises(data) {
   const worlds = data.worlds || {};
   const core = data.crises.filter((c) => c.world === 'fixed'
     || (c.mode === 'binary' && (c.cycle === 3 || c.cycle === 4))
     || (worlds[c.world] && worlds[c.world].finale === c.id));
-  if (core.length !== 14) err('crises.json', `expected 14 core crises (2 fixed + 8 world binary + 4 finales), found ${core.length}`);
+  const setCount = WORLDS.reduce((n, w) => n + new Set(data.crises.filter((c) => c.world === w && c.mode === 'binary').map((c) => c.set || 1)).size, 0);
+  const expected = 2 + setCount * 2 + WORLDS.length;
+  if (core.length !== expected) err('crises.json', `expected ${expected} core crises (2 fixed + ${setCount * 2} world-set binary + 4 finales), found ${core.length}`);
   for (const c of core) {
     const where = `crises.json[${c.id}] (core)`;
     if (!isStr(c.loomIntro)) err(where, 'empty loomIntro');

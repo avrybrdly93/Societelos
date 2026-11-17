@@ -53,13 +53,13 @@ test('trajectory sweep: deterministic, every game lands in exactly one final-GDW
   assert.ok(a.finals.every((g) => g >= 0 && g <= 100));
 });
 
-test('every crisis (the 14 core and the Blitz extras) loads into calibrate.js with valid forecasts', () => {
+test('every crisis (2 fixed, every world set cycles 3-4, and the finales) loads into calibrate.js with valid forecasts', () => {
   const { calibrateCrises } = require('../calibrate');
   const rows = calibrateCrises(simConfig, crises);
   const ids = new Set(rows.map((r) => r.id));
   assert.equal(ids.size, crises.crises.length);
   const core = crises.crises.filter((c) => c.world === 'fixed' || (c.mode === 'binary' && c.cycle <= 4) || Object.values(crises.worlds).some((w) => w.finale === c.id));
-  assert.equal(core.length, 14);
+  assert.equal(core.length, 22);
   for (const c of core) assert.ok(rows.filter((r) => r.id === c.id).length === 2, `${c.id}: both options forecast`);
   const bad = rows.filter((r) => !r.ok);
   assert.deepEqual(bad.map((r) => `${r.id} ${r.option}: ${r.problems.join('; ')}`), []);

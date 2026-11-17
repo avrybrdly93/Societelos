@@ -366,10 +366,10 @@ function initSockets(io, gameEngine) {
       reply({ ok: true });
     });
 
-    // host:config { debateSeconds?: 60 | 90, showForecastBeforeVote?: boolean }
-    // -> teacher settings, lobby only. The ack carries the full config;
+    // host:config { debateSeconds?: 60 | 90, showForecastBeforeVote?: boolean,
+    //   crisisSet?: 'random' | 1 | 2 ... } -> teacher settings, lobby only. The ack carries the full config;
     // everyone in the room gets host:config.
-    onValid(socket, 'host:config', { debateSeconds: 'number?', showForecastBeforeVote: 'boolean?' }, (payload, reply) => {
+    onValid(socket, 'host:config', { debateSeconds: 'number?', showForecastBeforeVote: 'boolean?', crisisSet: (v) => v === undefined || v === 'random' || typeof v === 'number' }, (payload, reply) => {
       const result = game.configure(payload);
       if (result.ok) io.to(roomChannel(game.roomCode)).emit('host:config', result.config);
       return reply(result);

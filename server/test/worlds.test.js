@@ -29,7 +29,9 @@ function cycle2State(world) {
   });
   return { state, volatility };
 }
-const worldCrises = (world) => crises.crises.filter((c) => c.world === world && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
+// Tuning targets are for each world's original crisis set (AA1, AB1, ...).
+const inSet1 = (c) => (c.set || 1) === 1 && c.mode === 'binary';
+const worldCrises = (world) => crises.crises.filter((c) => c.world === world && inSet1(c) && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
 const medianDelta = (start, effects, volatility) => last(simulate(start, effects, { runs: RUNS, seed: SEED + 2, volatility }).forecast.median) - computeGDW(start);
 
 /** { afterCycle2, ends: { AA: gdw, AB, BA, BB } } for cycles 3-4 choices. */
@@ -43,8 +45,8 @@ function worldPaths(world) {
     state = simulate(state, effects, { runs: RUNS, seed: SEED + i, volatility }).finalState;
     if (typeof o.volatility === 'number') volatility = o.volatility;
   });
-  const c3 = crises.crises.find((c) => c.world === world && c.cycle === 3);
-  const c4 = crises.crises.find((c) => c.world === world && c.cycle === 4);
+  const c3 = crises.crises.find((c) => c.world === world && inSet1(c) && c.cycle === 3);
+  const c4 = crises.crises.find((c) => c.world === world && inSet1(c) && c.cycle === 4);
   const ends = {};
   for (const a of ['A', 'B']) {
     const r3 = simulate(state, c3.options[a].effects, { runs: RUNS, seed: SEED + 2, volatility });
@@ -64,7 +66,7 @@ test('World BB: the comfortable 1B -> 2B opening is punished hardest in cycles 3
   // ...and its worst cycles 3-4 path falls further than any other world's.
   for (const w of ['AA', 'AB', 'BA']) assert.ok(worstDrop('BB') < worstDrop(w) - 5, `BB worst drop ${worstDrop('BB').toFixed(1)} vs ${w} ${worstDrop(w).toFixed(1)}`);
   // The comfort options (lotus/assimilator: the stipend, then the sweep) are that worst path: a drop of 10+.
-  const bb = crises.crises.filter((c) => c.world === 'BB' && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
+  const bb = crises.crises.filter((c) => c.world === 'BB' && inSet1(c) && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
   const comfort = bb.map((c) => ['A', 'B'].find((k) => (c.options[k].roles || []).includes('lotus'))).join('');
   assert.ok(worlds.BB.ends[comfort] - worlds.BB.afterCycle2 <= -10, `BB comfort path ${comfort} drops ${(worlds.BB.ends[comfort] - worlds.BB.afterCycle2).toFixed(1)}`);
 });

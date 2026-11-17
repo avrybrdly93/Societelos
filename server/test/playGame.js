@@ -12,7 +12,7 @@ const { GameState, NODE_IDS } = engine;
  * 3-5 vote `lateVote(cycle, i)`. Phones write `writeIn(i)` in FINALE_WRITE,
  * rank their ballot in order, and `onEvent` sees every engine event.
  */
-function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000 }) {
+function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000, crisisSet = 'random' }) {
   const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS, key: process.env.GEMINI_API_KEY };
   process.env.FAST_TIMERS = 'true';
   process.env.FAST_TIMER_SECONDS = '0.01';
@@ -24,6 +24,7 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
     }
   };
   game.gameId = gameId;
+  game.crisisSet = crisisSet;
   const out = { game, phases: [], payloads: [], resolutions: [], reveals: [], intel: [], ballots: [], feedback: [], roles: {}, end: null, gameEnd: null, restoreEnv };
   const log = console.log;
   console.log = () => {};

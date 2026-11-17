@@ -13,12 +13,13 @@ const { GameState, NODE_IDS } = engine;
  * Play cycles 1-4 with real phase timers shrunk to ~10 ms. `voteFor(cycle, i)`
  * returns [choice, override?] for node i. Resolves with everything emitted.
  */
-function playFourCycles({ gameId = 'integration01', voteFor, phaseSeconds = {} } = {}) {
+function playFourCycles({ gameId = 'integration01', voteFor, phaseSeconds = {}, crisisSet = 'random' } = {}) {
   const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS, key: process.env.GEMINI_API_KEY };
   process.env.FAST_TIMERS = 'true';
   process.env.FAST_TIMER_SECONDS = '0.01';
   delete process.env.GEMINI_API_KEY;
   const game = new GameState({ roomCode: 'INTG', phaseSeconds });
+  game.crisisSet = crisisSet;
   for (const [k, v] of [['FAST_TIMERS', saved.fast], ['FAST_TIMER_SECONDS', saved.secs], ['GEMINI_API_KEY', saved.key]]) {
     if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
@@ -110,13 +111,13 @@ function checkWorldRun(out, world, crisisIds) {
 }
 
 test('integration: headless 4-cycle playthrough on the AA (Commonwealth) branch', async () => {
-  const out = await playFourCycles({ gameId: 'playthroughAA', voteFor: () => ['A'] });
+  const out = await playFourCycles({ gameId: 'playthroughAA', voteFor: () => ['A'], crisisSet: 1 });
   checkWorldRun(out, 'AA', ['aa-purpose-drift', 'aa-lost-knowledge']);
   assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) made the rest of the game volatile');
 });
 
 test('integration: headless 4-cycle playthrough on the AB (Benevolent Machine) branch', async () => {
-  const out = await playFourCycles({ gameId: 'playthroughAB', voteFor: (cycle) => [cycle === 2 ? 'B' : 'A'] });
+  const out = await playFourCycles({ gameId: 'playthroughAB', voteFor: (cycle) => [cycle === 2 ? 'B' : 'A'], crisisSet: 1 });
   checkWorldRun(out, 'AB', ['ab-the-pods', 'ab-mood-dial']);
   assert.equal(out.game.volatility, 1, 'Delegated Control keeps normal volatility');
   // Crisis 2B after 1A: the Loom governs, with the assimilator tag.
@@ -175,7 +176,7 @@ test('integration: role +1 goes to every node whose secret role is tagged on the
   const totals = {};
   out.resolutions.forEach((r) => {
     const { cycle, winner } = r.result;
-    const crisis = engine.selectCrisis(data.crises, cycle, cycle <= 2 ? null : out.game.worldKey, data.roles);
+    const crisis = engine.selectCrisis(data.crises, cycle, cycle <= 2 ? null : out.game.worldKey, data.roles, undefined, out.game.worldSet);
     const option = crisis.options[winner];
     // Crisis 2B's tags depend on the Cycle 1 vote.
     const tags = option.rolesByWorld ? option.rolesByWorld[out.game.voteHistory[1]] : option.roles;

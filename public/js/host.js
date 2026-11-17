@@ -223,17 +223,20 @@
   const configStatus = document.getElementById('config-status');
   const debateRadios = Array.from(document.querySelectorAll('input[name="debate-length"]'));
   const forecastToggle = document.getElementById('forecast-toggle');
+  const crisisSetRadios = Array.from(document.querySelectorAll('input[name="crisis-set"]'));
   const seedInput = document.getElementById('seed-input');
   function showConfig(config) {
     if (!config) return;
     debateRadios.forEach((r) => { r.checked = Number(r.value) === config.debateSeconds; });
     if (typeof config.showForecastBeforeVote === 'boolean') forecastToggle.checked = config.showForecastBeforeVote;
+    if (config.crisisSet !== undefined) crisisSetRadios.forEach((r) => { r.checked = r.value === String(config.crisisSet); });
   }
   function sendConfig(change) {
     socket.emit('host:config', change, (res) => {
       if (res && res.ok) {
         showConfig(res.config);
-        configStatus.textContent = `Saved: ${res.config.debateSeconds}s debate, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote.`;
+        const setText = res.config.crisisSet === 'random' ? 'random crisis set' : `crisis set ${res.config.crisisSet}`;
+        configStatus.textContent = `Saved: ${res.config.debateSeconds}s debate, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote, ${setText}.`;
       } else {
         configStatus.textContent = `Not saved: ${(res && res.reason) || 'no response'}`;
       }
@@ -241,6 +244,9 @@
   }
   debateRadios.forEach((r) => r.addEventListener('change', () => { if (r.checked) sendConfig({ debateSeconds: Number(r.value) }); }));
   forecastToggle.addEventListener('change', () => sendConfig({ showForecastBeforeVote: forecastToggle.checked }));
+  crisisSetRadios.forEach((r) => r.addEventListener('change', () => {
+    if (r.checked) sendConfig({ crisisSet: r.value === 'random' ? 'random' : Number(r.value) });
+  }));
   socket.on('host:room', (info) => showConfig(info && info.config));
   socket.on('host:config', showConfig);
   const SEED_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -1050,7 +1056,7 @@
   // World reveal (10 s after Cycle 2): fullscreen takeover naming the world.
   function renderWorldReveal(world) {
     if (!world || !world.worldKey) return;
-    document.getElementById('world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('world-key').textContent = `WORLD ${world.variant || world.worldKey}`;
     document.getElementById('world-name').textContent = world.name || world.worldKey;
     document.getElementById('world-tagline').textContent = world.tagline || '';
     document.getElementById('world-problem').textContent = (world.problemLeft || 'unknown').toUpperCase();

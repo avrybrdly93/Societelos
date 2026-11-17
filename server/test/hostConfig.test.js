@@ -77,7 +77,7 @@ test('host:config toggles showForecastBeforeVote, and DEBATE carries forecasts o
   assert.equal(game.getConfig().showForecastBeforeVote, false);
   assert.deepEqual(game.configure({ showForecastBeforeVote: 'yes' }), { ok: false, reason: 'BAD_SHOW_FORECAST' });
   const res = game.configure({ showForecastBeforeVote: true, debateSeconds: 60 });
-  assert.deepEqual(res, { ok: true, config: { debateSeconds: 60, showForecastBeforeVote: true } });
+  assert.deepEqual(res, { ok: true, config: { debateSeconds: 60, showForecastBeforeVote: true, crisisSet: 'random' } });
 
   const log = console.log;
   console.log = () => {};
