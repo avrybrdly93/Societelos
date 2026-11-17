@@ -377,6 +377,19 @@ const MODERATION_SCHEMA = {
   }
 };
 
+/** The bland stand-in for a rejected (or never-moderated) finale write-in. */
+const PLACEHOLDER_TEXT = 'Maintain current regional administrative protocols without structural changes.';
+
+/**
+ * Placeholder policy for `node` after a rejected second submission: the
+ * standard protocol text, no role tags and a zero effect vector, so it can
+ * be ranked and enacted without favouring any agenda.
+ * @returns {{ node, status: 'reject', cleaned, feedback: '', roles: [], effects, placeholder: true }}
+ */
+function getPlaceholderPolicy(node) {
+  return { node: safeNode(node), status: 'reject', cleaned: PLACEHOLDER_TEXT, feedback: '', roles: [], effects: zeroEffects(), placeholder: true };
+}
+
 /**
  * Strict post-call sanitizer for one moderation result from Gemini:
  * - each of the 6 traits clamped to [-1.0, +1.0], missing or non-numeric -> 0;
@@ -544,4 +557,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

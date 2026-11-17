@@ -352,3 +352,14 @@ test('loom.moderate runs every Gemini result through sanitizeModerationResult (e
     assert.deepEqual(r.effects, { purpose: 1, connection: 0, health: 0, trust: -1, fairness: 0, autonomy: 0 });
   }
 });
+
+test('loom.getPlaceholderPolicy(node): the standard protocol text, no roles, zero effects', () => {
+  const p = loom.getPlaceholderPolicy('NODE-03');
+  assert.equal(p.node, 'NODE-03');
+  assert.equal(p.cleaned, 'Maintain current regional administrative protocols without structural changes.');
+  assert.deepEqual(p.roles, []);
+  assert.deepEqual(p.effects, { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
+  assert.equal(p.status, 'reject');
+  assert.equal(loom.getPlaceholderPolicy('Sam').node, null, 'never echoes a name');
+  assert.notEqual(loom.getPlaceholderPolicy('NODE-01').effects, loom.getPlaceholderPolicy('NODE-02').effects, 'fresh objects');
+});

@@ -858,7 +858,7 @@
     { id: 'POLICY-1', text: 'Every district elects a repair council that controls its own grid.' },
     { id: 'POLICY-3', text: 'Publish every staged challenge and let citizens vote on future ones.' },
     { id: 'POLICY-4', text: 'Keep the challenges but let anyone opt out of them.' },
-    { id: 'POLICY-5', text: 'Continue current policy unchanged while the council reviews its options.' }
+    { id: 'POLICY-5', text: 'Maintain current regional administrative protocols without structural changes.' }
   ] });
 
   window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };

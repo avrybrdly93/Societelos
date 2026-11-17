@@ -73,7 +73,8 @@ const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
-const PLACEHOLDER_POLICY = 'Continue current policy unchanged while the council reviews its options.';
+// The standard protocol policy that replaces a rejected write-in (loom.getPlaceholderPolicy).
+const PLACEHOLDER_POLICY = loom.PLACEHOLDER_TEXT;
 const ZERO_EFFECTS = Object.freeze({ purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
 const FINALE_RESUBMIT_MS = 25000; // one resubmit window for "revise" write-ins
 const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review them again next year.';
@@ -879,7 +880,8 @@ class GameState extends EventEmitter {
       // "reject", a second "revise", or a resubmit that never came / timed
       // out: a safe, bland placeholder so nothing unmoderated is shown.
       if (m.status !== 'ok') {
-        return { id: `POLICY-${i + 1}`, node, text: PLACEHOLDER_POLICY, roles: [], effects: { ...ZERO_EFFECTS }, placeholder: true };
+        const ph = loom.getPlaceholderPolicy(node);
+        return { id: `POLICY-${i + 1}`, node, text: ph.cleaned, roles: ph.roles, effects: ph.effects, placeholder: true };
       }
       return {
         id: `POLICY-${i + 1}`,
