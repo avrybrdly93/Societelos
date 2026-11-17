@@ -19,7 +19,11 @@
   const saved = loadSession();
   // auth is a function so every (re)connect sends the latest saved token: a
   // phone that joined after page load keeps its seat across a network drop.
+  // Subpath deployment (https://avesstudios.com/the-loom): the reverse proxy
+  // strips /the-loom, so the client must ask for /the-loom/socket.io.
+  const basePath = window.location.pathname.startsWith('/the-loom') ? '/the-loom' : '';
   const socket = window.io({
+    path: `${basePath}/socket.io`,
     auth: (cb) => {
       const current = loadSession();
       cb({ clientType: 'phone', token: (current && current.token) || undefined });

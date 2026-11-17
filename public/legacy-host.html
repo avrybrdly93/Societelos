@@ -415,7 +415,7 @@
           <div class="text-[10px] font-mono tracking-widest uppercase text-matcha-sage">Mobile Terminal Connection</div>
           <div class="text-sm font-mono font-semibold text-matcha-dark flex items-center gap-2">
             <span>Direct:</span>
-            <a id="join-url-link" href="/player.html" target="_blank" class="underline decoration-matcha-sage hover:text-matcha-accent transition-colors">
+            <a id="join-url-link" href="player.html" target="_blank" class="underline decoration-matcha-sage hover:text-matcha-accent transition-colors">
               http://<span id="join-ip">localhost</span>:3000/player.html
             </a>
           </div>
@@ -427,11 +427,11 @@
       <div class="flex flex-col sm:flex-row items-center gap-2.5 text-xs font-mono w-full lg:w-auto justify-end">
         <div class="flex items-center gap-1.5 bg-matcha-card border border-matcha-border rounded-xl px-3 py-1.5 shadow-sm">
           <span class="text-matcha-sage text-[10px] uppercase tracking-wider mr-1">Open Tab:</span>
-          <a href="/player.html?slot=NODE-01" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N1</a>
-          <a href="/player.html?slot=NODE-02" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N2</a>
-          <a href="/player.html?slot=NODE-03" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N3</a>
-          <a href="/player.html?slot=NODE-04" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N4</a>
-          <a href="/player.html?slot=NODE-05" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N5</a>
+          <a href="player.html?slot=NODE-01" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N1</a>
+          <a href="player.html?slot=NODE-02" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N2</a>
+          <a href="player.html?slot=NODE-03" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N3</a>
+          <a href="player.html?slot=NODE-04" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N4</a>
+          <a href="player.html?slot=NODE-05" target="_blank" class="px-2 py-1 rounded bg-matcha-bg hover:bg-matcha-tint border border-matcha-border font-semibold text-matcha-dark">N5</a>
         </div>
 
         <div class="flex items-center gap-2">
@@ -581,7 +581,7 @@
   </script>
 
   <!-- SOCKET.IO CLIENT & GAME LOGIC -->
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="socket.io/socket.io.js"></script>
   <script>
     function updateClock() {
       const now = new Date();
@@ -590,7 +590,8 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    const socket = io();
+    const basePath = window.location.pathname.startsWith('/the-loom') ? '/the-loom' : '';
+    const socket = io({ path: `${basePath}/socket.io` });
 
     // DOM Elements
     const socketIndicator = document.getElementById('socket-indicator');
@@ -815,7 +816,7 @@
             </div>
             <div class="mt-5 pt-3 border-t border-matcha-borderMuted flex items-center justify-between text-[10px] font-mono text-matcha-sage">
               <span class="animate-pulse">Awaiting node...</span>
-              <a href="/player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold">Join ↗</a>
+              <a href="player.html?slot=${slot.id}" target="_blank" class="text-matcha-accent hover:underline font-semibold">Join ↗</a>
             </div>
           `;
         }

@@ -317,7 +317,7 @@
     <span>Post-Labor Telos Protocol</span>
   </footer>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="socket.io/socket.io.js"></script>
   <script>
     const SESSION_KEY = 'societelos_node_session_id';
     let currentSessionId = sessionStorage.getItem(SESSION_KEY);
@@ -329,7 +329,8 @@
     const urlParams = new URLSearchParams(window.location.search);
     const requestedSlotFromUrl = urlParams.get('slot');
 
-    const socket = io();
+    const basePath = window.location.pathname.startsWith('/the-loom') ? '/the-loom' : '';
+    const socket = io({ path: `${basePath}/socket.io` });
 
     // DOM
     const connDot = document.getElementById('conn-dot');
