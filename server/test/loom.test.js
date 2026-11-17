@@ -283,3 +283,22 @@ test('loom.moderate sends all 5 write-ins and the Cycle 5 crisis in one batch ca
   assert.deepEqual(out.map((r) => r.cleaned), ['Cleaned 1', 'Cleaned 2', 'Cleaned 3', 'Cleaned 4', 'Cleaned 5']);
   assert.ok(out.every((r) => !r.fallback));
 });
+
+test('loom.moderate embeds few-shot calibration: authored policies with exact effect vectors and role tags', async () => {
+  const { calls, fetchImpl } = recordingFetch((body) => okFor(JSON.parse(body.contents[0].parts[0].text.split('\n\n').pop())));
+  await loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl });
+  const prompt = calls[0].prompt;
+  assert.match(prompt, /Calibration examples/);
+  const examples = loom.calibrationExamples(FINALE_CRISIS);
+  assert.ok(prompt.includes(JSON.stringify(examples)), 'examples sent verbatim');
+  // The crisis's own A/B first, exactly as authored...
+  assert.deepEqual(examples[0], { policy: FINALE_CRISIS.options.A.text, roles: ['ghost', 'artisan'], effects: FINALE_CRISIS.options.A.effects });
+  assert.deepEqual(examples[1].effects, FINALE_CRISIS.options.B.effects);
+  // ...then Fixed Crisis 1's options from data/crises.json as anchors.
+  const data = require('../../data/crises.json');
+  const fixed1 = data.crises.find((c) => c.world === 'fixed' && c.cycle === 1);
+  assert.deepEqual(examples[2].effects, loom.cleanEffects(fixed1.options.A.effects));
+  assert.equal(examples.length, 4);
+  // The submissions come last, after the calibration block.
+  assert.ok(prompt.indexOf('Calibration examples') < prompt.indexOf(FIVE[0].text));
+});

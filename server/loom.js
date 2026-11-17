@@ -377,6 +377,33 @@ const MODERATION_SCHEMA = {
 };
 
 /**
+ * Few-shot calibration for moderate(): authored policies with their exact
+ * 6-trait effect vectors and role tags from data/crises.json, so Gemini
+ * scores write-ins on the same scale as the designed options. Uses the
+ * finale crisis's own A/B (its offline fallback) plus the two Fixed Crisis 1
+ * options as anchors. Returns [{ policy, roles, effects }].
+ */
+let anchorExamples = null;
+function calibrationExamples(crisis = {}) {
+  const fromOptions = (c) => ['A', 'B']
+    .map((k) => c && c.options && c.options[k])
+    .filter((o) => o && o.effects && (o.text || o.name))
+    .map((o) => ({ policy: truncate(o.text || o.name, 160), roles: cleanRoles(o.roles), effects: cleanEffects(o.effects) }));
+  if (!anchorExamples) {
+    try {
+      const data = require('../data/crises.json');
+      const fixed1 = (data.crises || []).find((c) => c.world === 'fixed' && c.cycle === 1);
+      anchorExamples = fromOptions(fixed1);
+    } catch (e) {
+      anchorExamples = [];
+    }
+  }
+  const own = fromOptions(crisis);
+  const seen = new Set(own.map((e) => e.policy));
+  return [...own, ...anchorExamples.filter((e) => !seen.has(e.policy))].slice(0, 4);
+}
+
+/**
  * Offline fallback: every policy passes as written (trimmed to 140 chars)
  * with no role tags and a zero effect vector. Flagged `fallback: true` so the
  * engine can switch to the authored A/B finale instead.
@@ -409,8 +436,13 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
+    const examples = calibrationExamples(crisis);
     const prompt = [
       `Crisis: ${truncate(crisis.title, 120)}. ${truncate(crisis.incident, 400)}`,
+      ...(examples.length ? [
+        'Calibration examples: authored policies with their exact trait effects and role tags. Score every submission on this same scale.',
+        JSON.stringify(examples)
+      ] : []),
       'Moderate and translate each council submission. Return one object per submission, same node ids, as a JSON array.',
       JSON.stringify(list)
     ].join('\n\n');
@@ -494,4 +526,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
