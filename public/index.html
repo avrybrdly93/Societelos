@@ -56,6 +56,23 @@
           </div>
           <p class="join-url">Or open <span id="join-url" class="mono accent">http://…/mobile</span></p>
           <p class="join-room">Room code <span id="lobby-room-code" class="mono accent">----</span></p>
+          <fieldset id="lobby-config" class="lobby-config">
+            <legend class="label">Session settings</legend>
+            <div class="config-row" role="radiogroup" aria-label="Debate length">
+              <span class="config-name mono">Debate</span>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-60" value="60"><span>60s Fast [13.5m]</span></label>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-90" value="90" checked><span>90s Standard [16m]</span></label>
+            </div>
+            <label class="config-row config-check" for="forecast-toggle">
+              <input type="checkbox" id="forecast-toggle" class="dev-checkbox">
+              <span class="mono">Show the Loom's forecast before the vote</span>
+            </label>
+            <label class="config-row" for="seed-input">
+              <span class="config-name mono">Replay seed</span>
+              <input type="text" id="seed-input" class="config-seed mono" maxlength="64" placeholder="optional" autocomplete="off" spellcheck="false" pattern="[A-Za-z0-9_-]{1,64}">
+            </label>
+            <p id="config-status" class="config-status mono muted" aria-live="polite"></p>
+          </fieldset>
         </div>
         <div class="lobby-nodes">
           <p class="label">Council nodes <span id="lobby-count" class="mono">0/5</span></p>

@@ -212,14 +212,47 @@
     }
   });
 
-  // START COUNCIL SESSION -> host:start
+  // Lobby session settings -> host:config { debateSeconds, showForecastBeforeVote }.
+  // The server echoes the room's config (host:room / host:config) so a
+  // refreshed projector shows what is actually set.
+  const configStatus = document.getElementById('config-status');
+  const debateRadios = Array.from(document.querySelectorAll('input[name="debate-length"]'));
+  const forecastToggle = document.getElementById('forecast-toggle');
+  const seedInput = document.getElementById('seed-input');
+  function showConfig(config) {
+    if (!config) return;
+    debateRadios.forEach((r) => { r.checked = Number(r.value) === config.debateSeconds; });
+    if (typeof config.showForecastBeforeVote === 'boolean') forecastToggle.checked = config.showForecastBeforeVote;
+  }
+  function sendConfig(change) {
+    socket.emit('host:config', change, (res) => {
+      if (res && res.ok) {
+        showConfig(res.config);
+        configStatus.textContent = `Saved: ${res.config.debateSeconds}s debate, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote.`;
+      } else {
+        configStatus.textContent = `Not saved: ${(res && res.reason) || 'no response'}`;
+      }
+    });
+  }
+  debateRadios.forEach((r) => r.addEventListener('change', () => { if (r.checked) sendConfig({ debateSeconds: Number(r.value) }); }));
+  forecastToggle.addEventListener('change', () => sendConfig({ showForecastBeforeVote: forecastToggle.checked }));
+  socket.on('host:room', (info) => showConfig(info && info.config));
+  socket.on('host:config', showConfig);
+  const SEED_RE = /^[A-Za-z0-9_-]{1,64}$/;
+  seedInput.addEventListener('input', () => {
+    const v = seedInput.value.trim();
+    configStatus.textContent = !v ? '' : SEED_RE.test(v) ? `Replaying seed ${v}: same votes, same game.` : 'Seeds use letters, digits, - and _ only.';
+  });
+
+  // START COUNCIL SESSION -> host:start { seed? }
   const startBtn = document.getElementById('btn-start');
   startBtn.addEventListener('click', () => {
     startBtn.disabled = true;
     if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
-    socket.emit('host:start', {}, (res) => {
+    const seed = seedInput.value.trim();
+    socket.emit('host:start', seed && SEED_RE.test(seed) ? { seed } : {}, (res) => {
       if (!res || !res.ok) {
         startBtn.disabled = false;
         document.getElementById('start-hint').textContent = `Cannot start: ${(res && res.reason) || 'no response'}`;
