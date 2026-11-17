@@ -149,6 +149,34 @@ function checkCrises(data, citizenIds) {
   return undefined;
 }
 
+// Completeness of the 14 core crises a standard game can reach: the 2 fixed
+// crises, each world's cycle 3 and 4 crises and its write-in finale. Each
+// needs an incident, a Loom intro, options A and B with effects and role
+// tags, a role-slanted intel drop for all 5 roles, citizen feed lines and
+// debate hooks. Blitz-only extras (cycles 5-6) are not held to this.
+function checkCoreCrises(data) {
+  const worlds = data.worlds || {};
+  const core = data.crises.filter((c) => c.world === 'fixed'
+    || (c.mode === 'binary' && (c.cycle === 3 || c.cycle === 4))
+    || (worlds[c.world] && worlds[c.world].finale === c.id));
+  if (core.length !== 14) err('crises.json', `expected 14 core crises (2 fixed + 8 world binary + 4 finales), found ${core.length}`);
+  for (const c of core) {
+    const where = `crises.json[${c.id}] (core)`;
+    if (!isStr(c.loomIntro)) err(where, 'empty loomIntro');
+    for (const k of ['A', 'B']) {
+      const o = (c.options || {})[k] || {};
+      if (!isStr(o.name) || !isStr(o.text)) err(where, `option ${k} needs name and text`);
+      if (!o.effects && !o.effectsByWorld) err(where, `option ${k} has no effects`);
+      if (!(o.roles || o.rolesByWorld)) err(where, `option ${k} has no role tags`);
+    }
+    const missingIntel = ROLE_KEYS.filter((r) => !isStr((c.intel || {})[r]));
+    if (missingIntel.length) err(where, `intel missing for ${missingIntel.join(', ')}`);
+    if (!Array.isArray(c.feed) || c.feed.length < 2) err(where, 'needs at least 2 citizen feed lines');
+    if (c.world !== 'fixed' && (!Array.isArray(c.debateHooks) || c.debateHooks.length < 2)) err(where, 'needs at least 2 debate hooks');
+  }
+  return core.length;
+}
+
 // No emoji and school-appropriate language in any string of any data file.
 const EMOJI = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u{1F1E6}-\u{1F1FF}]/u;
 const BANNED = /\b(damn|hell|crap|sh[i1]t|f+u+c+k|bitch|bastard|ass(hole)?|piss|sex(y)?|kill yourself|stupid|idiot|retard(ed)?)\b/i;
@@ -170,6 +198,7 @@ const crises = load('crises.json');
 if (roles) checkRoles(roles);
 if (citizens) checkCitizens(citizens);
 if (crises) checkCrises(crises, new Set((citizens || []).map((c) => c.id)));
+const coreCount = crises && Array.isArray(crises.crises) ? checkCoreCrises(crises) : 0;
 
 // data/sim.json is checked with the simulation's own loader.
 const simConfig = load('sim.json');
@@ -192,4 +221,4 @@ if (errors.length) {
   errors.forEach((e) => console.error(`  - ${e}`));
   process.exit(1);
 }
-console.log('data/*.json valid');
+console.log(`data/*.json valid (${coreCount} core crises complete)`);
