@@ -1224,3 +1224,4 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .finale-timer.is-warn .finale-timer-secs { color: var(--amber); }
 .finale-timer.is-low .finale-timer-fill { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
 .finale-timer.is-low .finale-timer-secs { color: var(--danger); }
+.finale-revise .finale-timer { background: rgba(8, 11, 16, 0.96); }
