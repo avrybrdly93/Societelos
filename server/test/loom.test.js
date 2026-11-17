@@ -437,3 +437,18 @@ test('sanitizeModerationResult drops invalid role tags like "catalyst" or "hacke
   assert.deepEqual(tags(['ARTISAN', 'Lotus ', 7, null]), [], 'exact tags only');
   assert.deepEqual(tags('artisan'), [], 'not an array');
 });
+
+test('sanitizeModerationResult truncates 300-character strings to 140 (cleaned) and 200 (feedback)', () => {
+  const words = 'Every district elects a council that repairs its own grid '.repeat(6).slice(0, 300);
+  const solid = 'x'.repeat(300);
+  assert.equal(words.length, 300);
+  const r = loom.sanitizeModerationResult({ cleaned: words, feedback: words });
+  assert.ok(r.cleaned.length <= 140 && r.cleaned.length > 100, `cleaned ${r.cleaned.length}`);
+  assert.ok(r.feedback.length <= 200 && r.feedback.length > 150, `feedback ${r.feedback.length}`);
+  assert.ok(words.startsWith(r.cleaned.replace(/…$/, '')), 'a clean prefix, cut at a word');
+  const s = loom.sanitizeModerationResult({ cleaned: solid, feedback: solid });
+  assert.equal(s.cleaned.length, 140);
+  assert.equal(s.feedback.length, 200);
+  // Emoji are stripped before measuring.
+  assert.equal(loom.sanitizeModerationResult({ cleaned: `Free parks \u{1F333}\u{1F333} for all.` }).cleaned, 'Free parks for all.');
+});
