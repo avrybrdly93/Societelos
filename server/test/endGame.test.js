@@ -402,3 +402,16 @@ test('Shutdown Ending: the collapsed cycle\'s RESOLUTION goes straight to END an
   assert.equal(end.gdwHistory.at(-1), 0);
   assert.ok(end.gdwHistory.length < 37, 'the line stops at the shutdown month');
 });
+
+// TASK-649 ------------------------------------------------------------------
+
+test('the Catalyst does not score on the cycle where GDW hits 0%', async () => {
+  const out = await collapseInCycle3('shutdown-649');
+  const catalystNode = Object.keys(out.roles).find((n) => out.roles[n] === 'catalyst');
+  const ledger = out.game.scoreLedger.find((e) => e.cycle === 3);
+  const before = out.resolutions[1].gdw;
+  assert.ok(before >= 10, `a swing of ${before} points to 0 would otherwise count`);
+  assert.deepEqual(ledger.catalyst, {}, 'no Catalyst point for the collapse');
+  const row = out.gameEnd.roles.find((r) => r.node === catalystNode);
+  assert.equal(row.perCycle.find((c) => c.cycle === 3).catalyst, 0);
+});
