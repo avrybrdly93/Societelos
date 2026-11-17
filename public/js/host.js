@@ -623,6 +623,17 @@
     });
   }
 
+  // SKIP INTRO: for repeat sessions with a class that has seen the crawl.
+  // host:skipIntro -> the server moves INTRO on to ROLE_ASSIGN.
+  const btnSkipIntro = document.getElementById('btn-skip-intro');
+  function skipIntro() {
+    if (state.phase !== 'INTRO' || !btnSkipIntro || btnSkipIntro.disabled) return;
+    btnSkipIntro.disabled = true;
+    LoomVoice.stop();
+    socket.emit('host:skipIntro', {}, () => { btnSkipIntro.disabled = false; });
+  }
+  if (btnSkipIntro) btnSkipIntro.addEventListener('click', (e) => { e.stopPropagation(); skipIntro(); });
+
   const introView = document.getElementById('view-intro');
   if (introView) {
     introView.addEventListener('click', () => {

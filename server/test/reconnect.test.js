@@ -457,3 +457,28 @@ test('a spectator with no room gets spectate:error', { timeout: 5000 }, async ()
   const lone = connect({ clientType: 'spectator' });
   assert.deepEqual(await once(lone, 'spectate:error'), { reason: 'NO_ROOM' });
 });
+
+// TASK-658 (socket) ---------------------------------------------------------
+
+test('host:skipIntro moves INTRO straight on to ROLE_ASSIGN, and only during INTRO', { timeout: 15000 }, async () => {
+  const saved = process.env.FAST_TIMER_SECONDS;
+  for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
+  const host = connect({ clientType: 'host' });
+  const { roomCode } = await once(host, 'host:room');
+  const game = engine.getRoom(roomCode);
+  game.durations.INTRO = 30000; // a real-length intro, so only the skip can end it
+  assert.deepEqual(await host.emitWithAck('host:skipIntro', {}), { ok: false, reason: 'NOT_IN_INTRO' });
+  for (let i = 0; i < 5; i++) {
+    const phone = connect({ clientType: 'phone' });
+    await once(phone, 'connect');
+    await phone.emitWithAck('lobby:join', { name: `Skip ${i}`, room: roomCode });
+    await phone.emitWithAck('lobby:ready', { ready: true });
+  }
+  await host.emitWithAck('host:start', {});
+  assert.equal(game.phase, 'INTRO');
+  const next = once(host, 'phase');
+  const res = await host.emitWithAck('host:skipIntro', {});
+  assert.deepEqual(res, { ok: true, phase: 'ROLE_ASSIGN' });
+  assert.equal((await next).phase, 'ROLE_ASSIGN');
+  process.env.FAST_TIMER_SECONDS = saved;
+});

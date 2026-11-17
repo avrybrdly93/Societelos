@@ -8,7 +8,7 @@
 // the five seats) or 'spectator' (read-only). Every inbound event is checked
 // by onValid(): rate limit, payload schema, and a crash-proof handler.
 //
-//   host -> server    host:start { seed? }, host:config, host:playAgain,
+//   host -> server    host:start { seed? }, host:skipIntro, host:config, host:playAgain,
 //                     host:toggleBots, host:configureSession, host:triggerFinale
 //   phone -> server   lobby:join, lobby:ready, session:resume, spectate:join,
 //                     vote:cast, debate:ready, finale:submit, finale:rank
@@ -395,6 +395,13 @@ function initSockets(io, gameEngine) {
       const result = game.playAgain({ keepPlayers });
       broadcastLobby(game);
       return reply(result);
+    });
+
+    // host:skipIntro {} -> cut the 30 s intro crawl short (repeat classes).
+    onValid(socket, 'host:skipIntro', {}, (payload, reply) => {
+      if (game.phase !== 'INTRO') return reply({ ok: false, reason: 'NOT_IN_INTRO' });
+      game.advancePhase();
+      return reply({ ok: true, phase: game.phase });
     });
 
     // host:start { seed? } -> begin the phase flow once all 5 nodes have
