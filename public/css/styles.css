@@ -1687,8 +1687,8 @@ body.host .forecast-banner { white-space: normal; letter-spacing: 0.15em !import
   position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
     radial-gradient(ellipse 60% 55% at 50% 38%, rgba(230, 190, 115, 0.10), transparent 70%),
-    radial-gradient(ellipse 120% 40% at 50% 100%, rgba(30, 42, 38, 0.9), transparent 70%),
-    linear-gradient(180deg, #0b1311 0%, #0a100e 70%, #060908 100%);
+    radial-gradient(ellipse 120% 40% at 50% 100%, rgba(42, 34, 22, 0.9), transparent 70%),
+    linear-gradient(180deg, #15110b 0%, #100d08 70%, #090706 100%);
 }
 .chamber-arch {
   position: absolute; top: 4%; width: 420px; height: 88%;
@@ -1708,7 +1708,7 @@ body.host .forecast-banner { white-space: normal; letter-spacing: 0.15em !import
 .loom-awakens {
   position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 22px; margin: 0 0 14px;
   padding: 8px 28px; border: 1px solid rgba(235, 198, 125, 0.55); border-radius: 999px;
-  background: rgba(10, 16, 14, 0.85);
+  background: rgba(20, 14, 7, 0.85);
 }
 body.host .awakens-tag { font-family: 'Cinzel', serif !important; font-weight: 500 !important; font-size: 18px; letter-spacing: 0.18em !important; color: #fff3d6; }
 body.host .awakens-quote { font-family: 'Cormorant Garamond', serif !important; font-style: italic; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0.01em !important; font-size: 22px; color: #f3e6c8; }
@@ -1716,7 +1716,7 @@ body.host .awakens-quote { font-family: 'Cormorant Garamond', serif !important; 
 .voice-card {
   position: relative; z-index: 1; width: 1240px; padding: 26px 64px 22px;
   border: 1px solid rgba(235, 198, 125, 0.4); border-radius: 36px;
-  background: linear-gradient(180deg, rgba(20, 30, 27, 0.78), rgba(12, 19, 17, 0.84));
+  background: linear-gradient(180deg, rgba(34, 28, 19, 0.78), rgba(16, 13, 9, 0.86));
   backdrop-filter: blur(6px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(255, 225, 155, 0.05);
 }
@@ -1757,7 +1757,7 @@ body.host #view-intro .crawl p.accent:not(.voice-title) { color: #f5d998; }
 body.host .seat-card {
   position: relative; display: flex; flex-direction: column; gap: 8px; padding: 18px 22px;
   border: 1px solid rgba(235, 198, 125, 0.35); border-radius: 18px;
-  background: linear-gradient(180deg, rgba(20, 30, 27, 0.9), rgba(12, 19, 17, 0.92));
+  background: linear-gradient(180deg, rgba(28, 23, 15, 0.9), rgba(14, 12, 8, 0.92));
   font-size: 15px;
 }
 .seat-pos { font-size: 13px; color: var(--cine-gold, #e6c687); }

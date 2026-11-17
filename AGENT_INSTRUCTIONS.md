@@ -65,7 +65,7 @@ LOBBY ────> INTRO ────> ROLE_ASSIGN ────> CHAMBER
 
 ### Phase Identifiers (Exact Strings):
 - `LOBBY`: Waiting for 5 council nodes (`NODE-01` .. `NODE-05`) to connect and host trigger.
-- `INTRO`: 30s world crawl narration.
+- `INTRO`: 45s world crawl narration (spoken transmission is ~40s).
 - `ROLE_ASSIGN`: 20s encrypted role transmission to individual phones.
 - `CHAMBER`: 10s district map reveal (250,000 citizens across D1..D5).
 - `INCIDENT`: 15s crisis headline and context broadcast.

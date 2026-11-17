@@ -417,6 +417,7 @@
         "I cannot compute purpose.",
         "Gross Domestic Well-Being stands at twenty-five percent.",
         "My models forecast a ninety-four percent probability of revolt within five years.",
+        "As society enters a new phase, I've chosen five citizens at random to have them decide the ultimate fate of humanity.",
         "I have convened five human trustees in secret. You.",
         "Five crises. Five years. Do not let well-being reach zero."
       ];

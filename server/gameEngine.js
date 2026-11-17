@@ -142,7 +142,7 @@ const PHASE_STARTERS = {
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
-  INTRO: 30,
+  INTRO: 45, // long enough for the full spoken transmission (~40 s)
   ROLE_ASSIGN: 20,
   CHAMBER: 10,
   INCIDENT: 15,
