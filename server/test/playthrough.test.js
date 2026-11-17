@@ -208,3 +208,48 @@ test('headless 5-cycle playthrough on the BB (Gilded Cage) branch reaches END of
   assert.equal(out.game.volatility, 1, 'Delegated Control (2B) keeps normal volatility');
   assert.ok(out.resolutions[0].gdw > 25, 'the easy 1B opening lifts GDW');
 });
+
+// TASK-578 ------------------------------------------------------------------
+
+test('headless 5-cycle playthrough: a "revise" write-in in Cycle 5 is resubmitted, re-moderated and the finale completes', async () => {
+  const JOKE = 'Make P4 clean every toilet in the Grid lol';
+  const REVISED = 'Rotate essential maintenance shifts fairly across every district.';
+  const oneCalls = [];
+  await withLoom({
+    moderate: async (subs) => okModeration(subs).map((r, i) => (subs[i].text === JOKE
+      ? { node: r.node, status: 'revise', cleaned: '', feedback: 'Please keep it about policy, not a classmate.', roles: [], effects: {} }
+      : r)),
+    moderateOne: async (sub) => {
+      oneCalls.push(sub);
+      return { node: sub.node, status: 'ok', cleaned: sub.text, feedback: '', roles: ['artisan'], effects: { purpose: 0.2, connection: 0, health: 0, trust: 0.1, fairness: 0.2, autonomy: 0 } };
+    }
+  }, async () => {
+    const out = await playGame({
+      gameId: 'headless-revise',
+      world: 'AA',
+      writeIn: (i) => (i === 4 ? JOKE : `Council proposal number ${i + 1}`),
+      onEvent: (type, ev, game) => {
+        if (type === 'finale:feedback' && ev.status === 'revise') setImmediate(() => game.resubmitPolicy(ev.node, REVISED));
+      }
+    });
+    // FINALE_MOD is re-broadcast once for the resubmit window, then the write-and-rank flow continues.
+    const five = out.payloads.filter((p) => p.cycle === 5).map((p) => p.phase);
+    assert.deepEqual(five, ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'FINALE_MOD', 'FINALE_DEBATE', 'FINALE_RANK', 'FINALE_ENACT', 'END']);
+    const resubmitWindow = out.payloads.filter((p) => p.phase === 'FINALE_MOD')[1];
+    assert.equal(resubmitWindow.resubmit, true);
+    assert.equal(resubmitWindow.revising, 1);
+
+    // Only the joke's author was asked to revise, privately; nothing else leaked.
+    const revise = out.feedback.filter((f) => f.status === 'revise');
+    assert.deepEqual(revise.map((f) => f.node), ['NODE-05']);
+    assert.deepEqual(oneCalls, [{ node: 'NODE-05', text: REVISED }], 'moderateOne sees one resubmission: node id and text only');
+
+    // The revised text, not the joke, is what the council debates.
+    const debate = out.payloads.find((p) => p.phase === 'FINALE_DEBATE');
+    const texts = (debate.policies || debate.finale.policies).map((p) => p.text);
+    assert.ok(texts.includes(REVISED));
+    assert.ok(!texts.some((t) => /toilet|P4/.test(t)));
+    assert.equal(out.resolutions[4].result.finale, true);
+    assert.equal(out.game.gdwHistory.length, 1 + 5 * 12);
+  });
+});
