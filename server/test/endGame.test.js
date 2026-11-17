@@ -415,3 +415,26 @@ test('the Catalyst does not score on the cycle where GDW hits 0%', async () => {
   const row = out.gameEnd.roles.find((r) => r.node === catalystNode);
   assert.equal(row.perCycle.find((c) => c.cycle === 3).catalyst, 0);
 });
+
+// TASK-650 ------------------------------------------------------------------
+
+test('game:end Borda points and Author bonus match an independent recount of the ballots', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    for (const world of ['AA', 'BB']) {
+      const out = await playGame({ gameId: `borda-650-${world}`, world });
+      // Phones ranked their ballots in the order dealt: recount 4/3/2/1 by hand.
+      const points = {};
+      for (const b of out.ballots) b.policies.forEach((p, i) => { points[p.id] = (points[p.id] || 0) + [4, 3, 2, 1][i]; });
+      const { authors, roles } = out.gameEnd;
+      for (const a of authors) assert.equal(a.points, points[a.id] || 0, `${world} ${a.id} Borda points`);
+      const first = authors.find((a) => a.place === 1);
+      assert.equal(first.weight, 0.5);
+      assert.ok(authors.every((a) => a.place === 1 || a.points <= first.points), 'first place has the most points');
+      // Author bonus: +1 in Cycle 5 to the first-place author only.
+      for (const r of roles) {
+        const c5 = r.perCycle.find((c) => c.cycle === 5);
+        assert.equal(c5.author, r.node === first.node ? 1 : 0, `${world} ${r.node} author bonus`);
+      }
+    }
+  });
+});
