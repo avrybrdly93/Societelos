@@ -51,32 +51,63 @@ The Loom operates on a delicate balance between cooperative survival and competi
 ---
 
 ## 💻 Tech Stack & Aesthetics
-* **Backend:** Node.js, Express, Socket.IO
-* **Frontend UI:** HTML5 Canvas (Host Projector) + Vanilla JS/Tailwind CSS (Mobile Controllers)
-* **Aesthetic Palette:** Matcha Latte (`#f7f5f0` background, `#1a2e22` primary text/accents)
+* **Backend:** Node.js 18+ (tested on 22), Express, Socket.IO
+* **Frontend UI:** Vanilla JS, vanilla CSS with custom properties, HTML5 Canvas and SVG (host projector) — no CDNs, no build step, so it runs on an offline classroom router
+* **Aesthetic:** dark-slate administrative interface (`#080b10` background, Loom Cyan `#3fd8e6`, Alert Crimson `#e5484d`), system fonts only
 
 ---
 
-## 🚀 Local Setup & Installation
+## 🚀 Setup (teacher laptop)
 
-1. **Clone the repository:**
+1. **Install Node.js 18 or newer** (the LTS from nodejs.org), then get the code:
    ```bash
-   git clone git@github.com:avrybrdly93/The Loom.git
-   cd The Loom
-   ```
-2. **Install dependencies:**
-   ```bash
+   git clone https://github.com/avrybrdly93/The-Loom.git
+   cd The-Loom
    npm install
    ```
-3. **Start the local server:**
-   ```bash
-   npm run dev
+2. **Configure (optional):** `cp .env.example .env` and set what you need (see *Environment variables* below). With no `.env` at all the game runs fully offline on authored Loom lines.
+3. **Check the Loom connection (optional, uses 1 Gemini request):** `npm run loom:test`
+4. **Start the server:** `npm start` (or `npm run dev` to restart on file changes). The console prints the address phones should open, e.g.:
    ```
-   * `npm start` runs the 4-stream server (`server/server.js`). The pre-hackathon prototype is still available with `npm run start:legacy` (its host page is `public/legacy-host.html`).
-   * Checks: `npm run check` (syntax), `npm run check:dom` (DOM ids), `npm run check:offline` (no CDN dependencies), `npm run smoke` (Lobby -> Cycle 1 Resolution). Set `FAST_TIMERS=true` for 3-second phases.
-4. **Connect:**
-   * **Host Projector:** Navigate to `http://localhost:3000`
-   * **Mobile Controllers:** Connect devices to the same local network and navigate to `http://<YOUR_LOCAL_IP>:3000/mobile`
+   [server] Societelos listening on http://localhost:3000
+   [server] Phones join at http://192.168.1.20:3000/mobile
+   ```
+5. **Connect:**
+   * **Projector:** open `http://localhost:3000` on the laptop, full screen (F11), 1920×1080.
+   * **Phones (5):** join the same Wi-Fi and open the printed `/mobile` address, or scan the QR code on the lobby screen. Each phone enters a name and is seated as `NODE-01`…`NODE-05`; only node ids are shown on the projector.
+6. **Play:** when all five are ready, press Start on the projector. For the next class, the server can reset the room without restarting Node (`host:playAgain`; the projector button is part of the End Screen work).
+
+### 📶 Classroom network tips
+* **Everyone must be on the same network as the laptop.** School Wi-Fi often blocks device-to-device traffic ("client isolation"), so phones cannot reach the laptop even though both are online. If phones time out on the `/mobile` address, that is the usual cause.
+* **Most reliable: a pocket travel router** (any small 2.4/5 GHz router, no internet needed). Plug it in, connect the laptop and the five phones to it, and start the server. The game needs no internet; only the live Gemini narration and the write-in moderation do, and both fall back offline automatically.
+* **Phone hotspot:** turn on a hotspot on a spare phone, connect the laptop and the players' phones to it. Keep the hotspot phone plugged in and its screen on; some phones drop clients when the screen locks.
+* **Laptop hotspot** (Windows *Mobile hotspot* / macOS *Internet Sharing*) also works; allow Node through the firewall when the OS asks (Private networks on Windows).
+* **The printed IP changed?** Restart `npm start` after switching networks so the QR code and banner show the new address. `PORT` in `.env` changes the port if 3000 is taken.
+* **Phone fell asleep?** Just reopen the page: it rejoins the same seat with its saved token (or by typing the same name), and gets its role, intel and ballot back. A refreshed projector also picks up where the class is.
+
+### 🔧 Environment variables (`.env`)
+
+| Variable | Default | What it does |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | Port for the projector and phone pages. |
+| `GEMINI_API_KEY` | *(blank)* | Google AI Studio key for live Loom narration and write-in moderation. Blank = fully offline. Server-side only; never sent to phones. |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Flash-class model name. |
+| `LOOM_OFFLINE` | `false` | `true` forces offline fallbacks even with a key (rehearsals without spending quota). |
+| `DEBATE_SECONDS` | `90` | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). Also switchable per game from the lobby (`host:config`). |
+| `SHOW_FORECAST_BEFORE_VOTE` | `false` | Show the Loom's A/B forecast fans during the debate. Also switchable from the lobby. |
+| `SESSION_TIMER_ENABLED` / `SESSION_DURATION_SEC` | off | Blitz session mode: play crises until the session timer runs out, then the write-in finale. |
+| `LOOM_LOG` | `on` | Log each Gemini call's latency and token usage (`off` to silence). |
+| `LOOM_PRIVACY` | `true` | Never log student write-ins, even with prompt debugging on. |
+| `LOOM_DEBUG_PROMPTS` | `false` | Also log the prompts sent to Gemini (still redacted while `LOOM_PRIVACY` is on). |
+| `FAST_TIMERS` / `FAST_TIMER_SECONDS` | `false` / `3` | Testing only: shrink every phase to a few seconds. |
+| `LOG_PHASES` | `false` | Log every phase transition. |
+| `NODE_ENV` | — | `production` disables the `/api/state` debug endpoint. |
+
+### 🧪 Checks
+`npm run check:all` runs every check: syntax, data schemas, DOM ids, contrast, XSS sinks, offline (no CDN), sim purity, unit and integration tests, the Monte Carlo benchmark, a memory check and a smoke test. `npm test` runs the tests only. The pre-hackathon prototype is still available with `npm run start:legacy`.
+
+### 🔁 Replaying a game
+Every game has a **seed** (its game id, sent in `game:end` for the End Screen). Starting a new game with `host:start { seed }` and the same votes replays it exactly (same roles, same realized months, same GDW line), so a class can revisit a session.
 
 ---
 
@@ -95,15 +126,22 @@ Each request is small (prompt about 1–3k tokens, `maxOutputTokens` 1024), so p
 
 ## ⏱️ Game Timing (13.5–16 min)
 
-| Segment | Duration |
-| :--- | :--- |
-| Lobby + Intro (30 s) + Role assignment (20 s) + Council chamber (10 s) | ~1 min |
-| Cycles 1–4: Incident 15 s → Intel 20 s → Debate 90 s (or 60 s) → Blind vote 15 s → Resolution 20 s | ~2.6 min each |
-| World Reveal after cycle 2 | 10 s |
-| Cycle 5 finale: Incident → Write (45 s) → Moderate → Read & debate (60 s) → Rank (30 s) → Enact (20 s) | ~3 min |
-| Ending: recap, role reveal, winner | ~1 min |
+Every phase has a fixed timer (values in seconds; `DEBATE` is the only teacher setting).
 
-Debate length is set with `DEBATE_SECONDS` in `.env` (90 → ~16 min game, 60 → ~13.5 min game).
+| Segment | Phases | 90 s debate | 60 s debate |
+| :--- | :--- | ---: | ---: |
+| Opening | Intro crawl 30 + Role assignment 20 + Council chamber 10 | 1:00 | 1:00 |
+| Cycles 1–4 (×4) | Incident 15 + Intel 20 + **Debate 90 / 60** + Blind vote 15 + Resolution 20 = 160 / 130 each | 10:40 | 8:40 |
+| World Reveal | after Cycle 2 | 0:10 | 0:10 |
+| Cycle 5 finale | Incident 15 + Write 45 + Moderate ≤10 + Read & debate 60 + Rank 30 + Enact 20 | 3:00 | 3:00 |
+| Ending | GDW recap, role and author reveal, winner, closing citizen | ~1:00 | ~1:00 |
+| **Total** | | **~15:50** | **~13:50** |
+
+Notes:
+* Lobby time (students joining) is extra; plan ~1 minute.
+* A vote phase ends early once all 5 votes are in, and a debate ends early when all 5 press *Ready to vote*, so real games often run a little shorter.
+* A slow Loom can add up to 8 s before a Resolution or the Enact animation starts (the animation is never cut short). A "revise" write-in adds one 25 s resubmit window inside Moderate.
+* Without internet the finale falls back to the authored A/B vote (Debate + Vote + Resolution instead of Write/Rank/Enact), which takes about the same time.
 
 ---
 
