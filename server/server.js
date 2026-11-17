@@ -122,9 +122,44 @@ function shutdown(signal) {
   setTimeout(() => process.exit(0), 3000).unref();
 }
 
+/**
+ * Classroom safety nets: a stray exception or rejected promise is logged
+ * (with a running count) instead of killing a live game for 30 students.
+ * Returns an uninstall function. Installed only when run as the server.
+ */
+function installSafetyNets(proc = process, log = console.error) {
+  const counts = { uncaughtException: 0, unhandledRejection: 0 };
+  const describe = (err) => (err && err.stack) || (err && err.message) || String(err);
+  const onException = (err) => {
+    counts.uncaughtException++;
+    log(`[server] uncaughtException #${counts.uncaughtException} (game kept running): ${describe(err)}`);
+  };
+  const onRejection = (reason) => {
+    counts.unhandledRejection++;
+    log(`[server] unhandledRejection #${counts.unhandledRejection} (game kept running): ${describe(reason)}`);
+  };
+  proc.on('uncaughtException', onException);
+  proc.on('unhandledRejection', onRejection);
+  const uninstall = () => {
+    proc.off('uncaughtException', onException);
+    proc.off('unhandledRejection', onRejection);
+  };
+  uninstall.counts = counts;
+  return uninstall;
+}
+
 if (require.main === module) {
+  installSafetyNets();
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
+  // A port clash at start-up is not a classroom-game error: say so and stop.
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`[server] Port ${PORT} is already in use. Close the other server or set PORT in .env.`);
+      process.exit(1);
+    }
+    console.error(`[server] HTTP server error: ${err && err.message}`);
+  });
   server.listen(PORT, () => {
     const port = server.address().port;
     console.log(`[server] Societelos listening on http://localhost:${port}`);
@@ -132,4 +167,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl };
+module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl, installSafetyNets };
