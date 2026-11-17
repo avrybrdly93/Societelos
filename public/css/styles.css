@@ -1293,3 +1293,14 @@ body.mobile[data-world="BB"] .world-card {
   border-color: var(--theme-gold);
   background: linear-gradient(160deg, rgba(74, 31, 110, 0.35), rgba(227, 179, 65, 0.08)), var(--bg-raised);
 }
+
+/* World reveal: themed accents ease into the new world's colours instead of
+   snapping (AA / AB / BA / BB all retint the same elements). */
+body.host .topbar-brand, body.host .loom-line, body.host .topbar, body.host .chamber-col,
+body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .world-card {
+  transition: color 0.9s ease, border-color 0.9s ease, background-color 0.9s ease, box-shadow 0.9s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.host .topbar-brand, body.host .loom-line, body.host .topbar, body.host .chamber-col,
+  body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .world-card { transition: none; }
+}
