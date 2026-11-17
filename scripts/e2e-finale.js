@@ -112,6 +112,12 @@ async function phoneChecks(browser, shot) {
   await page.waitForTimeout(200);
   check('phone renders hostile policy text as text (ballot, feedback)', !(await pwned(page)) && (await text('#finale-wait-status')) === XSS);
 
+  await page.evaluate((x) => {
+    debugMobileEvent('lobby:update', { players: [{ node: 'NODE-03', name: x, connected: true }, { node: x, name: x }] });
+    debugMobileEvent('intel:drop', { text: x });
+  }, XSS);
+  check('phone renders hostile lobby names and intel as text', !(await pwned(page)));
+
   // Fallback: Gemini failed during moderation -> authored A/B debate and vote.
   await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'DEBATE', crisis, endsAt: Date.now() + 60000, options: { A: { key: 'A', name: 'Pass it' }, B: { key: 'B', name: 'Reject it' } } }), WRITEIN);
   await page.waitForTimeout(100);
@@ -215,6 +221,19 @@ async function hostChecks(browser, shot) {
   }, XSS);
   await page.waitForTimeout(400);
   check('host renders hostile policy text as text (proposals, enactment, names)', !(await pwned(page)) && (await text('#proposal-cards')).includes(XSS));
+
+  // XSS beyond the finale: lobby:update names and citizen messages in an
+  // ordinary cycle's incident feed and resolution.
+  await page.evaluate((x) => {
+    debugTriggerPhase('LOBBY', { seconds: 0 });
+    debugTriggerEvent('lobby:update', { players: [{ node: 'NODE-01', name: x, connected: true, ready: true }, { node: x, name: x, connected: true }] });
+    debugTriggerPhase('INCIDENT', { cycle: 2, seconds: 15, crisis: { id: 'xss-crisis', title: x, subtitle: x, incident: x, loomIntro: x, mode: 'binary', feed: [{ name: x, age: 30, district: 'D2', districtName: x, cohort: x, text: x }] } });
+    debugTriggerPhase('RESOLUTION', { cycle: 2, seconds: 20 });
+    debugTriggerEvent('resolution', { result: { winner: 'A', policy: x, totals: { A: 3, B: 2 } }, gdw: 24, loomLine: x, messages: [{ name: x, age: 40, district: 'D3', districtName: x, cohort: x, text: x, sentiment: x }] });
+  }, XSS);
+  await page.waitForTimeout(6800); // a single reaction lands mid-cycle (month 6 of 12)
+  const feedText = await text('#citizen-feed');
+  check('host renders hostile names and citizen messages as text (lobby, feed, resolution)', !(await pwned(page)) && feedText.includes(XSS), `pwned=${await pwned(page)} feed=${feedText.slice(0, 80)}`);
 
   // The intro narrator re-tokenizes its authored crawl each time (cloned nodes).
   const words = () => page.evaluate(() => document.querySelectorAll('#intro-crawl .crawl-word').length);
