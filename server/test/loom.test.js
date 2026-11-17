@@ -245,3 +245,41 @@ test('narrate fallback never repeats a citizen in the same resolution feed', asy
   const out2 = await loom.narrate({ winningOption: { name: 'P', reactions }, simSummary: {} }, { config: OFFLINE });
   assert.deepEqual(out2.messages.map((m) => m.citizenId), ['kai', 'lin']);
 });
+
+// ---------------------------------------------------------------------------
+// Finale moderation (Stream 4, TASK-536+)
+// ---------------------------------------------------------------------------
+
+/** A fetch stub that records each request body and answers with `respond(body)`. */
+function recordingFetch(respond) {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push({ url, body, prompt: body.contents[0].parts[0].text });
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(respond(body)) }] } }] }) };
+  };
+  return { calls, fetchImpl };
+}
+const FINALE_CRISIS = {
+  id: 'bb-march-datacenter', title: 'March on the Datacenter', mode: 'writein',
+  incident: 'Over 100,000 citizens converge outside the central Loom server monolith.',
+  options: {
+    A: { name: 'Open the Server Gates', text: 'Grant citizen representatives direct executive keys to The Loom.', roles: ['ghost', 'artisan'], effects: { purpose: 0.4, connection: 0.3, health: -0.5, trust: 0.2, fairness: 0.5, autonomy: 0.6 } },
+    B: { name: 'Acoustic Lockdown', text: 'Disperse the crowd with non-lethal sensory barriers.', roles: ['assimilator', 'lotus'], effects: { purpose: -0.5, connection: -0.4, health: 0.4, trust: -0.6, fairness: -0.6, autonomy: -0.7 } }
+  }
+};
+const FIVE = ['Every district elects a repair council.', 'A luxury dividend for all.', 'Neural links for every adult.', 'Shut the servers one day a week.', 'Keep things as they are.']
+  .map((text, i) => ({ node: `NODE-0${i + 1}`, text }));
+const okFor = (list) => list.map((s, i) => ({ node: s.node, status: 'ok', cleaned: `Cleaned ${i + 1}`, feedback: '', roles: ['artisan'], effects: { purpose: 0.1 * i, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 } }));
+
+test('loom.moderate sends all 5 write-ins and the Cycle 5 crisis in one batch call, results mapped by node', async () => {
+  const { calls, fetchImpl } = recordingFetch((body) => okFor(JSON.parse(body.contents[0].parts[0].text.split('\n\n').pop())).reverse());
+  const out = await loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl });
+  assert.equal(calls.length, 1, 'one Gemini call for the whole council');
+  assert.match(calls[0].prompt, /March on the Datacenter/);
+  assert.match(calls[0].prompt, /100,000 citizens/);
+  for (const s of FIVE) assert.ok(calls[0].prompt.includes(s.text), `prompt carries ${s.node}`);
+  assert.deepEqual(out.map((r) => r.node), FIVE.map((s) => s.node), 'same order as submitted, even if Gemini reorders');
+  assert.deepEqual(out.map((r) => r.cleaned), ['Cleaned 1', 'Cleaned 2', 'Cleaned 3', 'Cleaned 4', 'Cleaned 5']);
+  assert.ok(out.every((r) => !r.fallback));
+});
