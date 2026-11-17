@@ -171,3 +171,44 @@ test('a phone that reconnects mid-game receives state:sync, its role card and th
   assert.ok(got.phase.phase && got.phase.phase !== 'LOBBY');
   assert.equal(got['lobby:update'].players.find((p) => p.node === lost.node).connected, true);
 });
+
+// TASK-611 ------------------------------------------------------------------
+
+test('hostSync replays the phase, GDW line and the active resolution or game:end', async () => {
+  const snaps = {};
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({
+      gameId: 'host-sync',
+      world: 'AB',
+      onEvent: (type, ev, game) => {
+        if (type !== 'phase') return;
+        const key = `${ev.cycle}:${ev.phase}`;
+        if (['2:WORLD_REVEAL', '3:DEBATE', '5:END'].includes(key)) snaps[key] = game.hostSync();
+      }
+    });
+    const events = (key) => snaps[key].map(([e]) => e);
+    assert.deepEqual(events('2:WORLD_REVEAL'), ['host:sync', 'phase', 'resolution']);
+    const sync = snaps['2:WORLD_REVEAL'][0][1];
+    assert.equal(sync.worldKey, 'AB');
+    assert.equal(sync.gdwHistory.length, 25, 'start + 24 months after Cycle 2');
+    assert.equal(snaps['2:WORLD_REVEAL'][2][1], out.resolutions[1], 'the resolution on screen');
+
+    assert.deepEqual(events('3:DEBATE'), ['host:sync', 'phase'], 'no stale resolution mid-cycle');
+    assert.deepEqual(events('5:END'), ['host:sync', 'phase', 'game:end']);
+    assert.equal(snaps['5:END'][2][1], out.gameEnd);
+  });
+});
+
+test('a projector that refreshes mid-game rejoins its room and gets host:sync and the phase', { timeout: 15000 }, async () => {
+  const { host, roomCode, game } = await startedRoom();
+  await until(() => game.cycle >= 1);
+  host.close();
+  const again = connect({ clientType: 'host', roomCode });
+  const got = {};
+  for (const e of ['host:room', 'host:sync', 'phase']) again.once(e, (p) => { got[e] = p; });
+  await until(() => got['host:room'] && got['host:sync'] && got.phase);
+  assert.equal(got['host:room'].roomCode, roomCode, 'same room, not a new one');
+  assert.equal(got['host:sync'].phase, game.phase);
+  assert.deepEqual(got['host:sync'].gdwHistory, game.gdwHistory);
+  assert.ok(got.phase.phase !== 'LOBBY');
+});

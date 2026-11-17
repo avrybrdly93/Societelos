@@ -307,6 +307,11 @@ function initSockets(io, gameEngine) {
     // A projector reloading mid-game gets the world it missed.
     if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
     broadcastLobby(game);
+    // ...and the current phase, the GDW line so far and the active
+    // resolution or game:end, so the screen redraws where the class is.
+    for (const [event, payload] of game.hostSync()) {
+      socket.emit(event, event === 'game:end' ? gameEndPayload(payload) : payload);
+    }
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
     // host:toggleBots { enabled: boolean } -> dev mode toggle to fill remaining slots with bots

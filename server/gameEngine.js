@@ -2047,6 +2047,28 @@ class GameState extends EventEmitter {
     return events;
   }
 
+  /**
+   * Re-hydration for a projector that refreshed mid-game: only public
+   * state, as [[event, payload], ...]: host:sync (phase, world and the GDW
+   * line so far), the current phase broadcast, then the active resolution
+   * or, once the game is over, game:end.
+   */
+  hostSync() {
+    if (this.phase === PHASES.LOBBY) return [];
+    const events = [['host:sync', {
+      cycle: this.cycle,
+      phase: this.phase,
+      gdw: this.gdw,
+      worldKey: this.worldKey || null,
+      gdwHistory: this.gdwHistory.slice(),
+      cycleMarkers: this.cycleMarkers.slice()
+    }]];
+    if (this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
+    if (this.phase === PHASES.END && this.endData) events.push(['game:end', this.endData]);
+    else if (this.lastResolution) events.push(['resolution', this.lastResolution]);
+    return events;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);
