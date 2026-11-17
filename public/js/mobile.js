@@ -165,7 +165,8 @@
     WORLD_REVEAL: 'm-view-world',
     FINALE_WRITE: 'm-view-finale-write',
     FINALE_MOD: 'm-view-finale-wait',
-    FINALE_RANK: 'm-view-finale-rank'
+    FINALE_RANK: 'm-view-finale-rank',
+    END: 'm-view-end'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -431,6 +432,59 @@
     el.textContent = `+${payload.gained} AGENDA POINT${payload.gained === 1 ? '' : 'S'}`;
     document.getElementById('result-total').textContent = `Your agenda score: ${payload.total}`;
   });
+
+  // ---------------------------------------------------------------------------
+  // End Screen (game:end): this phone's final score, whether it won (or the
+  // Loom shut down), its cycle-by-cycle points and the class grade. Only this
+  // node's row is shown; the projector reveals everyone.
+  // ---------------------------------------------------------------------------
+  const GRADE_LABELS = { SHUTDOWN: 'SHUTDOWN', Fragile: 'FRAGILE', Stable: 'STABLE', Thriving: 'THRIVING' };
+
+  function renderEnd(data) {
+    if (!data) return;
+    state.endData = data;
+    const me = (data.roles || []).find((r) => r.node === state.node) || null;
+    const winners = data.winner || [];
+    const won = !data.shutdown && winners.includes(state.node);
+    const card = document.getElementById('end-card');
+    card.classList.toggle('is-won', won);
+    card.classList.toggle('is-lost', !!data.shutdown);
+    card.classList.toggle('is-shared', won && winners.length > 1);
+    document.getElementById('end-node').textContent = state.node || 'NODE';
+    const outcome = document.getElementById('end-outcome');
+    const headline = document.getElementById('end-headline');
+    if (data.shutdown) {
+      outcome.textContent = 'THE LOOM HAS SHUT DOWN';
+      headline.textContent = 'Everyone lost.';
+    } else if (won) {
+      outcome.textContent = winners.length > 1 ? 'SHARED VICTORY' : 'YOU WON';
+      headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
+    } else {
+      outcome.textContent = 'NOT THIS TIME';
+      headline.textContent = 'Another agenda shaped the future.';
+    }
+    document.getElementById('end-role').textContent = me && me.role ? `You were ${me.role.name || me.role.key}.` : '';
+    document.getElementById('end-score').textContent = me ? String(me.total) : '—';
+    const list = document.getElementById('end-breakdown');
+    list.textContent = '';
+    for (const c of (me && me.perCycle) || []) {
+      const li = document.createElement('li');
+      const parts = [];
+      if (c.role) parts.push(`+${c.role} role`);
+      if (c.catalyst) parts.push(`+${c.catalyst} catalyst`);
+      if (c.author) parts.push(`+${c.author} author`);
+      const gained = (c.role || 0) + (c.catalyst || 0) + (c.author || 0);
+      li.className = gained ? 'is-scored' : '';
+      li.textContent = `CYCLE ${c.cycle}: ${parts.length ? parts.join(', ') : '0'}`;
+      list.appendChild(li);
+    }
+    const grade = document.getElementById('end-grade');
+    grade.textContent = GRADE_LABELS[data.grade] || data.grade || '—';
+    grade.dataset.grade = data.grade || '';
+    document.getElementById('end-gdw').textContent = typeof data.finalGdw === 'number' ? `GDW ${data.finalGdw.toFixed(1)}%` : '';
+    document.getElementById('end-world').textContent = data.worldName ? `World reached: ${data.worldName}.` : '';
+  }
+  socket.on('game:end', renderEnd);
 
   // ---------------------------------------------------------------------------
   // World reveal card: the world the first two votes built and what changes.

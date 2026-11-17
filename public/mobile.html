@@ -209,6 +209,25 @@
       <p id="result-score" class="result-score mono" hidden>+1 AGENDA POINT</p>
       <p id="result-total" class="result-total muted"></p>
     </section>
+    <section id="m-view-end" class="m-view" aria-label="Session complete">
+      <p class="m-kicker mono">SESSION COMPLETE // <span id="end-node">NODE</span></p>
+      <div id="end-card" class="result-card end-card">
+        <p id="end-outcome" class="result-outcome mono">THE LOOM IS TALLYING…</p>
+        <h2 id="end-headline" class="end-headline">Look at the projector.</h2>
+        <p id="end-role" class="end-role muted"></p>
+      </div>
+      <div class="end-score">
+        <span class="m-label mono">Your final score</span>
+        <span id="end-score" class="end-score-value mono">—</span>
+      </div>
+      <ol id="end-breakdown" class="end-breakdown mono" aria-label="Points by cycle"></ol>
+      <div class="end-grade-row">
+        <span class="m-label mono">Class grade</span>
+        <span id="end-grade" class="end-grade mono">—</span>
+        <span id="end-gdw" class="end-gdw mono muted"></span>
+      </div>
+      <p id="end-world" class="end-world muted"></p>
+    </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
