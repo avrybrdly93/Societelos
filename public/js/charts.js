@@ -286,6 +286,25 @@
   }
 
   /**
+   * host:playAgain: stop any animation, forget the forecast and realized
+   * line that redraw() would repaint, and blank the given canvases (the
+   * resolution fan and the End Screen history chart).
+   */
+  function reset(...canvases) {
+    cancelAnimation();
+    active = null;
+    finished = null;
+    for (const canvas of canvases) {
+      if (!canvas || !canvas.getContext) continue;
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  }
+
+  /**
    * Draw the realized GDW trajectory month by month (months 1-12) over
    * `durationMs` (12 s) on top of the active forecast fan. `onMonthTick(m, gdw)`
    * fires as the line reaches each month m = 1..12. Returns { cancel }.
@@ -505,5 +524,5 @@
     return { ctx, g, months };
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw, drawFullHistoryChart, GRADE_BANDS };
+  window.SocietelosCharts = { reset, COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw, drawFullHistoryChart, GRADE_BANDS };
 })();
