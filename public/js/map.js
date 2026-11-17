@@ -120,11 +120,33 @@
     showMonth(0);
   }
 
+  // Floating month indicator (MONTH 1 / 12 .. MONTH 12 / 12), stepped by the
+  // same onMonthTick that advances the chart line so the two stay in sync.
+  function setMonthIndicator(monthIndex) {
+    const box = document.getElementById('map-month');
+    const num = document.getElementById('map-month-num');
+    if (!box || !num) return;
+    if (monthIndex === null) { box.hidden = true; return; }
+    const total = playback ? Math.max(1, playback.months.length - 1) : 12;
+    const month = Math.min(total, Math.max(1, monthIndex));
+    const totalEl = document.getElementById('map-month-total');
+    if (totalEl) totalEl.textContent = String(total);
+    if (box.hidden || num.textContent !== String(month)) {
+      num.textContent = String(month);
+      box.classList.remove('is-tick');
+      void box.offsetWidth; // restart the tick animation
+      box.classList.add('is-tick');
+    }
+    box.hidden = false;
+    box.classList[month >= total ? 'add' : 'remove']('is-final');
+  }
+
   /** onMonthTick(monthIndex): colour all 5 districts for that month. */
   function showMonth(monthIndex) {
     if (!playback) return;
     const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
     if (values) renderDistricts(values);
+    setMonthIndicator(monthIndex);
     playback.shocks.filter((sh) => sh.month === monthIndex).forEach(showShock);
     if (monthIndex >= playback.months.length - 1) showDeltas(playback.months[0], values);
   }
@@ -159,6 +181,7 @@
   /** Stop playback (colours stay where they are). */
   function stopPlayback() {
     playback = null;
+    setMonthIndicator(null);
   }
 
   // World accent colours (match the --theme-* tokens in styles.css).

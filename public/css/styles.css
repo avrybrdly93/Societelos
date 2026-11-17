@@ -1179,3 +1179,16 @@ body.host .enact-wait { font-size: 32px; text-align: center; color: var(--theme-
 }
 body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .m-finale-fallback { font-size: 12px; padding: 8px 10px; text-align: center; }
+
+/* Floating month indicator over the region map during month-by-month playback. */
+.map-container { position: relative; }
+.map-month {
+  position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 18px; letter-spacing: 0.12em;
+  color: var(--map-accent, var(--loom-cyan, #3fd8e6)); background: rgba(8, 11, 16, 0.82);
+  border: 1px solid currentColor; border-radius: var(--radius); pointer-events: none;
+}
+.map-month[hidden] { display: none; }
+.map-month.is-tick #map-month-num { display: inline-block; animation: map-month-tick 0.35s ease-out; }
+.map-month.is-final { color: var(--slate-50, #eef2f6); }
+@keyframes map-month-tick { from { transform: translateY(-4px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .map-month.is-tick #map-month-num { animation: none; } }
