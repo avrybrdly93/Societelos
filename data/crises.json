@@ -1109,21 +1109,21 @@
           "targetGdwDelta": 4
         },
         "B": {
-          "name": "Algorithmic Matchmaking Stipend",
-          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
+          "name": "Throttle Feeds and Require Offline Hours",
+          "text": "Throttle residential feeds and require daily offline hours to encourage in-person connection and reverse the birthrate decline.",
           "roles": [
-            "lotus",
-            "assimilator"
+            "artisan",
+            "ghost"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": 0.3,
+            "purpose": 0.5,
+            "connection": 0.6,
             "health": 0.3,
-            "trust": 0.4,
-            "fairness": 0.1,
-            "autonomy": -0.6
+            "trust": -0.6,
+            "fairness": 0.2,
+            "autonomy": 0.4
           },
-          "targetGdwDelta": 4
+          "targetGdwDelta": 6
         }
       },
       "intel": {
