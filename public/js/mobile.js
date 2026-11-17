@@ -69,6 +69,7 @@
   socket.on('session:resumed', (info) => {
     state.node = info.node;
     setNodeLabel(info.node);
+    requestWakeLock(); // seated again after a refresh: keep the screen awake
     renderRole(info.role);
     onPhase({ phase: info.phase, cycle: info.cycle, endsAt: info.endsAt });
     state.roomCode = info.roomCode;
@@ -177,6 +178,9 @@
       saveSession({ node: res.node, token: res.token, roomCode: res.roomCode });
       setNodeLabel(res.node);
       showView('m-view-wait');
+      // The JOIN tap still counts as a user gesture here, so the lock is
+      // granted now rather than on the student's next tap.
+      requestWakeLock();
     });
   });
 
