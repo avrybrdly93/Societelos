@@ -377,6 +377,19 @@ function initSockets(io, gameEngine) {
       world: game.worldKey ? game.worldInfo() : null
     });
     broadcastLobby(game);
+    syncPhone(socket, game, node);
+  }
+
+  // state:sync: replay this node's private state to its new socket
+  // (role, current phase, this cycle's intel, Override status, revise
+  // feedback, finale ballot, game:end), shaped exactly like the live events.
+  function syncPhone(socket, game, node) {
+    for (const [event, payload] of game.privateSyncFor(node)) {
+      if (event === 'role:assigned') socket.emit(event, { role: roleCard(payload.role) });
+      else if (event === 'override:status') socket.emit(event, { overrideAvailable: !!payload.overrideAvailable });
+      else if (event === 'game:end') socket.emit(event, gameEndPayload(payload));
+      else socket.emit(event, payload);
+    }
   }
 
   function handlePhone(socket) {

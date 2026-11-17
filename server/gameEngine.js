@@ -548,6 +548,8 @@ class GameState extends EventEmitter {
     this.worldKey = null;
     this.ending = null; // 'shutdown' once GDW reaches 0
     this.endData = null; // End Screen data, compiled when END starts
+    this.lastPhasePayload = null; // last 'phase' broadcast, for reconnects
+    this.intelByNode = {}; // node -> { cycle, text }: this cycle's private intel
     this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
@@ -859,6 +861,7 @@ class GameState extends EventEmitter {
       crisis: this.publicCrisis(),
       ...extra
     }, ['name']);
+    this.lastPhasePayload = payload; // replayed to reconnecting clients
     this.emit('phase', payload);
     return endsAt;
   }
@@ -887,6 +890,7 @@ class GameState extends EventEmitter {
     for (const node of NODE_IDS) {
       const role = this.roleAssignment && this.roleAssignment[node];
       const text = (role && intel[role.key]) || FALLBACK_INTEL;
+      this.intelByNode[node] = { cycle: this.cycle, text };
       this.emit('intel:drop', { node, text });
     }
     this.enterPhase(PHASES.INTEL);
@@ -1720,6 +1724,7 @@ class GameState extends EventEmitter {
       this.ending = null;
       this.endData = null;
       this.finale = null;
+      this.intelByNode = {};
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
@@ -1751,6 +1756,8 @@ class GameState extends EventEmitter {
     this.ending = null;
     this.endData = null;
     this.finale = null;
+    this.intelByNode = {};
+    this.lastPhasePayload = null;
     this.voteHistory = {};
     this.scoreLedger = [];
     this.roleAssignment = null;
@@ -2000,6 +2007,44 @@ class GameState extends EventEmitter {
       String(p.name || '').trim().toLowerCase() === wanted && (!node || p.node === node));
     // Two offline seats with the same name: ambiguous, so require the token.
     return matches.length === 1 ? matches[0].node : null;
+  }
+
+  /**
+   * Re-hydration for a reconnecting phone: the private events it would
+   * have received for the current moment of the game, in order, as
+   * [[event, payload], ...]. Payloads carry no `node` (they go to one
+   * socket). Never includes anything belonging to another node.
+   */
+  privateSyncFor(node) {
+    const player = this.players[node];
+    if (!player) return [];
+    const events = [];
+    const inGame = this.phase !== PHASES.LOBBY;
+    events.push(['state:sync', {
+      node,
+      cycle: this.cycle,
+      phase: this.phase,
+      voted: !!(this.votes && this.votes[node]),
+      submitted: !!(this.finale && this.finale.submissions && this.finale.submissions[node]),
+      ranked: !!(this.finale && this.finale.ranks && this.finale.ranks[node])
+    }]);
+    const role = this.roleAssignment && this.roleAssignment[node];
+    if (inGame && role) events.push(['role:assigned', { role }]);
+    if (inGame && this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
+    const intel = this.intelByNode[node];
+    if (inGame && this.phase !== PHASES.END && intel && intel.cycle === this.cycle) events.push(['intel:drop', { text: intel.text }]);
+    if (this.phase === PHASES.VOTE) events.push(['override:status', { overrideAvailable: this.overrideAvailable(node) }]);
+    const finale = this.finale;
+    if (finale && this.phase === PHASES.FINALE_MOD && finale.revise && finale.revise[node] === 'pending') {
+      const m = finale.moderation[node] || {};
+      events.push(['finale:feedback', { status: 'revise', feedback: String(m.feedback || 'Please rephrase your policy as one clear, school-appropriate sentence.') }]);
+    }
+    if (finale && this.phase === PHASES.FINALE_RANK && finale.ballots && finale.ballots[node]) {
+      const texts = Object.fromEntries((finale.policies || []).map((p) => [p.id, p.text]));
+      events.push(['finale:ballot', { policies: finale.ballots[node].map((id) => ({ id, text: texts[id] })) }]);
+    }
+    if (this.phase === PHASES.END && this.endData) events.push(['game:end', this.endData]);
+    return events;
   }
 
   /** Find the node id a socket is seated at, or null. */

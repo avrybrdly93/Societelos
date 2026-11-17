@@ -110,3 +110,64 @@ test('without a token, the same name reclaims only its own offline seat', { time
   assert.equal(game.players[lost.node].socketId, back.id);
   assert.equal(game.players[lost.node].connected, true);
 });
+
+// TASK-610 ------------------------------------------------------------------
+
+const { playGame, okModeration, withLoom } = require('./playGame');
+
+test('privateSyncFor replays role, phase, intel, Override, ballot and game:end for one node only', async () => {
+  const snaps = {};
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({
+      gameId: 'sync-phases',
+      world: 'AA',
+      onEvent: (type, ev, game) => {
+        if (type !== 'phase') return;
+        const key = `${ev.cycle}:${ev.phase}`;
+        if (['1:VOTE', '5:FINALE_RANK', '5:END'].includes(key)) {
+          setImmediate(() => { snaps[key] = game.privateSyncFor('NODE-02'); });
+        }
+      }
+    });
+    const events = (key) => snaps[key].map(([e]) => e);
+    const payload = (key, name) => (snaps[key].find(([e]) => e === name) || [])[1];
+
+    assert.deepEqual(events('1:VOTE'), ['state:sync', 'role:assigned', 'phase', 'intel:drop', 'override:status']);
+    assert.equal(payload('1:VOTE', 'state:sync').node, 'NODE-02');
+    assert.equal(payload('1:VOTE', 'role:assigned').role.key, out.roles['NODE-02']);
+    assert.equal(payload('1:VOTE', 'phase').phase, 'VOTE');
+    const drop = out.intel.find((d) => d.cycle === 1 && d.node === 'NODE-02');
+    assert.equal(payload('1:VOTE', 'intel:drop').text, drop.text);
+    assert.deepEqual(payload('1:VOTE', 'override:status'), { overrideAvailable: true });
+
+    assert.deepEqual(events('5:FINALE_RANK'), ['state:sync', 'role:assigned', 'phase', 'finale:ballot']);
+    const ballot = out.ballots.find((b) => b.node === 'NODE-02');
+    assert.deepEqual(payload('5:FINALE_RANK', 'finale:ballot').policies, ballot.policies);
+
+    assert.deepEqual(events('5:END'), ['state:sync', 'role:assigned', 'phase', 'game:end']);
+    assert.equal(payload('5:END', 'game:end'), out.gameEnd);
+
+    for (const snap of Object.values(snaps)) {
+      for (const [, p] of snap) assert.ok(!('node' in p) || p.node === 'NODE-02', 'nothing addressed to another node');
+    }
+  });
+});
+
+test('a phone that reconnects mid-game receives state:sync, its role card and the current phase', { timeout: 15000 }, async () => {
+  const { phones, game } = await startedRoom();
+  await until(() => game.phase === 'CHAMBER' || game.cycle >= 1);
+  const lost = phones[1];
+  lost.socket.close();
+  await until(() => game.players[lost.node].connected === false);
+
+  const back = connect({ clientType: 'phone', token: lost.token });
+  const got = {};
+  for (const e of ['state:sync', 'role:assigned', 'phase', 'lobby:update']) back.once(e, (p) => { got[e] = p; });
+  await once(back, 'session:resumed');
+  await until(() => got['state:sync'] && got['role:assigned'] && got.phase && got['lobby:update']);
+  assert.equal(got['state:sync'].node, lost.node);
+  assert.equal(got['role:assigned'].role.key, game.roleAssignment[lost.node].key);
+  assert.ok(got['role:assigned'].role.cardText, 'the full role card, as on first deal');
+  assert.ok(got.phase.phase && got.phase.phase !== 'LOBBY');
+  assert.equal(got['lobby:update'].players.find((p) => p.node === lost.node).connected, true);
+});
