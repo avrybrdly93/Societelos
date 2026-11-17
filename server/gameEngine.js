@@ -429,6 +429,26 @@ function resolveLoom() {
   return loom;
 }
 
+/**
+ * Shared class grade from the final realized GDW: 0 "SHUTDOWN" (the Loom
+ * has shut down), up to 34 "Fragile", 35-59 "Stable", 60+ "Thriving".
+ * GDW is reported to one decimal, so the bands are cut at 35 and 60.
+ */
+const GRADE_TEXT = Object.freeze({
+  SHUTDOWN: 'The Loom has shut down',
+  Fragile: 'Fragile: the region survived, barely',
+  Stable: 'Stable: the region holds together',
+  Thriving: 'Thriving: the region found something worth living for'
+});
+
+function gradeFor(gdw) {
+  const g = Number(gdw);
+  if (!Number.isFinite(g) || g <= 0) return 'SHUTDOWN';
+  if (g < 35) return 'Fragile';
+  if (g < 60) return 'Stable';
+  return 'Thriving';
+}
+
 const CATALYST_SWING = 10;
 
 /**
@@ -713,10 +733,13 @@ class GameState extends EventEmitter {
     const finalGdw = roundGdw(this.gdw);
     const shutdown = this.ending === 'shutdown' || finalGdw <= 0;
     const world = this.worldInfo();
+    const grade = shutdown ? 'SHUTDOWN' : gradeFor(finalGdw);
     return {
       gameId: this.gameId,
       cyclesPlayed: this.cycle,
       finalGdw,
+      grade,
+      gradeText: GRADE_TEXT[grade],
       shutdown,
       worldKey: this.worldKey || null,
       worldName: world.name || null,
@@ -1995,6 +2018,8 @@ module.exports = {
   forecastMedianEnd,
   computeWorldKey,
   catalystScores,
+  gradeFor,
+  GRADE_TEXT,
   bordaCount,
   rankBorda,
   selectEnacted,

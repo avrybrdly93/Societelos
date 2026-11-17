@@ -21,6 +21,8 @@ test('END compiles the End Screen data once, after Cycle 5, and emits game:end',
     assert.equal(end.cyclesPlayed, 5);
     assert.equal(end.finalGdw, out.game.gdw);
     assert.equal(end.shutdown, false);
+    assert.equal(end.grade, engine.gradeFor(end.finalGdw));
+    assert.equal(end.gradeText, engine.GRADE_TEXT[end.grade]);
     assert.equal(end.worldKey, 'BB');
     assert.equal(end.worldName, 'The Gilded Cage');
     assert.deepEqual(Object.keys(end.scores), NODE_IDS);
@@ -46,6 +48,8 @@ test('END data is compiled early when realized GDW hits 0, and resetGame clears 
     assert.equal(emitted.shutdown, true);
     assert.equal(emitted.cyclesPlayed, 2);
     assert.equal(emitted.finalGdw, 0);
+    assert.equal(emitted.grade, 'SHUTDOWN');
+    assert.equal(emitted.gradeText, 'The Loom has shut down');
     assert.equal(emitted.worldKey, null);
     game.resetGame();
     assert.equal(game.endData, null);
@@ -53,4 +57,14 @@ test('END data is compiled early when realized GDW hits 0, and resetGame clears 
     game.clearPhaseTimer();
     console.log = log;
   }
+});
+
+// TASK-602 ------------------------------------------------------------------
+
+test('gradeFor maps final GDW to SHUTDOWN / Fragile / Stable / Thriving', () => {
+  assert.equal(engine.gradeFor(0), 'SHUTDOWN');
+  assert.equal(engine.gradeFor(12.3), 'Fragile');
+  assert.equal(engine.gradeFor(47), 'Stable');
+  assert.equal(engine.gradeFor(81.4), 'Thriving');
+  assert.equal(engine.gradeFor(NaN), 'SHUTDOWN', 'a broken number never reads as a success');
 });
