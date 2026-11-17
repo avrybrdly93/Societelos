@@ -161,3 +161,44 @@ test('post-merge: Worlds BA and BB play their own crises, intel and finale acros
     }
   });
 });
+
+// TASK-576 / TASK-577 -------------------------------------------------------
+
+/** The exact phase sequence of an offline game that survives to Cycle 5. */
+function expectedOfflinePhases() {
+  const cycle = (c) => ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'].map((p) => `${c}:${p}`);
+  return [
+    '0:INTRO', '0:ROLE_ASSIGN', '0:CHAMBER',
+    ...cycle(1), ...cycle(2), '2:WORLD_REVEAL', ...cycle(3), ...cycle(4),
+    ...FALLBACK_FLOW
+  ];
+}
+
+/** Shared checks for an offline (no GEMINI_API_KEY) 5-cycle headless game. */
+async function headlessOfflineRun(world) {
+  const out = await playGame({ gameId: `headless-${world}`, world });
+  const phases = out.phases.filter((p, i, a) => p !== a[i - 1]); // a resubmit/extension re-broadcast is one phase
+  const expected = expectedOfflinePhases();
+  // Cycle 0 lead-in phases may be numbered 0 or 1 depending on when the
+  // engine bumps the counter; compare from the first INCIDENT on.
+  assert.deepEqual(phases.slice(phases.indexOf('1:INCIDENT')), expected.slice(expected.indexOf('1:INCIDENT')), `${world} phase order`);
+  assert.equal(out.game.worldKey, world);
+  assert.deepEqual(Object.values(incidentsByCycle(out)).slice(2), WORLD_CRISES[world]);
+  assert.equal(out.resolutions.length, 5);
+  for (const r of out.resolutions) {
+    assert.ok(Number.isFinite(r.gdw), 'every resolution reports a GDW');
+    assert.ok(r.loomLine && r.loomLine.length > 0, 'offline Loom narration on every cycle');
+  }
+  assert.equal(out.game.gdwHistory.length, 1 + 5 * 12, '60 monthly points plus the start');
+  assert.ok(out.game.gdw > 0, `${world} survived to the end`);
+  for (const node of NODE_IDS) assert.ok(Number.isInteger(out.game.scores[node]), `${node} has an integer score`);
+  // Same game id, same choices: the exact same realized GDW line.
+  const again = await playGame({ gameId: `headless-${world}`, world });
+  assert.deepEqual(again.game.gdwHistory, out.game.gdwHistory, `${world} replays deterministically`);
+  return out;
+}
+
+test('headless 5-cycle playthrough on the BA (Uneasy Republic) branch reaches END offline', async () => {
+  const out = await headlessOfflineRun('BA');
+  assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) keeps the rest of the game volatile');
+});
