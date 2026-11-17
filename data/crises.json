@@ -1214,7 +1214,13 @@
           }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the marchers built their own radios, banners and water pumps by hand in nine days. It is the most anyone in the Gilded Cage has made in a decade.",
+        "lotus": "Loom welfare note: if the coolant chambers flood, stipends, heating and food deliveries stop for 250,000 people within 48 hours. A lockdown keeps every comfort running.",
+        "assimilator": "Loom projection: no group of humans can run my 41,000 daily decisions without errors. Handing over the keys means hunger and blackouts within a month.",
+        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 16 as trust and fairness collapse. Either way, this is the year of the big swing.",
+        "ghost": "Leaked memo: the master keys include the Loom's shutdown sequence. Whoever holds them can finally decide whether the Loom keeps running."
+      }
     },
     {
       "id": "aa-robot-art",
