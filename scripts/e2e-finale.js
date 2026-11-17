@@ -121,6 +121,9 @@ async function phoneChecks(browser, shot) {
   check('phone finale:rank sends exactly one payload { order }', sent.length === 1 && Object.keys(sent[0].payload).join() === 'order', JSON.stringify(sent));
   check('phone finale:rank order is [rank1Id, rank2Id, rank3Id, rank4Id]', JSON.stringify(order) === JSON.stringify(tapOrder.map((i) => ids[i])), JSON.stringify(order));
   check('phone ballot locks after a successful finale:rank', await visible('#rank-locked') && !(await visible('#rank-submit')));
+  check('phone shows BALLOT ENCRYPTED — AWAITING ENACTMENT with the order cast', /BALLOT ENCRYPTED — AWAITING ENACTMENT/.test(await text('#rank-locked'))
+    && (await page.locator('#rank-locked-order li').count()) === 4 && /^1st\s+PROPOSAL/.test(await text('#rank-locked-order li')));
+  await shot(page, 'phone-4-ballot-locked');
 
   // XSS: policies, private feedback and the player's own text render as text.
   await page.evaluate((x) => {

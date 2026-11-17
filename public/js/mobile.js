@@ -683,7 +683,16 @@
       if (res && res.ok) {
         document.getElementById('rank-cards').hidden = true;
         rankSubmit.hidden = true;
+        // Confirmation: the ballot as cast (place, proposal, Borda points).
+        const summary = document.getElementById('rank-locked-order');
+        summary.textContent = '';
+        ballot.order.forEach((id, i) => {
+          const li = document.createElement('li');
+          li.textContent = `${PLACE_NAMES[i]}  ${proposalName(id)}  +${BORDA_POINTS[i]}`;
+          summary.appendChild(li);
+        });
         document.getElementById('rank-locked').hidden = false;
+        document.getElementById('m-view-finale-rank').classList.add('is-locked');
         buzz(50);
         return;
       }
@@ -700,6 +709,7 @@
     ballot.locked = false;
     rankSubmit.hidden = false;
     document.getElementById('rank-locked').hidden = true;
+    document.getElementById('m-view-finale-rank').classList.remove('is-locked');
     document.getElementById('rank-cards').hidden = false;
     renderBallot();
   });
