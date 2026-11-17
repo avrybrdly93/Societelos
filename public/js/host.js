@@ -1496,7 +1496,7 @@
     if (data.shutdown || !data.winner) {
       label.textContent = 'Total loss';
       title.textContent = 'THE LOOM HAS SHUT DOWN';
-      sub.textContent = 'Gross Domestic Well-Being reached 0%. Every agenda failed.';
+      sub.textContent = 'CRITICAL FAILURE: GROSS DOMESTIC WELL-BEING AT 0%. REVOLT IN PROGRESS. THE LOOM HAS SHUT DOWN.';
     } else {
       const who = data.winner.map((n) => `${names[n] || n} (${n})`);
       label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Architect of telos';
