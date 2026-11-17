@@ -528,7 +528,9 @@ html:has(body.mobile) { overscroll-behavior-y: contain; }
   background: linear-gradient(160deg, var(--slate-800), var(--slate-950));
   box-shadow: 0 0 32px var(--loom-glow);
 }
-.role-icon { font-size: 56px; line-height: 1; }
+.role-icon { width: 56px; height: 56px; color: var(--accent); }
+.role-icon svg { display: block; width: 100%; height: 100%; }
+.end-table .end-role-icon svg { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
 .role-title { font-size: 30px; margin: 12px 0 4px; }
 .role-flavor { font-size: 15px; margin: 0 0 16px; }
 .role-heading { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 16px 0 4px; }

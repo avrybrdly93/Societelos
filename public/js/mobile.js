@@ -192,7 +192,16 @@
   function renderRole(role) {
     if (!role) return;
     state.role = role;
-    document.getElementById('role-icon').textContent = role.icon || '';
+    const roleIcon = document.getElementById('role-icon');
+    roleIcon.textContent = '';
+    const iconPaths = { artisan: 'M4 20h16M7 17l8-8m-4-4 5 5-2 2-5-5z', lotus: 'M12 20c-5-2-8-6-8-10 4 0 7 3 8 7 1-4 4-7 8-7 0 4-3 8-8 10zM12 17V5m0 0L9 8m3-3 3 3', assimilator: 'M12 3v4m0 10v4M3 12h4m10 0h4M6 6l3 3m6 6 3 3m0-12-3 3m-6 6-3 3M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0z', ghost: 'M12 21c-5-3-8-7-8-12a8 8 0 0 1 16 0c0 5-3 9-8 12zM12 8v8m-3-5 3-3 3 3', catalyst: 'M13 2 5 13h6l-1 9 9-12h-6z' };
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', iconPaths[role.key] || iconPaths.catalyst);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.7'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path); roleIcon.appendChild(svg);
+    document.getElementById('role-card').dataset.role = role.key || '';
     document.getElementById('role-title').textContent = role.name || 'Unknown role';
     document.getElementById('role-flavor').textContent = role.cardText || '';
     document.getElementById('role-goal').textContent = role.goal || '';
