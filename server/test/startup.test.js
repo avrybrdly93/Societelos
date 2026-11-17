@@ -105,3 +105,49 @@ test('static files and pages revalidate on reload: Cache-Control no-cache, ETag 
     await new Promise((resolve) => srv.close(resolve));
   }
 });
+
+// TASK-652 ------------------------------------------------------------------
+
+/** Run `npm start`, wait for the banner, probe /health, then stop it. */
+function npmStart(env) {
+  return new Promise((resolve, reject) => {
+    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const child = spawn(npm, ['start', '--silent'], { cwd: path.join(__dirname, '..', '..'), env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    let out = '';
+    let err = '';
+    let probed = false; // the shutdown line arrives later: probe only once
+    const stop = () => { try { process.kill(process.platform === 'win32' ? child.pid : -child.pid, 'SIGTERM'); } catch { child.kill('SIGTERM'); } };
+    const timer = setTimeout(() => { stop(); reject(new Error(`npm start gave no banner: ${out} ${err}`)); }, 15000);
+    child.stdout.on('data', async (d) => {
+      out += d;
+      const m = out.match(/listening on http:\/\/localhost:(\d+)/);
+      if (probed || !m || !/Phones join at/.test(out)) return;
+      probed = true;
+      clearTimeout(timer);
+      try {
+        const health = await (await fetch(`http://127.0.0.1:${m[1]}/health`)).json();
+        stop();
+        child.once('exit', () => resolve({ port: Number(m[1]), health, out, err }));
+      } catch (e) { stop(); reject(new Error(`${e.message}: ${e.cause && e.cause.code} ${out}`)); }
+    });
+    child.stderr.on('data', (d) => { err += d; });
+  });
+}
+
+const portFree = (port) => new Promise((resolve) => {
+  const s = require('net').createServer().once('error', () => resolve(false)).listen(port, () => s.close(() => resolve(true)));
+});
+
+test('npm start launches cleanly on process.env.PORT', { timeout: 30000 }, async () => {
+  const { port, health, err } = await npmStart({ PORT: '3917' });
+  assert.equal(port, 3917);
+  assert.equal(health.status, 'ok');
+  assert.equal(err, '');
+});
+
+test('npm start defaults to port 3000 when PORT is unset', { timeout: 30000 }, async (t) => {
+  if (!(await portFree(3000))) { t.skip('port 3000 busy on this machine'); return; }
+  const { port, health } = await npmStart({ PORT: '' }); // empty PORT = unset for server.js
+  assert.equal(port, 3000);
+  assert.equal(health.status, 'ok');
+});
