@@ -667,6 +667,24 @@
   }
   if (btnSkipIntro) btnSkipIntro.addEventListener('click', (e) => { e.stopPropagation(); skipIntro(); });
 
+  // Teacher shortcuts: Space starts only when the lobby's five-seat gate is
+  // open, S skips the active intro, and F toggles projector fullscreen.
+  document.addEventListener('keydown', (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target;
+    if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
+    if (event.code === 'Space' && state.phase === 'LOBBY' && !startBtn.disabled) {
+      event.preventDefault();
+      startBtn.click();
+    } else if (event.key.toLowerCase() === 's' && state.phase === 'INTRO') {
+      event.preventDefault();
+      skipIntro();
+    } else if (event.key.toLowerCase() === 'f' && canFullscreen) {
+      event.preventDefault();
+      fullscreenBtn.click();
+    }
+  });
+
   const introView = document.getElementById('view-intro');
   if (introView) {
     introView.addEventListener('click', () => {
