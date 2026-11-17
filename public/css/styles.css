@@ -1202,3 +1202,12 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .district-pulse.is-down { stroke: var(--alert-crimson, #e5484d); }
 @keyframes district-pulse { from { transform: scale(0.6); opacity: 0.95; } to { transform: scale(4.5); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .district-pulse { animation-duration: 0.01s; } }
+
+/* Cohort breakdown legend under the host region map. */
+.cohort-legend {
+  list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 4px 0; font-size: 15px; color: var(--slate-400, #7d8a9a); letter-spacing: 0;
+}
+.cohort-legend li, body.host .cohort-legend li { padding: 0 8px; white-space: nowrap; font-size: 15px; }
+.cohort-legend li + li { border-left: 1px solid var(--slate-700, #222b38); }
+.cohort-legend b { color: var(--slate-50, #eef2f6); font-weight: 700; }

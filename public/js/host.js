@@ -632,11 +632,31 @@
     }));
     const map = window.SocietelosMap;
     if (map) map.renderDistricts(districts.length ? districts : map.DISTRICT_IDS.map((id) => ({ id, wellbeing: BASELINE_WELLBEING })));
+    renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
     document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
   }
 
   socket.on('phase', onPhase);
+
+  // Cohort legend under the map (Youth 25% | Former Workers 45% | ...). The
+  // static markup matches data/sim.json; a region payload carrying
+  // cohorts [{ name, share, ages }] replaces it.
+  function renderCohortLegend(cohorts) {
+    if (!Array.isArray(cohorts) || !cohorts.length) return;
+    const list = document.getElementById('cohort-legend');
+    list.textContent = '';
+    cohorts.forEach((c) => {
+      if (!c || typeof c.share !== 'number') return;
+      const li = document.createElement('li');
+      if (c.ages) li.title = `Ages ${c.ages}`;
+      li.append(document.createTextNode(`${c.name || c.id} `));
+      const pct = document.createElement('b');
+      pct.textContent = `${Math.round(c.share * 100)}%`;
+      li.appendChild(pct);
+      list.appendChild(li);
+    });
+  }
 
   // Breadcrumbs INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION: past steps
   // dimmed-done, current lit; hidden outside a binary cycle.
