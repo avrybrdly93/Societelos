@@ -1559,10 +1559,9 @@
       if (!inspection) return;
       const markers = (data.cycleMarkers || []).filter((m) => typeof m.index === 'number');
       if (!markers.length) return;
-      const chartPad = window.SocietelosCharts.PAD;
       const canvasWidth = canvas.offsetWidth || canvas.width;
       const months = Math.max(60, (Array.isArray(data.gdwHistory) ? data.gdwHistory.length : 1) - 1);
-      const plotWidth = canvasWidth - chartPad.left - chartPad.right - 150;
+      const plotWidth = canvasWidth - window.SocietelosCharts.PAD.left - window.SocietelosCharts.PAD.right - 150;
       let selected = -1;
       const showMarker = (index) => {
         selected = index;
@@ -1572,7 +1571,7 @@
       const inspect = (event) => {
         const rect = canvas.getBoundingClientRect();
         const x = (event.clientX - rect.left) / (rect.width || 1) * canvasWidth;
-        const month = Math.max(0, Math.min(months, Math.round((x - chartPad.left) / plotWidth * months)));
+        const month = Math.max(0, Math.min(months, Math.round((x - window.SocietelosCharts.PAD.left) / plotWidth * months)));
         let nearest = 0;
         markers.forEach((m, i) => { if (Math.abs(m.index - month) < Math.abs(markers[nearest].index - month)) nearest = i; });
         showMarker(nearest);
