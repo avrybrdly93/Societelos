@@ -1326,3 +1326,19 @@ body.host[data-phase="FINALE_MOD"] .loom-grid::before,
 body.host[data-phase="FINALE_ENACT"] .loom-grid::before { animation-duration: 5s; opacity: 1; }
 @keyframes loom-grid-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(64px, 64px, 0); } }
 @media (prefers-reduced-motion: reduce) { .loom-grid::before { animation: none; } }
+
+/* Finale enactment feed: package impact chips and the region summary card. */
+.feed-item.is-package { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-current, var(--accent)) 30%, transparent); }
+.feed-impact {
+  margin-left: 10px; padding: 1px 8px; font-size: 16px; border-radius: 6px; white-space: nowrap;
+  color: var(--slate-400); border: 1px solid currentColor;
+}
+.feed-impact.is-up { color: var(--teal); }
+.feed-impact.is-down { color: var(--danger); }
+.feed-package { border-left-color: var(--theme-current, var(--accent)); background: color-mix(in srgb, var(--theme-current, var(--accent)) 10%, var(--bg-sunken)); }
+body.host .feed-package-title { margin: 0 0 8px; font-size: 18px; letter-spacing: 0.08em; color: var(--theme-current, var(--accent)); }
+.feed-package-rows { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
+body.host .feed-package-rows li { font-size: 18px; color: var(--slate-400); }
+body.host .feed-package-rows li.is-up { color: var(--teal); }
+body.host .feed-package-rows li.is-down { color: var(--danger); }
+body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(--slate-200); }

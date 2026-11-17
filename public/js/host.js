@@ -734,12 +734,67 @@
     } else {
       body.append(meta, text);
     }
+    // Finale enactment: how the 50/25/25 package moved this citizen's district.
+    if (typeof item.impact === 'number') {
+      li.classList.add('is-package');
+      const dir = item.impact > 0.05 ? 'up' : item.impact < -0.05 ? 'down' : 'flat';
+      const chip = document.createElement('span');
+      chip.className = `feed-impact mono is-${dir}`;
+      chip.textContent = `PACKAGE ${dir === 'up' ? '\u25B2' : dir === 'down' ? '\u25BC' : '\u25C6'} ${item.impact >= 0 ? '+' : ''}${item.impact.toFixed(1)}`;
+      meta.appendChild(chip);
+    }
     li.append(avatar, body);
     return li;
   }
 
   // Citizen feed (newest at the top, capped so the column never overflows).
   const FEED_MAX = 6;
+  // Finale: each district's wellbeing change (W x 100) over the package's
+  // 12 months, from the resolution payload's month-by-month districts.
+  const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+  function districtShifts(districts) {
+    const first = Array.isArray(districts) && districts[0];
+    const last = Array.isArray(districts) && districts[districts.length - 1];
+    if (!first || !last || districts.length < 2) return null;
+    const out = {};
+    Object.keys(DISTRICT_NAMES).forEach((id) => {
+      if (typeof first[id] === 'number' && typeof last[id] === 'number') out[id] = Math.round((last[id] - first[id]) * 1000) / 10;
+    });
+    return Object.keys(out).length ? out : null;
+  }
+  // Closing card of the finale feed: the package's effect on every district,
+  // best to worst, with the biggest winner and the hardest hit called out.
+  function addPackageSummary(shifts) {
+    const list = document.getElementById('citizen-feed');
+    const ranked = Object.entries(shifts).sort((a, b) => b[1] - a[1]);
+    const li = document.createElement('li');
+    li.className = 'feed-item feed-package';
+    const body = document.createElement('div');
+    body.className = 'feed-body';
+    const head = document.createElement('p');
+    head.className = 'feed-package-title mono';
+    head.textContent = 'THE COUNCIL PACKAGE // 50 / 25 / 25 ACROSS THE REGION';
+    const rows = document.createElement('ul');
+    rows.className = 'feed-package-rows mono';
+    ranked.forEach(([id, delta]) => {
+      const row = document.createElement('li');
+      row.dataset.district = id;
+      row.className = delta > 0.05 ? 'is-up' : delta < -0.05 ? 'is-down' : 'is-flat';
+      row.textContent = `${id} ${DISTRICT_NAMES[id]} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+      rows.appendChild(row);
+    });
+    const verdict = document.createElement('p');
+    verdict.className = 'feed-package-verdict';
+    const [best, worst] = [ranked[0], ranked[ranked.length - 1]];
+    verdict.textContent = best[1] - worst[1] < 0.1
+      ? 'The package touched every district about equally.'
+      : `Biggest winner: ${DISTRICT_NAMES[best[0]]}. Hardest hit: ${DISTRICT_NAMES[worst[0]]}.`;
+    body.append(head, rows, verdict);
+    li.appendChild(body);
+    list.prepend(li);
+    while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
+    list.scrollTop = 0;
+  }
   function resetFeed() {
     document.getElementById('citizen-feed').textContent = '';
   }
@@ -1043,12 +1098,16 @@
     // across the 12 simulated months as they play out.
     clearFeedTimers();
     resetFeed();
-    const messages = payload.messages || [];
     const span = RESOLUTION_MONTH_MS * 12;
+    // Finale: tag each reaction with its district's package impact and close
+    // with a region-wide summary card once the 12 months have played.
+    const shifts = r.finale ? districtShifts(payload.districts) : null;
+    const messages = (payload.messages || []).map((m) => (shifts && m && typeof shifts[m.district] === 'number' ? { ...m, impact: shifts[m.district] } : m));
     messages.forEach((m, i) => {
       const at = Math.round(((i + 0.5) / messages.length) * span);
       feedTimers.push(setTimeout(() => addFeedItem(m), at));
     });
+    if (shifts) feedTimers.push(setTimeout(() => addPackageSummary(shifts), span + 400));
     // The map replays the 12 months in step with the realized line.
     if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS, (payload.realized && payload.realized.shocks) || []);
     renderForecastBanner(payload.forecast);
