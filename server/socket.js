@@ -335,6 +335,28 @@ function initSockets(io, gameEngine) {
       reply({ ok: true });
     });
 
+    // host:playAgain { keepPlayers? } -> reset this room for the next game
+    // (next class period) without restarting Node. Unless keepPlayers, every
+    // phone is released from its seat and must join again.
+    onValid(socket, 'host:playAgain', { keepPlayers: 'boolean?' }, (payload, reply) => {
+      const keepPlayers = payload.keepPlayers === true;
+      if (!keepPlayers) {
+        // Local adapter: the room's sockets are in this process.
+        const ids = io.sockets.adapter.rooms.get(roomChannel(game.roomCode)) || new Set();
+        for (const id of Array.from(ids)) {
+          const s = io.sockets.sockets.get(id);
+          if (!s || !s.data.node) continue;
+          s.emit('session:invalid', { reason: 'ROOM_RESET' });
+          s.data.node = null;
+          s.data.roomCode = null;
+          s.leave(roomChannel(game.roomCode));
+        }
+      }
+      const result = game.playAgain({ keepPlayers });
+      broadcastLobby(game);
+      return reply(result);
+    });
+
     // host:start {} -> begin the phase flow once all 5 nodes have joined.
     onValid(socket, 'host:start', {}, (payload, reply) => {
       const joined = Object.keys(game.players).length;

@@ -1766,6 +1766,9 @@ class GameState extends EventEmitter {
     this.sessionEndsAt = null;
     this.manualFinaleTriggered = false;
     this._designatedFinaleCycle = null;
+    this.debateReady = new Set();
+    this.simStateStart = null;
+    this.endsAt = null;
     for (const [node, player] of Object.entries(this.players)) {
       player.ready = false;
       player.role = null;
@@ -1775,6 +1778,27 @@ class GameState extends EventEmitter {
     console.log(`[game ${this.roomCode}] reset (gameId ${this.gameId})`);
     this.emit('phase', { cycle: 0, phase: PHASES.LOBBY, endsAt: null, crisis: null });
     return true;
+  }
+
+  /**
+   * host:playAgain: reset the room for another game without restarting
+   * Node. By default the seats are cleared too (a new class period brings
+   * new students); `keepPlayers: true` keeps the same five seated so they
+   * can replay. Returns { ok, gameId, keptPlayers, released: [node] }.
+   */
+  playAgain({ keepPlayers = false } = {}) {
+    const released = [];
+    if (!keepPlayers) {
+      for (const node of Object.keys(this.players)) {
+        if (!this.players[node].isBot) released.push(node);
+        delete this.players[node];
+        delete this.scores[node];
+        delete this.overridesUsed[node];
+      }
+    }
+    this.resetGame();
+    if (this.botsEnabled) this.fillBots();
+    return { ok: true, gameId: this.gameId, keptPlayers: !!keepPlayers, released };
   }
 
   /**

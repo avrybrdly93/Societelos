@@ -212,3 +212,47 @@ test('a projector that refreshes mid-game rejoins its room and gets host:sync an
   assert.deepEqual(got['host:sync'].gdwHistory, game.gdwHistory);
   assert.ok(got.phase.phase !== 'LOBBY');
 });
+
+// TASK-612 ------------------------------------------------------------------
+
+test('host:playAgain resets the room for the next class: new game id, LOBBY, seats released', { timeout: 15000 }, async () => {
+  const { host, roomCode, phones, game } = await startedRoom();
+  await until(() => game.cycle >= 1);
+  const firstGameId = game.gameId;
+  const invalid = phones.map((p) => once(p.socket, 'session:invalid'));
+  const lobby = new Promise((resolve) => host.on('phase', (p) => { if (p.phase === 'LOBBY') resolve(p); }));
+
+  const result = await host.emitWithAck('host:playAgain', {});
+  assert.equal(result.ok, true);
+  assert.equal(result.keptPlayers, false);
+  assert.deepEqual(result.released.sort(), ['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05']);
+  await lobby;
+  for (const reason of await Promise.all(invalid)) assert.deepEqual(reason, { reason: 'ROOM_RESET' });
+  assert.equal(engine.getRoom(roomCode), game, 'same room, same process');
+  assert.notEqual(game.gameId, firstGameId);
+  assert.equal(game.phase, 'LOBBY');
+  assert.equal(game.cycle, 0);
+  assert.equal(game.gdw, 25);
+  assert.deepEqual(game.players, {});
+
+  // The next class joins the same room code.
+  const next = connect({ clientType: 'phone' });
+  await once(next, 'connect');
+  const joined = await next.emitWithAck('lobby:join', { name: 'Next class', room: roomCode });
+  assert.equal(joined.ok, true);
+  assert.equal(joined.node, 'NODE-01');
+  // A released phone is no longer seated: its old events are refused.
+  const stale = await phones[0].socket.emitWithAck('vote:cast', { choice: 'A' });
+  assert.equal(stale.reason, 'NOT_JOINED');
+});
+
+test('host:playAgain { keepPlayers: true } keeps the same five seated for a replay', { timeout: 15000 }, async () => {
+  const { host, phones, game } = await startedRoom();
+  await until(() => game.cycle >= 1);
+  const result = await host.emitWithAck('host:playAgain', { keepPlayers: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.released, []);
+  assert.equal(game.phase, 'LOBBY');
+  assert.deepEqual(Object.keys(game.players).sort(), phones.map((p) => p.node).sort());
+  for (const p of Object.values(game.players)) assert.equal(p.ready, false, 'everyone readies up again');
+});
