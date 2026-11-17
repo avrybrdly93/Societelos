@@ -291,8 +291,26 @@
   function onPhase(payload) {
     if (!payload || !payload.phase) return;
     const previousPhase = state.phase;
-    if (previousPhase === 'END' && payload.phase === 'LOBBY') {
+    // Back in the lobby after a game (host:playAgain, normally from END):
+    // this seat starts Game #2 with nothing left over from Game #1.
+    if (previousPhase && previousPhase !== 'LOBBY' && payload.phase === 'LOBBY') {
       state.score = 0;
+      state.role = null;
+      state.worldKey = null;
+      delete document.body.dataset.world;
+      document.getElementById('drawer-role-name').textContent = '';
+      document.getElementById('intel-drawer-text').textContent = '';
+      document.getElementById('intel-text').textContent = 'Awaiting decryption\u2026';
+      setVoteLocked(false);
+      setVoteButtonsDisabled(false);
+      ballot.policies = [];
+      ballot.order = [];
+      ballot.locked = false;
+      document.getElementById('rank-cards').textContent = '';
+      document.getElementById('rank-cards').hidden = false;
+      document.getElementById('rank-locked').hidden = true;
+      document.getElementById('rank-locked-order').textContent = '';
+      document.getElementById('m-view-finale-rank').classList.remove('is-locked');
       state.endData = null;
       state.lastVote = null;
       state.voteLockedCycle = null;
