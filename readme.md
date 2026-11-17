@@ -80,6 +80,19 @@ The Loom operates on a delicate balance between cooperative survival and competi
 
 ---
 
+## 📡 Gemini API budget (per game)
+
+One game calls Gemini at most **11 times**, usually **6–7**, spread over ~15 minutes (well under 1 request per minute):
+
+| Call | When | Count |
+| :--- | :--- | :--- |
+| `loom.narrate` | each RESOLUTION / FINALE_ENACT | 5 |
+| `loom.moderate` | FINALE_MOD, one batch for all 5 write-ins | 1 |
+| `loom.moderateOne` | only for write-ins sent back to "revise" | 0–5 |
+| `npm run loom:test` | manual connection check | 1 per run |
+
+Each request is small (prompt about 1–3k tokens, `maxOutputTokens` 1024), so per-minute token limits are not a concern. **Requests per day is the limit to watch:** free-tier quotas for Flash models have been cut more than once (community reports from late 2025 mention about 20 requests/day, down from 250). At about 7 calls per game, that allows only **2–3 games per day per API key**, including rehearsals. Check the live limits for your project in Google AI Studio before class. If the quota runs out, every call falls back offline within 8 s (authored Loom lines, and the authored A/B finale), so the game keeps running, but without the write-in finale. For several classes a day, use a billing-enabled (Tier 1) key.
+
 ## ⏱️ Game Timing (13.5–16 min)
 
 | Segment | Duration |
