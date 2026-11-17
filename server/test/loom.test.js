@@ -302,3 +302,18 @@ test('loom.moderate embeds few-shot calibration: authored policies with exact ef
   // The submissions come last, after the calibration block.
   assert.ok(prompt.indexOf('Calibration examples') < prompt.indexOf(FIVE[0].text));
 });
+
+test('loom.moderate requests temperature 0.2 and a JSON responseSchema of { node, status, cleaned, feedback, roles, effects }', async () => {
+  const { calls, fetchImpl } = recordingFetch((body) => okFor(JSON.parse(body.contents[0].parts[0].text.split('\n\n').pop())));
+  await loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl });
+  const cfg = calls[0].body.generationConfig;
+  assert.equal(cfg.temperature, 0.2);
+  assert.equal(cfg.responseMimeType, 'application/json');
+  assert.equal(cfg.responseSchema.type, 'ARRAY');
+  const item = cfg.responseSchema.items;
+  assert.deepEqual([...item.required].sort(), ['cleaned', 'effects', 'feedback', 'node', 'roles', 'status']);
+  assert.deepEqual(item.properties.status.enum, ['ok', 'revise', 'reject']);
+  assert.deepEqual(item.properties.roles.items.enum, ['artisan', 'lotus', 'assimilator', 'ghost']);
+  assert.deepEqual([...item.properties.effects.required].sort(), ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust']);
+  assert.ok(calls[0].url.endsWith(':generateContent'));
+});
