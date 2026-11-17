@@ -500,87 +500,87 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-455:** Prepare `feature/backend` Wednesday branch state for automated end-of-day merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
-- [ ] **TASK-456:** Build Host Cycle 5 Finale Incident view in `public/index.html` ("THE LOOM CANNOT COMPUTE AN ANSWER. WRITE YOUR POLICY.") with no A/B options shown.
-- [ ] **TASK-457:** Build Mobile Finale Write screen in `public/mobile.html` featuring a `<textarea maxlength="140">`, live character counter (`0 / 140`), and "SUBMIT POLICY TO THE LOOM" button.
-- [ ] **TASK-458:** Display the player's secret role goal reminder at the top of the Mobile Finale Write screen so they craft a policy aligned with their agenda.
-- [ ] **TASK-459:** Implement live character counter and empty-submission guard in `public/js/mobile.js` for `finale:submit`.
-- [ ] **TASK-460:** Build Mobile Moderation Waiting state in `public/mobile.html` ("THE LOOM IS EVALUATING YOUR POLICY...").
-- [ ] **TASK-461:** Build Mobile Moderation Feedback & Resubmit modal in `public/mobile.html` for `status === "revise"`, displaying The Loom's private feedback and allowing one revised submission.
-- [ ] **TASK-462:** Implement `finale:feedback` listener in `public/js/mobile.js`: if `status === "ok"`, show "POLICY ACCEPTED BY THE LOOM"; if `status === "revise"`, unlock the textarea with the private feedback banner; if `status === "reject"`, show notice that a standard protocol policy was substituted.
-- [ ] **TASK-463:** Build Host Write & Moderate status view in `public/index.html` showing which nodes (`NODE-01`..`NODE-05`) have submitted policies and a pulsing Loom neural-processing animation during moderation.
-- [ ] **TASK-464:** Build Host Finale Read & Debate view in `public/index.html` displaying all 5 cleaned policies anonymously (`PROPOSAL I` through `PROPOSAL V`) in large projector cards with a 60-second debate timer.
-- [ ] **TASK-465:** Style the 5 anonymous proposal cards in `public/css/styles.css` so all 5 fit cleanly on a 1080p projector screen without scrolling.
-- [ ] **TASK-466:** Build Mobile Finale Rank ballot screen in `public/mobile.html` displaying the 4 policies written by the other players (the player's own policy is hidden).
-- [ ] **TASK-467:** Implement intuitive tap-to-rank (`1st`, `2nd`, `3rd`, `4th`) or up/down reorder controls in `public/js/mobile.js` so players can easily rank the 4 policies on mobile touchscreens without finicky drag-and-drop bugs.
-- [ ] **TASK-468:** Display Borda point badges (`1st = +4 pts`, `2nd = +3 pts`, `3rd = +2 pts`, `4th = +1 pt`) on the Mobile Finale Rank ballot cards so players understand the strategic weight (including burying a rival at 4th).
-- [ ] **TASK-469:** Implement "LOCK IN RANKINGS" submit button in `public/js/mobile.js` emitting `finale:rank` with `{ order: [id1, id2, id3, id4] }`.
-- [ ] **TASK-470:** Build Host Finale Ranking progress indicator in `public/index.html` showing which nodes have locked in their ballots during the 30s rank window.
-- [ ] **TASK-471:** Build Host Finale Enactment (`50 / 25 / 25`) reveal overlay in `public/index.html` showing the top 3 proposals by Borda score (`1ST PLACE — 50% WEIGHT`, `2ND PLACE — 25% WEIGHT`, `3RD PLACE — 25% WEIGHT`) before the final simulation runs.
-- [ ] **TASK-472:** Animate Borda points bar tally on Host Finale Enactment screen in `public/js/host.js`.
-- [ ] **TASK-473:** Transition Host Finale Enactment smoothly into the Forecast Fan Chart, Month-by-Month Region Map animation, and final Citizen Reactions feed.
-- [ ] **TASK-474:** Handle UI fallback seamlessly in `public/js/host.js` and `public/js/mobile.js`: if Gemini fails during Cycle 5 moderation and the server emits `phase: "DEBATE"` with authored A/B options, automatically switch phones and projector back to the binary Debate -> Vote UI.
-- [ ] **TASK-475:** Polish SVG District Map month-by-month animation in `public/js/map.js` adding a floating Month indicator (`MONTH 1 / 12` .. `MONTH 12 / 12`) synced with the chart line.
-- [ ] **TASK-476:** Add district pulse ring effect on the SVG map in `public/js/map.js` whenever a district experiences a large positive or negative trait shift.
-- [ ] **TASK-477:** Add cohort breakdown tooltip/legend on the Host Region Map panel (`Youth 25% | Former Workers 45% | Elders 29% | Former Elite 1%`).
-- [ ] **TASK-478:** Enhance Forecast Fan Chart in `public/js/charts.js` with a glowing endpoint dot on the realized GDW line as it draws across Months 1–12.
-- [ ] **TASK-479:** Display comparison callout on the Forecast Chart at Month 12 ("BEAT FORECAST BY +X%" or "MISSED FORECAST BY -X%").
-- [ ] **TASK-480:** Ensure mobile keyboard dismissal scrolls the viewport back to the top on iOS Safari and Android Chrome after submitting a Cycle 5 policy.
-- [ ] **TASK-481:** Prevent accidental pull-to-refresh on `public/mobile.html` (`overscroll-behavior-y: contain` in `public/css/styles.css`).
-- [ ] **TASK-482:** Add clear visual timer bar at the top of the Mobile Finale Write screen so players see the 45-second deadline while typing.
-- [ ] **TASK-483:** Add clear visual timer bar on the Mobile Resubmit screen during the `"revise"` window.
-- [ ] **TASK-484:** Test tap-to-rank ballot interaction on `public/mobile.html`: tapping an already-ranked card unranks it and shifts remaining ranks cleanly.
-- [ ] **TASK-485:** Require all 4 policies on the mobile ballot to have ranks `1`–`4` assigned before enabling the "LOCK IN RANKINGS" button.
-- [ ] **TASK-486:** Style the World `BA` (`The Uneasy Republic`) theme in `public/css/styles.css` (amber/brass vs industrial rust palette).
-- [ ] **TASK-487:** Style the World `BB` (`The Gilded Cage`) theme in `public/css/styles.css` (opulent gold & velvet violet palette).
-- [ ] **TASK-488:** Verify World `AA` (`The Commonwealth`) and World `AB` (`The Benevolent Machine`) themes transition cleanly during `world:reveal`.
-- [ ] **TASK-489:** Add subtle background grid animation on Host projector screen representing The Loom's active computation.
-- [ ] **TASK-490:** Ensure Citizen Feed during Cycle 5 Enactment highlights how the combined 50/25/25 policy package affected citizens across districts.
-- [ ] **TASK-491:** Test Host layout with maximum-length (140-character) policies across all 5 Finale Proposal cards.
-- [ ] **TASK-492:** Test Mobile Ballot layout with four 140-character policy strings on a small `375px` screen.
-- [ ] **TASK-493:** Add role tag reveal badges onto the 3 enacted finale policies on the Host Resolution screen AFTER rankings are locked and enacted.
-- [ ] **TASK-494:** Verify `public/js/charts.js` handles canvas resize events if the teacher toggles fullscreen (`F11`) on the projector laptop.
-- [ ] **TASK-495:** Add Fullscreen toggle button (`[ ⛶ ]`) in the corner of the Host top bar in `public/index.html`.
-- [ ] **TASK-496:** Test all Cycle 5 mobile screens using `window.debugMobilePhase` mock payloads.
-- [ ] **TASK-497:** Test all Cycle 5 host projector screens using `window.debugTriggerPhase` mock payloads.
-- [ ] **TASK-498:** Verify zero XSS vulnerabilities by using `.textContent` (never `.innerHTML`) when rendering player-submitted policies on both Host and Mobile!
-- [ ] **TASK-499:** Double-check `.textContent` enforcement on player names in `lobby:update` and citizen messages in `resolution`.
-- [ ] **TASK-500:** Verify smooth transitions between `FINALE_WRITE` -> `FINALE_MOD` -> `FINALE_DEBATE` -> `FINALE_RANK` -> `FINALE_ENACT`.
-- [ ] **TASK-501:** Test UI fallback from `FINALE_MOD` to binary `DEBATE` when simulating a Gemini timeout.
-- [ ] **TASK-502:** Check CSS animations for 60fps performance on integrated laptop GPUs.
-- [ ] **TASK-503:** Verify all DOM elements for Cycle 5 exist in `public/index.html` and `public/mobile.html`.
-- [ ] **TASK-504:** Run frontend syntax and reference checks across `public/js/*`.
-- [ ] **TASK-505:** Verify mobile rank ordering array matches exact `[rank1Id, rank2Id, rank3Id, rank4Id]` schema.
-- [ ] **TASK-506:** Add visual confirmation state after submitting Finale Rank ballot ("BALLOT ENCRYPTED — AWAITING ENACTMENT").
-- [ ] **TASK-507:** Ensure Host top bar displays `CYCLE 5/5 — FINALE` clearly.
-- [ ] **TASK-508:** Test complete Cycles 1–5 UI flow with mock socket events.
-- [ ] **TASK-509:** Confirm all Wednesday frontend tasks complete.
+- [x] **TASK-456:** Build Host Cycle 5 Finale Incident view in `public/index.html` ("THE LOOM CANNOT COMPUTE AN ANSWER. WRITE YOUR POLICY.") with no A/B options shown.
+- [x] **TASK-457:** Build Mobile Finale Write screen in `public/mobile.html` featuring a `<textarea maxlength="140">`, live character counter (`0 / 140`), and "SUBMIT POLICY TO THE LOOM" button.
+- [x] **TASK-458:** Display the player's secret role goal reminder at the top of the Mobile Finale Write screen so they craft a policy aligned with their agenda.
+- [x] **TASK-459:** Implement live character counter and empty-submission guard in `public/js/mobile.js` for `finale:submit`.
+- [x] **TASK-460:** Build Mobile Moderation Waiting state in `public/mobile.html` ("THE LOOM IS EVALUATING YOUR POLICY...").
+- [x] **TASK-461:** Build Mobile Moderation Feedback & Resubmit modal in `public/mobile.html` for `status === "revise"`, displaying The Loom's private feedback and allowing one revised submission.
+- [x] **TASK-462:** Implement `finale:feedback` listener in `public/js/mobile.js`: if `status === "ok"`, show "POLICY ACCEPTED BY THE LOOM"; if `status === "revise"`, unlock the textarea with the private feedback banner; if `status === "reject"`, show notice that a standard protocol policy was substituted.
+- [x] **TASK-463:** Build Host Write & Moderate status view in `public/index.html` showing which nodes (`NODE-01`..`NODE-05`) have submitted policies and a pulsing Loom neural-processing animation during moderation.
+- [x] **TASK-464:** Build Host Finale Read & Debate view in `public/index.html` displaying all 5 cleaned policies anonymously (`PROPOSAL I` through `PROPOSAL V`) in large projector cards with a 60-second debate timer.
+- [x] **TASK-465:** Style the 5 anonymous proposal cards in `public/css/styles.css` so all 5 fit cleanly on a 1080p projector screen without scrolling.
+- [x] **TASK-466:** Build Mobile Finale Rank ballot screen in `public/mobile.html` displaying the 4 policies written by the other players (the player's own policy is hidden).
+- [x] **TASK-467:** Implement intuitive tap-to-rank (`1st`, `2nd`, `3rd`, `4th`) or up/down reorder controls in `public/js/mobile.js` so players can easily rank the 4 policies on mobile touchscreens without finicky drag-and-drop bugs.
+- [x] **TASK-468:** Display Borda point badges (`1st = +4 pts`, `2nd = +3 pts`, `3rd = +2 pts`, `4th = +1 pt`) on the Mobile Finale Rank ballot cards so players understand the strategic weight (including burying a rival at 4th).
+- [x] **TASK-469:** Implement "LOCK IN RANKINGS" submit button in `public/js/mobile.js` emitting `finale:rank` with `{ order: [id1, id2, id3, id4] }`.
+- [x] **TASK-470:** Build Host Finale Ranking progress indicator in `public/index.html` showing which nodes have locked in their ballots during the 30s rank window.
+- [x] **TASK-471:** Build Host Finale Enactment (`50 / 25 / 25`) reveal overlay in `public/index.html` showing the top 3 proposals by Borda score (`1ST PLACE — 50% WEIGHT`, `2ND PLACE — 25% WEIGHT`, `3RD PLACE — 25% WEIGHT`) before the final simulation runs.
+- [x] **TASK-472:** Animate Borda points bar tally on Host Finale Enactment screen in `public/js/host.js`.
+- [x] **TASK-473:** Transition Host Finale Enactment smoothly into the Forecast Fan Chart, Month-by-Month Region Map animation, and final Citizen Reactions feed.
+- [x] **TASK-474:** Handle UI fallback seamlessly in `public/js/host.js` and `public/js/mobile.js`: if Gemini fails during Cycle 5 moderation and the server emits `phase: "DEBATE"` with authored A/B options, automatically switch phones and projector back to the binary Debate -> Vote UI.
+- [x] **TASK-475:** Polish SVG District Map month-by-month animation in `public/js/map.js` adding a floating Month indicator (`MONTH 1 / 12` .. `MONTH 12 / 12`) synced with the chart line.
+- [x] **TASK-476:** Add district pulse ring effect on the SVG map in `public/js/map.js` whenever a district experiences a large positive or negative trait shift.
+- [x] **TASK-477:** Add cohort breakdown tooltip/legend on the Host Region Map panel (`Youth 25% | Former Workers 45% | Elders 29% | Former Elite 1%`).
+- [x] **TASK-478:** Enhance Forecast Fan Chart in `public/js/charts.js` with a glowing endpoint dot on the realized GDW line as it draws across Months 1–12.
+- [x] **TASK-479:** Display comparison callout on the Forecast Chart at Month 12 ("BEAT FORECAST BY +X%" or "MISSED FORECAST BY -X%").
+- [x] **TASK-480:** Ensure mobile keyboard dismissal scrolls the viewport back to the top on iOS Safari and Android Chrome after submitting a Cycle 5 policy.
+- [x] **TASK-481:** Prevent accidental pull-to-refresh on `public/mobile.html` (`overscroll-behavior-y: contain` in `public/css/styles.css`).
+- [x] **TASK-482:** Add clear visual timer bar at the top of the Mobile Finale Write screen so players see the 45-second deadline while typing.
+- [x] **TASK-483:** Add clear visual timer bar on the Mobile Resubmit screen during the `"revise"` window.
+- [x] **TASK-484:** Test tap-to-rank ballot interaction on `public/mobile.html`: tapping an already-ranked card unranks it and shifts remaining ranks cleanly.
+- [x] **TASK-485:** Require all 4 policies on the mobile ballot to have ranks `1`–`4` assigned before enabling the "LOCK IN RANKINGS" button.
+- [x] **TASK-486:** Style the World `BA` (`The Uneasy Republic`) theme in `public/css/styles.css` (amber/brass vs industrial rust palette).
+- [x] **TASK-487:** Style the World `BB` (`The Gilded Cage`) theme in `public/css/styles.css` (opulent gold & velvet violet palette).
+- [x] **TASK-488:** Verify World `AA` (`The Commonwealth`) and World `AB` (`The Benevolent Machine`) themes transition cleanly during `world:reveal`.
+- [x] **TASK-489:** Add subtle background grid animation on Host projector screen representing The Loom's active computation.
+- [x] **TASK-490:** Ensure Citizen Feed during Cycle 5 Enactment highlights how the combined 50/25/25 policy package affected citizens across districts.
+- [x] **TASK-491:** Test Host layout with maximum-length (140-character) policies across all 5 Finale Proposal cards.
+- [x] **TASK-492:** Test Mobile Ballot layout with four 140-character policy strings on a small `375px` screen.
+- [x] **TASK-493:** Add role tag reveal badges onto the 3 enacted finale policies on the Host Resolution screen AFTER rankings are locked and enacted.
+- [x] **TASK-494:** Verify `public/js/charts.js` handles canvas resize events if the teacher toggles fullscreen (`F11`) on the projector laptop.
+- [x] **TASK-495:** Add Fullscreen toggle button (`[ ⛶ ]`) in the corner of the Host top bar in `public/index.html`.
+- [x] **TASK-496:** Test all Cycle 5 mobile screens using `window.debugMobilePhase` mock payloads.
+- [x] **TASK-497:** Test all Cycle 5 host projector screens using `window.debugTriggerPhase` mock payloads.
+- [x] **TASK-498:** Verify zero XSS vulnerabilities by using `.textContent` (never `.innerHTML`) when rendering player-submitted policies on both Host and Mobile!
+- [x] **TASK-499:** Double-check `.textContent` enforcement on player names in `lobby:update` and citizen messages in `resolution`.
+- [x] **TASK-500:** Verify smooth transitions between `FINALE_WRITE` -> `FINALE_MOD` -> `FINALE_DEBATE` -> `FINALE_RANK` -> `FINALE_ENACT`.
+- [x] **TASK-501:** Test UI fallback from `FINALE_MOD` to binary `DEBATE` when simulating a Gemini timeout.
+- [x] **TASK-502:** Check CSS animations for 60fps performance on integrated laptop GPUs.
+- [x] **TASK-503:** Verify all DOM elements for Cycle 5 exist in `public/index.html` and `public/mobile.html`.
+- [x] **TASK-504:** Run frontend syntax and reference checks across `public/js/*`.
+- [x] **TASK-505:** Verify mobile rank ordering array matches exact `[rank1Id, rank2Id, rank3Id, rank4Id]` schema.
+- [x] **TASK-506:** Add visual confirmation state after submitting Finale Rank ballot ("BALLOT ENCRYPTED — AWAITING ENACTMENT").
+- [x] **TASK-507:** Ensure Host top bar displays `CYCLE 5/5 — FINALE` clearly.
+- [x] **TASK-508:** Test complete Cycles 1–5 UI flow with mock socket events.
+- [x] **TASK-509:** Confirm all Wednesday frontend tasks complete.
 - [ ] **TASK-510:** Prepare `feature/frontend` Wednesday branch state for automated end-of-day merge.
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
-- [ ] **TASK-511:** Author `ba-shadow-elite` (World `BA` Cycle 3: The Shadow Elite) incident ("Owners buy private Loom copies to get around the Assembly") and Loom intro in `data/crises.json`.
+- [x] **TASK-511:** Author `ba-shadow-elite` (World `BA` Cycle 3: The Shadow Elite) incident ("Owners buy private Loom copies to get around the Assembly") and Loom intro in `data/crises.json`.
 - [ ] **TASK-512:** Author `ba-shadow-elite` Option A ("Nationalise all compute into one Loom", tags `["assimilator"]`) and effect vector in `data/crises.json`.
 - [ ] **TASK-513:** Author `ba-shadow-elite` Option B ("Allow private copies but tax them heavily", tags `["lotus", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-514:** Author all 5 role-slanted secret intel drops for `ba-shadow-elite` in `data/crises.json`.
-- [ ] **TASK-515:** Author `ba-status-wars` (World `BA` Cycle 4: The Status Wars) incident ("Citizens fight over coastal homes and other scarce goods") and Loom intro in `data/crises.json`.
+- [x] **TASK-514:** Author all 5 role-slanted secret intel drops for `ba-shadow-elite` in `data/crises.json`.
+- [x] **TASK-515:** Author `ba-status-wars` (World `BA` Cycle 4: The Status Wars) incident ("Citizens fight over coastal homes and other scarce goods") and Loom intro in `data/crises.json`.
 - [ ] **TASK-516:** Author `ba-status-wars` Option A ("Lottery for everything scarce", tags `["lotus"]`) and effect vector in `data/crises.json`.
 - [ ] **TASK-517:** Author `ba-status-wars` Option B ("Allocate by community contribution", tags `["artisan"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-518:** Author all 5 role-slanted secret intel drops for `ba-status-wars` in `data/crises.json`.
-- [ ] **TASK-519:** Author `ba-vote-to-seize` (World `BA` Cycle 5 Finale: The Vote to Seize, `mode: "writein"`) incident ("A ballot measure would confiscate the owners' stakes") and Loom prompt in `data/crises.json`.
+- [x] **TASK-518:** Author all 5 role-slanted secret intel drops for `ba-status-wars` in `data/crises.json`.
+- [x] **TASK-519:** Author `ba-vote-to-seize` (World `BA` Cycle 5 Finale: The Vote to Seize, `mode: "writein"`) incident ("A ballot measure would confiscate the owners' stakes") and Loom prompt in `data/crises.json`.
 - [ ] **TASK-520:** Author `ba-vote-to-seize` fallback Option A ("Pass it", tags `["assimilator", "artisan"]`) and fallback Option B ("Reject it; property rights stand", tags `["lotus", "ghost"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-521:** Author all 5 secret intel drops for `ba-vote-to-seize` in `data/crises.json`.
-- [ ] **TASK-522:** Author `bb-scroll-extinction` (World `BB` Cycle 3: Scroll Extinction) incident ("Birthrate near zero; most citizens scroll 14 hours a day") and Loom intro in `data/crises.json`.
+- [x] **TASK-521:** Author all 5 secret intel drops for `ba-vote-to-seize` in `data/crises.json`.
+- [x] **TASK-522:** Author `bb-scroll-extinction` (World `BB` Cycle 3: Scroll Extinction) incident ("Birthrate near zero; most citizens scroll 14 hours a day") and Loom intro in `data/crises.json`.
 - [ ] **TASK-523:** Author `bb-scroll-extinction` Option A ("Loom matchmaking plus large child stipends", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
 - [ ] **TASK-524:** Author `bb-scroll-extinction` Option B ("Throttle feeds; mandatory offline hours", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-525:** Author all 5 role-slanted secret intel drops for `bb-scroll-extinction` in `data/crises.json`.
-- [ ] **TASK-526:** Author `bb-the-unplugged` (World `BB` Cycle 4: The Unplugged) incident ("A movement is sabotaging infrastructure") and Loom intro in `data/crises.json`.
+- [x] **TASK-525:** Author all 5 role-slanted secret intel drops for `bb-scroll-extinction` in `data/crises.json`.
+- [x] **TASK-526:** Author `bb-the-unplugged` (World `BB` Cycle 4: The Unplugged) incident ("A movement is sabotaging infrastructure") and Loom intro in `data/crises.json`.
 - [ ] **TASK-527:** Author `bb-the-unplugged` Option A ("Grant them a tech-free autonomous zone", tags `["ghost"]`) and effect vector in `data/crises.json`.
 - [ ] **TASK-528:** Author `bb-the-unplugged` Option B ("Loom surveillance and re-education", tags `["assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-529:** Author all 5 role-slanted secret intel drops for `bb-the-unplugged` in `data/crises.json`.
-- [ ] **TASK-530:** Author `bb-march-datacenter` (World `BB` Cycle 5 Finale: March on the Datacenter, `mode: "writein"`) incident ("A crowd gathers to shut the Loom down") and Loom prompt in `data/crises.json`.
+- [x] **TASK-529:** Author all 5 role-slanted secret intel drops for `bb-the-unplugged` in `data/crises.json`.
+- [x] **TASK-530:** Author `bb-march-datacenter` (World `BB` Cycle 5 Finale: March on the Datacenter, `mode: "writein"`) incident ("A crowd gathers to shut the Loom down") and Loom prompt in `data/crises.json`.
 - [ ] **TASK-531:** Author `bb-march-datacenter` fallback Option A ("Open the doors: give citizens real control", tags `["ghost", "artisan"]`) and fallback Option B ("Lock down; the Loom pacifies the crowd", tags `["assimilator", "lotus"]`) with effect vectors in `data/crises.json`.
-- [ ] **TASK-532:** Author all 5 secret intel drops for `bb-march-datacenter` in `data/crises.json`.
-- [ ] **TASK-533:** Author pre-debate incident citizen feed lines and debate hooks for all `BA` and `BB` crises in `data/crises.json`.
-- [ ] **TASK-534:** Ensure `BB` (The Gilded Cage) late crises (`bb-scroll-extinction`, `bb-the-unplugged`, `bb-march-datacenter`) carry harsh negative trait trade-offs so the comfortable early `1B -> 2B` path hits hardest in Cycles 3–5.
+- [x] **TASK-532:** Author all 5 secret intel drops for `bb-march-datacenter` in `data/crises.json`.
+- [x] **TASK-533:** Author pre-debate incident citizen feed lines and debate hooks for all `BA` and `BB` crises in `data/crises.json`.
+- [x] **TASK-534:** Ensure `BB` (The Gilded Cage) late crises (`bb-scroll-extinction`, `bb-the-unplugged`, `bb-march-datacenter`) carry harsh negative trait trade-offs so the comfortable early `1B -> 2B` path hits hardest in Cycles 3–5.
 - [ ] **TASK-535:** Verify all 14 crises (2 fixed + 8 world binary + 4 world finales) are complete in `data/crises.json` and prepare `feature/content` Wednesday branch state for merge.
 
 ### Agent 4: Simulation & Loom (`feature/sim` — 50 Tasks)
