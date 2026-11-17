@@ -1494,3 +1494,44 @@ body.host .topbar.is-crowded .phase-crumbs li { font-size: 16px; padding: 3px 5p
 .topbar.is-finale .phase-crumbs { margin-left: 12px; }
 body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px; }
 .topbar.is-finale .topbar-brand .muted { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* End Screen: three beats (recap, roles & authors reveal, winner).    */
+/* ------------------------------------------------------------------ */
+.view-end { display: none; padding: 18px 48px; gap: 14px; flex-direction: column; overflow: hidden; }
+.view-end.is-active { display: flex; }
+.end-beat { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 22px; }
+.end-beat > .label { margin: 0 0 8px; }
+.end-recap-grid { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 20px; align-items: stretch; }
+.end-chart-wrap { position: relative; min-height: 230px; }
+.end-chart { display: block; width: 100%; height: 230px; }
+.end-badges { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; }
+.end-badges .end-closing { grid-column: 1 / -1; }
+.end-badge { display: flex; flex-direction: column; gap: 0; padding: 6px 14px; border-radius: var(--radius); background: var(--bg-sunken); border-left: 4px solid var(--theme-current, var(--accent)); }
+.end-badge-value { font-size: 28px; line-height: 1.15; }
+.end-badge-grade[data-grade="Thriving"] { border-left-color: var(--teal); }
+.end-badge-grade[data-grade="Stable"] { border-left-color: var(--accent); }
+.end-badge-grade[data-grade="Fragile"] { border-left-color: var(--amber); }
+.end-badge-grade[data-grade="SHUTDOWN"] { border-left-color: var(--danger); }
+.end-badge-grade[data-grade="SHUTDOWN"] .end-badge-value { color: var(--danger); }
+.end-closing { margin: 0; padding: 4px 14px; border-left: 4px solid var(--slate-600); font-size: 20px; line-height: 1.3; }
+.end-closing p { margin: 0 0 6px; }
+.end-closing footer { font-size: 16px; }
+.end-table { width: 100%; border-collapse: collapse; font-size: 22px; }
+.end-table th { text-align: left; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.end-table td { padding: 5px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
+.end-table td.col-points, .end-table th.col-points { text-align: right; font-family: var(--font-mono); }
+.end-table .end-role { white-space: nowrap; }
+.end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
+.end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+.end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
+.end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
+.view-end.no-writein .col-author { display: none; }
+.end-winner { text-align: center; padding-top: 8px; padding-bottom: 8px; }
+.end-winner .label { margin: 0; }
+.end-winner-title { font-size: 44px; line-height: 1.1; margin: 0; color: var(--teal); }
+.end-winner-sub { font-size: 20px; margin: 0; display: inline; }
+.end-seed { font-size: 15px; margin: 0 0 0 16px; display: inline; }
+.view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
+.view-end.is-shutdown .end-winner-title { color: var(--danger); }

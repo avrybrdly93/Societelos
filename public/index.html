@@ -333,7 +333,50 @@
       <ol id="enact-cards" class="enact-cards"></ol>
       <p id="enact-wait" class="enact-wait mono">THE LOOM IS COUNTING BALLOTS...</p>
     </section>
-    <section id="view-end" class="view" aria-label="End of session"></section>
+    <section id="view-end" class="view view-end" aria-label="End of session">
+      <!-- Beat 1: Five-Year Recap -->
+      <div id="end-recap" class="end-beat end-recap">
+        <p class="label accent">Five-year recap</p>
+        <div class="end-recap-grid">
+          <div class="end-chart-wrap">
+            <canvas id="end-history-chart" class="end-chart" aria-label="Realized GDW over five years"></canvas>
+          </div>
+          <aside class="end-badges">
+            <div class="end-badge end-badge-world">
+              <span class="label">World reached</span>
+              <strong id="end-world-name" class="end-badge-value"></strong>
+              <span id="end-world-key" class="mono muted"></span>
+            </div>
+            <div class="end-badge end-badge-grade">
+              <span class="label">Class grade</span>
+              <strong id="end-grade" class="end-badge-value"></strong>
+              <span id="end-final-gdw" class="mono"></span>
+            </div>
+            <blockquote id="end-closing" class="end-closing">
+              <p id="end-closing-text"></p>
+              <footer id="end-closing-who" class="mono muted"></footer>
+            </blockquote>
+          </aside>
+        </div>
+      </div>
+      <!-- Beat 2: Secret Roles & Write-in Authors -->
+      <div id="end-reveal" class="end-beat end-reveal">
+        <p class="label accent">Secret roles &amp; write-in authors</p>
+        <table id="end-table" class="end-table">
+          <thead>
+            <tr><th>Node</th><th>Player</th><th>Secret role</th><th class="col-author">Write-in policy &middot; Borda rank</th><th class="col-points">Points</th></tr>
+          </thead>
+          <tbody id="end-roles-body"></tbody>
+        </table>
+      </div>
+      <!-- Beat 3: Winner (or the Shutdown total loss) -->
+      <div id="end-winner" class="end-beat end-winner">
+        <p id="end-winner-label" class="label"></p>
+        <h2 id="end-winner-title" class="end-winner-title"></h2>
+        <p id="end-winner-sub" class="end-winner-sub muted"></p>
+        <p id="end-seed" class="end-seed mono muted"></p>
+      </div>
+    </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>

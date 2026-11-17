@@ -1366,6 +1366,98 @@
   socket.on('phase', (payload) => {
     if (payload.phase === 'FINALE_ENACT') renderEnacted([]);
   });
+  // ---------------------------------------------------------------------
+  // End Screen (game:end): 1) five-year recap, 2) secret roles and write-in
+  // authors, 3) winner banner or the Shutdown total loss. Everything reaches
+  // the DOM through textContent (player names and write-ins are user text).
+  // ---------------------------------------------------------------------
+  const END_GRADE_LABELS = { SHUTDOWN: 'SHUTDOWN', Fragile: 'FRAGILE', Stable: 'STABLE', Thriving: 'THRIVING' };
+
+  function endCell(text, className) {
+    const td = document.createElement('td');
+    if (className) td.className = className;
+    if (text !== undefined && text !== null) td.textContent = String(text);
+    return td;
+  }
+
+  function renderEndRecap(data) {
+    document.getElementById('end-world-name').textContent = data.worldName || (data.shutdown ? 'Never formed' : '\u2014');
+    document.getElementById('end-world-key').textContent = data.worldKey ? `WORLD ${data.worldKey}` : '';
+    const grade = document.getElementById('end-grade');
+    grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
+    grade.parentElement.dataset.grade = data.grade || '';
+    document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL GDW ${data.finalGdw.toFixed(1)}%` : '';
+    const closing = data.closingMessage || {};
+    document.getElementById('end-closing-text').textContent = closing.text ? `\u201C${closing.text}\u201D` : '';
+    const who = [closing.name, typeof closing.age === 'number' ? closing.age : null, closing.districtName || closing.district].filter((v) => v !== null && v !== undefined && v !== '');
+    document.getElementById('end-closing-who').textContent = who.length ? `\u2014 ${who.join(', ')}` : '';
+  }
+
+  function renderEndTable(data) {
+    const body = document.getElementById('end-roles-body');
+    body.textContent = '';
+    const authorsByNode = {};
+    for (const a of data.authors || []) authorsByNode[a.node] = a;
+    const winners = new Set(data.winner || []);
+    for (const r of data.roles || []) {
+      const tr = document.createElement('tr');
+      tr.dataset.node = r.node;
+      if (winners.has(r.node)) tr.classList.add('is-winner');
+      const role = endCell(null, 'end-role');
+      if (r.role) {
+        const icon = document.createElement('span');
+        icon.className = 'end-role-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = r.role.icon || '';
+        role.append(icon, document.createTextNode(r.role.name || r.role.key));
+      }
+      const policy = endCell(null, 'col-author end-policy');
+      const a = authorsByNode[r.node];
+      if (a) {
+        policy.append(document.createTextNode(`${proposalLabel(a.id)}: ${a.text}`));
+        const rank = document.createElement('span');
+        rank.className = 'end-policy-rank';
+        rank.textContent = `RANK #${a.place} \u00B7 ${a.points} BORDA PTS${a.weight ? ` \u00B7 ENACTED ${Math.round(a.weight * 100)}%` : ''}`;
+        policy.appendChild(rank);
+      }
+      tr.append(endCell(r.node, 'mono'), endCell(r.name), role, policy, endCell(r.total, 'col-points'));
+      body.appendChild(tr);
+    }
+  }
+
+  function renderEndWinner(data) {
+    const label = document.getElementById('end-winner-label');
+    const title = document.getElementById('end-winner-title');
+    const sub = document.getElementById('end-winner-sub');
+    const names = {};
+    for (const r of data.roles || []) names[r.node] = r.name;
+    if (data.shutdown || !data.winner) {
+      label.textContent = 'Total loss';
+      title.textContent = 'THE LOOM HAS SHUT DOWN';
+      sub.textContent = 'Gross Domestic Well-Being reached 0%. Every agenda failed.';
+    } else {
+      const who = data.winner.map((n) => `${names[n] || n} (${n})`);
+      label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Architect of telos';
+      title.textContent = who.join(' & ');
+      const top = (data.scores && data.scores[data.winner[0]]) || 0;
+      sub.textContent = `${top} point${top === 1 ? '' : 's'}${data.winner.length > 1 ? ' each' : ''}. The region survived five years.`;
+    }
+    document.getElementById('end-seed').textContent = data.seed ? `SEED ${data.seed}` : '';
+  }
+
+  function renderEnd(data) {
+    if (!data) return;
+    state.endData = data;
+    const view = document.getElementById('view-end');
+    view.classList.toggle('is-shutdown', !!data.shutdown);
+    view.classList.toggle('no-writein', data.finaleMode !== 'writein');
+    if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);
+    renderEndRecap(data);
+    renderEndTable(data);
+    renderEndWinner(data);
+  }
+  socket.on('game:end', renderEnd);
+
   // Borda tally: one bar per proposal (max 16 points), growing from zero.
   const BORDA_MAX = 16;
   function renderBordaBars(tally) {
