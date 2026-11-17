@@ -97,6 +97,19 @@ const FINALE_SCHEMAS = Object.freeze({
 });
 
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
+/** The game:end broadcast: the spec's keys first, then End Screen extras. */
+const GAME_END_KEYS = Object.freeze([
+  'gdwHistory', 'finalGdw', 'grade', 'worldKey', 'worldName', 'closingMessage',
+  'roles', 'authors', 'scores', 'winner', 'shutdown', 'seed',
+  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin'
+]);
+
+function gameEndPayload(data = {}) {
+  const out = {};
+  for (const key of GAME_END_KEYS) if (data[key] !== undefined) out[key] = data[key];
+  return out;
+}
+
 function roleCard(role) {
   return {
     key: role.key,
@@ -194,6 +207,13 @@ function initSockets(io, gameEngine) {
     // intel:drop { text } privately, chosen by the node's secret role.
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
+    });
+
+    // game:end { gdwHistory, finalGdw, grade, worldKey, worldName,
+    // closingMessage, roles, authors, scores, winner, shutdown, seed } to the
+    // room once END starts: the game is over, so roles and authors are revealed.
+    game.on('game:end', (data) => {
+      io.to(roomChannel(game.roomCode)).emit('game:end', gameEndPayload(data));
     });
   }
 
@@ -481,4 +501,4 @@ function initSockets(io, gameEngine) {
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
+module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, gameEndPayload, GAME_END_KEYS, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
