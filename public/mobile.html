@@ -16,6 +16,8 @@
     <span id="m-session-timer" class="m-session-timer mono" hidden>--:--</span>
     <div id="m-countdown" class="m-countdown" aria-hidden="true"><div id="m-countdown-fill" class="m-countdown-fill"></div></div>
   </header>
+  <!-- Non-destructive: the current screen stays put underneath while the socket reconnects. -->
+  <div id="m-reconnect" class="m-reconnect mono" role="status" aria-live="polite" hidden>RECONNECTING TO LOOM…</div>
 
   <!-- Persistent role drawer: check your hidden agenda in any phase. -->
   <details id="role-drawer" class="role-drawer" hidden>

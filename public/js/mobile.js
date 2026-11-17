@@ -28,8 +28,31 @@
 
   const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
 
-  socket.on('connect', () => console.debug('[mobile] connected'));
-  socket.on('disconnect', (reason) => console.warn('[mobile] disconnected:', reason));
+  // Brief drops (Wi-Fi blip, screen lock): show a top banner instead of
+  // tearing down the screen. Socket.IO reconnects on its own; the server
+  // then replays this seat's state (state:sync, role, phase, intel, ballot)
+  // and the normal handlers repaint the active view.
+  const reconnectBanner = document.getElementById('m-reconnect');
+  let reconnectTimer = null;
+  function setReconnecting(on) {
+    clearTimeout(reconnectTimer);
+    if (!on) {
+      reconnectBanner.hidden = true;
+      document.body.classList.remove('is-reconnecting');
+      return;
+    }
+    // A short grace period so a sub-second blip never flashes the banner.
+    reconnectTimer = setTimeout(() => {
+      reconnectBanner.hidden = false;
+      document.body.classList.add('is-reconnecting');
+    }, 700);
+  }
+  socket.on('connect', () => { console.debug('[mobile] connected'); setReconnecting(false); });
+  socket.on('disconnect', (reason) => {
+    console.warn('[mobile] disconnected:', reason);
+    if (reason !== 'io client disconnect') setReconnecting(true);
+  });
+  socket.io.on('reconnect_attempt', () => { if (!socket.connected) setReconnecting(true); });
 
   // A stale token (server restarted, new game) means starting from the join form.
   socket.on('session:invalid', () => {
