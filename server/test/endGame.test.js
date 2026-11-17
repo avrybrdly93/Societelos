@@ -168,3 +168,14 @@ test('game:end winner is every top-scoring node, or null when the Loom shut down
   assert.deepEqual(engine.determineWinners({ 'NODE-01': 3, 'NODE-02': 5, 'NODE-03': 1 }, 40), ['NODE-02']);
   assert.equal(engine.determineWinners({ 'NODE-01': 3, 'NODE-02': 5 }, 0), null, 'shutdown: nobody wins');
 });
+
+// TASK-607 ------------------------------------------------------------------
+
+test('game:end carries the game id seed and the per-cycle realized-run seeds', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-seed', world: 'BB' });
+    assert.equal(out.gameEnd.seed, 'enddata-seed');
+    assert.deepEqual(out.gameEnd.cycleSeeds, [1, 2, 3, 4, 5].map((c) => engine.hashSeed('enddata-seed', c)));
+    for (const s of out.gameEnd.cycleSeeds) assert.ok(Number.isInteger(s) && s >= 0 && s < 2 ** 32);
+  });
+});

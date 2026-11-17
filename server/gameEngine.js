@@ -817,6 +817,11 @@ class GameState extends EventEmitter {
     const winners = shutdown ? null : determineWinners(scores, finalGdw);
     return {
       gameId: this.gameId,
+      // Replay: every run in the game is seeded from the game id, so
+      // the same game id and the same votes replay it exactly.
+      // cycleSeeds are the per-cycle 32-bit realized-run seeds, for discussion.
+      seed: this.gameId,
+      cycleSeeds: Array.from({ length: Math.max(0, this.cycle) }, (_, i) => hashSeed(this.gameId, i + 1)),
       cyclesPlayed: this.cycle,
       finalGdw,
       grade,
