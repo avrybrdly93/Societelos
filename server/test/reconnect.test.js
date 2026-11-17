@@ -351,3 +351,29 @@ test('disconnect + reconnect during VOTE, FINALE_WRITE and FINALE_RANK restores 
   assert.deepEqual(checks.rankResult, { ok: true });
   for (const c of [checks.vote, checks.write, checks.rank]) assert.equal(c.scoreAfter, c.before.score, 'score untouched');
 });
+
+// TASK-627 ------------------------------------------------------------------
+
+test('all 5 phones reconnect at once after a sleep/wake cycle and the game carries on', { timeout: 15000 }, async () => {
+  const { phones, game } = await startedRoom();
+  await until(() => game.cycle >= 1);
+  // Every screen locks at once (the teacher talks for a minute)...
+  for (const p of phones) p.socket.close();
+  await until(() => Object.values(game.players).every((pl) => !pl.connected));
+  const phaseBefore = `${game.cycle}:${game.phase}`;
+
+  // ...and every phone wakes in the same instant.
+  const woken = phones.map((p) => connect({ clientType: 'phone', token: p.token }));
+  const syncs = await Promise.all(woken.map((s) => once(s, 'state:sync')));
+  assert.deepEqual(syncs.map((s) => s.node), phones.map((p) => p.node), 'each phone back in its own seat');
+  phones.forEach((p, i) => assert.equal(game.players[p.node].socketId, woken[i].id));
+  assert.equal(Object.keys(game.players).length, 5, 'no extra seats');
+  assert.ok(Object.values(game.players).every((pl) => pl.connected));
+  const tokens = new Set(Object.values(game.players).map((pl) => pl.token));
+  assert.equal(tokens.size, 5, 'tokens unchanged and distinct');
+
+  // The phase clock never stopped: the game moves on with everyone connected.
+  await until(() => `${game.cycle}:${game.phase}` !== phaseBefore, 5000);
+  const next = await once(woken[0], 'phase');
+  assert.ok(next.phase);
+});
