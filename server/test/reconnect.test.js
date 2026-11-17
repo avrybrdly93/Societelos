@@ -263,7 +263,7 @@ test('host:config over Socket.IO: ack and room broadcast in the lobby, refused m
   for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
   const host = connect({ clientType: 'host' });
   const room = await once(host, 'host:room');
-  assert.deepEqual(room.config, { debateSeconds: engine.getRoom(room.roomCode).getConfig().debateSeconds });
+  assert.deepEqual(room.config, engine.getRoom(room.roomCode).getConfig());
   const broadcast = once(host, 'host:config');
   const res = await host.emitWithAck('host:config', { debateSeconds: 60 });
   assert.equal(res.ok, true);

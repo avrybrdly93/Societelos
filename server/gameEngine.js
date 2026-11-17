@@ -1794,12 +1794,16 @@ class GameState extends EventEmitter {
       if (!DEBATE_CHOICES.includes(settings.debateSeconds)) return { ok: false, reason: 'BAD_DEBATE_SECONDS' };
       this.durations.DEBATE = settings.debateSeconds * 1000;
     }
+    if (settings.showForecastBeforeVote !== undefined) {
+      if (typeof settings.showForecastBeforeVote !== 'boolean') return { ok: false, reason: 'BAD_SHOW_FORECAST' };
+      this.showForecastBeforeVote = settings.showForecastBeforeVote;
+    }
     return { ok: true, config: this.getConfig() };
   }
 
-  /** Current teacher settings: { debateSeconds }. */
+  /** Current teacher settings: { debateSeconds, showForecastBeforeVote }. */
   getConfig() {
-    return { debateSeconds: Math.round(this.durations.DEBATE / 1000) };
+    return { debateSeconds: Math.round(this.durations.DEBATE / 1000), showForecastBeforeVote: !!this.showForecastBeforeVote };
   }
 
   /**

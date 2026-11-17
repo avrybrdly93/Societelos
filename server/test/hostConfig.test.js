@@ -68,3 +68,34 @@ test('the configured debate length is what the DEBATE phase timer uses', () => {
     console.log = log;
   }
 });
+
+// TASK-614 ------------------------------------------------------------------
+
+test('host:config toggles showForecastBeforeVote, and DEBATE carries forecasts only when on', () => {
+  const game = lobbyGame();
+  game.showForecastBeforeVote = false;
+  assert.equal(game.getConfig().showForecastBeforeVote, false);
+  assert.deepEqual(game.configure({ showForecastBeforeVote: 'yes' }), { ok: false, reason: 'BAD_SHOW_FORECAST' });
+  const res = game.configure({ showForecastBeforeVote: true, debateSeconds: 60 });
+  assert.deepEqual(res, { ok: true, config: { debateSeconds: 60, showForecastBeforeVote: true } });
+
+  const log = console.log;
+  console.log = () => {};
+  const debates = [];
+  game.on('phase', (p) => { if (p.phase === 'DEBATE') debates.push(p); });
+  try {
+    NODE_IDS.forEach((n, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(n, true); });
+    game.startIntroPhase();
+    game.clearPhaseTimer();
+    game.startCycle(1);
+    game.crisis = engine.selectCrisis(game.data.crises, 1, null, game.data.roles);
+    game.startDebatePhase();
+    game.showForecastBeforeVote = false;
+    game.startDebatePhase();
+  } finally {
+    game.clearPhaseTimer();
+    console.log = log;
+  }
+  assert.ok(debates[0].forecasts && debates[0].forecasts.A && debates[0].forecasts.B, 'forecast fans shown before the vote');
+  assert.equal(debates[1].forecasts, undefined, 'hidden when the toggle is off');
+});
