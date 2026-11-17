@@ -721,6 +721,19 @@
     renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
     document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('#region-map .district-pop[data-pop]').forEach((label) => {
+      const target = Number(String(label.getAttribute('data-pop')).replace(/[^0-9]/g, '')) || 0;
+      if (reduceMotion) { label.textContent = target.toLocaleString('en-US'); return; }
+      const start = performance.now();
+      const tick = (now) => {
+        const fraction = Math.min(1, (now - start) / 1800);
+        label.textContent = Math.round(target * (1 - Math.pow(1 - fraction, 3))).toLocaleString('en-US');
+        if (fraction < 1) requestAnimationFrame(tick);
+      };
+      label.textContent = '0';
+      requestAnimationFrame(tick);
+    });
   }
 
   socket.on('phase', onPhase);
