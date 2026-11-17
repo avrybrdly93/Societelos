@@ -1,0 +1,28 @@
+# Stream 4 test suite run (TASK-572)
+# Command: npm run test:stream4  (check:sim + sim/loom/contract tests + bench + calibrate)
+# Run: 2026-11-17T06:38Z, node v22.23.4, no GEMINI_API_KEY (offline fallbacks)
+# Result: exit 0, pass 66 of 66 tests
+
+# ([loom] log lines from mocked-fetch tests omitted)
+server/sim: no Math.random(), no I/O, no network
+# tests 66
+# suites 0
+# pass 66
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3341.610843
+single realized run          0.117 ms
+single forecast run          0.084 ms
+simulate (500 + 1 runs)      41.197 ms
+PASS (targets: run < 0.2 ms, cycle < 50 ms)
+Calibration: 500 forecast runs per option, seed 20261119, start GDW 25.0
+option            target  median  realized  name
+1A                  -5.0    -4.9    -3.5    The Commons
+1B                 +10.0   +10.2   +11.6    The Charter
+2A                  -5.0    -4.8    -3.3    The Assembly
+2B (after 1A)       +5.0    +5.2    +6.5    Delegated Control
+2B (after 1B)       +5.0    +4.8    +6.1    Delegated Control
+
+Two-cycle paths (median GDW: start -> after cycle 1 -> after cycle 2):
