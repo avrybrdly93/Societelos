@@ -1445,6 +1445,17 @@
     document.getElementById('end-seed').textContent = data.seed ? `SEED ${data.seed}` : '';
   }
 
+  // The canvas has no size until #view-end is shown, so draw on the next
+  // frame (and again whenever the projector stage is resized).
+  function drawEndChart() {
+    const data = state.endData;
+    if (!data || !window.SocietelosCharts || !window.SocietelosCharts.drawFullHistoryChart) return;
+    requestAnimationFrame(() => {
+      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, document.getElementById('end-history-chart'), { cycleMarkers: data.cycleMarkers });
+    });
+  }
+  window.addEventListener('resize', () => { if (state.phase === 'END') drawEndChart(); });
+
   function renderEnd(data) {
     if (!data) return;
     state.endData = data;
@@ -1453,6 +1464,7 @@
     view.classList.toggle('no-writein', data.finaleMode !== 'writein');
     if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);
     renderEndRecap(data);
+    drawEndChart();
     renderEndTable(data);
     renderEndWinner(data);
   }

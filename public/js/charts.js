@@ -404,5 +404,94 @@
     if (last > 0 && realized.every((v, m) => m === 0 || v > 0)) drawForecastCallout(chart.ctx, chart.g, last, realized[last], median && median[last]);
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw };
+  // Class-grade bands for the five-year chart (final GDW thresholds).
+  const GRADE_BANDS = [
+    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(43, 196, 160, 0.10)', text: '#2bc4a0' },
+    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(63, 216, 230, 0.07)', text: '#3fd8e6' },
+    { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(240, 164, 48, 0.08)', text: '#f0a430' },
+    { from: 0, to: 1, label: '0 SHUTDOWN', fill: 'rgba(229, 72, 77, 0.35)', text: '#e5484d' }
+  ];
+  const MONTHS_PER_CYCLE = 12;
+
+  /**
+   * End Screen: the whole game's realized GDW (start + up to 60 months) on a
+   * fixed 5-year axis, with the class-grade threshold bands, a vertical
+   * divider at the end of each cycle and YEAR 1..5 labels. A game that shut
+   * down early draws its line up to the collapse and leaves the rest empty.
+   * `cycleMarkers` ([{ cycle, index }]) place the dividers; without them the
+   * dividers fall every 12 months. Returns { ctx, g } or null.
+   */
+  function drawFullHistoryChart(gdwHistory, canvas, { cycleMarkers = null, cycles = 5, lineColor = COLORS.realized } = {}) {
+    if (!canvas && typeof document !== 'undefined') canvas = document.getElementById('end-history-chart');
+    if (!canvas || !canvas.getContext) return null;
+    const history = (Array.isArray(gdwHistory) ? gdwHistory : []).filter((v) => typeof v === 'number' && isFinite(v));
+    const months = Math.max(cycles * MONTHS_PER_CYCLE, history.length - 1);
+    const { ctx } = fitCanvas(canvas);
+    const g = geometry(canvas, months);
+    clear(ctx, g);
+    ctx.save();
+    // Threshold bands with their labels at the right edge.
+    ctx.font = '600 13px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (const b of GRADE_BANDS) {
+      const top = g.y(b.to);
+      const bottom = b.from === 0 ? g.y(0) + 1 : g.y(b.from);
+      ctx.fillStyle = b.fill;
+      ctx.fillRect(g.x(0), top, g.x(months) - g.x(0), Math.max(2, bottom - top));
+      ctx.fillStyle = b.text;
+      const labelY = b.from === 0 ? g.y(0) - 9 : top + 10; // top of the band, clear of the line below
+      ctx.fillText(b.label, g.x(months) - 8, labelY);
+    }
+    // Gridlines and GDW labels every 20%.
+    ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
+    for (let v = 0; v <= 100; v += 20) {
+      ctx.strokeStyle = v === 0 ? COLORS.axis : COLORS.grid;
+      ctx.lineWidth = v === 0 ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(g.x(0), g.y(v));
+      ctx.lineTo(g.x(months), g.y(v));
+      ctx.stroke();
+      ctx.fillStyle = COLORS.text;
+      ctx.fillText(`${v}%`, g.x(0) - 10, g.y(v));
+    }
+    // Cycle dividers (dashed) and YEAR labels centred in each cycle.
+    const ends = cycleMarkers && cycleMarkers.length
+      ? cycleMarkers.map((m) => m.index)
+      : Array.from({ length: cycles }, (_, i) => (i + 1) * MONTHS_PER_CYCLE);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.setLineDash([5, 6]);
+    for (let c = 0; c < cycles; c++) {
+      const start = c * MONTHS_PER_CYCLE;
+      const end = (c + 1) * MONTHS_PER_CYCLE;
+      if (c < cycles - 1) {
+        ctx.strokeStyle = 'rgba(125, 138, 154, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(g.x(end), g.y(100));
+        ctx.lineTo(g.x(end), g.y(0));
+        ctx.stroke();
+      }
+      ctx.fillStyle = c < ends.length ? COLORS.text : 'rgba(125, 138, 154, 0.45)';
+      ctx.fillText(`YEAR ${c + 1}`, g.x((start + end) / 2), g.y(0) + 10);
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+    // The realized line, with a dot on each cycle's closing month.
+    line(ctx, g, history, { color: lineColor, width: 4 });
+    ctx.save();
+    ctx.fillStyle = lineColor;
+    for (const i of ends) {
+      if (i < history.length) {
+        ctx.beginPath();
+        ctx.arc(g.x(i), g.y(history[i]), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    return { ctx, g, months };
+  }
+
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw, drawFullHistoryChart, GRADE_BANDS };
 })();
