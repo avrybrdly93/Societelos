@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-// Live Cycle 5 flow in the browser: a projector page and 5 phone pages join a
+// Live Cycles 1-5 in the browser: a projector page and 5 phone pages join a
 // real game, play Cycles 1-4 on fast timers, then run the write-and-rank
 // finale FINALE_WRITE -> FINALE_MOD -> FINALE_DEBATE -> FINALE_RANK ->
 // FINALE_ENACT -> END on longer timers, with the Loom's moderation stubbed
-// (no Gemini key needed). Every 100 ms it samples which screen the projector
-// and each phone show, and fails on a page error, a screen that does not
+// (no Gemini key needed). From the intro on, every 100 ms it samples which
+// screen the projector and each phone show, and fails on a page error, a screen that does not
 // match the phase, or a flash of an unrelated screen mid-transition.
 //
 // With FALLBACK=1 the stubbed moderation fails instead, and the finale must
@@ -48,11 +48,13 @@ const FINALE_SECONDS = { INCIDENT: 2, FINALE_WRITE: 8, FINALE_MOD: 6, FINALE_DEB
 // Screens each phase may show (a transition may pass through the previous
 // phase's screen for a frame, which is fine; anything else is a flash).
 const HOST_VIEWS = {
+  INTRO: ['view-intro'], ROLE_ASSIGN: ['view-roles'], CHAMBER: ['view-chamber'], INTEL: ['view-chamber'], WORLD_REVEAL: ['view-world'],
   INCIDENT: ['view-chamber'], FINALE_WRITE: ['view-chamber'], FINALE_MOD: ['view-chamber'],
   FINALE_DEBATE: ['view-finale'], FINALE_RANK: ['view-finale'], FINALE_ENACT: ['view-enact', 'view-chamber'],
   DEBATE: ['view-chamber'], VOTE: ['view-chamber'], RESOLUTION: ['view-chamber'], END: ['view-end']
 };
 const PHONE_VIEWS = {
+  INTRO: ['m-view-wait'], ROLE_ASSIGN: ['m-view-role'], CHAMBER: ['m-view-wait'], INTEL: ['m-view-intel'], WORLD_REVEAL: ['m-view-world'],
   INCIDENT: ['m-view-wait'], FINALE_WRITE: ['m-view-finale-write', 'm-view-finale-wait'], FINALE_MOD: ['m-view-finale-wait'],
   FINALE_DEBATE: ['m-view-wait'], FINALE_RANK: ['m-view-finale-rank'], FINALE_ENACT: ['m-view-wait'],
   DEBATE: ['m-view-debate'], VOTE: ['m-view-vote'], RESOLUTION: ['m-view-result'], END: ['m-view-wait', 'm-view-end']
@@ -128,8 +130,8 @@ const POLICIES = [
         await p.click('#rank-submit', { timeout: 2000 });
       }).map((pr) => pr.catch((e) => problems.push(`rank: ${e.message.split('\n')[0]}`))));
     }
-    // Sample the screens during the finale cycle.
-    if (game.cycle === 5) {
+    // Sample the screens through all five cycles (from the intro on).
+    if (game.phase !== 'LOBBY') {
       const phase = game.phase;
       const hv = await viewOf(host, '#host-main > .view.is-active');
       const pv = await Promise.all(phones.map((p) => viewOf(p, '#m-main > .m-view.is-active')));
@@ -152,6 +154,10 @@ const POLICIES = [
   problems.forEach((p) => { counts[p] = (counts[p] || 0) + 1; });
   const real = Object.entries(counts).filter(([p, n]) => n >= 3 || /^(write|rank):/.test(p)).map(([p, n]) => `${p} (x${n})`);
   const finale = sequence.filter((k) => k.startsWith('5:')).map((k) => k.slice(2));
+  for (const c of [1, 2, 3, 4]) {
+    for (const ph of ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION']) if (!sequence.includes(`${c}:${ph}`)) real.push(`missing ${c}:${ph}`);
+  }
+  if (!sequence.includes('2:WORLD_REVEAL')) real.push('missing 2:WORLD_REVEAL');
   const expected = FALLBACK ? ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'DEBATE', 'VOTE', 'RESOLUTION'] : ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'FINALE_DEBATE', 'FINALE_RANK', 'FINALE_ENACT'];
   if (finale.join(' ') !== expected.join(' ')) real.push(`finale ran ${finale.join(' -> ')}; expected ${expected.join(' -> ')}`);
   if (game.phase !== 'END') real.push(`game stopped at ${game.cycle}:${game.phase}`);
@@ -162,6 +168,7 @@ const POLICIES = [
   await browser.close();
   server.close();
   console.log = log;
+  console.log(`phases: ${sequence.join(' ')}`);
   console.log(`world ${game.worldKey}; finale: ${finale.join(' -> ')} -> ${game.phase}; GDW ${game.gdw}`);
   if (real.length) {
     console.error(`E2E FINALE FLOW FAILED:\n${real.join('\n')}`);
