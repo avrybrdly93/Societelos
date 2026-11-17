@@ -79,3 +79,17 @@ test('volatility 1.5 raises noise SD and shock frequency by 50%', () => {
   assert.ok(Math.abs(shockRatio - 1.5) < 0.08, `shock rate ratio ${shockRatio}`);
   assert.ok(Math.abs(calm.shockRate - simConfig.constants.shockChance) < 0.005, `base shock rate ${calm.shockRate}`);
 });
+
+test('every shock carries its district\'s named flavour for narration (no extra RNG draws)', () => {
+  const { SHOCK_NAMES, runSingleSimulation: run } = require('../step');
+  const { createInitialState: init } = require('../state');
+  const config = require('../../../data/sim.json');
+  assert.deepEqual(SHOCK_NAMES, { D1: 'Coastal Storm', D2: 'Cooling Grid Outage', D3: 'School Quarantine', D4: 'Warehouse Transformer Failure', D5: 'Unplugged Relay Cut' });
+  const shocky = { ...config, constants: { ...config.constants, shockChance: 0.5 } };
+  const r = run(init(shocky), {}, 12345); // realized run: shocks are tracked
+  assert.ok(r.shocks.length > 5);
+  for (const sh of r.shocks) assert.equal(sh.name, SHOCK_NAMES[sh.district]);
+  // Names are labels only: the same seed gives the same trajectory with or without tracking.
+  assert.deepEqual(Array.from(run(init(shocky), {}, 12345, true).gdw).length, r.gdw.length);
+  assert.deepEqual(Array.from(run(init(shocky), {}, 12345).gdw), Array.from(r.gdw), 'deterministic');
+});

@@ -184,10 +184,24 @@ function applyNoise(state, params, rng) {
   }
 }
 /**
+ * Named shock flavours per district, so narration can say what happened
+ * ("a Coastal Storm hit Old Harbour") instead of "a shock". Names only: they
+ * never change the maths or draw from the RNG.
+ */
+const SHOCK_NAMES = Object.freeze({
+  D1: 'Coastal Storm',
+  D2: 'Cooling Grid Outage',
+  D3: 'School Quarantine',
+  D4: 'Warehouse Transformer Failure',
+  D5: 'Unplugged Relay Cut'
+});
+const DEFAULT_SHOCK_NAME = 'Local Disruption';
+
+/**
  * Step 4, district shocks: each district has a (shockChance * volatility)
  * chance per month of an event (outage, heatwave, viral trend) that cuts one
  * random trait by U(shockMin, shockMax) for every cohort there. Fired shocks
- * are pushed onto `out` as { month, district, trait, amount }.
+ * are pushed onto `out` as { month, district, trait, amount, name }.
  */
 function applyShocks(state, monthIndex, params, rng, out) {
   const { K, constants, volatility, districtIds, cohortsByDistrict } = params;
@@ -198,7 +212,7 @@ function applyShocks(state, monthIndex, params, rng, out) {
     const k = Math.floor(rng() * K);
     const amount = randomUniform(rng, constants.shockMin, constants.shockMax);
     for (const i of cohortsByDistrict[d]) t[i * K + k] -= amount;
-    if (out) out.push({ month: monthIndex, district: districtIds[d], trait: state.traitNames[k], amount });
+    if (out) out.push({ month: monthIndex, district: districtIds[d], trait: state.traitNames[k], amount, name: SHOCK_NAMES[districtIds[d]] || DEFAULT_SHOCK_NAME });
   }
 }
 /**
@@ -279,4 +293,4 @@ module.exports = {
   fastGdw,
   getTopology,
   runSingleSimulation,
-  districtSnapshot, buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01 };
+  districtSnapshot, buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01, SHOCK_NAMES };

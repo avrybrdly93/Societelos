@@ -153,7 +153,11 @@ function withSimFacts(base, summary = {}) {
   const district = top && top.district ? `${top.district} ${DISTRICT_NAMES[top.district] || ''}`.trim() : '';
   const facts = [];
   if (district) facts.push(`${district} moved most.`);
-  if (shock && shock.district) facts.push(`A shock hit ${shock.district} in month ${shock.month}.`);
+  if (shock && shock.district) {
+    // Named shock flavour from the simulation (e.g. "A Coastal Storm hit D1 Old Harbour in month 3.").
+    const where = `${shock.district} ${DISTRICT_NAMES[shock.district] || ''}`.trim();
+    facts.push(shock.name ? `A ${shock.name} hit ${where} in month ${shock.month}.` : `A shock hit ${shock.district} in month ${shock.month}.`);
+  }
   while (facts.length) {
     const line = `${base} ${facts.join(' ')}`;
     if (line.length <= 200) return line;

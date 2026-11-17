@@ -394,3 +394,8 @@ test('loom.moderateOne falls back to a deterministic local heuristic when Gemini
     console.warn = warn;
   }
 });
+
+test('offline Loom line names the shock: "A Coastal Storm hit D1 Old Harbour in month 3."', () => {
+  const line = loom.withSimFacts('The council has chosen.', { topMoves: [], shocks: [{ month: 3, district: 'D1', trait: 'health', amount: 0.04, name: 'Coastal Storm' }] });
+  assert.equal(line, 'The council has chosen. A Coastal Storm hit D1 Old Harbour in month 3.');
+});
