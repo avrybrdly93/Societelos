@@ -50,10 +50,12 @@
   });
   document.addEventListener('fullscreenchange', syncFullscreenButton);
 
-  // Subpath deployment (https://avesstudios.com/the-loom): the reverse proxy
-  // strips /the-loom, so the client must ask for /the-loom/socket.io.
+  // Socket.IO target: LOOM_CONFIG.socketUrl (the Render server when the
+  // frontend is on Vercel), else the server that served this page, under
+  // /the-loom when reverse-proxied at that subpath.
+  const socketUrl = (window.LOOM_CONFIG && window.LOOM_CONFIG.socketUrl) || '';
   const basePath = window.location.pathname.startsWith('/the-loom') ? '/the-loom' : '';
-  const socket = window.io({ path: `${basePath}/socket.io`, auth: { clientType: 'host', roomCode: savedRoom || undefined } });
+  const socket = window.io(socketUrl || undefined, { path: socketUrl ? '/socket.io' : `${basePath}/socket.io`, auth: { clientType: 'host', roomCode: savedRoom || undefined } });
 
   const state = { roomCode: null, gameId: null, phase: 'LOBBY', cycle: 0, endsAt: null };
 
@@ -82,7 +84,7 @@
     const placeholder = document.getElementById('qr-placeholder');
     const urlEl = document.getElementById('join-url');
     try {
-      const res = await fetch('api/qr');
+      const res = await fetch(socketUrl ? `${socketUrl}/api/qr` : 'api/qr');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { joinUrl, dataUrl } = await res.json();
       img.src = dataUrl;

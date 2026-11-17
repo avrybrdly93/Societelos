@@ -54,7 +54,9 @@ function getLanIp(interfaces = os.networkInterfaces()) {
  */
 function getJoinUrl(port = PORT, publicUrl = process.env.PUBLIC_URL) {
   const base = (publicUrl || '').trim().replace(/\/+$/, '');
-  if (base) return `${base}/mobile`;
+  // mobile.html, not /mobile: a host with trailing-slash redirects (Vercel)
+  // would turn /mobile into /mobile/ and break the page's relative assets.
+  if (base) return `${base}/mobile.html`;
   return `http://${getLanIp()}:${port}/mobile`;
 }
 
@@ -102,6 +104,8 @@ app.get('/api/state', (req, res, next) => {
 
 // QR code (PNG data URL) pointing phones at PUBLIC_URL/mobile, or http://<lan-ip>:<port>/mobile.
 app.get('/api/qr', async (req, res) => {
+  // The host page may be served from another origin (Vercel) than this API.
+  res.set('Access-Control-Allow-Origin', '*');
   try {
     const port = (server.address() && server.address().port) || PORT;
     const joinUrl = getJoinUrl(port);

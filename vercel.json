@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo 'static frontend: no install needed'",
+  "buildCommand": "node scripts/write-config.js",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/mobile", "destination": "/mobile.html" },
+    { "source": "/host", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+  ]
+}
