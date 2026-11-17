@@ -99,7 +99,16 @@ app.get('/api/qr', async (req, res) => {
 
 // HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+// Classroom Wi-Fi settings: a heartbeat every 5 s, and a phone counts as gone
+// only after 20 s of silence, so a brief Wi-Fi blip or a phone switching
+// access points does not drop the seat. CORS is open because phones load the
+// pages from this same LAN server (there is no other origin to protect).
+const SOCKET_OPTIONS = Object.freeze({
+  cors: { origin: '*' },
+  pingInterval: 5000,
+  pingTimeout: 20000
+});
+const io = new Server(server, { ...SOCKET_OPTIONS, cors: { ...SOCKET_OPTIONS.cors } }); // a copy: Socket.IO adds its own defaults
 initSockets(io, gameEngine);
 
 // Graceful shutdown: hooks (e.g. clearing game timers) run first, then sockets
@@ -167,4 +176,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl, installSafetyNets };
+module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl, installSafetyNets, SOCKET_OPTIONS };

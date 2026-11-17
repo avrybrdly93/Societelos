@@ -65,3 +65,15 @@ test('Node start-up prints no warnings or deprecations (even with --pending-depr
   assert.match(lines[0], /^\[server\] Societelos listening on http:\/\/localhost:\d+$/);
   assert.match(lines[1], /^\[server\] Phones join at http:\/\/\S+\/mobile$/);
 });
+
+// TASK-639 ------------------------------------------------------------------
+
+test('Socket.IO uses classroom Wi-Fi heartbeat settings (pingInterval 5 s, pingTimeout 20 s) and open CORS', () => {
+  const { io, SOCKET_OPTIONS } = require('../server');
+  assert.equal(SOCKET_OPTIONS.pingInterval, 5000);
+  assert.equal(SOCKET_OPTIONS.pingTimeout, 20000);
+  assert.equal(io.engine.opts.pingInterval, 5000);
+  assert.equal(io.engine.opts.pingTimeout, 20000);
+  assert.deepEqual(io.engine.opts.cors, { origin: '*' });
+  io.close();
+});
