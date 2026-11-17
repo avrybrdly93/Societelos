@@ -1986,6 +1986,22 @@ class GameState extends EventEmitter {
     return true;
   }
 
+  /**
+   * Mid-game reconnect without a token (the phone lost its storage): find
+   * the disconnected seat whose player name matches (trimmed, any case),
+   * optionally pinned to the phone's saved `node`. Only an offline seat can
+   * be reclaimed, so a live player can never be bumped. Returns node or null.
+   */
+  findReconnectSeat({ name, node } = {}) {
+    if (this.phase === PHASES.LOBBY) return null;
+    const wanted = String(name || '').trim().toLowerCase();
+    if (!wanted) return null;
+    const matches = Object.values(this.players).filter((p) => !p.isBot && !p.connected &&
+      String(p.name || '').trim().toLowerCase() === wanted && (!node || p.node === node));
+    // Two offline seats with the same name: ambiguous, so require the token.
+    return matches.length === 1 ? matches[0].node : null;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);

@@ -353,7 +353,13 @@ function initSockets(io, gameEngine) {
   function resumeSession(socket, token) {
     const session = gameEngine.findSession(token);
     if (!session) return false;
-    const { game, node } = session;
+    bindPhone(socket, session.game, session.node);
+    return true;
+  }
+
+  // Bind this socket to an existing seat (new socket.id -> NODE-0X) and
+  // tell the phone where the game is.
+  function bindPhone(socket, game, node) {
     wireRoom(game);
     game.reconnectPlayer(node, socket.id);
     socket.data.roomCode = game.roomCode;
@@ -371,7 +377,6 @@ function initSockets(io, gameEngine) {
       world: game.worldKey ? game.worldInfo() : null
     });
     broadcastLobby(game);
-    return true;
   }
 
   function handlePhone(socket) {
@@ -390,11 +395,20 @@ function initSockets(io, gameEngine) {
     });
 
     // lobby:join { name, room? } -> seat the phone in a NODE slot.
-    onValid(socket, 'lobby:join', { name: nonEmptyString, room: 'string?' }, (payload, reply) => {
+    // Mid-game, a phone that lost its token may reclaim its own offline seat
+    // by the same name (and its saved node id, if it still has it).
+    onValid(socket, 'lobby:join', { name: nonEmptyString, room: 'string?', node: 'string?' }, (payload, reply) => {
       if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
       const game = findPhoneRoom(payload.room);
       if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
-      if (game.phase !== 'LOBBY') return reply({ ok: false, reason: 'GAME_IN_PROGRESS' });
+      if (game.phase !== 'LOBBY') {
+        const node = game.findReconnectSeat({ name: payload.name, node: payload.node });
+        if (!node) return reply({ ok: false, reason: 'GAME_IN_PROGRESS' });
+        bindPhone(socket, game, node);
+        const rejoined = { ok: true, node, roomCode: game.roomCode, token: game.players[node].token, resumed: true };
+        socket.emit('lobby:joined', rejoined);
+        return reply(rejoined);
+      }
 
       const seat = game.addPlayer(socket.id, payload.name);
       if (!seat.ok) return reply(seat);
