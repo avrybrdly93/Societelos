@@ -1347,3 +1347,10 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
    anywhere rather than overflow the card (host proposals and enactment,
    phone ballot and wait screen, resolution headline). */
 .proposal-text, .enact-text, .rank-text, .finale-mine, #resolution-policy, .feed-text { overflow-wrap: anywhere; }
+
+/* Long ballots (four 140-character policies on a 375 px phone) scroll; the
+   lock-in button stays pinned to the bottom of the screen. */
+#rank-submit {
+  position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2;
+  box-shadow: 0 -12px 24px 8px var(--bg, #0d1117);
+}
