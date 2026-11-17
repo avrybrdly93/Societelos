@@ -1500,7 +1500,37 @@
     const data = state.endData;
     if (!data || !window.SocietelosCharts || !window.SocietelosCharts.drawFullHistoryChart) return;
     requestAnimationFrame(() => {
-      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, document.getElementById('end-history-chart'), { cycleMarkers: data.cycleMarkers });
+      const canvas = document.getElementById('end-history-chart');
+      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, canvas, { cycleMarkers: data.cycleMarkers });
+      const inspection = document.getElementById('end-chart-inspection');
+      if (!inspection) return;
+      const markers = (data.cycleMarkers || []).filter((m) => typeof m.index === 'number');
+      if (!markers.length) return;
+      const chartPad = window.SocietelosCharts.PAD;
+      const canvasWidth = canvas.offsetWidth || canvas.width;
+      const months = Math.max(60, (Array.isArray(data.gdwHistory) ? data.gdwHistory.length : 1) - 1);
+      const plotWidth = canvasWidth - chartPad.left - chartPad.right - 150;
+      let selected = -1;
+      const showMarker = (index) => {
+        selected = index;
+        const marker = markers[index];
+        inspection.textContent = `Cycle ${marker.cycle}: ${marker.policy || 'Policy details unavailable'} — ${marker.policyText || marker.policy || ''} (GDW ${Number(marker.gdw).toFixed(1)}%)`;
+      };
+      const inspect = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / (rect.width || 1) * canvasWidth;
+        const month = Math.max(0, Math.min(months, Math.round((x - chartPad.left) / plotWidth * months)));
+        let nearest = 0;
+        markers.forEach((m, i) => { if (Math.abs(m.index - month) < Math.abs(markers[nearest].index - month)) nearest = i; });
+        showMarker(nearest);
+      };
+      canvas.onpointermove = inspect;
+      canvas.onpointerdown = inspect;
+      canvas.onkeydown = (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        showMarker((selected + (event.key === 'ArrowRight' ? 1 : markers.length - 1)) % markers.length);
+      };
     });
   }
   window.addEventListener('resize', () => { if (state.phase === 'END') drawEndChart(); });
