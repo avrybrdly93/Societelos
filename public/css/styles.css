@@ -1453,6 +1453,12 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
    phone ballot and wait screen, resolution headline). */
 .proposal-text, .enact-text, .rank-text, .finale-mine, #resolution-policy, .feed-text { overflow-wrap: anywhere; }
 
+/* Authored crisis copy on the 16:9 projector: long titles, subtitles and
+   policy descriptions wrap onto new lines (even at an unbroken word)
+   instead of clipping at the panel edge. */
+.incident-title, .incident-subtitle, .incident-text, .loom-line, .debate-hook-text,
+.policy-name, .policy-text, .world-name, .world-tagline, .world-problem, .end-badge-value { overflow-wrap: anywhere; min-width: 0; }
+
 /* Long ballots (four 140-character policies on a 375 px phone) scroll; the
    lock-in button stays pinned to the bottom of the screen. */
 #rank-submit {
