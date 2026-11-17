@@ -290,3 +290,64 @@ test('host:start { seed } starts the game on that seed; a malformed seed is refu
   assert.equal(engine.getRoom(roomCode).gameId, 'period3-tuesday');
   assert.equal((await host.emitWithAck('host:start', { seed: 'again' })).reason, 'ALREADY_STARTED');
 });
+
+// TASK-622 ------------------------------------------------------------------
+
+test('disconnect + reconnect during VOTE, FINALE_WRITE and FINALE_RANK restores the full private state', async () => {
+  const checks = {};
+  const node = 'NODE-03';
+  const bounce = (game) => {
+    const token = game.players[node].token;
+    const before = { score: game.scores[node], override: game.overrideAvailable(node), role: game.roleAssignment[node].key };
+    game.markDisconnected(node);
+    assert.equal(game.players[node].connected, false);
+    const seat = engine.findSession(token);
+    assert.equal(seat && seat.node, node, 'token still finds the seat while offline');
+    game.reconnectPlayer(node, 'socket-after-wake');
+    return {
+      before, sync: game.privateSyncFor(node), game, vote: game.votes[node], scoreAfter: game.scores[node],
+      submission: game.finale && game.finale.submissions[node], ballot: game.finale && game.finale.ballots[node]
+    };
+  };
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const roomBefore = engine.rooms.size;
+    await playGame({
+      gameId: 'reconnect-phases',
+      world: 'BB',
+      onEvent: (type, ev, game) => {
+        if (type !== 'phase') return;
+        // Register the room so findSession can see it during the bounce.
+        engine.rooms.set(game.roomCode, game);
+        if (ev.cycle === 3 && ev.phase === 'VOTE') setImmediate(() => { checks.vote = bounce(game); });
+        if (ev.phase === 'FINALE_WRITE') setImmediate(() => { checks.write = bounce(game); });
+        if (ev.phase === 'FINALE_RANK') setImmediate(() => { checks.rank = bounce(game); checks.rankResult = game.rankPolicies(node, game.finale.ballots[node].slice()); });
+        if (ev.phase === 'END') engine.rooms.delete(game.roomCode);
+      }
+    });
+    assert.equal(engine.rooms.size, roomBefore);
+  });
+  const sync = (c) => Object.fromEntries(c.sync.map(([e, p]) => [e, p]));
+
+  // VOTE: the vote cast before the drop still stands, Override status and role return.
+  const v = sync(checks.vote);
+  assert.equal(v['state:sync'].phase, 'VOTE');
+  assert.equal(v['state:sync'].voted, true, 'the vote cast before sleeping is kept');
+  assert.ok(checks.vote.vote && ['A', 'B'].includes(checks.vote.vote.choice), 'the recorded vote itself survived');
+  assert.equal(v['role:assigned'].role.key, checks.vote.before.role);
+  assert.deepEqual(v['override:status'], { overrideAvailable: checks.vote.before.override });
+  assert.ok(v['intel:drop'].text, 'this cycle\'s intel is re-sent');
+
+  // FINALE_WRITE: the write-in survives; the phone sees it already submitted.
+  const w = sync(checks.write);
+  assert.equal(w['state:sync'].phase, 'FINALE_WRITE');
+  assert.equal(w['state:sync'].submitted, true);
+  assert.equal(checks.write.submission, 'Council proposal number 3');
+
+  // FINALE_RANK: the same personal ballot comes back and can still be ranked.
+  const r = sync(checks.rank);
+  assert.equal(r['state:sync'].phase, 'FINALE_RANK');
+  assert.equal(r['state:sync'].ranked, false);
+  assert.deepEqual(r['finale:ballot'].policies.map((p) => p.id), checks.rank.ballot);
+  assert.deepEqual(checks.rankResult, { ok: true });
+  for (const c of [checks.vote, checks.write, checks.rank]) assert.equal(c.scoreAfter, c.before.score, 'score untouched');
+});
