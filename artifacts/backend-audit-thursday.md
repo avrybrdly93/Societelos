@@ -29,3 +29,28 @@ Findings and changes:
   `timeRemainingMs()`, `findNodeBySocket()`.
 - Finale arithmetic (Borda, 50/25/25, package vector) already lives in
   `server/finale.js` (pure functions); no further split is needed for the MVP.
+
+## server/socket.js (TASK-642)
+
+| | |
+| :--- | ---: |
+| Lines | 641 |
+| Comment lines | 119 (~19%) |
+| Inbound events (all through `onValid`) | 14 |
+
+Findings and changes:
+- Every inbound client event goes through `onValid()` (rate limit, payload
+  schema, try/catch), so a bad packet cannot crash the server. The only raw
+  listener is `disconnect`.
+- Added an **event index** at the top of the file: client types and every
+  event by direction (host → server, phone → server, server → room,
+  server → one phone, server → host).
+- Updated stale comments: `detectClientType` now documents the
+  `spectator` client type; `roomChannel` / `hostChannel` explain who is in
+  each Socket.IO room (`hostChannel` is joined by the projector and kept for
+  host-only broadcasts; none are needed for the MVP).
+- Private events (`role:assigned`, `intel:drop`, `override:status`,
+  `score:update`, `finale:feedback`, `finale:ballot`, `state:sync`) are only
+  ever sent with `emitToNode` / to one socket; covered by
+  `server/test/specContract.test.js` and `server/test/reconnect.test.js`.
+- No dead code found.

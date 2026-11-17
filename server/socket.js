@@ -3,17 +3,36 @@
 // Societelos — Stream 1 Socket.IO layer.
 // Translates client events into gameEngine calls and relays engine events
 // back to the right sockets. Holds no game state of its own.
+//
+// Clients (handshake auth.clientType): 'host' (projector), 'phone' (one of
+// the five seats) or 'spectator' (read-only). Every inbound event is checked
+// by onValid(): rate limit, payload schema, and a crash-proof handler.
+//
+//   host -> server    host:start { seed? }, host:config, host:playAgain,
+//                     host:toggleBots, host:configureSession, host:triggerFinale
+//   phone -> server   lobby:join, lobby:ready, session:resume, spectate:join,
+//                     vote:cast, debate:ready, finale:submit, finale:rank
+//   server -> room    phase, lobby:update, resolution, world:reveal, game:end,
+//                     vote:progress, debate:progress, finale:progress, host:config
+//   server -> one     role:assigned, intel:drop, override:status, score:update,
+//                     finale:feedback, finale:ballot, state:sync (reconnect)
+//   server -> host    host:room, host:sync (projector refresh), host:error
 
 const crypto = require('crypto');
 const CLIENT_TYPES = ['host', 'phone', 'spectator'];
 
-/** Socket.IO room names for a game. */
+/**
+ * Socket.IO room names for a game: everyone in the game (host, phones,
+ * spectators) is in roomChannel; the projector is also in hostChannel,
+ * reserved for host-only broadcasts (none needed for the MVP).
+ */
 const roomChannel = (code) => `room:${code}`;
 const hostChannel = (code) => `host:${code}`;
 
 /**
- * Work out whether a socket is the projector ('host') or a controller
- * ('phone') from the handshake (auth first, then query string). Defaults to phone.
+ * Work out whether a socket is the projector ('host'), a controller
+ * ('phone') or a read-only 'spectator' from the handshake (auth first, then
+ * query string). Defaults to phone.
  */
 function detectClientType(socket) {
   const hs = socket.handshake || {};
