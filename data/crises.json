@@ -1149,7 +1149,13 @@
           "targetGdwDelta": -8
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: Highland farms run by hand grew 30 crops the Loom never plants. Their bread sells out in Old Harbour within an hour of arriving.",
+        "lotus": "Loom welfare note: life expectancy in a tech-free zone would fall about 9 years without drone medicine. The sweep moves every guerrilla into a heated, fully stocked home.",
+        "assimilator": "Loom projection: the EMP blasts have cut drone deliveries to 40,000 people. Reconnecting the Highlands closes the only gap in my map of the region.",
+        "catalyst": "Forecast: both choices shake the region hard. The bio-zone lifts the line about 10 points. The sweep crashes it about 17 as trust collapses across all five districts.",
+        "ghost": "Leaked memo: the acoustic drones in the sweep can also record every conversation within 200 metres. Once deployed, they are never recalled."
+      }
     },
     {
       "id": "bb-march-datacenter",
