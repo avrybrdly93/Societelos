@@ -1187,8 +1187,7 @@
           "name": "Loom Pacification Sweep",
           "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
           "roles": [
-            "assimilator",
-            "lotus"
+            "assimilator"
           ],
           "effects": {
             "purpose": -0.5,
