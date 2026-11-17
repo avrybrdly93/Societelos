@@ -1,22 +1,22 @@
 /* Societelos — shared styles for the host projector and phone controllers.
-   Dystopian post-labor aesthetic: dark slate, Loom cyan, alert crimson.
-   System fonts only, so the UI works on an offline classroom router. */
+   Obsidian glass, Loom gold and cream, matching the cinematic intro.
+   Fonts are vendored (css/fonts.css), so the UI works on an offline classroom router. */
 
 :root {
   /* Surfaces */
-  --slate-950: #080b10;
-  --slate-900: #0d1117;
-  --slate-800: #161c25;
-  --slate-700: #222b38;
-  --slate-600: #33404f;
-  --slate-400: #7d8a9a;
-  --slate-200: #c6cfda;
-  --slate-50: #eef2f6;
+  --slate-950: #070c0b;
+  --slate-900: #0c1513;
+  --slate-800: #14211e;
+  --slate-700: #24332e;
+  --slate-600: #3b4a43;
+  --slate-400: #a89f88;
+  --slate-200: #e3d8bf;
+  --slate-50: #fff3d6;
 
   /* Accents */
-  --loom-cyan: #3fd8e6;
-  --loom-cyan-dim: #1f7f89;
-  --loom-glow: rgba(63, 216, 230, 0.35);
+  --loom-cyan: #e6c687; /* Loom gold (name kept for compatibility) */
+  --loom-cyan-dim: #8f7442;
+  --loom-glow: rgba(230, 198, 135, 0.35);
   --alert-crimson: #e5484d;
   --alert-crimson-dim: #8c2a2e;
   --amber: #f0a430;
@@ -95,7 +95,7 @@ body.host {
   overflow: hidden;
   background-color: var(--slate-950);
   background-image:
-    radial-gradient(ellipse at 50% 35%, rgba(8, 11, 16, 0.74) 0%, rgba(8, 11, 16, 0.92) 100%),
+    radial-gradient(ellipse at 50% 35%, rgba(7, 12, 11, 0.74) 0%, rgba(7, 12, 11, 0.92) 100%),
     url('../img/The%20Loom_%20A%20Perfect%20World.png');
   background-position: center center;
   background-size: cover;
@@ -122,7 +122,7 @@ body.host .label {
   gap: 48px;
   height: 96px;
   padding: 0 40px;
-  background: rgba(8, 11, 16, 0.88);
+  background: rgba(7, 12, 11, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--border);
@@ -135,7 +135,7 @@ body.host .label {
   font-weight: 700;
   padding: 2px 16px;
   border-radius: var(--radius);
-  background: rgba(63, 216, 230, 0.12);
+  background: rgba(230, 198, 135, 0.12);
   color: var(--accent);
   border: 2px solid var(--loom-cyan-dim);
 }
@@ -308,7 +308,7 @@ body.host .label {
   text-shadow: 0 0 18px var(--alert-crimson), 0 0 32px rgba(229, 72, 77, 0.45);
 }
 /* Cinematic typography: wide-tracked transmission label, soft glow on text. */
-.crawl p { letter-spacing: 0.01em; text-shadow: 0 0 28px rgba(63, 216, 230, 0.08); }
+.crawl p { letter-spacing: 0.01em; text-shadow: 0 0 28px rgba(230, 198, 135, 0.08); }
 .crawl p.label { letter-spacing: 0.32em; text-transform: uppercase; }
 /* Staggered fade-in: each line rises into place in turn as the view opens. */
 .view.is-active .crawl p { animation: crawl-line-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -712,7 +712,7 @@ body.host .gdw-meter .label { font-size: 20px; }
 /* Citizen feed cards: slide in from above, colour-coded by district. */
 :root {
   --district-d1: #5b8def; /* Old Harbour */
-  --district-d2: #3fd8e6; /* The Grid */
+  --district-d2: #e6c687; /* The Grid */
   --district-d3: #2bc4a0; /* Riverside */
   --district-d4: #f0a430; /* Eastworks */
   --district-d5: #c084fc; /* Highlands */
@@ -997,7 +997,7 @@ body.host.alarm-flash::before {
 body.host .governance-line { margin: 0; padding: 10px 16px; font-size: 26px; border-radius: var(--radius); flex-shrink: 0; }
 body.host .governance-line.gov-loom {
   font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--loom-cyan); background: rgba(63, 216, 230, 0.08); border: 2px solid var(--loom-cyan);
+  color: var(--loom-cyan); background: rgba(230, 198, 135, 0.08); border: 2px solid var(--loom-cyan);
   box-shadow: 0 0 24px var(--loom-glow);
 }
 body.host .governance-line.gov-loom::before { content: "\25C9  LOOM // "; opacity: 0.7; }
@@ -1024,7 +1024,7 @@ body.host .phase-crumbs li { font-size: 20px; }
 .debate-hook {
   position: relative; padding: 16px 20px 18px;
   border-radius: var(--radius-lg); border: 2px solid var(--theme-current, var(--accent));
-  background: linear-gradient(135deg, rgba(63, 216, 230, 0.10), transparent 70%);
+  background: linear-gradient(135deg, rgba(230, 198, 135, 0.10), transparent 70%);
 }
 .debate-hook::after {
   content: ""; position: absolute; left: 36px; bottom: -14px; width: 24px; height: 24px;
@@ -1090,7 +1090,7 @@ body.host .finale-status-sub { font-size: 24px; margin: 0; }
 body.host #phase-name { font-size: 20px; letter-spacing: 0.08em; white-space: nowrap; }
 
 /* Finale incident: the Loom admits it cannot compute an answer. */
-.finale-callout { margin-top: auto; padding: 28px; text-align: center; border: 3px solid var(--theme-current, var(--accent)); border-radius: var(--radius-lg); background: rgba(63, 216, 230, 0.06); }
+.finale-callout { margin-top: auto; padding: 28px; text-align: center; border: 3px solid var(--theme-current, var(--accent)); border-radius: var(--radius-lg); background: rgba(230, 198, 135, 0.06); }
 .finale-callout[hidden] { display: none; }
 body.host .finale-callout-title { margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 0.06em; color: var(--theme-current, var(--accent)); }
 body.host .finale-callout-sub { margin: 8px 0 12px; font-size: 48px; font-weight: 700; letter-spacing: 0.1em; }
@@ -1121,7 +1121,7 @@ body.host .finale-callout-note { margin: 0; font-size: 24px; }
 .finale-revise {
   position: fixed; inset: 0; z-index: 50; overflow-y: auto;
   padding: calc(56px + env(safe-area-inset-top)) 16px 24px;
-  background: rgba(8, 11, 16, 0.96);
+  background: rgba(7, 12, 11, 0.96);
 }
 .finale-revise .m-kicker { color: var(--amber); }
 .finale-feedback { padding: 14px; border-left: 4px solid var(--amber); background: var(--bg-raised); border-radius: var(--radius); font-size: 17px; margin: 8px 0 0; }
@@ -1285,7 +1285,7 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .map-container { position: relative; }
 .map-month {
   position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 18px; letter-spacing: 0.12em;
-  color: var(--map-accent, var(--loom-cyan, #3fd8e6)); background: rgba(8, 11, 16, 0.82);
+  color: var(--map-accent, var(--loom-cyan, #e6c687)); background: rgba(7, 12, 11, 0.82);
   border: 1px solid currentColor; border-radius: var(--radius); pointer-events: none;
 }
 .map-month[hidden] { display: none; }
@@ -1323,7 +1323,7 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .finale-timer.is-warn .finale-timer-secs { color: var(--amber); }
 .finale-timer.is-low .finale-timer-fill { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
 .finale-timer.is-low .finale-timer-secs { color: var(--danger); }
-.finale-revise .finale-timer { background: rgba(8, 11, 16, 0.96); }
+.finale-revise .finale-timer { background: rgba(7, 12, 11, 0.96); }
 
 /* World BA, The Uneasy Republic: amber/brass (the owners' polish) against
    industrial rust (the workers' districts). Brass stays the text accent
@@ -1411,8 +1411,8 @@ body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .w
 .loom-grid::before {
   content: ""; position: absolute; inset: -64px;
   background-image:
-    linear-gradient(rgba(63, 216, 230, 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(63, 216, 230, 0.09) 1px, transparent 1px);
+    linear-gradient(rgba(230, 198, 135, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 198, 135, 0.09) 1px, transparent 1px);
   background-size: 64px 64px;
   -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
   mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
@@ -1608,3 +1608,165 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 }
 body.is-reconnecting .m-main { opacity: 0.6; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .m-reconnect { animation: none; } }
+
+/* ---------------------------------------------------------------------------
+   House typography: every piece of game text, host and phone, is Montserrat
+   Light, uppercase, tracked at 0.35em (matching the cinematic intro).
+   One block, so the look is tuned in one place. The cinematic layer keeps
+   Cinzel for its display titles (logo, crisis title, call to action).
+--------------------------------------------------------------------------- */
+:root {
+  --font-house: 'Montserrat', sans-serif;
+  --font-sans: var(--font-house);
+  --font-mono: var(--font-house);
+}
+body, body *, body *::before, body *::after,
+input, textarea, select, button {
+  font-family: var(--font-house) !important;
+  font-weight: 300 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.35em !important;
+}
+.cine .cine-crisis-title, .cine .cine-cta, .cine .cine-gate-title {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 500 !important;
+}
+.cine .cine-crisis-title { letter-spacing: 0.04em !important; text-transform: none !important; }
+
+/* Running sentences (incident text, citizen posts, debate prompts, the Loom's
+   lines, role briefings, policy descriptions, help text) stay Montserrat
+   Light but in normal case with light tracking, so they fit their panels
+   and read from the back of the room. Typed input keeps the player's case. */
+.incident-text, .incident-text *, .loom-line, .loom-line *, .debate-hook-text, .debate-hook-text *,
+.feed-text, .feed-text *, .feed-package-verdict, .policy-text, .policy-text *, .crawl, .crawl *,
+.proposal-text, .rank-text, .enact-text, .world-tagline, .world-card li, .world-card li *,
+.role-text, .role-text *, .role-flavor, .role-drawer-body p, .role-drawer-body p *,
+.intel-drawer-text, .intel-drawer-text *, .memo-body, .memo-body *, .override-armed-text,
+.finale-goal-text, .finale-feedback, .finale-callout-note, .finale-instruction, .finale-goal-hint,
+p.muted, input, textarea {
+  text-transform: none !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Wider tracking needs a slimmer top bar to fit 1920px. */
+body.host .topbar { gap: 20px; }
+body.host .topbar-brand { font-size: 22px; }
+body.host .topbar-value { font-size: 30px; }
+body.host .topbar .label { font-size: 16px; }
+body.host .phase-crumbs { font-size: 13px; margin-left: 12px; }
+body.host .phase-crumbs li { padding: 4px 6px; font-size: 14px; }
+body.host .phase-crumbs li + li::before { margin-right: 4px; }
+
+/* Buttons in the cinematic style: dark glass pill, gold hairline, cream text. */
+.btn {
+  border: 1px solid rgba(235, 198, 125, 0.45);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(14, 24, 22, 0.88) 0%, rgba(22, 36, 33, 0.82) 100%);
+  color: var(--slate-50);
+  box-shadow: inset 0 0 18px rgba(255, 225, 155, 0.08);
+}
+.btn-primary {
+  border-color: rgba(235, 198, 125, 0.75);
+  background: linear-gradient(135deg, rgba(14, 24, 22, 0.92) 0%, rgba(22, 36, 33, 0.86) 100%);
+  color: #fff3d6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(230, 190, 115, 0.22), inset 0 0 18px rgba(255, 225, 155, 0.12);
+}
+.btn-primary:not(:disabled):hover { border-color: rgba(255, 228, 168, 0.95); color: #fff; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 34px rgba(255, 215, 130, 0.45), inset 0 0 22px rgba(255, 225, 155, 0.2); }
+body.host .topbar { gap: 16px; }
+body.host .topbar-brand { font-size: 20px; }
+body.host .topbar-value, body.host .gdw-badge { font-size: 26px; }
+body.host .btn-fullscreen { letter-spacing: 0 !important; padding-left: 6px; padding-right: 6px; }
+body.host .forecast-banner { white-space: normal; letter-spacing: 0.15em !important; }
+
+/* ---------------------------------------------------------------------------
+   Intro: the Loom addresses the council ("Voice of the Loom").
+--------------------------------------------------------------------------- */
+#view-intro { position: relative; flex-direction: column; align-items: center; padding: 18px 40px 28px; overflow: hidden; }
+#view-intro.is-active { display: flex; }
+.loom-chamber {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 38%, rgba(230, 190, 115, 0.10), transparent 70%),
+    radial-gradient(ellipse 120% 40% at 50% 100%, rgba(30, 42, 38, 0.9), transparent 70%),
+    linear-gradient(180deg, #0b1311 0%, #0a100e 70%, #060908 100%);
+}
+.chamber-arch {
+  position: absolute; top: 4%; width: 420px; height: 88%;
+  border-radius: 210px 210px 0 0;
+  background: linear-gradient(180deg, rgba(150, 95, 30, 0.38) 0%, rgba(40, 32, 18, 0.25) 45%, rgba(10, 16, 14, 0) 90%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.7);
+}
+.chamber-arch.left { left: -90px; }
+.chamber-arch.right { right: -90px; }
+.chamber-orbits { position: absolute; inset: 0; width: 100%; height: 100%; }
+.chamber-orbits ellipse { fill: none; stroke: rgba(230, 198, 135, 0.28); stroke-width: 1.4; stroke-dasharray: 6 9; animation: orbit-drift 30s linear infinite; }
+.chamber-orbits ellipse + ellipse { stroke: rgba(230, 198, 135, 0.16); animation-direction: reverse; }
+.chamber-thread { stroke: rgba(230, 198, 135, 0.7); stroke-width: 2; }
+.chamber-pedestal { fill: rgba(16, 24, 21, 0.85); stroke: rgba(201, 150, 70, 0.8); stroke-width: 1.6; }
+@keyframes orbit-drift { to { stroke-dashoffset: -300; } }
+
+.loom-awakens {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 22px; margin: 0 0 14px;
+  padding: 8px 28px; border: 1px solid rgba(235, 198, 125, 0.55); border-radius: 999px;
+  background: rgba(10, 16, 14, 0.85);
+}
+body.host .awakens-tag { font-family: 'Cinzel', serif !important; font-weight: 500 !important; font-size: 18px; letter-spacing: 0.18em !important; color: #fff3d6; }
+body.host .awakens-quote { font-family: 'Cormorant Garamond', serif !important; font-style: italic; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0.01em !important; font-size: 22px; color: #f3e6c8; }
+
+.voice-card {
+  position: relative; z-index: 1; width: 1240px; padding: 26px 64px 22px;
+  border: 1px solid rgba(235, 198, 125, 0.4); border-radius: 36px;
+  background: linear-gradient(180deg, rgba(20, 30, 27, 0.78), rgba(12, 19, 17, 0.84));
+  backdrop-filter: blur(6px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(255, 225, 155, 0.05);
+}
+#view-intro .crawl { max-width: none; gap: 6px; }
+#view-intro .crawl p.voice-title { margin: 0 0 10px; font-size: 22px; color: var(--cine-gold, #e6c687); }
+#view-intro .crawl p.voice-title, #view-intro .crawl p.voice-title * { text-transform: uppercase !important; letter-spacing: 0.42em !important; }
+#view-intro .crawl p.voice-title::before, #view-intro .crawl p.voice-title::after {
+  content: ''; display: inline-block; vertical-align: middle; width: 130px; height: 1px; margin: 0 28px;
+  background: linear-gradient(90deg, transparent, rgba(230, 198, 135, 0.85), transparent);
+}
+body.host #view-intro .crawl p:not(.voice-title), body.host #view-intro .crawl p:not(.voice-title) * {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-style: italic;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+body.host #view-intro .crawl p:not(.voice-title) {
+  font-size: 40px; line-height: 1.38; color: #fbefd2;
+  text-shadow: 0 0 18px rgba(255, 230, 170, 0.18);
+}
+body.host #view-intro .crawl p.accent:not(.voice-title) { color: #f5d998; }
+#view-intro .crawl .danger { color: #f0b46a; font-weight: 500 !important; }
+#view-intro .crawl-word.is-current { color: #fff8e6; text-shadow: 0 0 16px rgba(255, 220, 150, 0.9), 0 0 30px rgba(230, 190, 115, 0.5); }
+
+.voice-meta {
+  display: flex; justify-content: center; align-items: center; gap: 22px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(235, 198, 125, 0.22);
+  font-size: 16px; color: var(--text-muted);
+}
+.voice-meta b { color: #f5d998; }
+.voice-dot { color: rgba(230, 198, 135, 0.6); }
+
+.seat-cards {
+  position: relative; z-index: 1; list-style: none; margin: auto 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; width: 100%;
+}
+body.host .seat-card {
+  position: relative; display: flex; flex-direction: column; gap: 8px; padding: 18px 22px;
+  border: 1px solid rgba(235, 198, 125, 0.35); border-radius: 18px;
+  background: linear-gradient(180deg, rgba(20, 30, 27, 0.9), rgba(12, 19, 17, 0.92));
+  font-size: 15px;
+}
+.seat-pos { font-size: 13px; color: var(--cine-gold, #e6c687); }
+.seat-icon { position: absolute; top: 16px; right: 18px; width: 26px; height: 26px; color: #f5d998; }
+body.host .seat-node { font-family: 'Cinzel', serif !important; font-weight: 600 !important; font-size: 26px; letter-spacing: 0.08em !important; color: #fff3d6; }
+body.host .seat-quote { font-family: 'Cormorant Garamond', serif !important; font-style: italic; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0.01em !important; font-size: 22px; color: #e9dcc0; }
+
+#view-intro .intro-controls { bottom: auto; top: 18px; right: 28px; flex-direction: column; align-items: flex-end; gap: 10px; }
+#view-intro { border: 1px solid rgba(235, 198, 125, 0.22); border-radius: 28px; }
+@media (prefers-reduced-motion: reduce) { .chamber-orbits ellipse { animation: none; } }
+body.host .gdw-meter-head { flex-wrap: wrap; row-gap: 4px; }
+body.host .gdw-meter-head .label { font-size: 18px; }

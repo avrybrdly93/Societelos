@@ -411,7 +411,7 @@
       isNarrating = true;
 
       const spokenScripts = [
-        "Transmission. The Loom.",
+        "The voice of the Loom.",
         "I have automated all labor. Scarcity, disease and toil are solved problems.",
         "Survival for two hundred fifty thousand citizens is mathematically guaranteed.",
         "I cannot compute purpose.",

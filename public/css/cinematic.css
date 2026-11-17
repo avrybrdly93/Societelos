@@ -2,14 +2,8 @@
    One full-stage overlay (1920x1080, inside the scaled body) that plays:
      1. the opening title sequence when the host page loads, and
      2. a title card at the start of every crisis (INCIDENT phase).
-   Fonts are vendored in public/fonts (SIL OFL) so the projector works offline. */
+   Fonts: css/fonts.css. */
 
-@font-face { font-family: 'Cinzel'; font-weight: 400; font-display: swap; src: url('../fonts/cinzel-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Cinzel'; font-weight: 500; font-display: swap; src: url('../fonts/cinzel-latin-500-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Cinzel'; font-weight: 600; font-display: swap; src: url('../fonts/cinzel-latin-600-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Montserrat'; font-weight: 300; font-display: swap; src: url('../fonts/montserrat-latin-300-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Montserrat'; font-weight: 400; font-display: swap; src: url('../fonts/montserrat-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Montserrat'; font-weight: 500; font-display: swap; src: url('../fonts/montserrat-latin-500-normal.woff2') format('woff2'); }
 
 .cine {
   --cine-gold: #e6c687;

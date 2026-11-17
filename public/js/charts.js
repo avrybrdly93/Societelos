@@ -5,13 +5,13 @@
   'use strict';
 
   const COLORS = {
-    band: 'rgba(63, 216, 230, 0.18)',
-    bandLegend: 'rgba(63, 216, 230, 0.35)',
-    median: '#3fd8e6',
-    realized: '#f0a430',
-    text: '#7d8a9a',
+    band: 'rgba(230, 198, 135, 0.18)',
+    bandLegend: 'rgba(230, 198, 135, 0.35)',
+    median: '#e6c687',
+    realized: '#fff3d6',
+    text: '#a89f88',
     grid: 'rgba(125, 138, 154, 0.18)',
-    axis: '#33404f',
+    axis: '#3b4a43',
     danger: '#e5484d'
   };
   const PAD = { left: 64, right: 24, top: 20, bottom: 56 };
@@ -96,12 +96,12 @@
     ctx.fillStyle = 'rgba(229, 72, 77, 0.16)';
     ctx.fillRect(g.x(0), g.y(5), g.x(g.months) - g.x(0), g.y(0) - g.y(5));
     ctx.fillStyle = COLORS.danger;
-    ctx.font = '600 14px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 14px Montserrat, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     ctx.fillText('COLLAPSE', g.x(g.months) - 6, g.y(0) - 3);
     // Horizontal gridlines and GDW labels.
-    ctx.font = '16px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 16px Montserrat, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let v = 0; v <= 100; v += 20) {
@@ -149,7 +149,7 @@
       { label: 'Realized', swatch: (x, y) => { ctx.strokeStyle = COLORS.realized; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 26, y); ctx.stroke(); } }
     ];
     ctx.save();
-    ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 15px Montserrat, sans-serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     let y = PAD.top + 14;
@@ -227,7 +227,7 @@
     const x = g.x(m);
     const y = g.y(realizedEnd);
     ctx.save();
-    ctx.font = '700 20px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 20px Montserrat, sans-serif';
     const measured = ctx.measureText ? ctx.measureText(verdict.text) : null;
     const tw = (measured && measured.width) || verdict.text.length * 12;
     const boxW = tw + 24;
@@ -264,7 +264,7 @@
     ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
     ctx.stroke();
     ctx.fillStyle = COLORS.danger;
-    ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 22px Montserrat, sans-serif';
     ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
     ctx.textBaseline = 'bottom';
     ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
@@ -407,7 +407,7 @@
   // Class-grade bands for the five-year chart (final GDW thresholds).
   const GRADE_BANDS = [
     { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(43, 196, 160, 0.10)', text: '#2bc4a0' },
-    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(63, 216, 230, 0.07)', text: '#3fd8e6' },
+    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(230, 198, 135, 0.07)', text: '#e6c687' },
     { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(240, 164, 48, 0.08)', text: '#f0a430' },
     { from: 0, to: 1, label: '0 SHUTDOWN', fill: 'rgba(229, 72, 77, 0.35)', text: '#e5484d' }
   ];
@@ -442,7 +442,7 @@
     clear(ctx, g);
     ctx.save();
     // Threshold bands, labelled in the right margin.
-    ctx.font = '600 14px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 14px Montserrat, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     for (const b of GRADE_BANDS) {
@@ -456,7 +456,7 @@
     }
     ctx.textAlign = 'right';
     // Gridlines and GDW labels every 20%.
-    ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
+    ctx.font = '300 15px Montserrat, sans-serif';
     for (let v = 0; v <= 100; v += 20) {
       ctx.strokeStyle = v === 0 ? COLORS.axis : COLORS.grid;
       ctx.lineWidth = v === 0 ? 2 : 1;
