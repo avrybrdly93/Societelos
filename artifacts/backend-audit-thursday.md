@@ -73,3 +73,38 @@ Findings and changes:
 - `require('dotenv').config({ quiet: true })` keeps start-up output to the
   two banner lines (no dotenv tips), checked by `server/test/startup.test.js`.
 - No dead code found.
+
+## Code freeze review (TASK-653)
+
+`npm run check:all`: exit 0 — 246/246 tests, simulation benchmark in
+target (cycle < 50 ms), heap flat, smoke test OK, no CDN dependencies,
+no XSS sinks, DOM ids consistent.
+
+Reviewed every Thursday backend change (End Screen data, reconnects,
+teacher controls, safety nets, timers) for crash paths, privacy and state
+leaks between games:
+
+| Area | Status |
+| :--- | :--- |
+| `game:end` payload (grade, gdwHistory + markers, roles, authors, winner, seed, finale mode, closing citizen) | Done, spec keys verified over Socket.IO |
+| Phone reconnect (token or same name, offline seats only) + `state:sync` re-hydration | Done |
+| Projector refresh (`host:sync`, phase, resolution / game:end) | Done |
+| `host:playAgain`, `host:config` (60/90 s debate, forecast toggle), `host:start { seed }` | Done (server side) |
+| Timer races, `isTransitioning` lock, rapid skipping | Done, no double advance or double scoring |
+| Offline / DNS failure mid-game, crash safety nets | Done, no unhandled rejections |
+| Logs | Node ids only; no names or write-ins |
+| 10 games on one instance; heap after `playAgain` | Flat (≈0.4 MB over 10 games, plateaus) |
+
+Known limitations / for the frontend and the teacher:
+- The projector and phones do not yet render `game:end`, `host:sync`,
+  `state:sync`, spectator mode or the Play-again / debate-length / seed
+  controls; the server events are ready (Stream 2 tasks 656+).
+- A phone that lost its token reclaims its seat by typing the **same name**,
+  and only while that seat is offline. In a classroom this is the intended
+  trade-off; a student who knows a classmate's name could take an offline
+  seat.
+- `server/index.js` (the pre-hackathon prototype, `npm run start:legacy`)
+  still logs player names; `npm start` does not use it.
+- `game:end` includes player display names in the role and author reveal
+  (TASK-604/605 ask for them). They go to the local projector and phones
+  only, never to Gemini or the logs.
