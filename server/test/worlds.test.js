@@ -65,7 +65,8 @@ test('World BB: the comfortable 1B -> 2B opening is punished hardest in cycles 3
   for (const w of ['AA', 'AB', 'BA']) assert.ok(worstDrop('BB') < worstDrop(w) - 5, `BB worst drop ${worstDrop('BB').toFixed(1)} vs ${w} ${worstDrop(w).toFixed(1)}`);
   // The comfort options (lotus/assimilator: the stipend, then the sweep) are that worst path: a drop of 10+.
   const bb = crises.crises.filter((c) => c.world === 'BB' && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
-  const comfort = bb.map((c) => ['A', 'B'].find((k) => (c.options[k].roles || []).includes('lotus'))).join('');
+  const complacent = (o) => (o.roles || []).some((r) => r === 'lotus' || r === 'assimilator');
+  const comfort = bb.map((c) => ['A', 'B'].find((k) => complacent(c.options[k]))).join('');
   assert.ok(worlds.BB.ends[comfort] - worlds.BB.afterCycle2 <= -10, `BB comfort path ${comfort} drops ${(worlds.BB.ends[comfort] - worlds.BB.afterCycle2).toFixed(1)}`);
 });
 
