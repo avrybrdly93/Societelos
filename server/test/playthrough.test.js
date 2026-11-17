@@ -202,3 +202,9 @@ test('headless 5-cycle playthrough on the BA (Uneasy Republic) branch reaches EN
   const out = await headlessOfflineRun('BA');
   assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) keeps the rest of the game volatile');
 });
+
+test('headless 5-cycle playthrough on the BB (Gilded Cage) branch reaches END offline', async () => {
+  const out = await headlessOfflineRun('BB');
+  assert.equal(out.game.volatility, 1, 'Delegated Control (2B) keeps normal volatility');
+  assert.ok(out.resolutions[0].gdw > 25, 'the easy 1B opening lifts GDW');
+});
