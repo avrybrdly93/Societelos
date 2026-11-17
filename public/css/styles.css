@@ -1342,3 +1342,8 @@ body.host .feed-package-rows li { font-size: 18px; color: var(--slate-400); }
 body.host .feed-package-rows li.is-up { color: var(--teal); }
 body.host .feed-package-rows li.is-down { color: var(--danger); }
 body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(--slate-200); }
+
+/* Player-written policies can be one unbroken 140-character string: wrap
+   anywhere rather than overflow the card (host proposals and enactment,
+   phone ballot and wait screen, resolution headline). */
+.proposal-text, .enact-text, .rank-text, .finale-mine, #resolution-policy, .feed-text { overflow-wrap: anywhere; }
