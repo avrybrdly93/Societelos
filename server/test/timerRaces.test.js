@@ -175,3 +175,34 @@ test('FINALE_MOD waits for a slow Gemini moderation; FINALE_DEBATE then gets its
   const debateMs = stamps.FINALE_DEBATE.endsAt - stamps.FINALE_DEBATE.at;
   assert.ok(Math.abs(debateMs - 1000) < 50, `FINALE_DEBATE got its full timer (${debateMs} ms)`);
 });
+
+// TASK-635 ------------------------------------------------------------------
+
+test('RESOLUTION waits for a slow loom.narrate, then runs the full playback timer from the payload', { timeout: 30000 }, async () => {
+  const DELAY = 400;
+  const loom = require('../loom');
+  const realNarrate = loom.narrate;
+  const cycle1 = {};
+  await withLoom({
+    narrate: (ctx, opts) => new Promise((resolve) => setTimeout(() => resolve(realNarrate(ctx, opts)), DELAY))
+  }, async () => {
+    await playGame({
+      gameId: 'slow-narration',
+      world: 'AA',
+      phaseSeconds: { RESOLUTION: 1 },
+      onEvent: (type, ev, game) => {
+        if (type === 'phase' && ev.cycle === 1 && ev.phase === 'RESOLUTION') {
+          cycle1.phaseAt = Date.now();
+          game.once('resolution', (r) => { cycle1.payloadAt = Date.now(); cycle1.endsAt = r.endsAt; });
+        }
+        if (type === 'phase' && ev.cycle === 2 && ev.phase === 'INCIDENT' && !cycle1.nextAt) cycle1.nextAt = Date.now();
+      }
+    });
+  });
+  const waited = cycle1.payloadAt - cycle1.phaseAt;
+  assert.ok(waited >= DELAY - 20, `the payload waited for the narration (${waited} ms)`);
+  const playback = cycle1.endsAt - cycle1.payloadAt;
+  assert.ok(Math.abs(playback - 1000) < 50, `full playback timer from the payload (${playback} ms)`);
+  const total = cycle1.nextAt - cycle1.phaseAt;
+  assert.ok(total >= DELAY + 1000 - 30, `the animation was never cut short (${total} ms in RESOLUTION)`);
+});
