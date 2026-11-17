@@ -232,3 +232,43 @@ test('game:end grade at the boundary values 0, 1, 34, 35, 59, 60, 100', () => {
   assert.equal(engine.gradeFor(34.9), 'Fragile');
   assert.equal(engine.gradeFor(59.9), 'Stable');
 });
+
+// TASK-623 ------------------------------------------------------------------
+
+test('host:playAgain clears scores, Overrides, votes and End Screen data and resets GDW to 25', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    // Play a full game, then mark an Override spent and a vote cast so there is something to clear.
+    const out = await playGame({ gameId: 'play-again', world: 'AA' });
+    const { game } = out;
+    game.overridesUsed['NODE-01'] = true;
+    game.votes = { 'NODE-01': { choice: 'A', override: true } };
+    assert.ok(out.gameEnd, 'a finished game');
+    assert.notEqual(game.gdw, 25);
+
+    const log = console.log;
+    console.log = () => {};
+    let result;
+    try {
+      result = game.playAgain({ keepPlayers: true });
+    } finally {
+      game.clearPhaseTimer();
+      console.log = log;
+    }
+    assert.equal(result.ok, true);
+    assert.equal(game.phase, 'LOBBY');
+    assert.equal(game.gdw, 25);
+    assert.deepEqual(game.gdwHistory, []);
+    assert.deepEqual(game.votes, {});
+    for (const node of NODE_IDS) {
+      assert.equal(game.scores[node], 0, `${node} score`);
+      assert.equal(game.overridesUsed[node], false, `${node} Override back`);
+      assert.equal(game.overrideAvailable(node), true);
+    }
+    assert.deepEqual(game.scoreLedger, []);
+    assert.equal(game.endData, null);
+    assert.equal(game.finale, null);
+    assert.equal(game.worldKey, null);
+    assert.equal(game.cycle, 0);
+    assert.notEqual(game.gameId, 'play-again', 'fresh seeds');
+  });
+});
