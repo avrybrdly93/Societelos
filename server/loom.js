@@ -180,6 +180,13 @@ const NARRATION_SCHEMA = {
   required: ['loomLine', 'messages']
 };
 
+// Offline Loom lines for the Cycle 5 finale's enacted 50/25/25 package.
+const FINALE_LOOM_LINES = {
+  good: 'You wrote your own answer and wove three of them together. The region rose. I could not have computed that.',
+  mixed: 'Three policies, one region, pulling in different directions. Some districts rose, others fell. That is what a compromise costs.',
+  bad: 'Your three policies pulled against each other, and wellbeing fell. I have kept a record of the package you chose.'
+};
+
 const BAND_LOOM_LINES = {
   good: 'Wellbeing indicators are rising across the region. I note that you did this without me. I will try not to take it personally.',
   mixed: 'The council has decided. Some districts improved, others did not. Your species calls this compromise.',
@@ -224,7 +231,8 @@ function withSimFacts(base, summary = {}) {
  * Offline fallback: the option's authored Loom line (or a band template) and
  * each citizen's authored line for this outcome band.
  */
-function narrateFallback(context = {}) {
+function narrateFallback(rawContext = {}) {
+  const context = narrationContext(rawContext);
   const band = outcomeBand(context.simSummary || context.summary);
   const option = context.winningOption || {};
   const citizens = Array.isArray(context.citizens) ? context.citizens : [];
@@ -248,7 +256,8 @@ function narrateFallback(context = {}) {
   }
   // Authored line for this outcome band, then the option's single line, then a template.
   const bandLine = option.loomLines && option.loomLines[band];
-  const base = String(bandLine || option.loomLine || BAND_LOOM_LINES[band]).trim();
+  const finale = Array.isArray(context.enacted) && context.enacted.length > 0;
+  const base = String(bandLine || option.loomLine || (finale ? FINALE_LOOM_LINES[band] : BAND_LOOM_LINES[band])).trim();
   return { loomLine: withSimFacts(base, context.simSummary || context.summary), messages, band, fallback: true };
 }
 

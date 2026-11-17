@@ -558,3 +558,24 @@ test('every Gemini call logs latency and token usage, never student write-ins in
     assert.equal(lines.length, 0);
   } finally { console.warn = warn; }
 });
+
+test('loom.narrate fallback works for the Cycle 5 finale when the winning option is a 50/25/25 package', async () => {
+  const enacted = [
+    { text: 'Every district elects a repair council.', weight: 0.5, place: 'first' },
+    { text: 'A luxury dividend for all.', weight: 0.25, place: 'second' },
+    { text: 'Shut the servers one day a week.', weight: 0.25, place: 'third' }
+  ];
+  const pkg = { name: 'The Council Package', text: enacted.map((e) => `${e.weight * 100}%: ${e.text}`).join(' | '), summary: 'Three council-written policies enacted together at 50/25/25.' };
+  const lines = new Set();
+  for (const delta of [-9, 0, 9]) {
+    const out = await loom.narrate({ crisis: { title: 'March on the Datacenter' }, winningOption: pkg, simSummary: { realizedDelta: delta, shocks: [{ month: 4, district: 'D2', name: 'Cooling Grid Outage' }] }, citizens, enacted }, { config: OFFLINE });
+    assert.equal(out.fallback, true);
+    assert.ok(out.loomLine.length > 0 && out.loomLine.length <= 200, out.loomLine);
+    assert.match(out.loomLine, /three/i, 'speaks about the package');
+    assert.ok(out.messages.length > 0 && out.messages.every((m) => m.text.length <= 140 && citizens.some((c) => c.id === m.citizenId)));
+    lines.add(out.loomLine);
+  }
+  assert.equal(lines.size, 3, 'a different line for good, mixed and bad outcomes');
+  // Engine-shaped context through narrateFallback directly as well.
+  assert.match(loom.narrateFallback({ winningOption: pkg, simSummary: { realizedDelta: 5 }, enacted }).loomLine, /three/i);
+});
