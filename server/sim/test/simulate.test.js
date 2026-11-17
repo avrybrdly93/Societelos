@@ -127,3 +127,20 @@ test('realized run clamps GDW at 0% and records collapsed: true when W <= 0.20 a
   const ok = simulate(createInitialState(simConfig), EFFECTS, { runs: 20, seed: 5 });
   assert.equal(ok.realized.collapsed, false);
 });
+
+test('simulate() forecasts a single write-in policy (sparse, unscaled effects) for the Borda tie-breaker', () => {
+  const start = createInitialState(simConfig);
+  // A moderated write-in typically moves 2-3 traits and leaves the rest out.
+  const writeIn = { purpose: 0.4, autonomy: 0.3 };
+  const r = simulate({ gdw: 25, simState: start }, writeIn, { runs: 200, seed: 99 });
+  const end = r.forecast.median[r.forecast.median.length - 1];
+  assert.ok(Number.isFinite(end) && end > 25, `a purpose/autonomy write-in lifts the median (${end.toFixed(1)})`);
+  assert.equal(r.forecast.runs, 200);
+  // Same seed, same median: the tie-breaker is deterministic.
+  assert.equal(simulate({ gdw: 25, simState: start }, writeIn, { runs: 200, seed: 99 }).forecast.median[12], r.forecast.median[12]);
+  // Two different write-ins are distinguishable, so a Borda tie can be broken.
+  const other = simulate({ gdw: 25, simState: start }, { trust: -0.4, fairness: -0.3 }, { runs: 200, seed: 99 });
+  assert.ok(other.forecast.median[12] < end - 1);
+  // An empty (placeholder) vector is a valid input too.
+  assert.ok(Number.isFinite(simulate(start, {}, { runs: 50, seed: 1 }).forecast.median[12]));
+});
