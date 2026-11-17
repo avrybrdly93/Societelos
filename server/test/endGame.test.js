@@ -272,3 +272,23 @@ test('host:playAgain clears scores, Overrides, votes and End Screen data and res
     assert.notEqual(game.gameId, 'play-again', 'fresh seeds');
   });
 });
+
+// TASK-626 ------------------------------------------------------------------
+
+test('replaying a fixed seed with identical votes gives identical final scores, GDW and End Screen', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const runs = [];
+    for (let i = 0; i < 2; i++) runs.push(await playGame({ gameId: 'replay-seed-626', world: 'BA' }));
+    const [a, b] = runs.map((r) => r.gameEnd);
+    assert.equal(a.finalGdw, b.finalGdw);
+    assert.deepEqual(a.gdwHistory, b.gdwHistory);
+    assert.deepEqual(a.scores, b.scores);
+    assert.deepEqual(a.winner, b.winner);
+    assert.deepEqual(a.roles.map((r) => [r.node, r.role.key, r.total]), b.roles.map((r) => [r.node, r.role.key, r.total]));
+    assert.deepEqual(a.authors, b.authors);
+    assert.deepEqual(a.closingMessage, b.closingMessage);
+    // A different seed with the same votes plays out differently.
+    const other = await playGame({ gameId: 'replay-seed-other', world: 'BA' });
+    assert.notDeepEqual(other.gameEnd.gdwHistory, a.gdwHistory);
+  });
+});
