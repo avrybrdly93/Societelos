@@ -52,3 +52,16 @@ test('the start-up banner prints the local URL and the exact LAN /mobile URL for
   assert.match(join[1], new RegExp(`^http://(\\d{1,3}(\\.\\d{1,3}){3}|localhost):${listen[1]}/mobile$`));
   assert.equal(join[1], `http://${getLanIp()}:${listen[1]}/mobile`, 'same address the QR code encodes');
 });
+
+// TASK-629 ------------------------------------------------------------------
+
+test('Node start-up prints no warnings or deprecations (even with --pending-deprecation)', { timeout: 15000 }, async () => {
+  const { out, err } = await launch({ PORT: '0', NODE_OPTIONS: '--pending-deprecation --trace-warnings' });
+  assert.equal(err, '', `stderr must be empty, got: ${err}`);
+  assert.doesNotMatch(out, /warning|deprecat|\[dotenv/i, out);
+  // Only the banner (and the shutdown line from stopping the test server).
+  const lines = out.trim().split('\n').filter((l) => !/SIGTERM received/.test(l));
+  assert.equal(lines.length, 2, out);
+  assert.match(lines[0], /^\[server\] Societelos listening on http:\/\/localhost:\d+$/);
+  assert.match(lines[1], /^\[server\] Phones join at http:\/\/\S+\/mobile$/);
+});
