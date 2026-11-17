@@ -20,6 +20,7 @@ const loom = require('../loom');
 const { okModeration } = require('./playGame');
 
 const once = (socket, event) => new Promise((resolve) => socket.once(event, resolve));
+let flowSeen = null; // events recorded by the full-game test, reused by TASK-647
 
 /** The spec table, parsed from mvp_spec.md so the test follows the document. */
 function specTable() {
@@ -146,6 +147,7 @@ test('every spec socket event flows over a full game with the spec payload keys'
       }
       if (!toAll) assert.equal(seen.host[event], undefined, `${event} is private: never sent to the projector`);
     }
+    flowSeen = seen;
     // Shapes the spec spells out.
     assert.ok(seen.phone['finale:ballot'].every((b) => b.policies.length === 4), 'ballot: the other four');
     assert.ok(seen.host['lobby:update'].every((u) => u.players.every((p) => 'node' in p && 'ready' in p && !('name' in p))), 'lobby:update has no names');
@@ -198,6 +200,40 @@ test('all 14 spec event names appear character-for-character in the server, with
     if (names.has(name) || INTENTIONAL.has(name)) continue;
     for (const spec of names) {
       assert.ok(distance(name, spec) > 2, `'${name}' looks like a misspelling of spec event '${spec}'`);
+    }
+  }
+});
+
+// TASK-647 ------------------------------------------------------------------
+
+test('payload keys for all 14 events match the spec table character-for-character', () => {
+  assert.ok(flowSeen, 'the full-game test ran first');
+  const rows = specTable();
+  // Outbound: every payload of the event carries every required spec key, spelled exactly.
+  for (const { event, direction, payload } of rows) {
+    if (direction.endsWith('→ server')) continue;
+    const got = flowSeen[direction.includes('all') ? 'host' : 'phone'][event];
+    for (const { key, optional } of specKeys(payload)) {
+      if (optional) continue;
+      got.forEach((p, i) => assert.ok(Object.prototype.hasOwnProperty.call(p, key), `${event} #${i} has "${key}"`));
+    }
+  }
+  // Nested shapes named in the table.
+  for (const u of flowSeen.host['lobby:update']) for (const pl of u.players) for (const k of ['node', 'ready']) assert.ok(k in pl, `lobby:update players[].${k}`);
+  for (const b of flowSeen.phone['finale:ballot']) for (const pol of b.policies) assert.deepEqual(Object.keys(pol).sort(), ['id', 'text']);
+  for (const v of flowSeen.phone['finale:feedback']) assert.ok(['ok', 'revise', 'reject'].includes(v.status));
+  for (const p of flowSeen.host.phase) assert.ok(typeof p.cycle === 'number' && typeof p.phase === 'string' && 'endsAt' in p);
+
+  // Inbound: what the real phone and projector clients send uses the spec keys.
+  const clients = ['public/js/host.js', 'public/js/mobile.js'].map((f) => fs.readFileSync(path.join(__dirname, '..', '..', f), 'utf8')).join('\n');
+  for (const { event, direction, payload } of rows) {
+    if (!direction.endsWith('→ server')) continue;
+    const sends = [...clients.matchAll(new RegExp(`emit\\('${event}', \\{([^}]*)\\}`, 'g'))].map((m) => m[1]);
+    assert.ok(sends.length, `a client sends '${event}'`);
+    const keys = specKeys(payload).map((k) => k.key);
+    for (const body of sends) {
+      const sent = body.split(',').map((x) => x.trim().split(':')[0].trim()).filter(Boolean);
+      for (const key of keys) assert.ok(sent.includes(key), `client '${event}' sends "${key}" (sent: ${sent.join(', ') || 'nothing'})`);
     }
   }
 });
