@@ -385,7 +385,9 @@ body.host .label {
 .map-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6; opacity: 0.45; }
 
 /* Phone controller base */
-body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
+body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; overscroll-behavior-y: contain; }
+/* No accidental pull-to-refresh on the phone controller (would drop the socket mid-vote). */
+html:has(body.mobile) { overscroll-behavior-y: contain; }
 .m-main { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
 .m-kicker { font-size: 13px; color: var(--accent); letter-spacing: 0.14em; margin: 8px 0 4px; }
 .m-title { font-size: 32px; margin: 0 0 8px; }
