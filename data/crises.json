@@ -932,11 +932,10 @@
       ],
       "options": {
         "A": {
-          "name": "Universal Scarcity Lottery",
+          "name": "Lottery for Everything Scarce",
           "text": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
           "roles": [
-            "lotus",
-            "assimilator"
+            "lotus"
           ],
           "effects": {
             "purpose": -0.2,
