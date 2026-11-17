@@ -217,3 +217,40 @@ test('headless 5-cycle playthrough: an 8-second Gemini timeout in Cycle 5 falls 
     assert.equal(out.game.gdwHistory.length, 1 + 5 * 12);
   });
 });
+
+// TASK-618 ------------------------------------------------------------------
+
+test('internet drops mid-game: DNS and socket errors from the Loom never crash the engine', { timeout: 30000 }, async () => {
+  const real = { narrate: loom.narrate, moderate: loom.moderate, moderateOne: loom.moderateOne };
+  const config = { apiKey: 'test-key-not-real', enabled: true, model: 'gemini-2.5-flash', timeoutMs: 8000 };
+  const netError = (code) => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error(`getaddrinfo ${code} generativelanguage.googleapis.com`), { code }) });
+  const failures = ['ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN', 'ETIMEDOUT', 'ENETUNREACH'];
+  let calls = 0;
+  // The classroom's internet is gone (the LAN hotspot is still up): every Gemini call fails at the network layer.
+  const fetchImpl = async () => {
+    calls++;
+    throw netError(failures[calls % failures.length]);
+  };
+  const unhandled = [];
+  const onUnhandled = (err) => unhandled.push(err);
+  process.on('unhandledRejection', onUnhandled);
+  try {
+    await withLoom({
+      narrate: (ctx, opts = {}) => real.narrate(ctx, { ...opts, config, fetchImpl }),
+      moderate: (subs, crisis, opts = {}) => real.moderate(subs, crisis, { ...opts, config, fetchImpl }),
+      moderateOne: (sub, crisis, opts = {}) => real.moderateOne(sub, crisis, { ...opts, config, fetchImpl })
+    }, async () => {
+      const out = await playGame({ gameId: 'offline-midgame', world: 'BA' });
+      assert.ok(calls >= 5, `the Loom was really called (${calls})`);
+      assert.equal(out.end.phase, 'END');
+      assert.deepEqual(out.phases.filter((p) => p.startsWith('5:')), FALLBACK_FLOW, 'moderation failed, so the authored A/B finale ran');
+      assert.equal(out.resolutions.length, 5);
+      for (const r of out.resolutions) assert.ok(r.loomLine, 'offline narration on every cycle');
+      assert.ok(out.gameEnd && out.gameEnd.closingMessage, 'End Screen data still compiled');
+    });
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(unhandled, [], 'no unhandled promise rejections');
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+  }
+});
