@@ -639,6 +639,13 @@
     else if (ballot.order.length < ballot.policies.length) ballot.order.push(id);
     renderRanks();
   }
+  // A ballot can be locked only when every one of the (4) proposals has a
+  // distinct place 1-4: exactly the ids on this ballot, each once.
+  function ballotComplete() {
+    const ids = ballot.policies.map((p) => p.id);
+    return ids.length > 0 && ballot.order.length === ids.length
+      && new Set(ballot.order).size === ids.length && ballot.order.every((id) => ids.includes(id));
+  }
   function renderRanks() {
     document.querySelectorAll('.rank-card').forEach((card) => {
       const place = ballot.order.indexOf(card.dataset.policy);
@@ -649,7 +656,7 @@
       card.setAttribute('aria-label', `${proposalName(card.dataset.policy)}${place >= 0 ? `, ranked ${PLACE_NAMES[place]}` : ', not ranked yet'}`);
     });
     const left = ballot.policies.length - ballot.order.length;
-    document.getElementById('rank-submit').disabled = !!ballot.locked || left !== 0 || !ballot.policies.length;
+    document.getElementById('rank-submit').disabled = !!ballot.locked || !ballotComplete();
     document.getElementById('rank-help').textContent = left
       ? `Tap the proposals in order of preference: ${PLACE_NAMES[ballot.order.length]} next. Tap a ranked one to undo.`
       : 'All four ranked. Tap one to change it, or lock in.';
@@ -657,7 +664,7 @@
   // LOCK IN RANKINGS -> finale:rank { order: [id1, id2, id3, id4] }.
   const rankSubmit = document.getElementById('rank-submit');
   rankSubmit.addEventListener('click', () => {
-    if (ballot.locked || ballot.order.length !== ballot.policies.length) return;
+    if (ballot.locked || !ballotComplete()) return;
     ballot.locked = true;
     rankSubmit.disabled = true;
     document.getElementById('rank-error').hidden = true;
