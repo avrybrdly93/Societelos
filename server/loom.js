@@ -57,6 +57,12 @@ const SYSTEM_PROMPT = [
 // Transport: fetch with a hard 8-second AbortController timeout.
 // ---------------------------------------------------------------------------
 
+// Retry-once policy for transient Gemini errors (inside the 8 s budget).
+const RETRYABLE_STATUS = [429, 503];
+const RETRY_BACKOFF_MS = 600;
+const RETRY_MAX_BACKOFF_MS = 2000;
+const RETRY_MIN_ATTEMPT_MS = 2500; // don't retry unless a real attempt still fits
+
 /** fetch() that aborts after `timeoutMs`. Rejects with an AbortError on timeout. */
 async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl = globalThis.fetch) {
   const controller = new AbortController();
@@ -88,16 +94,26 @@ async function callGemini(userPrompt, opts = {}) {
   };
   if (opts.schema) body.generationConfig.responseSchema = opts.schema;
 
-  const res = await fetchWithTimeout(
-    `${API_BASE}/${encodeURIComponent(cfg.model)}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.apiKey },
-      body: JSON.stringify(body)
-    },
-    cfg.timeoutMs,
-    opts.fetchImpl
-  );
+  const url = `${API_BASE}/${encodeURIComponent(cfg.model)}:generateContent`;
+  const init = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.apiKey },
+    body: JSON.stringify(body)
+  };
+  // One 8-second budget for the whole call. A 429 (rate limited) or 503
+  // (overloaded) is retried once after a short backoff, only if enough of
+  // the budget is left for a real second attempt.
+  const deadline = Date.now() + cfg.timeoutMs;
+  let res = await fetchWithTimeout(url, init, cfg.timeoutMs, opts.fetchImpl);
+  if (RETRYABLE_STATUS.includes(res.status)) {
+    const retryAfter = Number(res.headers && typeof res.headers.get === 'function' ? res.headers.get('retry-after') : NaN);
+    const backoff = Math.min(RETRY_MAX_BACKOFF_MS, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : RETRY_BACKOFF_MS);
+    const left = deadline - Date.now() - backoff;
+    if (left >= RETRY_MIN_ATTEMPT_MS) {
+      await new Promise((r) => setTimeout(r, backoff));
+      res = await fetchWithTimeout(url, init, Math.max(1, deadline - Date.now()), opts.fetchImpl);
+    }
+  }
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const data = await res.json();
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&

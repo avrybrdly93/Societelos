@@ -502,3 +502,31 @@ test('loom.moderate falls back cleanly after the 8,000 ms timeout, and the engin
     console.log = log;
   }
 });
+
+test('callGemini retries once on 429/503 inside the 8 s budget, then gives up', async () => {
+  const reply = (status, payload, headers = {}) => ({ ok: status === 200, status, headers: { get: (k) => headers[k.toLowerCase()] }, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] }) });
+  // 503 then success: one retry, same request.
+  let n = 0;
+  const flaky = async () => (++n === 1 ? reply(503) : reply(200, { loomLine: 'Recovered.', messages: [] }));
+  const out = await loom.narrate({ winningOption: { name: 'P' }, simSummary: {}, citizens }, { config: ONLINE, fetchImpl: flaky });
+  assert.equal(n, 2);
+  assert.equal(out.loomLine, 'Recovered.');
+  assert.ok(!out.fallback);
+  // 429 twice: exactly one retry, then the offline fallback.
+  n = 0;
+  const limited = async () => { n++; return reply(429, null, { 'retry-after': '0.1' }); };
+  const warn = console.warn; console.warn = () => {};
+  try {
+    const fb = await loom.narrate({ winningOption: { name: 'P' }, simSummary: {}, citizens }, { config: ONLINE, fetchImpl: limited });
+    assert.equal(n, 2, 'one retry only');
+    assert.equal(fb.fallback, true);
+    // Other errors (e.g. 400) are not retried.
+    n = 0;
+    await loom.narrate({ winningOption: { name: 'P' }, simSummary: {}, citizens }, { config: ONLINE, fetchImpl: async () => { n++; return reply(400); } });
+    assert.equal(n, 1);
+    // Not enough budget left for a real second attempt: no retry.
+    n = 0;
+    await loom.narrate({ winningOption: { name: 'P' }, simSummary: {}, citizens }, { config: { ...ONLINE, timeoutMs: 2000 }, fetchImpl: async () => { n++; return reply(503); } });
+    assert.equal(n, 1);
+  } finally { console.warn = warn; }
+});
