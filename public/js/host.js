@@ -1456,10 +1456,28 @@
   }
   window.addEventListener('resize', () => { if (state.phase === 'END') drawEndChart(); });
 
+  // Reveal sequence: beat 1 (five-year recap) at once, beat 2 (secret roles
+  // and write-in authors) 15 s later, beat 3 (winner / shutdown) 10 s after.
+  const END_BEAT_DELAYS_MS = [0, 15000, 25000];
+  let endBeatTimers = [];
+  function clearEndBeats() {
+    endBeatTimers.forEach(clearTimeout);
+    endBeatTimers = [];
+  }
+  function playEndBeats(view) {
+    clearEndBeats();
+    view.classList.remove('beat-1', 'beat-2', 'beat-3');
+    END_BEAT_DELAYS_MS.forEach((ms, i) => {
+      endBeatTimers.push(setTimeout(() => view.classList.add(`beat-${i + 1}`), ms));
+    });
+  }
+  socket.on('phase', (payload) => { if (payload.phase !== 'END') clearEndBeats(); });
+
   function renderEnd(data) {
     if (!data) return;
     state.endData = data;
     const view = document.getElementById('view-end');
+    playEndBeats(view);
     view.classList.toggle('is-shutdown', !!data.shutdown);
     view.classList.toggle('no-writein', data.finaleMode !== 'writein');
     if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);

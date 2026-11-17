@@ -1535,3 +1535,23 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-seed { font-size: 15px; margin: 0 0 0 16px; display: inline; }
 .view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
 .view-end.is-shutdown .end-winner-title { color: var(--danger); }
+
+/* End Screen reveal: beats 2 and 3 keep their space but stay hidden until
+   host.js adds .beat-2 (15 s) and .beat-3 (25 s) to #view-end. */
+.view-end .end-beat { transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.view-end .end-recap, .view-end .end-reveal, .view-end .end-winner { opacity: 0; transform: translateY(18px); }
+.view-end.beat-1 .end-recap,
+.view-end.beat-2 .end-reveal,
+.view-end.beat-3 .end-winner { opacity: 1; transform: none; }
+.view-end.beat-2 .end-reveal tbody tr { animation: end-row-in 0.6s ease both; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(2) { animation-delay: 0.5s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(3) { animation-delay: 1s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(4) { animation-delay: 1.5s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(5) { animation-delay: 2s; }
+@keyframes end-row-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+.view-end.beat-3 .end-winner-title { animation: end-winner-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes end-winner-in { from { opacity: 0; transform: scale(0.92); letter-spacing: 0.2em; } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .view-end .end-beat { transition: none; transform: none; }
+  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title { animation: none; }
+}
