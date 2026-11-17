@@ -519,7 +519,7 @@
     const headline = document.getElementById('end-headline');
     if (data.shutdown) {
       outcome.textContent = 'THE LOOM HAS SHUT DOWN';
-      headline.textContent = 'Everyone lost.';
+      headline.textContent = 'SYSTEM COLLAPSE — ALL AGENDAS FAILED';
     } else if (won) {
       outcome.textContent = winners.length > 1 ? 'SHARED VICTORY' : 'YOU WON';
       headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
