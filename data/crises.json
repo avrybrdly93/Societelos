@@ -1092,21 +1092,21 @@
       ],
       "options": {
         "A": {
-          "name": "Mandatory Offline Quotas",
-          "text": "Impose strict 8-hour digital blackouts. Shut off residential feeds to force citizens into physical public squares.",
+          "name": "Loom Matchmaking and Child Stipends",
+          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
           "roles": [
-            "artisan",
-            "ghost"
+            "assimilator",
+            "lotus"
           ],
           "effects": {
-            "purpose": 0.5,
-            "connection": 0.6,
+            "purpose": 0.2,
+            "connection": 0.3,
             "health": 0.3,
-            "trust": -0.6,
-            "fairness": 0.2,
-            "autonomy": 0.4
+            "trust": 0.4,
+            "fairness": 0.1,
+            "autonomy": -0.6
           },
-          "targetGdwDelta": 6
+          "targetGdwDelta": 4
         },
         "B": {
           "name": "Algorithmic Matchmaking Stipend",
