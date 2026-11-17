@@ -150,3 +150,28 @@ test('a narration that returns after its phase moved on is not broadcast, but th
   assert.equal(resolutions.length, 0, 'no stale resolution repaints the screen');
   game.clearPhaseTimer();
 });
+
+// TASK-634 ------------------------------------------------------------------
+
+test('FINALE_MOD waits for a slow Gemini moderation; FINALE_DEBATE then gets its full timer', { timeout: 30000 }, async () => {
+  const DELAY = 600;
+  const stamps = {};
+  await withLoom({
+    moderate: (subs) => new Promise((resolve) => setTimeout(() => resolve(okModeration(subs)), DELAY))
+  }, async () => {
+    const out = await playGame({
+      gameId: 'slow-moderation',
+      world: 'AB',
+      phaseSeconds: { FINALE_MOD: 10, FINALE_DEBATE: 1 },
+      onEvent: (type, ev) => {
+        if (type === 'phase' && ev.cycle === 5) stamps[ev.phase] = { at: Date.now(), endsAt: ev.endsAt };
+      }
+    });
+    assert.deepEqual(out.phases.filter((p) => p.startsWith('5:')).slice(2, 4), ['5:FINALE_MOD', '5:FINALE_DEBATE']);
+  });
+  const modLasted = stamps.FINALE_DEBATE.at - stamps.FINALE_MOD.at;
+  assert.ok(modLasted >= DELAY - 20, `FINALE_MOD held until moderation returned (${modLasted} ms)`);
+  assert.ok(modLasted < 10000, 'and moved on as soon as it did, not at the 10 s timer');
+  const debateMs = stamps.FINALE_DEBATE.endsAt - stamps.FINALE_DEBATE.at;
+  assert.ok(Math.abs(debateMs - 1000) < 50, `FINALE_DEBATE got its full timer (${debateMs} ms)`);
+});
