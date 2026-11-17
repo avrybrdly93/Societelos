@@ -1,0 +1,84 @@
+{
+    "study_title": "Self-Determination Theory (SDT) in Financial Dependence Policies",
+    "description": "Data collection schema for evaluating how specific financial support policies impact a person's autonomy, competence, and relatedness.",
+    "participants": [
+        {
+            "participant_id": "P-001",
+            "demographics": {
+                "age": 25,
+                "employment_status": "Unemployed",
+                "living_arrangement": "Living with parents"
+            },
+            "policy_context": {
+                "support_type": "Full-Time Child Allowance",
+                "conditions": "Must perform 15 hours of household chores/week",
+                "predictability": "High (Fixed monthly deposit)"
+            },
+            "sdt_metrics": {
+                "autonomy": {
+                    "score_1_to_10": 8,
+                    "policy_impact_factors": [
+                        "Unrestricted spending",
+                        "No monitoring of purchases",
+                        "Voluntary agreement"
+                    ],
+                    "qualitative_notes": "Participant feels in control of their daily schedule despite receiving financial support, as the arrangement was explicitly agreed upon."
+                },
+                "competence": {
+                    "score_1_to_10": 7,
+                    "policy_impact_factors": [
+                        "Assigned household responsibilities",
+                        "Skill utilization in eldercare"
+                    ],
+                    "qualitative_notes": "The requirement to contribute labor in exchange for the allowance creates a sense of capability and purpose."
+                },
+                "relatedness": {
+                    "score_1_to_10": 9,
+                    "policy_impact_factors": [
+                        "Daily family interactions",
+                        "Reduction of guilt through reciprocity"
+                    ],
+                    "qualitative_notes": "Participant feels highly connected and valued; reciprocity prevents the guilt usually associated with over-benefiting."
+                }
+            }
+        },
+        {
+            "participant_id": "P-002",
+            "demographics": {
+                "age": 32,
+                "employment_status": "Homemaker",
+                "living_arrangement": "Living with spouse"
+            },
+            "policy_context": {
+                "support_type": "Spousal Support (Single-income household)",
+                "conditions": "Must ask for funds for personal items",
+                "predictability": "Low (Ad hoc transfers)"
+            },
+            "sdt_metrics": {
+                "autonomy": {
+                    "score_1_to_10": 3,
+                    "policy_impact_factors": [
+                        "Gatekeeping of funds",
+                        "Need to justify expenses"
+                    ],
+                    "qualitative_notes": "Feels financially at their partner's mercy; lack of direct access to joint accounts severely limits freedom."
+                },
+                "competence": {
+                    "score_1_to_10": 5,
+                    "policy_impact_factors": [
+                        "Managing childrearing"
+                    ],
+                    "qualitative_notes": "Feels capable as a parent, but feels financially incompetent due to lack of earning power."
+                },
+                "relatedness": {
+                    "score_1_to_10": 4,
+                    "policy_impact_factors": [
+                        "Power imbalance in marriage",
+                        "Visible support dynamic"
+                    ],
+                    "qualitative_notes": "The visible and conditional nature of the financial support creates resentment and isolates the participant."
+                }
+            }
+        }
+    ]
+}
