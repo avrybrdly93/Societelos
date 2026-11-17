@@ -1031,6 +1031,9 @@ test('loom.narrate is called with the enacted 50/25/25 package and its simulatio
       assert.ok(ctx.winningOption.text.includes(`${e.weight * 100}%: ${text}`));
     }
     assert.equal(ctx.simSummary, game.finale.simResult.summary);
+    // The package itself, best first, for one commentary on the whole (TASK-551).
+    assert.deepEqual(ctx.enacted.map((e) => [e.place, e.weight]), [['first', 0.5], ['second', 0.25], ['third', 0.25]]);
+    assert.ok(ctx.enacted.every((e) => typeof e.text === 'string' && !('node' in e) && !('author' in e)));
     assert.equal(ctx.citizens.length, 10);
     assert.equal(typeof ctx.citizens[0].mood, 'number');
   } finally {

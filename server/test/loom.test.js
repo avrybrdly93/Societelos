@@ -399,3 +399,23 @@ test('offline Loom line names the shock: "A Coastal Storm hit D1 Old Harbour in 
   const line = loom.withSimFacts('The council has chosen.', { topMoves: [], shocks: [{ month: 3, district: 'D1', trait: 'health', amount: 0.04, name: 'Coastal Storm' }] });
   assert.equal(line, 'The council has chosen. A Coastal Storm hit D1 Old Harbour in month 3.');
 });
+
+test('loom.narrate for the Cycle 5 finale gets the 50/25/25 package and asks for one commentary on it', async () => {
+  let prompt = '';
+  const fetchImpl = async (url, init) => {
+    prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ loomLine: 'Three policies, one region.', messages: [] }) }] } }] }) };
+  };
+  const enacted = [
+    { text: 'Shut the servers one day a week.', weight: 0.25, place: 'third', author: 'NODE-02' },
+    { text: 'Every district elects a repair council.', weight: 0.5, place: 'first', node: 'NODE-04' },
+    { text: 'A luxury dividend for all.', weight: 0.25, place: 'second' }
+  ];
+  const out = await loom.narrate({ crisis: { title: 'March on the Datacenter' }, winningOption: { name: 'The Council Package', text: 'x' }, simSummary: { realizedDelta: 4 }, citizens, enacted }, { config: ONLINE, fetchImpl });
+  assert.equal(out.loomLine, 'Three policies, one region.');
+  assert.match(prompt, /weighted package was enacted together \(50 \/ 25 \/ 25\)/);
+  assert.ok(prompt.indexOf('- 50% (1st): Every district elects a repair council.') < prompt.indexOf('- 25% (2nd): A luxury dividend for all.'));
+  assert.match(prompt, /- 25% \(3rd\): Shut the servers one day a week\./);
+  assert.match(prompt, /comment on the package as a whole/);
+  assert.doesNotMatch(prompt, /NODE-0|Policy enacted:/, 'no authors, no single-policy line');
+});

@@ -203,11 +203,26 @@ function narrateFallback(context = {}) {
  * contract) as well as { winningOption, simSummary } (engine).
  */
 function narrationContext(context = {}) {
+  // Cycle 5 finale: the enacted 50/25/25 package as [{ text, weight, place }],
+  // best first (from context.enacted or context.package). Never authors.
+  const pkg = Array.isArray(context.enacted) ? context.enacted : Array.isArray(context.package) ? context.package : [];
+  const enacted = pkg
+    .filter((e) => e && typeof e.text === 'string' && e.text.trim())
+    .map((e) => ({ text: truncate(e.text, 140), weight: Number(e.weight) || 0, place: String(e.place || '') }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 3);
   return {
     ...context,
     winningOption: context.winningOption || context.winningPolicy || {},
-    simSummary: context.simSummary || context.summary || {}
+    simSummary: context.simSummary || context.summary || {},
+    enacted
   };
+}
+
+/** "50% (1st): text" lines for the enacted finale package. */
+function packageLines(enacted = []) {
+  const PLACES = { first: '1st', second: '2nd', third: '3rd' };
+  return enacted.map((e) => `- ${Math.round(e.weight * 100)}%${PLACES[e.place] ? ` (${PLACES[e.place]})` : ''}: ${e.text}`);
 }
 
 /**
@@ -250,9 +265,17 @@ async function narrate(rawContext = {}, opts = {}) {
       return out;
     });
     const option = context.winningOption || {};
+    const pkg = context.enacted || [];
+    const enactedLines = pkg.length
+      ? [
+        `Cycle 5 finale. The council wrote and ranked its own policies; this weighted package was enacted together (${pkg.map((e) => Math.round(e.weight * 100)).join(' / ')}):`,
+        ...packageLines(pkg),
+        'Your Loom line must comment on the package as a whole: how these policies combine or pull against each other, weighted by their share, and what that did to the region. Do not judge any policy\'s author.'
+      ]
+      : [`Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`];
     const prompt = [
       `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
-      `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
+      ...enactedLines,
       `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
       `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
@@ -619,4 +642,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

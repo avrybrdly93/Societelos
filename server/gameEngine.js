@@ -1440,6 +1440,8 @@ class GameState extends EventEmitter {
     const moods = new Map(sim.citizenMoods(stateBefore, this.simState, this.data.citizens).map((m) => [m.id, m]));
     const citizens = (this.data.citizens || []).map((c) => ({ ...c, ...(moods.get(c.id) || {}) }));
     const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens };
+    // Finale: the Loom comments on the enacted 50/25/25 package as a whole (texts and weights, no authors).
+    if (result && result.finale && Array.isArray(result.enacted)) context.enacted = result.enacted.map((e) => ({ text: e.text, weight: e.weight, place: e.place }));
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
       .catch((err) => {
