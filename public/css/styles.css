@@ -1372,3 +1372,28 @@ body.host .resolution-enacted-item { font-size: 18px; }
 .resolution-enacted-label { color: var(--slate-200); letter-spacing: 0.06em; }
 .resolution-enacted .enact-roles { margin: 0; }
 .resolution-enacted .role-badge { font-size: 14px; padding: 2px 8px; }
+
+/* Top bar: optional items (Blitz session clock, Call Finale) really hide
+   (.topbar-item's display:flex was overriding [hidden], which pushed the GDW
+   badge off the 1920 px stage). */
+.topbar-item[hidden], .btn-fullscreen[hidden] { display: none; }
+
+/* [ ⛶ ] fullscreen toggle in the top bar's right-hand corner. */
+.btn-fullscreen {
+  flex-shrink: 0; align-self: center; padding: 6px 8px; font-size: 20px; line-height: 1;
+  color: var(--slate-400); background: transparent; border: 1px solid var(--slate-700); border-radius: var(--radius);
+  cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.btn-fullscreen:hover, .btn-fullscreen:focus-visible { color: var(--theme-current, var(--accent)); border-color: currentColor; }
+.btn-fullscreen[aria-pressed="true"] { color: var(--theme-current, var(--accent)); }
+/* Idle breadcrumbs (lobby, finale) give their width back to the top bar. */
+.phase-crumbs.is-idle { display: none; }
+.topbar-brand:has(+ .phase-crumbs.is-idle) { margin-right: auto; }
+/* Crowded top bar (Blitz session clock + Call Finale showing). */
+.topbar.is-crowded { gap: 20px; padding: 0 24px; }
+.topbar.is-crowded .topbar-brand { font-size: 24px; }
+.topbar.is-crowded .topbar-brand .muted { display: none; }
+.topbar.is-crowded .phase-crumbs { margin-left: 12px; }
+body.host .topbar.is-crowded .phase-crumbs li { font-size: 16px; padding: 3px 5px; }
+.topbar.is-crowded .phase-crumbs li + li::before { margin-right: 4px; }
+.topbar.is-crowded .topbar-value, .topbar.is-crowded .gdw-badge { font-size: 32px; }

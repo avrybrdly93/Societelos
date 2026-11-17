@@ -33,6 +33,23 @@
   document.addEventListener('fullscreenchange', onStageResize);
   fitStage();
 
+  // [ ⛶ ] corner button: toggle browser fullscreen for the projector page
+  // (hidden where the Fullscreen API is unavailable). F11 still works too.
+  const fullscreenBtn = document.getElementById('btn-fullscreen');
+  const canFullscreen = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen);
+  fullscreenBtn.hidden = !canFullscreen;
+  function syncFullscreenButton() {
+    const on = !!document.fullscreenElement;
+    fullscreenBtn.setAttribute('aria-pressed', String(on));
+    fullscreenBtn.title = on ? 'Exit fullscreen' : 'Toggle fullscreen (F11)';
+  }
+  fullscreenBtn.addEventListener('click', () => {
+    const request = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    if (request && request.catch) request.catch((err) => console.warn('[host] fullscreen refused:', err && err.message));
+    fullscreenBtn.blur();
+  });
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
+
   const socket = window.io({ auth: { clientType: 'host', roomCode: savedRoom || undefined } });
 
   const state = { roomCode: null, gameId: null, phase: 'LOBBY', cycle: 0, endsAt: null };
@@ -135,6 +152,9 @@
     const inGame = state.phase !== 'LOBBY' && state.phase !== 'END';
     const show = inGame && state.sessionTimerEnabled && state.sessionEndsAt;
     if (sessionBadge) sessionBadge.hidden = !show;
+    // Blitz mode adds the session clock and Call Finale: compact the top bar
+    // so the GDW badge and the fullscreen button stay on the 1920 px stage.
+    document.getElementById('host-topbar').classList.toggle('is-crowded', !!show);
     if (sessionActions) sessionActions.hidden = !show || state.isFinale;
     if (callFinaleBtn && state.isFinale) callFinaleBtn.disabled = true;
   }
