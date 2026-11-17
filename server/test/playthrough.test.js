@@ -63,7 +63,7 @@ test('post-merge: Cycle 5 write-and-rank flows FINALE_WRITE -> FINALE_MOD -> FIN
 
 // TASK-575 ------------------------------------------------------------------
 
-test('post-merge: Worlds BA and BB play their own crises, intel and finale across Cycles 3-5', async () => {
+test('post-merge: Worlds BA and BB play their own crises, Loom lines and finale across Cycles 3-5', async () => {
   const { crises } = engine.loadGameData();
   const byId = Object.fromEntries(crises.crises.map((c) => [c.id, c]));
   await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
@@ -76,12 +76,13 @@ test('post-merge: Worlds BA and BB play their own crises, intel and finale acros
       const incidents = incidentsByCycle(out);
       assert.deepEqual([incidents[3], incidents[4], incidents[5]], WORLD_CRISES[world], `${world} cycles 3-5`);
 
-      // Cycles 3 and 4: every node gets the intel authored for its secret role.
+      // Cycles 3 and 4: no intel drops; the Loom says the crisis out loud to everyone.
       for (const cycle of [3, 4]) {
         const crisis = byId[WORLD_CRISES[world][cycle - 3]];
-        const drops = out.intel.filter((d) => d.cycle === cycle);
-        assert.equal(drops.length, 5, `${world} cycle ${cycle} intel drops`);
-        for (const d of drops) assert.equal(d.text, crisis.intel[out.roles[d.node]], `${world} c${cycle} ${d.node} gets ${out.roles[d.node]} intel`);
+        assert.equal(out.intel.length, 0, 'intel drops are gone');
+        const lines = out.game.loomFeed.filter((l) => l.cycle === cycle && l.kind === 'crisis');
+        assert.ok(lines.some((l) => l.text.startsWith(crisis.title)), `${world} c${cycle} Loom names the crisis`);
+        assert.ok(lines.every((l) => l.year === 2120 + cycle), 'cycle n is the year 2120 + n');
       }
 
       // Cycles 3 and 4 resolve as normal binary votes, Cycle 5 as the finale.
@@ -98,7 +99,7 @@ test('post-merge: Worlds BA and BB play their own crises, intel and finale acros
 
 /** The exact phase sequence of an offline game that survives to Cycle 5. */
 function expectedOfflinePhases() {
-  const cycle = (c) => ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'].map((p) => `${c}:${p}`);
+  const cycle = (c) => ['INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION'].map((p) => `${c}:${p}`);
   return [
     '0:INTRO', '0:ROLE_ASSIGN', '0:CHAMBER',
     ...cycle(1), ...cycle(2), '2:WORLD_REVEAL', ...cycle(3), ...cycle(4),

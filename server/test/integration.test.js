@@ -148,46 +148,7 @@ test('integration: Override counts double, is spent once, and a 3-3 tie goes to 
   assert.ok(!JSON.stringify(out.resolutions).includes('NODE-01'), 'no node named in any resolution');
 });
 
-test('integration: the Catalyst scores +1 exactly on cycles whose realized GDW swings by >= 10', async () => {
-  // The Charter (1B) has a +10 median target, so cycle 1 B usually swings >= 10.
-  let out = null;
-  for (const id of ['catalyst0001', 'catalyst0002', 'catalyst0003', 'catalyst0004']) {
-    out = await playFourCycles({ gameId: id, voteFor: (cycle) => [cycle === 1 ? 'B' : 'A'] });
-    if (out.resolutions.some((r) => Math.abs(r.result.gdwDelta) >= 10)) break;
-  }
-  const catalyst = Object.keys(out.roles).find((n) => out.roles[n] === 'catalyst');
-  let swings = 0;
-  out.resolutions.forEach((r) => {
-    const swing = Math.round(Math.abs(r.gdw - r.result.previousGdw) * 10) / 10;
-    const expected = swing >= 10 && r.gdw > 0 ? 1 : 0;
-    swings += expected;
-    const update = out.scores.find((s) => s.node === catalyst && s.cycle === r.result.cycle);
-    assert.equal(update.catalyst, expected, `cycle ${r.result.cycle}: swing ${swing}`);
-    // Nobody else ever gets a Catalyst point.
-    out.scores.filter((s) => s.cycle === r.result.cycle && s.node !== catalyst).forEach((s) => assert.equal(s.catalyst, 0));
-  });
-  assert.ok(swings >= 1, 'at least one >= 10 point swing was exercised');
-});
 
-test('integration: role +1 goes to every node whose secret role is tagged on the winning option', async () => {
-  const out = await playFourCycles({ gameId: 'rolescore001', voteFor: (cycle) => [cycle % 2 ? 'B' : 'A'] });
-  const data = engine.loadGameData();
-  const totals = {};
-  out.resolutions.forEach((r) => {
-    const { cycle, winner } = r.result;
-    const crisis = engine.selectCrisis(data.crises, cycle, cycle <= 2 ? null : out.game.worldKey, data.roles);
-    const option = crisis.options[winner];
-    // Crisis 2B's tags depend on the Cycle 1 vote.
-    const tags = option.rolesByWorld ? option.rolesByWorld[out.game.voteHistory[1]] : option.roles;
-    for (const node of NODE_IDS) {
-      const update = out.scores.find((s) => s.node === node && s.cycle === cycle);
-      assert.equal(update.role, tags.includes(out.roles[node]) ? 1 : 0, `cycle ${cycle} ${node} (${out.roles[node]})`);
-      totals[node] = update.total;
-    }
-  });
-  for (const node of NODE_IDS) assert.equal(out.game.scores[node], totals[node], 'running totals match the engine');
-  assert.ok(Object.values(totals).some((t) => t > 0), 'some roles scored');
-});
 
 test('integration: with GEMINI_API_KEY unset the game narrates offline and never touches the network', async () => {
   const realFetch = globalThis.fetch;

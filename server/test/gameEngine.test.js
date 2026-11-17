@@ -148,12 +148,10 @@ test('Crisis 2B applies assimilator in the AB world and lotus in the BB world', 
     assert.deepEqual(game.rolesFor('B'), [tag]);
     assert.deepEqual(game.effectsFor('B'), raw.effectsByWorld[vote1]);
 
-    const holder = Object.keys(game.roleAssignment).find((n) => game.roleAssignment[n].key === tag);
-    const before = game.scores[holder];
     await resolveWith(game, 'B');
     assert.equal(game.worldKey, `${vote1}B`);
-    assert.equal(game.scores[holder], before + 1, `${tag} scores in ${vote1}B`);
-    assert.deepEqual(game.scoreLedger[1].role, { [holder]: 1 });
+    // The world-specific effect vector is what the round is scored on.
+    assert.equal(game.scoreLedger[1].winner, 'B');
   }
 });
 
@@ -165,25 +163,7 @@ function catalystGame() {
   return { game, node };
 }
 
-test('Catalyst scores +1 on a -10 GDW drop (GDW > 0) and 0 on a -9.9 drop', () => {
-  assert.equal(engine.catalystScores(35, 25), true);
-  assert.equal(engine.catalystScores(25, 35), true, 'a +10 rise counts too');
-  assert.equal(engine.catalystScores(35, 25.1), false);
-  assert.equal(engine.catalystScores(30.3, 20.3), true, 'float noise does not hide a 10.0 swing');
 
-  const { game, node } = catalystGame();
-  assert.deepEqual(game.awardCatalystPoints(35, 25), { [node]: 1 });
-  assert.equal(game.scores[node], 1);
-  assert.deepEqual(game.awardCatalystPoints(35, 25.1), {});
-  assert.equal(game.scores[node], 1);
-});
-
-test('Catalyst scores 0 when a 15 point drop reaches GDW 0 (Loom shutdown)', () => {
-  assert.equal(engine.catalystScores(15, 0), false);
-  const { game, node } = catalystGame();
-  assert.deepEqual(game.awardCatalystPoints(15, 0), {});
-  assert.equal(game.scores[node], 0);
-});
 
 test('realized GDW hitting 0 in Cycle 2 transitions straight to END', async () => {
   const game = votingGame({ cycle: 2, voteHistory: { 1: 'A' } });
@@ -206,32 +186,6 @@ test('realized GDW hitting 0 in Cycle 2 transitions straight to END', async () =
   assert.equal(game.phase, 'END');
 });
 
-test('intel:drop delivers world-specific intel for Cycles 3 and 4', () => {
-  const crises = engine.loadGameData().crises.crises;
-  for (const world of ['AA', 'AB', 'BA', 'BB']) {
-    for (const cycle of [3, 4]) {
-      const raw = crises.find((c) => c.world === world && c.cycle === cycle);
-      assert.ok(raw, `no crisis for ${world} cycle ${cycle}`);
-      const game = votingGame();
-      game.assignRoles(game.data.roles);
-      game.cycle = cycle;
-      game.worldKey = world;
-      const drops = {};
-      game.on('intel:drop', ({ node, text }) => { drops[node] = text; });
-      game.startIncidentPhase();
-      assert.equal(game.crisis.id, raw.id);
-      game.startIntelDropPhase();
-      game.clearPhaseTimer();
-      assert.equal(Object.keys(drops).length, 5);
-      for (const [node, role] of Object.entries(game.roleAssignment)) {
-        const authored = raw.intel && raw.intel[role.key];
-        // Authored world intel when present; otherwise the generic fallback (content pending).
-        if (authored) assert.equal(drops[node], authored, `${raw.id} ${role.key}`);
-        else assert.ok(drops[node].length > 0);
-      }
-    }
-  }
-});
 
 test('RESOLUTION waits the full animation duration after the payload is sent', async () => {
   const game = votingGame();
@@ -311,9 +265,10 @@ test('FAST_TIMERS=true drives Cycle 1 -> Cycle 4 automatically', async () => {
     console.log = log;
   }
   for (const cycle of [1, 2, 3, 4]) {
-    for (const phase of ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION']) {
+    for (const phase of ['INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION']) {
       assert.ok(seen.includes(`${cycle}:${phase}`), `missing ${cycle}:${phase}`);
     }
+    assert.ok(!seen.includes(`${cycle}:INTEL`), 'intel drops are gone');
   }
   assert.ok(seen.indexOf('2:WORLD_REVEAL') > seen.indexOf('2:RESOLUTION'));
   assert.ok(seen.indexOf('3:INCIDENT') > seen.indexOf('2:WORLD_REVEAL'));
@@ -472,7 +427,7 @@ function quiet(fn) {
   try { return fn(); } finally { console.log = log; }
 }
 
-test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (45 s)', () => {
+test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (2 minutes)', () => {
   const game = finaleGame();
   const phases = [];
   game.on('phase', (p) => phases.push(p));
@@ -483,7 +438,7 @@ test('finale INCIDENT (15 s, no options) advances to FINALE_WRITE (45 s)', () =>
   game.stop();
   const write = phases[1];
   assert.equal(write.phase, 'FINALE_WRITE');
-  assert.ok(write.endsAt - Date.now() > 44000 && write.endsAt - Date.now() <= 45000);
+  assert.ok(write.endsAt - Date.now() > 119000 && write.endsAt - Date.now() <= 120000);
   assert.deepEqual(write.finale, { maxLength: 140 });
   assert.equal(game.finale.writingOpen, true);
 });
@@ -958,31 +913,8 @@ function scoringFinale(policyRoles) {
 }
 const ENACT = [{ id: 'POLICY-1', place: 'first', weight: 0.5 }, { id: 'POLICY-2', place: 'second', weight: 0.25 }, { id: 'POLICY-3', place: 'third', weight: 0.25 }];
 
-test('finale role points: +2 for 1st, +1 for 2nd and 3rd', () => {
-  const game = scoringFinale([['artisan'], ['lotus'], ['ghost'], ['assimilator'], []]);
-  const awards = game.awardFinaleRolePoints(ENACT);
-  assert.deepEqual(awards, { 'NODE-01': 2, 'NODE-02': 1, 'NODE-05': 1 });
-  assert.equal(game.scores['NODE-04'], 0, 'the Catalyst never scores on tags');
-  assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the 4th policy');
-});
 
-test('finale author bonus: +1 to the author of the 1st-place policy only', () => {
-  const game = scoringFinale([[], [], [], [], []]);
-  const author = game.finale.authors['POLICY-1'];
-  assert.deepEqual(game.awardAuthorBonus(ENACT), { [author]: 1 });
-  assert.equal(game.scores[author], 1);
-  assert.equal(Object.values(game.scores).reduce((a, b) => a + b, 0), 1);
-});
 
-test('finale Catalyst scores +1 when the package moves realized GDW by >= 10 (and GDW > 0)', () => {
-  for (const [prev, now, expected] of [[30, 41, 1], [30, 20, 1], [30, 39.9, 0], [12, 0, 0]]) {
-    const game = scoringFinale([[], [], [], [], []]);
-    const { catalyst } = game.scoreFinale(ENACT, prev, now);
-    const catalystNode = 'NODE-04';
-    assert.deepEqual(catalyst, expected ? { [catalystNode]: 1 } : {}, `${prev} -> ${now}`);
-    assert.equal(game.scoreLedger[game.scoreLedger.length - 1].cycle, 5);
-  }
-});
 
 test('Overrides are ignored in Cycle 5 (counted as a normal vote, not spent)', () => {
   const game = votingGame({ cycle: 5 });
@@ -1087,14 +1019,6 @@ test('Borda count across 5 players who each rank the 4 policies they did not wri
   assert.deepEqual(engine.rankBorda(tally).map((r) => r.id), pref);
 });
 
-test('finale role points accumulate when a role is tagged on several of the top 3', () => {
-  // artisan on 1st and 3rd (+2 +1), ghost on 2nd and 3rd (+1 +1), lotus on all three (+4).
-  const game = scoringFinale([['artisan', 'lotus'], ['ghost', 'lotus'], ['artisan', 'ghost'], ['assimilator'], []]);
-  game.finale.policies[2].roles.push('lotus'); // a third tag only in this test, to cover all three places
-  const awards = game.awardFinaleRolePoints(ENACT);
-  assert.deepEqual(awards, { 'NODE-01': 3, 'NODE-02': 4, 'NODE-05': 2 });
-  assert.equal(game.scores['NODE-03'], 0, 'assimilator only on the unenacted 4th');
-});
 
 test('if loom.moderate times out, Write-and-Rank falls back to the authored binary A/B vote', async () => {
   let release;

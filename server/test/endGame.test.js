@@ -98,18 +98,19 @@ test('on a shutdown, gdwHistory stops at the month GDW hit 0', () => {
 
 // TASK-604 ------------------------------------------------------------------
 
-test('game:end roles reveal maps NODE-01..05 to name, secret role and per-cycle scores', async () => {
+test('game:end roles reveal maps NODE-01..05 to name, character and per-cycle scores', async () => {
   await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
     const out = await playGame({ gameId: 'enddata-roles', world: 'AB' });
     const { roles, scores } = out.gameEnd;
     assert.deepEqual(roles.map((r) => r.node), NODE_IDS);
     assert.deepEqual(roles.map((r) => r.name), ['P0', 'P1', 'P2', 'P3', 'P4']);
-    assert.deepEqual(roles.map((r) => r.role.key).sort(), ['artisan', 'assimilator', 'catalyst', 'ghost', 'lotus']);
+    assert.deepEqual(roles.map((r) => r.role.key).sort(), ['humanist', 'optimist', 'pragmatist', 'radical', 'traditionalist']);
     for (const r of roles) {
       assert.equal(r.role.key, out.roles[r.node], `${r.node} reveals the role it was dealt`);
-      assert.ok(r.role.name && r.role.icon, 'role title and icon');
+      assert.ok(r.role.name && r.role.portrait && r.role.motto, 'character name, portrait and motto');
       assert.deepEqual(r.perCycle.map((c) => c.cycle), [1, 2, 3, 4, 5]);
-      const sum = r.perCycle.reduce((t, c) => t + c.role + c.catalyst + c.author, 0);
+      for (const c of r.perCycle) assert.ok(c.points >= 0 && c.points <= 100, 'each round is worth 0-100');
+      const sum = r.perCycle.reduce((t, c) => t + c.points, 0);
       assert.equal(sum, r.total, `${r.node} breakdown adds up`);
       assert.equal(r.total, scores[r.node]);
     }
@@ -405,20 +406,10 @@ test('Shutdown Ending: the collapsed cycle\'s RESOLUTION goes straight to END an
 
 // TASK-649 ------------------------------------------------------------------
 
-test('the Catalyst does not score on the cycle where GDW hits 0%', async () => {
-  const out = await collapseInCycle3('shutdown-649');
-  const catalystNode = Object.keys(out.roles).find((n) => out.roles[n] === 'catalyst');
-  const ledger = out.game.scoreLedger.find((e) => e.cycle === 3);
-  const before = out.resolutions[1].gdw;
-  assert.ok(before >= 10, `a swing of ${before} points to 0 would otherwise count`);
-  assert.deepEqual(ledger.catalyst, {}, 'no Catalyst point for the collapse');
-  const row = out.gameEnd.roles.find((r) => r.node === catalystNode);
-  assert.equal(row.perCycle.find((c) => c.cycle === 3).catalyst, 0);
-});
 
 // TASK-650 ------------------------------------------------------------------
 
-test('game:end Borda points and Author bonus match an independent recount of the ballots', async () => {
+test('game:end Borda points match an independent recount of the ballots', async () => {
   await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
     for (const world of ['AA', 'BB']) {
       const out = await playGame({ gameId: `borda-650-${world}`, world });
@@ -430,10 +421,10 @@ test('game:end Borda points and Author bonus match an independent recount of the
       const first = authors.find((a) => a.place === 1);
       assert.equal(first.weight, 0.5);
       assert.ok(authors.every((a) => a.place === 1 || a.points <= first.points), 'first place has the most points');
-      // Author bonus: +1 in Cycle 5 to the first-place author only.
+      // Cycle 5 scores the enacted package like any round: 0-100 per member.
       for (const r of roles) {
         const c5 = r.perCycle.find((c) => c.cycle === 5);
-        assert.equal(c5.author, r.node === first.node ? 1 : 0, `${world} ${r.node} author bonus`);
+        assert.ok(c5.points >= 0 && c5.points <= 100, `${world} ${r.node} cycle 5 points in 0..100`);
       }
     }
   });

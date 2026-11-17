@@ -30,7 +30,9 @@ const LONG = (s) => (s + ' '.repeat(140)).slice(0, 140).trimEnd().padEnd(140, '.
 
 // Player-written text that would run script if it were ever parsed as HTML.
 const XSS = '<img src=x onerror="window.__xss=1"><script>window.__xss=1</script>';
-const pwned = (page) => page.evaluate(() => !!window.__xss || document.querySelectorAll('#m-main img, #host-main img:not(#qr-image), .proposal-card img, .enact-card img, .rank-card img, script:not([src])').length > 0);
+// An injected element would be an <img onerror> or an inline <script>; the
+// game's own portraits are plain <img src> and never match.
+const pwned = (page) => page.evaluate(() => !!window.__xss || document.querySelectorAll('img[onerror], img[src="x"], script:not([src])').length > 0);
 
 const failures = [];
 function check(label, ok, detail = '') {
@@ -46,7 +48,8 @@ async function phoneChecks(browser, shot) {
   await page.waitForFunction(() => typeof window.debugMobilePhase === 'function');
   const active = () => page.evaluate(() => (document.querySelector('#m-main > .m-view.is-active') || {}).id);
   const visible = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return !!e && !e.hidden && e.getClientRects().length > 0; }, sel);
-  const text = (sel) => page.evaluate((s) => (document.querySelector(s) || {}).textContent || '', sel);
+  // Math-bold titles keep their plain text in aria-label.
+  const text = (sel) => page.evaluate((s) => { const el = document.querySelector(s); return el ? (el.dataset.mathboldDone !== undefined && el.getAttribute('aria-label')) || el.textContent || '' : ''; }, sel);
 
   // FINALE_WRITE: write screen with agenda reminder, timer bar and counter.
   await page.evaluate(() => { debugMobilePhase('ROLE_ASSIGN'); debugMobilePhase('FINALE_WRITE', { seconds: 45, cycle: 5 }); });
@@ -165,7 +168,8 @@ async function hostChecks(browser, shot) {
   await page.waitForFunction(() => typeof window.debugTriggerPhase === 'function');
   const activeView = () => page.evaluate(() => (document.querySelector('#host-main > .view.is-active') || {}).id);
   const visible = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return !!e && !e.hidden && e.getClientRects().length > 0; }, sel);
-  const text = (sel) => page.evaluate((s) => (document.querySelector(s) || {}).textContent || '', sel);
+  // Math-bold titles keep their plain text in aria-label.
+  const text = (sel) => page.evaluate((s) => { const el = document.querySelector(s); return el ? (el.dataset.mathboldDone !== undefined && el.getAttribute('aria-label')) || el.textContent || '' : ''; }, sel);
   const onStage = () => page.evaluate(() => ['gdw-badge', 'phase-timer', 'cycle-indicator'].every((id) => {
     const r = document.getElementById(id).getBoundingClientRect();
     return r.width > 0 && r.right <= 1920 && r.left >= 0;
@@ -255,7 +259,7 @@ async function hostChecks(browser, shot) {
     debugTriggerEvent('resolution', { result: { winner: 'A', policy: x, totals: { A: 3, B: 2 } }, gdw: 24, loomLine: x, messages: [{ name: x, age: 40, district: 'D3', districtName: x, cohort: x, text: x, sentiment: x }] });
   }, XSS);
   await page.waitForTimeout(6800); // a single reaction lands mid-cycle (month 6 of 12)
-  const feedText = await text('#citizen-feed');
+  const feedText = await text('#citizen-ticker');
   check('host renders hostile names and citizen messages as text (lobby, feed, resolution)', !(await pwned(page)) && feedText.includes(XSS), `pwned=${await pwned(page)} feed=${feedText.slice(0, 80)}`);
 
   // The intro narrator re-tokenizes its authored crawl each time (cloned nodes).

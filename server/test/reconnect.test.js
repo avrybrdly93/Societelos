@@ -117,7 +117,7 @@ test('without a token, the same name reclaims only its own offline seat', { time
 
 const { playGame, okModeration, withLoom } = require('./playGame');
 
-test('privateSyncFor replays role, phase, intel, Override, ballot and game:end for one node only', async () => {
+test('privateSyncFor replays role, phase, council, Loom feed, scores, Override, ballot and game:end for one node only', async () => {
   const snaps = {};
   await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
     const out = await playGame({
@@ -131,15 +131,21 @@ test('privateSyncFor replays role, phase, intel, Override, ballot and game:end f
         }
       }
     });
-    const events = (key) => snaps[key].map(([e]) => e);
+    // Public replays (the council, the Loom's feed, the scoreboard) sit
+    // between the phase and the node's own private state.
+    const PUBLIC = new Set(['council', 'loom:history', 'scores']);
+    const all = (key) => snaps[key].map(([e]) => e);
+    const events = (key) => all(key).filter((e) => !PUBLIC.has(e));
     const payload = (key, name) => (snaps[key].find(([e]) => e === name) || [])[1];
 
-    assert.deepEqual(events('1:VOTE'), ['state:sync', 'role:assigned', 'phase', 'intel:drop', 'override:status']);
+    assert.deepEqual(events('1:VOTE'), ['state:sync', 'role:assigned', 'phase', 'override:status']);
+    assert.ok(all('1:VOTE').includes('council') && all('1:VOTE').includes('loom:history'), 'council and Loom feed replayed');
+    assert.ok(!all('1:VOTE').includes('intel:drop'), 'no intel');
+    assert.ok(all('5:END').includes('scores'), 'scoreboard replayed after round 1');
+    assert.equal(payload('1:VOTE', 'council').members.length, 5);
     assert.equal(payload('1:VOTE', 'state:sync').node, 'NODE-02');
     assert.equal(payload('1:VOTE', 'role:assigned').role.key, out.roles['NODE-02']);
     assert.equal(payload('1:VOTE', 'phase').phase, 'VOTE');
-    const drop = out.intel.find((d) => d.cycle === 1 && d.node === 'NODE-02');
-    assert.equal(payload('1:VOTE', 'intel:drop').text, drop.text);
     assert.deepEqual(payload('1:VOTE', 'override:status'), { overrideAvailable: true });
 
     assert.deepEqual(events('5:FINALE_RANK'), ['state:sync', 'role:assigned', 'phase', 'finale:ballot']);
@@ -188,16 +194,19 @@ test('hostSync replays the phase, GDW line and the active resolution or game:end
         if (['2:WORLD_REVEAL', '3:DEBATE', '5:END'].includes(key)) snaps[key] = game.hostSync();
       }
     });
-    const events = (key) => snaps[key].map(([e]) => e);
+    const PUBLIC = new Set(['council', 'loom:history', 'scores']);
+    const events = (key) => snaps[key].map(([e]) => e).filter((e) => !PUBLIC.has(e));
+    const find = (key, name) => (snaps[key].find(([e]) => e === name) || [])[1];
     assert.deepEqual(events('2:WORLD_REVEAL'), ['host:sync', 'phase', 'resolution']);
+    assert.equal(find('2:WORLD_REVEAL', 'scores').rows.length, 5, 'the scoreboard comes back too');
     const sync = snaps['2:WORLD_REVEAL'][0][1];
     assert.equal(sync.worldKey, 'AB');
     assert.equal(sync.gdwHistory.length, 25, 'start + 24 months after Cycle 2');
-    assert.equal(snaps['2:WORLD_REVEAL'][2][1], out.resolutions[1], 'the resolution on screen');
+    assert.equal(find('2:WORLD_REVEAL', 'resolution'), out.resolutions[1], 'the resolution on screen');
 
     assert.deepEqual(events('3:DEBATE'), ['host:sync', 'phase'], 'no stale resolution mid-cycle');
     assert.deepEqual(events('5:END'), ['host:sync', 'phase', 'game:end']);
-    assert.equal(snaps['5:END'][2][1], out.gameEnd);
+    assert.equal(find('5:END', 'game:end'), out.gameEnd);
   });
 });
 
@@ -337,7 +346,8 @@ test('disconnect + reconnect during VOTE, FINALE_WRITE and FINALE_RANK restores 
   assert.ok(checks.vote.vote && ['A', 'B'].includes(checks.vote.vote.choice), 'the recorded vote itself survived');
   assert.equal(v['role:assigned'].role.key, checks.vote.before.role);
   assert.deepEqual(v['override:status'], { overrideAvailable: checks.vote.before.override });
-  assert.ok(v['intel:drop'].text, 'this cycle\'s intel is re-sent');
+  assert.ok(v['loom:history'].lines.length > 0, 'the Loom\'s feed is re-sent');
+  assert.equal(v['scores'].rows.length, 5, 'and the public scoreboard');
 
   // FINALE_WRITE: the write-in survives; the phone sees it already submitted.
   const w = sync(checks.write);

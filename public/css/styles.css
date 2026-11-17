@@ -2197,3 +2197,10 @@ body.host .score-name { font-size: 13px; }
 body.mobile .m-header { gap: 12px; }
 body.mobile .m-node-label { margin-left: 4px; }
 body.mobile .end-score-value { font-size: 40px; letter-spacing: 0.06em !important; white-space: nowrap; }
+
+.scene-veil { transition: opacity 0.7s ease; }
+.scene-veil.is-cut { opacity: 1; transition: none; }
+.champion-card { width: 1120px; }
+.champion-profile { min-width: 0; }
+.idea-row { grid-template-columns: 300px 1fr; }
+body.host .idea-row .idea-name { letter-spacing: 0.1em !important; font-size: 14px; }

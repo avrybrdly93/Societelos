@@ -36,12 +36,12 @@ Ownership is defined by exact file path. Identify which stream you are assisting
 * **Styling Technology:** **Vanilla CSS with CSS Custom Properties** in `public/css/styles.css`. Do **not** inject Tailwind CDN links or external build steps.
 * **Host Projector Screen (`public/index.html`):**
   * Tuned for 1920x1080 display (min 24px body text, 48px headers for back-row classroom legibility).
-  * Features persistent status topbar: Room Code, Cycle indicator (`CYCLE X/5`), Phase timer (`MM:SS`), and GDW badge.
+  * Features persistent status topbar: Room Code, Cycle indicator (`CYCLE X/5`), Phase timer (`MM:SS`), Year (2121-2125) and Societal Satisfaction badge (internally `gdw`).
   * Interactive 5-district SVG map (`D1 Old Harbour`, `D2 The Grid`, `D3 Riverside`, `D4 Eastworks`, `D5 Highlands`) with neighbour spillover links.
-  * Canvas-rendered GDW 500-run fan chart and realized trajectory telemetry.
+  * Canvas-rendered Societal Satisfaction 500-run fan chart; five council seats facing the Loom; the Loom's live feed; one-at-a-time citizen quote bar; scene backgrounds with transitions (public/js/council.js); Unicode math-bold titles (public/js/mathbold.js).
 * **Mobile Phone Controller (`public/mobile.html`):**
   * Touch-optimized viewport (`user-scalable=no`).
-  * Secret role dossiers, private intel drops, and tactile vote inputs (Option A vs Option B).
+  * Character profile (portrait, idea vector, group-vs-personal weight), always-visible score, the Loom's live feed, scoreboards, and tactile vote inputs (Option A vs Option B).
 
 ---
 
@@ -55,7 +55,7 @@ LOBBY ────> INTRO ────> ROLE_ASSIGN ────> CHAMBER
                                              │
 ┌────────────────── Cycle Loop (1..4) ───────┘
 │
-├──> INCIDENT ──> INTEL ──> DEBATE ──> VOTE ──> RESOLUTION ──> WORLD_REVEAL ──┐
+├──> INCIDENT ──> DEBATE ──> VOTE ──> RESOLUTION ──> WORLD_REVEAL ──┐
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 │
@@ -69,13 +69,14 @@ LOBBY ────> INTRO ────> ROLE_ASSIGN ────> CHAMBER
 - `ROLE_ASSIGN`: 20s encrypted role transmission to individual phones.
 - `CHAMBER`: 10s district map reveal (250,000 citizens across D1..D5).
 - `INCIDENT`: 15s crisis headline and context broadcast.
-- `INTEL`: 20s secret asymmetric intelligence drops sent to each role.
+- Characters (data/roles.json): Optimist, Traditionalist, Pragmatist, Radical, Humanist. Public; each has an idea vector over the six traits and a groupWeight.
+- Scoring (server/scoring.js): every member earns 0-100 per round = 100 x (groupWeight x councilGoal + (1 - groupWeight) x personalFit); max 500. The council goal mixes the Societal Satisfaction change and the share of the 500 simulated citizens (server/citizens.js) who approve.
 - `DEBATE`: 90s (Cycle 1) / 60s (Cycles 2–4) council deliberation.
 - `VOTE`: 15s blind voting on Option A vs Option B. Early advances when all 5 votes lock in.
 - `RESOLUTION`: 20s Monte Carlo simulation execution, realized outcome reveal, and Loom narration.
 - `WORLD_REVEAL`: End-of-cycle state reveal and transition.
 - `FINALE_*`: Cycle 5 custom write-and-rank endgame sequence.
-- `END`: Session conclusion (GDW collapse at 0% or survival after Cycle 5).
+- `END`: Session conclusion (Societal Satisfaction collapse at 0% or survival after Cycle 5); champion = top score with the character's profile.
 
 ---
 
@@ -95,7 +96,8 @@ Sockets specify `clientType: 'host' | 'phone'` in handshake auth or query params
 | **Server $\to$ Clients** | `lobby:update` | `{ players: [{ node, ready, connected }] }` | Broadcast lobby occupancy (no student names) |
 | **Server $\to$ Clients** | `phase` | `{ cycle, phase, endsAt, crisis, ... }` | Broadcast authoritative phase transition |
 | **Server $\to$ Node** | `role:assigned` | `{ role: { key, name, icon, goal, winCondition, cardText } }` | Private role card to specific phone socket |
-| **Server $\to$ Node** | `intel:drop` | `{ text: string }` | Private asymmetric intel to specific phone |
+| **Server $\to$ All** | `loom:line` | `{ cycle, year, phase, kind, text }` | The Loom's live feed (replaces intel drops) |
+| **Server $\to$ All** | `council` / `scores` | `{ members }` / `{ cycle, rows, maxTotal }` | Public seats and scoreboard |
 | **Server $\to$ Clients** | `vote:progress` | `{ voted: string[] }` | Array of nodes that have voted (never choices) |
 | **Server $\to$ Clients** | `resolution` | `{ result, gdw, forecast, realized, districts, loomLine, messages }` | Full cycle simulation results broadcast |
 
@@ -112,7 +114,7 @@ Sockets specify `clientType: 'host' | 'phone'` in handshake auth or query params
   - All calculations must be 100% deterministic and reproducible from a 32-bit seed.
   - **Zero unseeded randomness:** Never use `Math.random()`. Use `mulberry32(seed)` and `hashSeed(str)`.
   - **Zero I/O & Zero Network:** No `fs`, `http`, `fetch`, or external imports in `server/sim/`.
-  - Scaled GDW: 0 to 100%, starts at 25.0%.
+  - Societal Satisfaction (internally GDW): 0 to 100%, starts at 25.0%.
 - **Monte Carlo Performance Benchmark:**
   - Single realized 12-month run: `< 0.2 ms`.
   - Single forecast run: `< 0.2 ms`.

@@ -78,24 +78,23 @@
   const veil = $('scene-veil');
   let veilTimer = null;
   function transitionTo(viewId, swap) {
-    const enter = () => {
-      swap();
-      setScene(viewId);
-      const view = $(viewId);
-      if (view && !reducedMotion) {
-        view.classList.remove('view-enter');
-        void view.offsetWidth;
-        view.classList.add('view-enter');
-      }
-    };
-    if (reducedMotion || !veil) return enter();
+    // The view swaps at once (screen state always matches the phase); the
+    // cut is dressed as a dip from gold-black that fades out while the new
+    // view rises in and the background crossfades.
+    swap();
+    setScene(viewId);
+    if (reducedMotion) return;
+    const view = $(viewId);
+    if (view) {
+      view.classList.remove('view-enter');
+      void view.offsetWidth;
+      view.classList.add('view-enter');
+    }
+    if (!veil) return;
     clearTimeout(veilTimer);
-    veil.classList.add('is-on');
-    veilTimer = setTimeout(() => {
-      enter();
-      veilTimer = setTimeout(() => veil.classList.remove('is-on'), 60);
-    }, 320);
-    return undefined;
+    veil.classList.add('is-cut');
+    void veil.offsetWidth;
+    veilTimer = setTimeout(() => veil.classList.remove('is-cut'), 40);
   }
 
   // ---------------------------------------------------------------------------
@@ -131,7 +130,8 @@
     list.textContent = '';
     council.forEach((m) => {
       const c = m.character || {};
-      const li = el('li', 'council-seat');
+      const li = document.createElement('li');
+      li.className = 'council-seat';
       li.dataset.node = m.node;
       li.dataset.character = c.id || '';
       li.appendChild(portrait(c.portrait, 'seat-portrait'));
@@ -400,8 +400,10 @@
       const num = $('approval-num');
       if (num && a && a.total) num.textContent = `${a.approve} / ${a.total}`;
     });
-    socket.on('world:reveal', (w) => { worldKey = (w && w.worldKey) || null; });
+    // The world (and a shutdown) are known just after the scene changes: re-pick the scene.
+    socket.on('world:reveal', (w) => { worldKey = (w && w.worldKey) || null; setScene(document.body.dataset.scene || 'view-world'); });
     socket.on('phase', (p) => {
+      if (p.world && p.world.worldKey && p.world.worldKey !== worldKey) { worldKey = p.world.worldKey; setScene(document.body.dataset.scene); }
       if (p.phase === 'LOBBY') {
         worldKey = null; shutdown = false; council = [];
         Object.keys(scoreByNode).forEach((k) => { delete scoreByNode[k]; delete roundByNode[k]; });
@@ -414,7 +416,7 @@
       if (p.phase === 'INCIDENT') renderSeats();
     });
     socket.on('host:sync', (p) => { if (p && p.worldKey) worldKey = p.worldKey; });
-    socket.on('game:end', (d) => { shutdown = !!(d && d.shutdown); if (d && d.worldKey) worldKey = d.worldKey; });
+    socket.on('game:end', (d) => { shutdown = !!(d && d.shutdown); if (d && d.worldKey) worldKey = d.worldKey; setScene('view-end'); });
     return undefined;
   }
 

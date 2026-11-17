@@ -24,7 +24,7 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
     }
   };
   game.gameId = gameId;
-  const out = { game, phases: [], payloads: [], resolutions: [], reveals: [], intel: [], ballots: [], feedback: [], roles: {}, end: null, gameEnd: null, restoreEnv };
+  const out = { game, phases: [], payloads: [], resolutions: [], reveals: [], intel: [], ballots: [], feedback: [], roles: {}, end: null, gameEnd: null, scores: [], scoreUpdates: [], council: [], loomLines: [], restoreEnv };
   const log = console.log;
   console.log = () => {};
   NODE_IDS.forEach((node, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(node, true); });
@@ -33,6 +33,10 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
   game.on('world:reveal', (w) => out.reveals.push(w));
   game.on('game:end', (d) => { out.gameEnd = d; });
   game.on('intel:drop', (e) => out.intel.push({ cycle: game.cycle, ...e }));
+  game.on('scores', (e) => out.scores.push(e));
+  game.on('score:update', (e) => out.scoreUpdates.push(e));
+  game.on('council', (e) => out.council.push(e));
+  game.on('loom:line', (e) => out.loomLines.push(e));
   game.on('finale:feedback', (f) => { out.feedback.push(f); onEvent('finale:feedback', f, game); });
   game.on('finale:ballot', (b) => {
     out.ballots.push(b);

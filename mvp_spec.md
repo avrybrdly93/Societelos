@@ -392,7 +392,7 @@ Finale entries use `"mode": "writein"` and still carry options A/B as the fallba
 | `host:start` | host → server | `{}` |
 | `role:assigned` | server → one phone | `{ role }` |
 | `phase` | server → all | `{ cycle, phase, endsAt, crisis? }` |
-| `intel:drop` | server → one phone | `{ text }` |
+| `loom:line` | server → all | `{ cycle, year, phase, kind, text }` |
 | `vote:cast` | phone → server | `{ choice: "A" or "B", override: bool }` |
 | `finale:submit` | phone → server | `{ text }` |
 | `finale:feedback` | server → one phone | `{ status, feedback }` |

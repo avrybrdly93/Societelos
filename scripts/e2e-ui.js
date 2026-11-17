@@ -9,12 +9,12 @@
 //
 // Needs Playwright with Chromium (not a project dependency, so CI stays light):
 //   npm i --no-save playwright && npx playwright install chromium
-//   npm run e2e:ui            # FAST_TIMER_SECONDS=1.2 by default
+//   npm run e2e:ui            # FAST_TIMER_SECONDS=2.5 by default (scene transitions take ~0.4 s)
 // Exits non-zero if the run stalls, cycles 1-4 are not all played, or a page
 // logs an error.
 
 process.env.FAST_TIMERS = 'true';
-process.env.FAST_TIMER_SECONDS = process.env.FAST_TIMER_SECONDS || '1.2';
+process.env.FAST_TIMER_SECONDS = process.env.FAST_TIMER_SECONDS || '2.5';
 delete process.env.GEMINI_API_KEY;
 let chromium;
 try {
@@ -53,9 +53,11 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
     phones.push(p);
   }
   await host.waitForTimeout(800);
-  await host.click('#btn-start');
   const seen = new Set();
   const hostPhases = [];
+  // Record every phase the server enters (polling alone can miss a short one).
+  game.on('phase', (p) => { const ph = `${p.cycle}:${p.phase}`; if (!seen.has(ph)) { seen.add(ph); hostPhases.push(ph); } });
+  await host.click('#btn-start');
   const deadline = Date.now() + 120000;
   while (Date.now() < deadline) {
     const ph = `${game.cycle}:${game.phase}`;
@@ -76,13 +78,14 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   // Optional screenshots of the final state: SHOT_DIR=/some/dir npm run e2e:ui
   const out = process.env.SHOT_DIR;
   if (out) { await host.screenshot({ path: out + '/e2e-host.png' }); await phones[0].screenshot({ path: out + '/e2e-phone.png' }); }
-  const hostText = await host.textContent('#world-name');
+  // Titles render in Unicode Mathematical Bold; aria-label keeps the plain text.
+  const hostText = (await host.getAttribute('#world-name', 'aria-label')) || (await host.textContent('#world-name'));
   // World reveal applied in the browser: host theme, map recolour, phone theme.
   const themed = {
     hostBody: await host.evaluate(() => document.body.dataset.world || null),
     hostClass: await host.evaluate(() => document.body.className),
-    map: await host.evaluate(() => document.getElementById('region-map').dataset.world || null),
-    mapAccent: await host.evaluate(() => getComputedStyle(document.getElementById('region-map')).getPropertyValue('--map-accent').trim()),
+    seats: await host.evaluate(() => document.querySelectorAll('#council-seats .council-seat').length),
+    scores: await host.evaluate(() => document.querySelectorAll('#scoreboard .score-row').length),
     phone: await phones[0].evaluate(() => document.body.dataset.world || null)
   };
   console.log = log;
@@ -97,7 +100,7 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   if (!seen.has('2:WORLD_REVEAL')) problems.push('missing world reveal');
   const wk = game.worldKey;
   if (themed.hostBody !== wk || !themed.hostClass.includes(`world-${String(wk).toLowerCase()}`)) problems.push(`host not themed for ${wk}: ${JSON.stringify(themed)}`);
-  if (themed.map !== wk || !themed.mapAccent) problems.push(`map not recoloured for ${wk}: ${JSON.stringify(themed)}`);
+  if (themed.seats !== 5 || themed.scores !== 5) problems.push(`council seats or scoreboard missing: ${JSON.stringify(themed)}`);
   if (themed.phone !== wk) problems.push(`phone not themed for ${wk}: ${JSON.stringify(themed)}`);
   if (hostText !== engine.loadGameData().crises.worlds[wk].name) problems.push(`world title "${hostText}"`);
   await browser.close();

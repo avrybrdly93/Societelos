@@ -34,7 +34,7 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
     engine.getRoom(roomCode).gameId = 'socketflow01'; // fixed seeds: reproducible run
 
     const phones = [];
-    const privateEvents = { roles: 0, intel: 0, override: 0, score: 0 };
+    const privateEvents = { roles: 0, intel: 0, loom: 0, override: 0, score: 0 };
     for (let i = 0; i < 5; i++) {
       const phone = connect({ clientType: 'phone' });
       await once(phone, 'connect');
@@ -43,6 +43,7 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
       await phone.emitWithAck('lobby:ready', { ready: true });
       phone.on('role:assigned', () => privateEvents.roles++);
       phone.on('intel:drop', () => privateEvents.intel++);
+      phone.on('loom:line', () => privateEvents.loom++);
       phone.on('override:status', () => privateEvents.override++);
       phone.on('score:update', () => privateEvents.score++);
       // Cycle 1: A wins 3-2; cycle 2: B wins -> world AB; cycles 3-4: A wins.
@@ -73,7 +74,8 @@ test('5 simulated phones play Cycles 1-4 over Socket.IO', { timeout: 20000 }, as
     assert.deepEqual(reveal && reveal.worldKey, 'AB');
     assert.ok(hostPhases.includes('2:WORLD_REVEAL'));
     assert.equal(privateEvents.roles, 5);
-    assert.equal(privateEvents.intel, 20, '5 phones x 4 cycles');
+    assert.equal(privateEvents.intel, 0, 'intel drops are gone');
+    assert.ok(privateEvents.loom >= 5 * 4 * 2, 'every phone hears the Loom each cycle');
     assert.equal(privateEvents.override, 20);
     assert.equal(privateEvents.score, 20, 'private score update per phone per cycle');
     const game = engine.getRoom(roomCode);

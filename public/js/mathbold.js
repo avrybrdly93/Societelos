@@ -49,6 +49,7 @@
   function convert(el) {
     if (!el || el.closest('[data-no-mathbold]')) return;
     const upper = getComputedStyle(el).textTransform === 'uppercase';
+    const original = fromMathBold(el.textContent).replace(/\s+/g, ' ').trim();
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     let changed = false;
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -59,8 +60,8 @@
       changed = true;
     }
     if (changed || el.dataset.mathboldDone === undefined) {
-      const plain = fromMathBold(el.textContent).replace(/\s+/g, ' ').trim();
-      if (plain) el.setAttribute('aria-label', plain);
+      // aria-label keeps the text as written (screen readers, tests).
+      if (original) el.setAttribute('aria-label', original);
       el.dataset.mathboldDone = '';
     }
   }
