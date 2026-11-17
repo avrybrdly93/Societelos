@@ -374,7 +374,12 @@
         <p id="end-winner-label" class="label"></p>
         <h2 id="end-winner-title" class="end-winner-title"></h2>
         <p id="end-winner-sub" class="end-winner-sub muted"></p>
-        <p id="end-seed" class="end-seed mono muted"></p>
+        <div class="end-actions">
+          <span id="end-seed" class="end-seed-badge mono" title="Replay this exact game: enter the seed in the lobby"></span>
+          <button id="btn-play-again" class="btn btn-primary btn-end" type="button">PLAY AGAIN</button>
+          <button id="btn-new-session" class="btn btn-end" type="button">NEW SESSION</button>
+          <span id="end-action-hint" class="end-action-hint mono muted"></span>
+        </div>
       </div>
     </section>
   </main>

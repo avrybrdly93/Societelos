@@ -1445,6 +1445,22 @@
     document.getElementById('end-seed').textContent = data.seed ? `SEED ${data.seed}` : '';
   }
 
+  // Next game without restarting the server (host:playAgain):
+  //  PLAY AGAIN  -> the same five stay seated and ready up again;
+  //  NEW SESSION -> seats are released for the next class period.
+  function playAgain(keepPlayers) {
+    const hint = document.getElementById('end-action-hint');
+    const buttons = [document.getElementById('btn-play-again'), document.getElementById('btn-new-session')];
+    buttons.forEach((b) => { b.disabled = true; });
+    hint.textContent = 'RESETTING THE COUNCIL...';
+    socket.emit('host:playAgain', { keepPlayers }, (res) => {
+      buttons.forEach((b) => { b.disabled = false; });
+      hint.textContent = res && res.ok ? '' : `Could not reset: ${(res && res.reason) || 'no response'}`;
+    });
+  }
+  document.getElementById('btn-play-again').addEventListener('click', () => playAgain(true));
+  document.getElementById('btn-new-session').addEventListener('click', () => playAgain(false));
+
   // The canvas has no size until #view-end is shown, so draw on the next
   // frame (and again whenever the projector stage is resized).
   function drawEndChart() {

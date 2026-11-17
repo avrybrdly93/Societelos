@@ -1532,7 +1532,12 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-winner .label { margin: 0; }
 .end-winner-title { font-size: 44px; line-height: 1.1; margin: 0; color: var(--teal); }
 .end-winner-sub { font-size: 20px; margin: 0; display: inline; }
-.end-seed { font-size: 15px; margin: 0 0 0 16px; display: inline; }
+/* Seed badge and the teacher's next-game buttons. */
+.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.end-seed-badge { font-size: 16px; letter-spacing: 0.08em; padding: 6px 12px; border: 1px dashed var(--slate-600); border-radius: var(--radius); color: var(--text-muted); }
+.end-seed-badge:empty { display: none; }
+.btn-end { font-size: 20px; padding: 10px 22px; letter-spacing: 0.08em; }
+.end-action-hint { font-size: 15px; }
 .view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
 .view-end.is-shutdown .end-winner-title { color: var(--danger); }
 
