@@ -720,8 +720,8 @@ body.host .gdw-meter .label { font-size: 20px; }
   --district-d1: #5b8def; /* Old Harbour */
   --district-d2: #3fd8e6; /* The Grid */
   --district-d3: #2bc4a0; /* Riverside */
-  --district-d4: #f0a430; /* Eastworks */
-  --district-d5: #c084fc; /* Highlands */
+  --district-d4: #d97745; /* Eastworks */
+  --district-d5: #d7a941; /* Highlands */
 }
 .feed-item {
   --district-color: var(--slate-600);
