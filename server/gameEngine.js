@@ -3,6 +3,23 @@
 // Societelos — Stream 1 authoritative game state machine.
 // The server is the only source of truth: this module owns game state and
 // phase timers. socket.js translates client events into calls on it.
+//
+// Map of this file (search for the names):
+//   constants ........ NODE_IDS, PHASES, PHASE_STARTERS, DEFAULT_PHASE_SECONDS
+//   pure helpers ..... hashSeed, seededShuffle, gradeFor, determineWinners,
+//                      breakTie, catalystScores, selectCrisis, sanitizeForBroadcast
+//   GameState
+//     timers ......... startPhaseTimer, clearPhaseTimer, beginTransition (isTransitioning)
+//     phase flow ..... advancePhase -> nextPhase -> start*Phase (one per phase)
+//     voting ......... castVote, tallyVotes, startResolutionPhase, narrateAndBroadcast
+//     finale ......... submitPolicy, runFinaleModeration, resubmitPolicy,
+//                      rankPolicies, startFinaleEnactPhase (Borda math in finale.js)
+//     scoring ........ awardRolePoints, awardCatalystPoints, scoreFinale
+//     end screen ..... startEndPhase, compileEndData (game:end), endRoles, endAuthors
+//     reconnects ..... findReconnectSeat, reconnectPlayer, privateSyncFor, hostSync
+//     teacher ........ configure (host:config), setSeed, playAgain, resetGame
+//   room registry .... createRoom, getRoom, findSession, closeRoom
+//   smokeTest ........ npm run smoke
 
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
@@ -380,7 +397,7 @@ function sanitizeForBroadcast(value, allow = []) {
 
 // ---------------------------------------------------------------------------
 // Stream 4 interfaces. The real simulate() from server/sim drives every
-// resolution; the Loom stub below remains only as a last-resort fallback.
+// resolution; the narration stub below is only a last-resort fallback.
 // ---------------------------------------------------------------------------
 
 /** The simulation entry point used by the engine (server/sim/index.js). */
@@ -402,7 +419,8 @@ function createSimState(simConfig) {
 /**
  * Last-resort canned narration, used only if server/loom.js itself throws
  * (it already falls back to authored lines when Gemini is unavailable).
- * Both are async to match the real Gemini-backed interface.
+ * Async to match the real Gemini-backed interface. (Moderation needs no
+ * stub: a failed loom.moderate falls back to the authored A/B finale.)
  */
 const loomStub = {
   async narrate(context = {}) {
@@ -418,17 +436,6 @@ const loomStub = {
       ],
       stub: true
     };
-  },
-  async moderate(submissions = []) {
-    return submissions.map((s) => ({
-      node: s.node,
-      status: 'ok',
-      cleaned: String(s.text || '').trim().slice(0, 140),
-      feedback: '',
-      roles: [],
-      effects: { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 },
-      stub: true
-    }));
   }
 };
 
@@ -1598,8 +1605,8 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * RESOLUTION: close voting, run the simulation (stub until server/sim is
-   * merged) on the winning option and broadcast 'resolution' once the Loom's
+   * RESOLUTION: close voting, run the seeded simulation (server/sim) on the
+   * winning option and broadcast 'resolution' once the Loom's
    * narration is ready. A safety timer starts immediately so a slow Loom
    * never stalls the game; once the payload is out, the timer restarts for
    * the full RESOLUTION duration so the 20 s month-by-month animation plays.
