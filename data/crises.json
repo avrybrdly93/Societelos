@@ -873,8 +873,8 @@
           "targetGdwDelta": 7
         },
         "B": {
-          "name": "Heavy Private Compute Levy",
-          "text": "Permit private server clusters, but impose a 70% tax on their output to fund public schools and parks in Eastworks.",
+          "name": "Tax Private Copies",
+          "text": "Allow private Loom copies but tax their output heavily to fund public services.",
           "roles": [
             "lotus",
             "ghost"
