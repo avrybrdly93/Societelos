@@ -290,6 +290,19 @@
   const debateClock = document.getElementById('debate-clock');
   let phaseDurationMs = 0;
   let durationFor = null;
+  // Finale timer bars (write screen, resubmit modal): a thick bar and the
+  // seconds left, from the same endsAt as the header countdown. Amber under
+  // 15 s, crimson under 5 s.
+  const finaleTimers = Array.from(document.querySelectorAll('.finale-timer'));
+  function renderFinaleTimers(fraction, secs, remaining) {
+    const on = !!state.endsAt;
+    finaleTimers.forEach((el) => {
+      el.querySelector('.finale-timer-fill').style.transform = `scaleX(${on ? fraction.toFixed(4) : 0})`;
+      el.querySelector('.finale-timer-secs').textContent = on ? String(secs) : '--';
+      el.classList.toggle('is-warn', on && remaining > 0 && remaining < 15000);
+      el.classList.toggle('is-low', on && remaining > 0 && remaining < 5000);
+    });
+  }
   function tick() {
     const remaining = state.endsAt ? Math.max(0, state.endsAt - Date.now()) : 0;
     if (durationFor !== state.endsAt) {
@@ -305,6 +318,7 @@
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
     countdownFill.classList.toggle('is-low', low);
     debateClock.classList.toggle('is-low', low);
+    renderFinaleTimers(fraction, secs, remaining);
 
     const mSessionTimer = document.getElementById('m-session-timer');
     if (mSessionTimer) {

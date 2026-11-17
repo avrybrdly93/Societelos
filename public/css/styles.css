@@ -1213,3 +1213,14 @@ body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
 .cohort-legend li, body.host .cohort-legend li { padding: 0 8px; white-space: nowrap; font-size: 15px; }
 .cohort-legend li + li { border-left: 1px solid var(--slate-700, #222b38); }
 .cohort-legend b { color: var(--slate-50, #eef2f6); font-weight: 700; }
+
+/* Finale timer bar on the phone (write screen and resubmit modal). */
+.finale-timer { position: sticky; top: 0; z-index: 2; margin: 0 0 12px; padding: 6px 0 4px; background: var(--bg, var(--slate-950, #080b10)); }
+.finale-timer-track { height: 10px; border-radius: 5px; background: var(--slate-800, #161c25); overflow: hidden; }
+.finale-timer-fill { height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+.finale-timer-label { margin: 4px 0 0; font-size: 12px; letter-spacing: 0.12em; color: var(--slate-400, #7d8a9a); text-align: right; }
+.finale-timer-secs { color: var(--slate-50, #eef2f6); font-weight: 700; }
+.finale-timer.is-warn .finale-timer-fill { background: var(--amber); }
+.finale-timer.is-warn .finale-timer-secs { color: var(--amber); }
+.finale-timer.is-low .finale-timer-fill { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
+.finale-timer.is-low .finale-timer-secs { color: var(--danger); }
