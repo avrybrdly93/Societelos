@@ -287,6 +287,59 @@ body.host .label {
   color: var(--danger);
   text-shadow: 0 0 18px var(--alert-crimson), 0 0 32px rgba(229, 72, 77, 0.45);
 }
+/* Cinematic typography: wide-tracked transmission label, soft glow on text. */
+.crawl p { letter-spacing: 0.01em; text-shadow: 0 0 28px rgba(63, 216, 230, 0.08); }
+.crawl p.label { letter-spacing: 0.32em; text-transform: uppercase; }
+/* Staggered fade-in: each line rises into place in turn as the view opens. */
+.view.is-active .crawl p { animation: crawl-line-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.view.is-active .crawl p:nth-child(2) { animation-delay: 0.15s; }
+.view.is-active .crawl p:nth-child(3) { animation-delay: 0.3s; }
+.view.is-active .crawl p:nth-child(4) { animation-delay: 0.45s; }
+.view.is-active .crawl p:nth-child(5) { animation-delay: 0.6s; }
+.view.is-active .crawl p:nth-child(6) { animation-delay: 0.75s; }
+.view.is-active .crawl p:nth-child(7) { animation-delay: 0.9s; }
+.view.is-active .crawl p:nth-child(8) { animation-delay: 1.05s; }
+@keyframes crawl-line-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Live schematic pulse of the 5 districts under the transmission. */
+#view-intro { position: relative; }
+.intro-schematic {
+  position: absolute;
+  left: 40px;
+  bottom: 24px;
+  width: 440px;
+  height: auto;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.schematic-links line {
+  stroke: var(--loom-cyan-dim);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  animation: schematic-flow 2.4s linear infinite;
+}
+.schematic-node circle {
+  fill: var(--node-color);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: schematic-pulse 2s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+.schematic-node text {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  text-anchor: middle;
+}
+@keyframes schematic-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.75; filter: drop-shadow(0 0 0 transparent); }
+  50% { transform: scale(1.35); opacity: 1; filter: drop-shadow(0 0 8px var(--node-color)); }
+}
+@keyframes schematic-flow { to { stroke-dashoffset: -20; } }
+@media (prefers-reduced-motion: reduce) {
+  .view.is-active .crawl p, .schematic-node circle, .schematic-links line { animation: none; }
+}
+
 .intro-controls {
   position: absolute;
   bottom: 24px;

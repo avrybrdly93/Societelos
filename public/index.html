@@ -94,6 +94,20 @@
           <p class="accent">Five crises. Five years. Do not let well-being reach zero.</p>
         </div>
       </div>
+      <!-- Live schematic of the 5 districts: nodes and spillover links pulse while the Loom speaks. -->
+      <svg class="intro-schematic" viewBox="0 0 520 150" role="img" aria-label="Schematic of the five districts">
+        <g class="schematic-links">
+          <line x1="60" y1="40" x2="190" y2="60" /><line x1="60" y1="40" x2="230" y2="115" />
+          <line x1="190" y1="60" x2="230" y2="115" /><line x1="190" y1="60" x2="340" y2="70" />
+          <line x1="230" y1="115" x2="340" y2="70" /><line x1="230" y1="115" x2="460" y2="105" />
+          <line x1="340" y1="70" x2="460" y2="105" />
+        </g>
+        <g class="schematic-node" style="--node-color: var(--district-d1); --delay: 0s"><circle cx="60" cy="40" r="9" /><text x="60" y="20">D1</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d2); --delay: 0.4s"><circle cx="190" cy="60" r="11" /><text x="190" y="38">D2</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d3); --delay: 0.8s"><circle cx="230" cy="115" r="12" /><text x="230" y="145">D3</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d4); --delay: 1.2s"><circle cx="340" cy="70" r="11" /><text x="340" y="48">D4</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d5); --delay: 1.6s"><circle cx="460" cy="105" r="8" /><text x="460" y="85">D5</text></g>
+      </svg>
       <div class="intro-controls">
         <button id="btn-voice-toggle" class="btn-voice-toggle is-active" type="button" aria-label="Toggle Loom Voice">
           <span id="voice-icon" aria-hidden="true">🔊</span> <span id="voice-label">LOOM VOICE: ACTIVE</span>
