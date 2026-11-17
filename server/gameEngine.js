@@ -529,6 +529,7 @@ class GameState extends EventEmitter {
 
     // Society.
     this.gdw = STARTING_GDW;
+    this.cycleMarkers = []; // [{ cycle, index, gdw }]: where each cycle ends in gdwHistory
     this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
     this.worldKey = null;
@@ -724,6 +725,23 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * The End Screen trajectory: the starting GDW (25) and every realized
+   * month, 60 points after 5 cycles, cut at the first month that hits 0 on
+   * a shutdown. Markers give each cycle's last index into gdwHistory.
+   */
+  endGdwHistory() {
+    let history = this.gdwHistory.slice();
+    const zero = history.findIndex((g, i) => i > 0 && g <= 0);
+    if (zero > 0) history = history.slice(0, zero + 1);
+    const last = history.length - 1;
+    const cycleMarkers = this.cycleMarkers
+      .map((m) => ({ cycle: m.cycle, index: Math.min(m.index, last) }))
+      .map((m) => ({ ...m, gdw: history[m.index] }))
+      .filter((m, i, a) => i === 0 || a[i - 1].index < m.index);
+    return { gdwHistory: history, cycleMarkers };
+  }
+
+  /**
    * END data compiler: everything the End Screen reveals, gathered once
    * after Cycle 5's FINALE_ENACT / RESOLUTION, or straight after the cycle
    * whose realized GDW hit 0. Stored as this.endData and emitted as
@@ -744,6 +762,7 @@ class GameState extends EventEmitter {
       worldKey: this.worldKey || null,
       worldName: world.name || null,
       closingMessage,
+      ...this.endGdwHistory(),
       scores: Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]))
     };
   }
@@ -1383,6 +1402,8 @@ class GameState extends EventEmitter {
     const monthly = trajectory && typeof trajectory.length === 'number' ? Array.from(trajectory).slice(1).map(roundGdw) : [];
     if (monthly.length) monthly[monthly.length - 1] = this.gdw;
     this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
+    // Cycle boundary marker: the gdwHistory index of this cycle's last month.
+    this.cycleMarkers.push({ cycle: this.cycle, index: this.gdwHistory.length - 1, gdw: this.gdw });
   }
 
   /**
@@ -1616,6 +1637,7 @@ class GameState extends EventEmitter {
       this.simStateStart = this.simState; // for the End Screen's closing citizen
       this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
       this.gdwHistory = [this.gdw];
+      this.cycleMarkers = [];
       this.volatility = 1.0;
       this.voteHistory = {};
       this.worldKey = null;
@@ -1646,6 +1668,7 @@ class GameState extends EventEmitter {
     this.simState = null;
     this.gdw = STARTING_GDW;
     this.gdwHistory = [];
+    this.cycleMarkers = [];
     this.volatility = 1.0;
     this.worldKey = null;
     this.ending = null;

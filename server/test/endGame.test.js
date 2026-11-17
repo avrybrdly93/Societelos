@@ -68,3 +68,30 @@ test('gradeFor maps final GDW to SHUTDOWN / Fragile / Stable / Thriving', () => 
   assert.equal(engine.gradeFor(81.4), 'Thriving');
   assert.equal(engine.gradeFor(NaN), 'SHUTDOWN', 'a broken number never reads as a success');
 });
+
+// TASK-603 ------------------------------------------------------------------
+
+test('game:end gdwHistory holds the starting 25 plus all 60 realized months, with cycle markers', async () => {
+  await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+    const out = await playGame({ gameId: 'enddata-history', world: 'AA' });
+    const { gdwHistory, cycleMarkers } = out.gameEnd;
+    assert.equal(gdwHistory.length, 61);
+    assert.equal(gdwHistory[0], 25);
+    assert.equal(gdwHistory[60], out.gameEnd.finalGdw);
+    assert.deepEqual(cycleMarkers.map((m) => m.cycle), [1, 2, 3, 4, 5]);
+    assert.deepEqual(cycleMarkers.map((m) => m.index), [12, 24, 36, 48, 60]);
+    // Each marker's GDW is the realized GDW the resolution showed for that cycle.
+    assert.deepEqual(cycleMarkers.map((m) => m.gdw), out.resolutions.map((r) => r.gdw));
+    assert.notEqual(gdwHistory, out.game.gdwHistory, 'a copy, not the live array');
+  });
+});
+
+test('on a shutdown, gdwHistory stops at the month GDW hit 0', () => {
+  const game = new engine.GameState({ roomCode: 'ENDH' });
+  game.gdwHistory = [25, ...Array.from({ length: 12 }, (_, i) => 24 - i), 9, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  game.cycleMarkers = [{ cycle: 1, index: 12, gdw: 13 }, { cycle: 2, index: 24, gdw: 0 }];
+  const { gdwHistory, cycleMarkers } = game.endGdwHistory();
+  assert.equal(gdwHistory.length, 16, 'start + 12 months + 3 months to the shutdown');
+  assert.equal(gdwHistory.at(-1), 0);
+  assert.deepEqual(cycleMarkers, [{ cycle: 1, index: 12, gdw: 13 }, { cycle: 2, index: 15, gdw: 0 }]);
+});
