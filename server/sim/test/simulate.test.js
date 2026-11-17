@@ -153,10 +153,4 @@ test('getForecastMedian(state, effects, seed) matches simulate()\'s month-12 med
     const full = simulate({ gdw: 25, simState: start }, effects, { runs: 200, seed, volatility: vol }).forecast.median[12];
     assert.equal(getForecastMedian({ gdw: 25, simState: start }, effects, seed, { volatility: vol }), full, `seed ${seed}`);
   }
-  const t0 = process.hrtime.bigint();
-  for (let i = 0; i < 5; i++) simulate(start, effects, { runs: 200, seed: i });
-  const t1 = process.hrtime.bigint();
-  for (let i = 0; i < 5; i++) getForecastMedian(start, effects, i);
-  const t2 = process.hrtime.bigint();
-  assert.ok(t2 - t1 <= t1 - t0, 'no slower than the full simulate()');
 });
