@@ -452,3 +452,53 @@ test('sanitizeModerationResult truncates 300-character strings to 140 (cleaned) 
   // Emoji are stripped before measuring.
   assert.equal(loom.sanitizeModerationResult({ cleaned: `Free parks \u{1F333}\u{1F333} for all.` }).cleaned, 'Free parks for all.');
 });
+
+test('loom.moderate falls back cleanly after the 8,000 ms timeout, and the engine then switches to the authored A/B finale', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let aborted = false;
+  const hanging = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener('abort', () => { aborted = true; const e = new Error('aborted'); e.name = 'AbortError'; reject(e); });
+  });
+  const warn = console.warn;
+  console.warn = () => {};
+  let out;
+  try {
+    let settled = false;
+    const pending = loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl: hanging }).then((r) => { settled = true; return r; });
+    await Promise.resolve();
+    t.mock.timers.tick(7999);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(settled, false, 'still waiting just before 8 s');
+    t.mock.timers.tick(1);
+    out = await pending;
+  } finally {
+    console.warn = warn;
+  }
+  assert.equal(aborted, true, 'request aborted at 8 s');
+  assert.equal(out.length, 5, 'resolves (never rejects), one result per write-in');
+  assert.ok(out.every((r) => r.fallback === true && r.status === 'ok' && r.roles.length === 0));
+  assert.ok(out.every((r) => Object.values(r.effects).every((v) => v === 0)), 'zero effects: never scored');
+  // The engine reads an all-fallback batch as "Gemini unavailable" and plays the authored A/B.
+  t.mock.timers.reset();
+  const engine = require('../gameEngine');
+  const game = new engine.GameState({ roomCode: 'TOUT' });
+  const log = console.log;
+  console.log = () => {};
+  try {
+    engine.NODE_IDS.forEach((n, i) => game.addPlayer(`s${i}`, `P${i}`));
+    game.assignRoles(game.data.roles);
+    game.worldKey = 'BB';
+    game.voteHistory = { 1: 'B', 2: 'B', 3: 'A', 4: 'A' };
+    game.cycle = 5;
+    game.startIncidentPhase();
+    game.startFinaleWritePhase();
+    game.phase = engine.PHASES.FINALE_MOD;
+    game.onFinaleModeration(out);
+    assert.equal(game.finaleFallback, true);
+    assert.equal(game.phase, 'DEBATE');
+    assert.equal(game.publicOptions().A.name, 'Open the Server Gates');
+  } finally {
+    game.stop();
+    console.log = log;
+  }
+});
