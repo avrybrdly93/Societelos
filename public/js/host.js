@@ -1477,6 +1477,12 @@
       const a = authorsByNode[r.node];
       if (a) {
         policy.append(document.createTextNode(`${proposalLabel(a.id)}: ${a.text}`));
+        if (a.place === 1) {
+          const bonus = document.createElement('span');
+          bonus.className = 'end-author-bonus mono';
+          bonus.textContent = '+1 AUTHOR BONUS';
+          policy.appendChild(bonus);
+        }
         const rank = document.createElement('span');
         rank.className = 'end-policy-rank';
         rank.textContent = `RANK #${a.place} \u00B7 ${a.points} BORDA PTS${a.weight ? ` \u00B7 ENACTED ${Math.round(a.weight * 100)}%` : ''}`;
