@@ -643,9 +643,11 @@
   const CRUMB_ORDER = ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
   function renderCrumbs(payload) {
     const crumbs = document.getElementById('phase-crumbs');
-    // The write-in finale has its own flow, so the binary breadcrumbs hide.
+    // The write-in finale has its own flow, so the binary breadcrumbs hide --
+    // unless the Loom failed and the finale fell back to DEBATE -> VOTE -> RESOLUTION.
     const writein = payload.crisis && payload.crisis.mode === 'writein';
-    const idx = writein ? -1 : CRUMB_ORDER.indexOf(payload.phase);
+    const finaleFlow = writein && !isFinaleFallbackPhase(payload);
+    const idx = finaleFlow ? -1 : CRUMB_ORDER.indexOf(payload.phase);
     crumbs.classList.toggle('is-idle', idx < 0);
     crumbs.querySelectorAll('li').forEach((li, i) => {
       li.classList.toggle('is-done', idx >= 0 && i < idx);
@@ -655,6 +657,17 @@
     });
   }
   socket.on('phase', renderCrumbs);
+
+  // Cycle 5 fallback: Gemini failed during moderation, so the server sent the
+  // write-in crisis back through the binary DEBATE -> VOTE -> RESOLUTION flow
+  // with its authored A/B options. The projector says so above the debate.
+  function isFinaleFallbackPhase(payload) {
+    const writein = !!(payload && payload.crisis && payload.crisis.mode === 'writein');
+    return writein && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
+  }
+  socket.on('phase', (payload) => {
+    document.getElementById('finale-fallback-notice').hidden = !(isFinaleFallbackPhase(payload) && payload.phase === 'DEBATE');
+  });
 
   // One feed card: avatar badge (initials), name, age, district tag, message.
   function feedItemElement(item) {

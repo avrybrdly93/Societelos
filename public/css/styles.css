@@ -1171,3 +1171,11 @@ body.host .enact-wait { font-size: 32px; text-align: center; color: var(--theme-
   color: var(--danger, #ff4d4f);
   border-color: var(--danger, #ff4d4f);
 }
+
+/* Cycle 5 fallback (Gemini failed during moderation): authored A/B debate. */
+.finale-fallback-notice, .m-finale-fallback {
+  color: var(--amber); border: 1px solid rgba(240, 164, 48, 0.5); border-radius: var(--radius);
+  background: rgba(240, 164, 48, 0.08); letter-spacing: 0.08em; margin: 0 0 12px;
+}
+body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
+.m-finale-fallback { font-size: 12px; padding: 8px 10px; text-align: center; }

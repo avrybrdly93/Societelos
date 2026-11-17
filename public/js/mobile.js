@@ -249,6 +249,15 @@
 
   socket.on('phase', onPhase);
 
+  // Cycle 5 fallback: if Gemini fails during moderation the server sends the
+  // write-in crisis through DEBATE with authored A/B options. The phone has
+  // already switched to the debate screen (PHASE_SCREENS); explain why.
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    const fallback = !!(payload.crisis && payload.crisis.mode === 'writein') && ['DEBATE', 'VOTE'].includes(payload.phase);
+    document.getElementById('m-finale-fallback').hidden = !(fallback && payload.phase === 'DEBATE');
+  });
+
   // Subtle haptics (Android Chrome; silently ignored where unsupported, e.g. iOS).
   function buzz(pattern = 50) {
     try {
