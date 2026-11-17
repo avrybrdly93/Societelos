@@ -22,6 +22,7 @@
     "bench:sim": "node server/sim/test/bench.js",
     "calibrate": "node server/sim/calibrate.js",
     "calibrate:sweep": "node server/sim/calibrate.js --sweep",
+    "calibrate:crises": "node server/sim/calibrate.js --crises",
     "test:stream4": "npm run -s check:sim && node --test server/sim/test/*.test.js server/test/loom.test.js server/test/contracts.test.js && npm run -s bench:sim && npm run -s calibrate",
     "check:mem": "node --expose-gc scripts/check-memory.js",
     "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\"",

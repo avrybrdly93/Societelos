@@ -7,6 +7,7 @@
 //   node server/sim/calibrate.js          (npm run calibrate)
 //   node server/sim/calibrate.js --json   machine-readable output
 //   node server/sim/calibrate.js --sweep  1,000 random games: final-GDW bands
+//   node server/sim/calibrate.js --crises every crisis option's forecast, validated
 //
 // The data files are loaded with require() (no fs), so server/sim keeps its
 // no-I/O rule (npm run check:sim) and the simulation stays pure.
@@ -60,6 +61,59 @@ function pathGdw(simConfig, crises, votes, seed = SEED) {
     if (typeof o.volatility === 'number') volatility = o.volatility;
   });
   return trace;
+}
+
+/** Sim state (and volatility) at the end of cycle 2 along a world's path, e.g. 'BA'. */
+function worldStartState(simConfig, crises, world, seed = SEED) {
+  let state = createInitialState(simConfig);
+  let volatility = 1;
+  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const votes = world.split('');
+  votes.forEach((vote, i) => {
+    const o = fixed[i].options[vote];
+    const effects = o.effectsByWorld ? o.effectsByWorld[votes[0]] : o.effects;
+    state = simulate(state, effects, { runs: RUNS, seed: seed + i, volatility }).finalState;
+    if (typeof o.volatility === 'number') volatility = o.volatility;
+  });
+  return { state, volatility };
+}
+
+/**
+ * Forecast every option of every crisis in data/crises.json from the state
+ * it is played in (fixed crises from the start, world crises from that
+ * world's cycle-2 state) and check the forecast is usable: 13 finite monthly
+ * medians inside [0, 100] with p5 <= median <= p95. Returns one row per
+ * option: { id, world, cycle, mode, option, name, medianDelta, spread, ok, problems }.
+ */
+function calibrateCrises(simConfig, crises) {
+  const starts = { fixed: { state: createInitialState(simConfig), volatility: 1 } };
+  for (const w of ['AA', 'AB', 'BA', 'BB']) starts[w] = worldStartState(simConfig, crises, w);
+  const rows = [];
+  for (const c of crises.crises) {
+    const start = starts[c.world];
+    for (const key of ['A', 'B']) {
+      const o = (c.options || {})[key] || {};
+      const effects = o.effectsByWorld ? o.effectsByWorld.A : o.effects;
+      const problems = [];
+      if (!start) problems.push(`unknown world ${c.world}`);
+      if (!effects) problems.push('no effect vector');
+      let medianDelta = NaN;
+      let spread = NaN;
+      if (!problems.length) {
+        const f = simulate(start.state, effects, { runs: RUNS, seed: SEED, volatility: start.volatility }).forecast;
+        const months = f.median.length;
+        if (months !== 13) problems.push(`${months} months`);
+        for (let m = 0; m < months; m++) {
+          if (![f.median[m], f.p5[m], f.p95[m]].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)) { problems.push(`month ${m} out of range`); break; }
+          if (!(f.p5[m] <= f.median[m] + 1e-9 && f.median[m] <= f.p95[m] + 1e-9)) { problems.push(`month ${m} bands out of order`); break; }
+        }
+        medianDelta = f.median[months - 1] - computeGDW(start.state);
+        spread = f.p95[months - 1] - f.p5[months - 1];
+      }
+      rows.push({ id: c.id, world: c.world, cycle: c.cycle, mode: c.mode, option: key, name: o.name, medianDelta, spread, ok: !problems.length, problems });
+    }
+  }
+  return rows;
 }
 
 // Final-GDW bands for a whole game (TASK-561 targets for random play).
@@ -119,6 +173,18 @@ function sweepGames(simConfig, crises, { games = 1000, seed = SEED } = {}) {
 }
 
 function main() {
+  if (process.argv.includes('--crises')) {
+    const data = readJson('crises.json');
+    const rows = calibrateCrises(readJson('sim.json'), data);
+    if (process.argv.includes('--json')) { console.log(JSON.stringify(rows)); return; }
+    const f = (v) => (Number.isFinite(v) ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}` : 'n/a').padStart(6);
+    console.log(`Every crisis option forecast from the state it is played in (${RUNS} runs, seed ${SEED})`);
+    for (const r of rows) console.log(`  ${r.id.padEnd(22)} ${r.world.padEnd(5)} c${r.cycle} ${r.mode === 'writein' ? 'finale' : '      '} ${r.option}  median ${f(r.medianDelta)}  p5-95 ${f(r.spread)}  ${r.ok ? 'ok' : `FAIL ${r.problems.join('; ')}`}`);
+    const bad = rows.filter((r) => !r.ok);
+    console.log(`${new Set(rows.map((r) => r.id)).size} crises, ${rows.length} options: ${bad.length ? `${bad.length} FAILED` : 'all forecasts valid'}`);
+    if (bad.length) process.exitCode = 1;
+    return;
+  }
   if (process.argv.includes('--sweep')) {
     const n = Number((process.argv.find((a) => /^--games=\d+$/.test(a)) || '').split('=')[1]) || 1000;
     const r = sweepGames(readJson('sim.json'), readJson('crises.json'), { games: n });
@@ -151,4 +217,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { main, medianDelta, calibrateFixed, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };
+module.exports = { main, medianDelta, calibrateFixed, calibrateCrises, worldStartState, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };
