@@ -332,3 +332,13 @@ test('moderation rules: ok rewrites (140), revise for crude/off-topic/personal a
   assert.doesNotMatch(calls[0].prompt, /second attempts/);
 });
 
+test('loom.moderateOne marks the call as a revision: ok or reject only, a second "revise" becomes "reject"', async () => {
+  const { calls, fetchImpl } = recordingFetch((body) => [{ node: 'NODE-05', status: 'revise', cleaned: 'x', feedback: 'try again', roles: [], effects: {} }]);
+  const out = await loom.moderateOne({ node: 'NODE-05', text: 'still a joke about Sam' }, FINALE_CRISIS, { config: ONLINE, fetchImpl });
+  assert.match(calls[0].prompt, /revised second attempts .*Never "revise" again/);
+  assert.equal(out.status, 'reject');
+  assert.equal(out.node, 'NODE-05');
+  const ok = await loom.moderateOne({ node: 'NODE-05', text: 'Every district elects a council.' }, FINALE_CRISIS, { config: ONLINE, fetchImpl: recordingFetch(() => [{ node: 'NODE-05', status: 'ok', cleaned: 'Every district elects a council.', feedback: '', roles: ['artisan'], effects: { purpose: 0.3 } }]).fetchImpl });
+  assert.equal(ok.status, 'ok');
+  assert.equal(ok.effects.purpose, 0.3);
+});

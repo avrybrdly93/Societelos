@@ -444,6 +444,7 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
         'Calibration examples: authored policies with their exact trait effects and role tags. Score every submission on this same scale.',
         JSON.stringify(examples)
       ] : []),
+      ...(opts.revision ? ['These are revised second attempts after your private feedback. Use status "ok" if the policy is now acceptable, otherwise "reject". Never "revise" again.'] : []),
       'Moderate and translate each council submission. Return one object per submission, same node ids, as a JSON array.',
       JSON.stringify(list)
     ].join('\n\n');
@@ -454,7 +455,8 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
       if (!r) return moderateFallback([s])[0];
       return {
         node: s.node,
-        status: STATUSES.includes(r.status) ? r.status : 'revise',
+        // A revision gets one chance: anything but "ok" is final.
+        status: STATUSES.includes(r.status) ? (opts.revision && r.status === 'revise' ? 'reject' : r.status) : (opts.revision ? 'reject' : 'revise'),
         cleaned: truncate(r.cleaned, 140),
         feedback: truncate(r.feedback, 200),
         roles: cleanRoles(r.roles),
@@ -479,7 +481,7 @@ async function moderateOne(submission = {}, crisis = {}, opts = {}) {
   const reject = { node, status: 'reject', cleaned: '', feedback: '', roles: [], effects: zeroEffects(), fallback: true };
   const cfg = opts.config || getConfig();
   if (!node || !cfg.enabled) return reject;
-  const [result] = await moderate([{ node, text: submission.text }], crisis, opts);
+  const [result] = await moderate([{ node, text: submission.text }], crisis, { ...opts, revision: true });
   return result && !result.fallback ? result : reject;
 }
 
