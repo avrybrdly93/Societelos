@@ -581,33 +581,33 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-532:** Author all 5 secret intel drops for `bb-march-datacenter` in `data/crises.json`.
 - [x] **TASK-533:** Author pre-debate incident citizen feed lines and debate hooks for all `BA` and `BB` crises in `data/crises.json`.
 - [x] **TASK-534:** Ensure `BB` (The Gilded Cage) late crises (`bb-scroll-extinction`, `bb-the-unplugged`, `bb-march-datacenter`) carry harsh negative trait trade-offs so the comfortable early `1B -> 2B` path hits hardest in Cycles 3–5.
-- [ ] **TASK-535:** Verify all 14 crises (2 fixed + 8 world binary + 4 world finales) are complete in `data/crises.json` and prepare `feature/content` Wednesday branch state for merge.
+- [x] **TASK-535:** Verify all 14 crises (2 fixed + 8 world binary + 4 world finales) are complete in `data/crises.json` and prepare `feature/content` Wednesday branch state for merge.
 
 ### Agent 4: Simulation & Loom (`feature/sim` — 50 Tasks)
-- [ ] **TASK-536:** Implement full `loom.moderate(submissions, crisis)` batch function in `server/loom.js` accepting 5 raw player submissions and the Cycle 5 crisis context.
-- [ ] **TASK-537:** Embed few-shot calibration examples (authored A/B policies and their exact 6-trait effect vectors and role tags from `data/crises.json`) into the `loom.moderate` prompt so Gemini scores player write-ins on the exact same scale.
-- [ ] **TASK-538:** Configure `loom.moderate` API request with `temperature: 0.2` and structured JSON `responseSchema` returning an array of moderation objects `{ node, status, cleaned, feedback, roles, effects }`.
-- [ ] **TASK-539:** Implement moderation rules in prompt: `status: "ok"` rewrites into one clear, neutral policy sentence (max 140 chars) preserving intent; `status: "revise"` for crude, off-topic, or personal attacks with kind, specific private feedback (max 200 chars, no lecturing); `status: "reject"` for unsafe content or failed revision.
-- [ ] **TASK-540:** Implement `loom.moderateOne(submission, crisis)` in `server/loom.js` for single-policy resubmissions during the `"revise"` step.
-- [ ] **TASK-541:** Implement strict post-call sanitizer `sanitizeModerationResult(item)` in `server/loom.js`:
+- [x] **TASK-536:** Implement full `loom.moderate(submissions, crisis)` batch function in `server/loom.js` accepting 5 raw player submissions and the Cycle 5 crisis context.
+- [x] **TASK-537:** Embed few-shot calibration examples (authored A/B policies and their exact 6-trait effect vectors and role tags from `data/crises.json`) into the `loom.moderate` prompt so Gemini scores player write-ins on the exact same scale.
+- [x] **TASK-538:** Configure `loom.moderate` API request with `temperature: 0.2` and structured JSON `responseSchema` returning an array of moderation objects `{ node, status, cleaned, feedback, roles, effects }`.
+- [x] **TASK-539:** Implement moderation rules in prompt: `status: "ok"` rewrites into one clear, neutral policy sentence (max 140 chars) preserving intent; `status: "revise"` for crude, off-topic, or personal attacks with kind, specific private feedback (max 200 chars, no lecturing); `status: "reject"` for unsafe content or failed revision.
+- [x] **TASK-540:** Implement `loom.moderateOne(submission, crisis)` in `server/loom.js` for single-policy resubmissions during the `"revise"` step.
+- [x] **TASK-541:** Implement strict post-call sanitizer `sanitizeModerationResult(item)` in `server/loom.js`:
   - Clamp each of the 6 traits (`purpose`, `connection`, `health`, `trust`, `fairness`, `autonomy`) to $[-1.0, +1.0]$ and default missing traits to `0`.
   - Filter `roles` to only valid tags (`artisan`, `lotus`, `assimilator`, `ghost`) and slice to at most `2` tags.
   - Truncate `cleaned` to `140` chars and `feedback` to `200` chars.
   - Strip any emoji characters.
-- [ ] **TASK-542:** Implement bland placeholder generator `getPlaceholderPolicy(node)` in `server/loom.js` for rejected second submissions (`cleaned: "Maintain current regional administrative protocols without structural changes."`, `roles: []`, `effects: {0,0,0,0,0,0}`).
-- [ ] **TASK-543:** Implement deterministic local heuristic fallback for `loom.moderateOne` in case Gemini times out on a single resubmit after succeeding on the initial batch.
+- [x] **TASK-542:** Implement bland placeholder generator `getPlaceholderPolicy(node)` in `server/loom.js` for rejected second submissions (`cleaned: "Maintain current regional administrative protocols without structural changes."`, `roles: []`, `effects: {0,0,0,0,0,0}`).
+- [x] **TASK-543:** Implement deterministic local heuristic fallback for `loom.moderateOne` in case Gemini times out on a single resubmit after succeeding on the initial batch.
 - [ ] **TASK-544:** Tune sensitivity table $S$ and $\alpha$ in `data/sim.json` across all 4 worlds (`AA`, `AB`, `BA`, `BB`) using `server/sim/calibrate.js`.
-- [ ] **TASK-545:** Verify World `AA` (Commonwealth) crises (`aa-purpose-drift`, `aa-lost-knowledge`) produce meaningful GDW tension around `purpose` and `autonomy`.
+- [x] **TASK-545:** Verify World `AA` (Commonwealth) crises (`aa-purpose-drift`, `aa-lost-knowledge`) produce meaningful GDW tension around `purpose` and `autonomy`.
 - [ ] **TASK-546:** Verify World `AB` (Benevolent Machine) crises (`ab-the-pods`, `ab-mood-dial`) trade off `health`/`trust` against `autonomy`/`connection`.
-- [ ] **TASK-547:** Verify World `BA` (Uneasy Republic) crises (`ba-shadow-elite`, `ba-status-wars`) create sharp `fairness` and `trust` swings between `D1` elite and `D4` workers.
-- [ ] **TASK-548:** Verify World `BB` (Gilded Cage) crises (`bb-scroll-extinction`, `bb-the-unplugged`) punish complacency after the easy `1B -> 2B` opening.
+- [x] **TASK-547:** Verify World `BA` (Uneasy Republic) crises (`ba-shadow-elite`, `ba-status-wars`) create sharp `fairness` and `trust` swings between `D1` elite and `D4` workers.
+- [x] **TASK-548:** Verify World `BB` (Gilded Cage) crises (`bb-scroll-extinction`, `bb-the-unplugged`) punish complacency after the easy `1B -> 2B` opening.
 - [ ] **TASK-549:** Tune shock magnitudes (`shockMin: 0.02`, `shockMax: 0.06`) and `volatility: 1.5` multiplier in `data/sim.json` so Catalyst players have a realistic (~35–45%) chance of seeing a $\ge 10$ GDW swing when pushing high-variance policies.
-- [ ] **TASK-550:** Add named shock flavor types per district in `server/sim/step.js` (e.g., `D1` Coastal Storm, `D2` Cooling Grid Outage, `D3` School Quarantine, `D4` Warehouse Transformer Failure, `D5` Unplugged Relay Cut) so Gemini narration has concrete shock names.
-- [ ] **TASK-551:** Update `loom.narrate` for Cycle 5 Finale to accept the 3 enacted policies (`50% / 25% / 25%`) and synthesize a cohesive Loom commentary on the council's combined package.
-- [ ] **TASK-552:** Write unit test in `server/sim/` verifying `sanitizeModerationResult` clamps `{ purpose: 2.5, trust: -9.0 }` to `{ purpose: 1.0, trust: -1.0 }`.
-- [ ] **TASK-553:** Write unit test verifying `sanitizeModerationResult` drops invalid role tags like `"catalyst"` or `"hacker"` and limits valid tags to max 2.
-- [ ] **TASK-554:** Write unit test verifying `sanitizeModerationResult` truncates 300-char strings to 140 (`cleaned`) and 200 (`feedback`).
-- [ ] **TASK-555:** Write unit test verifying `loom.moderate` rejects/falls back cleanly after 8,000ms timeout so the engine can trigger the authored A/B finale fallback.
+- [x] **TASK-550:** Add named shock flavor types per district in `server/sim/step.js` (e.g., `D1` Coastal Storm, `D2` Cooling Grid Outage, `D3` School Quarantine, `D4` Warehouse Transformer Failure, `D5` Unplugged Relay Cut) so Gemini narration has concrete shock names.
+- [x] **TASK-551:** Update `loom.narrate` for Cycle 5 Finale to accept the 3 enacted policies (`50% / 25% / 25%`) and synthesize a cohesive Loom commentary on the council's combined package.
+- [x] **TASK-552:** Write unit test in `server/sim/` verifying `sanitizeModerationResult` clamps `{ purpose: 2.5, trust: -9.0 }` to `{ purpose: 1.0, trust: -1.0 }`.
+- [x] **TASK-553:** Write unit test verifying `sanitizeModerationResult` drops invalid role tags like `"catalyst"` or `"hacker"` and limits valid tags to max 2.
+- [x] **TASK-554:** Write unit test verifying `sanitizeModerationResult` truncates 300-char strings to 140 (`cleaned`) and 200 (`feedback`).
+- [x] **TASK-555:** Write unit test verifying `loom.moderate` rejects/falls back cleanly after 8,000ms timeout so the engine can trigger the authored A/B finale fallback.
 - [ ] **TASK-556:** Test live Gemini API call for `loom.moderate` with 5 diverse sample student policies:
   1. An Artisan-style guild proposal (`status: "ok"`)
   2. A Lotus-Eater UBI luxury proposal (`status: "ok"`)
@@ -618,29 +618,29 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-558:** Verify Gemini assigns at most 2 role tags and leaves 3–4 traits at `0` for focused policies.
 - [ ] **TASK-559:** Test live Gemini API call for `loom.moderateOne` when the 5th student revises their joke into a valid policy.
 - [ ] **TASK-560:** Test live Gemini API call for `loom.moderateOne` when the 5th student submits another inappropriate line (`status: "reject"`).
-- [ ] **TASK-561:** Run 1,000-game Monte Carlo trajectory sweep across random A/B choices in `server/sim/calibrate.js` to verify:
+- [x] **TASK-561:** Run 1,000-game Monte Carlo trajectory sweep across random A/B choices in `server/sim/calibrate.js` to verify:
   - ~15–25% of poorly managed games end in Collapse ($GDW = 0$)
   - ~20–30% end in Fragile ($1\text{--}34$)
   - ~35–45% end in Stable ($35\text{--}59$)
   - ~15–25% end in Thriving ($60+$)
 - [ ] **TASK-562:** Adjust `hedonicDrift` or `alpha` in `data/sim.json` if the 1,000-game sweep shows collapse is too rare ($<5\%$) or too frequent ($>40\%$).
-- [ ] **TASK-563:** Ensure `simulate()` supports evaluating a single write-in policy's forecast median GDW (used by the Borda tie-breaker in Cycle 5).
-- [ ] **TASK-564:** Add fast `getForecastMedian(state, effects, seed)` helper in `server/sim/index.js` for tie-breakers.
-- [ ] **TASK-565:** Verify all 14 crises in `data/crises.json` load cleanly into `server/sim/calibrate.js` and produce valid forecasts.
-- [ ] **TASK-566:** Check Gemini API rate limits (RPM/TPM) for Flash models to confirm 1 game (~7 calls over 15 minutes) is well within free-tier quotas.
-- [ ] **TASK-567:** Add retry-once-on-429/503 logic inside the 8-second timeout budget in `server/loom.js`.
-- [ ] **TASK-568:** Ensure `server/loom.js` logs API latency (ms) and token usage for debugging without logging student submission text if privacy mode is set.
-- [ ] **TASK-569:** Verify `loom.narrate` fallback works for Cycle 5 Finale when `winningOption` is a 50/25/25 custom package.
-- [ ] **TASK-570:** Write closing citizen message selector in `server/sim/index.js` for the End Screen (picking the citizen whose cohort changed the most over the 5-year / 5-cycle game).
-- [ ] **TASK-571:** Verify all files in `server/sim/`, `server/loom.js`, and `data/sim.json` pass validation.
-- [ ] **TASK-572:** Run full Stream 4 test suite.
-- [ ] **TASK-573:** Trigger Wednesday Night Automated Branch Merger (`feature/backend`, `feature/frontend`, `feature/content`, `feature/sim` -> `main`).
-- [ ] **TASK-574:** Verify post-merge integration of Cycle 5 Write-and-Rank flow (`FINALE_WRITE` -> `FINALE_MOD` -> `FINALE_DEBATE` -> `FINALE_RANK` -> `FINALE_ENACT`).
-- [ ] **TASK-575:** Verify post-merge integration of Worlds `BA` and `BB` across Cycles 3–5.
-- [ ] **TASK-576:** Run automated 5-cycle headless playthrough test on `BA` branch.
-- [ ] **TASK-577:** Run automated 5-cycle headless playthrough test on `BB` branch.
-- [ ] **TASK-578:** Run automated 5-cycle headless playthrough test simulating a `"revise"` submission in Cycle 5.
-- [ ] **TASK-579:** Run automated 5-cycle headless playthrough test simulating an 8-second Gemini timeout in Cycle 5 (verifying fallback to authored A/B finale).
+- [x] **TASK-563:** Ensure `simulate()` supports evaluating a single write-in policy's forecast median GDW (used by the Borda tie-breaker in Cycle 5).
+- [x] **TASK-564:** Add fast `getForecastMedian(state, effects, seed)` helper in `server/sim/index.js` for tie-breakers.
+- [x] **TASK-565:** Verify all 14 crises in `data/crises.json` load cleanly into `server/sim/calibrate.js` and produce valid forecasts.
+- [x] **TASK-566:** Check Gemini API rate limits (RPM/TPM) for Flash models to confirm 1 game (~7 calls over 15 minutes) is well within free-tier quotas.
+- [x] **TASK-567:** Add retry-once-on-429/503 logic inside the 8-second timeout budget in `server/loom.js`.
+- [x] **TASK-568:** Ensure `server/loom.js` logs API latency (ms) and token usage for debugging without logging student submission text if privacy mode is set.
+- [x] **TASK-569:** Verify `loom.narrate` fallback works for Cycle 5 Finale when `winningOption` is a 50/25/25 custom package.
+- [x] **TASK-570:** Write closing citizen message selector in `server/sim/index.js` for the End Screen (picking the citizen whose cohort changed the most over the 5-year / 5-cycle game).
+- [x] **TASK-571:** Verify all files in `server/sim/`, `server/loom.js`, and `data/sim.json` pass validation.
+- [x] **TASK-572:** Run full Stream 4 test suite.
+- [x] **TASK-573:** Trigger Wednesday Night Automated Branch Merger (`feature/backend`, `feature/frontend`, `feature/content`, `feature/sim` -> `main`).
+- [x] **TASK-574:** Verify post-merge integration of Cycle 5 Write-and-Rank flow (`FINALE_WRITE` -> `FINALE_MOD` -> `FINALE_DEBATE` -> `FINALE_RANK` -> `FINALE_ENACT`).
+- [x] **TASK-575:** Verify post-merge integration of Worlds `BA` and `BB` across Cycles 3–5.
+- [x] **TASK-576:** Run automated 5-cycle headless playthrough test on `BA` branch.
+- [x] **TASK-577:** Run automated 5-cycle headless playthrough test on `BB` branch.
+- [x] **TASK-578:** Run automated 5-cycle headless playthrough test simulating a `"revise"` submission in Cycle 5.
+- [x] **TASK-579:** Run automated 5-cycle headless playthrough test simulating an 8-second Gemini timeout in Cycle 5 (verifying fallback to authored A/B finale).
 - [ ] **TASK-580:** Execute Wednesday Night 5-Player Live Playtest #1 and record playtest observations.
 - [ ] **TASK-581:** Measure total game duration during Playtest #1 (checking 90s vs 60s debate timing).
 - [ ] **TASK-582:** Measure student reading time during `INCIDENT` (15s) and `INTEL` (20s).
@@ -654,8 +654,8 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-590:** Log all playtest bug reports for Thursday morning resolution.
 - [ ] **TASK-591:** Verify zero unhandled promise rejections occurred during Playtest #1.
 - [ ] **TASK-592:** Verify `data/sim.json` parameters produced believable citizen reactions during Playtest #1.
-- [ ] **TASK-593:** Verify Borda `50/25/25` package calculation matched manual math check.
-- [ ] **TASK-594:** Verify role points and author bonus matched manual math check.
+- [x] **TASK-593:** Verify Borda `50/25/25` package calculation matched manual math check.
+- [x] **TASK-594:** Verify role points and author bonus matched manual math check.
 - [ ] **TASK-595:** Archive Playtest #1 game seed and state log.
 - [ ] **TASK-596:** Verify game replay from Playtest #1 seed reproduces the exact realized GDW line.
 - [ ] **TASK-597:** Confirm Wednesday milestone criteria met.
@@ -669,79 +669,79 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 **Milestone:** End screen, phone reconnect resilience, intro crawl, full 28-option role tag balance pass, playtest fixes, and complete offline fallback verification (full game runs with Wi-Fi / internet unplugged). Ship MVP demo!
 
 ### Agent 1: Network & State (`feature/backend` — 55 Tasks)
-- [ ] **TASK-601:** Implement complete `END` phase data compiler in `server/gameEngine.js` triggered after Cycle 5 `FINALE_ENACT` (or earlier if realized GDW hits `0`).
-- [ ] **TASK-602:** Compute shared class grade in `server/gameEngine.js` based on final realized GDW:
+- [x] **TASK-601:** Implement complete `END` phase data compiler in `server/gameEngine.js` triggered after Cycle 5 `FINALE_ENACT` (or earlier if realized GDW hits `0`).
+- [x] **TASK-602:** Compute shared class grade in `server/gameEngine.js` based on final realized GDW:
   - `GDW === 0`: `"SHUTDOWN"` ("The Loom has shut down")
   - `1 <= GDW <= 34`: `"Fragile"`
   - `35 <= GDW <= 59`: `"Stable"`
   - `GDW >= 60`: `"Thriving"`
-- [ ] **TASK-603:** Compile `gdwHistory` array in `server/gameEngine.js` containing initial GDW (25%) and all 60 monthly realized GDW data points (or up to the shutdown month) plus cycle boundary markers.
-- [ ] **TASK-604:** Compile full `roles` reveal array in `server/gameEngine.js` mapping `NODE-01`..`NODE-05` to player display names, secret role titles, role icons, and per-cycle score breakdowns.
-- [ ] **TASK-605:** Compile `authors` reveal array in `server/gameEngine.js` mapping each Cycle 5 write-in policy (`POLICY-1`..`POLICY-5`) to its author (`NODE-0X` / player name), Borda score, rank placement, and role tags.
-- [ ] **TASK-606:** Implement Winner determination logic in `server/gameEngine.js`:
+- [x] **TASK-603:** Compile `gdwHistory` array in `server/gameEngine.js` containing initial GDW (25%) and all 60 monthly realized GDW data points (or up to the shutdown month) plus cycle boundary markers.
+- [x] **TASK-604:** Compile full `roles` reveal array in `server/gameEngine.js` mapping `NODE-01`..`NODE-05` to player display names, secret role titles, role icons, and per-cycle score breakdowns.
+- [x] **TASK-605:** Compile `authors` reveal array in `server/gameEngine.js` mapping each Cycle 5 write-in policy (`POLICY-1`..`POLICY-5`) to its author (`NODE-0X` / player name), Borda score, rank placement, and role tags.
+- [x] **TASK-606:** Implement Winner determination logic in `server/gameEngine.js`:
   - If final `GDW <= 0`, `winner = null` (`shutdown: true`, everyone loses).
   - If final `GDW > 0`, find maximum total score across `NODE-01`..`NODE-05` and return all tied top-scoring players as shared winners!
-- [ ] **TASK-607:** Include `gameId` / realized run seed in the `game:end` payload so classes can replay and discuss a specific session.
-- [ ] **TASK-608:** Emit `game:end` broadcast event in `server/socket.js` with `{ gdwHistory, finalGdw, grade, worldKey, worldName, closingMessage, roles, authors, scores, winner, shutdown, seed }`.
-- [ ] **TASK-609:** Implement robust mid-game phone reconnection in `server/socket.js` and `server/gameEngine.js`: when a phone reconnects with its saved `nodeId` (or matching player name in an active game), rebind its new `socket.id` to that `NODE-0X` slot.
-- [ ] **TASK-610:** Immediately emit a private `state:sync` / re-hydration sequence (`lobby:update`, `role:assigned`, `phase`, `intel:drop`, and `finale:ballot` if in `FINALE_RANK`) to any reconnecting phone in `server/socket.js`.
-- [ ] **TASK-611:** Implement Host screen reconnection resilience in `server/socket.js`: if the projector browser refreshes mid-game, immediately re-send current `phase`, `worldKey`, `gdwHistory`, and active `resolution` or `game:end` payload.
-- [ ] **TASK-612:** Implement `host:playAgain` socket event in `server/socket.js` allowing the teacher to reset the room for the next class period without restarting the Node process.
-- [ ] **TASK-613:** Add configurable debate timer toggle (`60s` vs `90s`) via URL query parameter or Host Lobby setting (`host:config`) in `server/gameEngine.js` so the teacher can choose between the 13.5-minute and 16-minute game lengths.
-- [ ] **TASK-614:** Add configurable `showForecastBeforeVote` toggle in `host:config` in `server/gameEngine.js`.
-- [ ] **TASK-615:** Add custom `seed` override support in `host:start` payload (`{ seed? }`) in `server/gameEngine.js` so a class can replay an exact historical seed.
-- [ ] **TASK-616:** Audit all phase timers in `server/gameEngine.js` to ensure zero race conditions if a player submits a vote or policy at the exact millisecond a timer expires.
-- [ ] **TASK-617:** Add mutex/lock guard `isTransitioning` in `server/gameEngine.js` around asynchronous `RESOLUTION` and `FINALE_MOD` transitions.
-- [ ] **TASK-618:** Verify that if Wi-Fi internet drops completely mid-game (while local LAN hotspot stays up), `server/gameEngine.js` never crashes on DNS/socket errors from `server/loom.js`.
-- [ ] **TASK-619:** Add global `uncaughtException` and `unhandledRejection` safety nets in `server/server.js` that log errors without crashing an active classroom game.
-- [ ] **TASK-620:** Write unit test in `server/` verifying `game:end` winner calculation for a single winner, a 2-way tie (shared win), and a GDW 0% shutdown (no winner).
-- [ ] **TASK-621:** Write unit test verifying `game:end` grade classification at boundary values (`0`, `1`, `34`, `35`, `59`, `60`, `100`).
-- [ ] **TASK-622:** Write unit test verifying phone disconnect and reconnect during `VOTE`, `FINALE_WRITE`, and `FINALE_RANK` restores full state.
-- [ ] **TASK-623:** Write unit test verifying `host:playAgain` clears all scores, overrides, votes, and resets GDW to `25`.
-- [ ] **TASK-624:** Update `README.md` with final setup instructions, hotspot/travel router tips for classroom Wi-Fi, environment variables, and exact 13.5–16 minute timing breakdown.
-- [ ] **TASK-625:** Verify all backend endpoints and socket events strictly match the MVP specification.
-- [ ] **TASK-626:** Test replaying a game with a fixed seed and identical votes to confirm identical final scores and GDW.
-- [ ] **TASK-627:** Test 5 phones reconnecting simultaneously after a simulated mobile sleep/wake cycle.
-- [ ] **TASK-628:** Verify `server/server.js` startup banner prints the exact local LAN URL (`http://192.168.x.x:3000/mobile`) for the teacher.
-- [ ] **TASK-629:** Confirm zero console warnings or deprecations on Node startup.
-- [ ] **TASK-630:** Run full backend test suite (Tasks 001–630 verification).
-- [ ] **TASK-631:** Verify `NODE-01`..`NODE-05` anonymization holds across all server logs.
-- [ ] **TASK-632:** Check that late `lobby:join` attempts after the game has started (6th phone) receive a polite `"GAME IN PROGRESS"` spectator/full message instead of corrupting the 5 nodes.
-- [ ] **TASK-633:** Add `spectator` read-only socket handling if a 6th student connects in a larger group.
-- [ ] **TASK-634:** Verify `FINALE_MOD` timer pauses countdown while awaiting Gemini (up to 8s max) before starting the 60s `FINALE_DEBATE` timer.
-- [ ] **TASK-635:** Verify `RESOLUTION` phase waits for `loom.narrate` (up to 8s max) before starting the 20s resolution playback timer so animations never get cut short.
-- [ ] **TASK-636:** Test rapid phase skipping in debug mode to confirm timers clean up properly.
-- [ ] **TASK-637:** Verify `authors` reveal in `game:end` includes fallback status if Cycle 5 fell back to binary A/B.
-- [ ] **TASK-638:** Ensure `closingMessage` in `game:end` always has a valid citizen name, district, and text even in offline mode.
-- [ ] **TASK-639:** Check CORS and Socket.io pingInterval/pingTimeout settings (`pingTimeout: 20000`, `pingInterval: 5000`) for mobile classroom Wi-Fi stability.
-- [ ] **TASK-640:** Verify static file caching headers in `server/server.js` allow instant reloads during demo.
-- [ ] **TASK-641:** Audit `server/gameEngine.js` line count and comments.
-- [ ] **TASK-642:** Audit `server/socket.js` line count and comments.
-- [ ] **TASK-643:** Audit `server/server.js` line count and comments.
-- [ ] **TASK-644:** Run automated stress test: 10 sequential full games on the same server instance.
-- [ ] **TASK-645:** Verify memory heap returns to baseline after `host:playAgain`.
-- [ ] **TASK-646:** Verify all 14 socket event names match the spec table character-for-character.
-- [ ] **TASK-647:** Verify payload keys for all 14 socket events match the spec table character-for-character.
-- [ ] **TASK-648:** Double-check Shutdown Ending skips straight from the collapsed cycle's resolution to `game:end`.
-- [ ] **TASK-649:** Double-check Catalyst does not score on the cycle where GDW hits 0%.
-- [ ] **TASK-650:** Double-check Borda points and Author bonus on `game:end`.
-- [ ] **TASK-651:** Verify `.gitignore` excludes `node_modules/` and `.env`.
-- [ ] **TASK-652:** Verify `npm start` launches the server cleanly on port 3000 (or `process.env.PORT`).
-- [ ] **TASK-653:** Perform final backend code freeze review.
-- [ ] **TASK-654:** Confirm all Thursday backend tasks complete.
+- [x] **TASK-607:** Include `gameId` / realized run seed in the `game:end` payload so classes can replay and discuss a specific session.
+- [x] **TASK-608:** Emit `game:end` broadcast event in `server/socket.js` with `{ gdwHistory, finalGdw, grade, worldKey, worldName, closingMessage, roles, authors, scores, winner, shutdown, seed }`.
+- [x] **TASK-609:** Implement robust mid-game phone reconnection in `server/socket.js` and `server/gameEngine.js`: when a phone reconnects with its saved `nodeId` (or matching player name in an active game), rebind its new `socket.id` to that `NODE-0X` slot.
+- [x] **TASK-610:** Immediately emit a private `state:sync` / re-hydration sequence (`lobby:update`, `role:assigned`, `phase`, `intel:drop`, and `finale:ballot` if in `FINALE_RANK`) to any reconnecting phone in `server/socket.js`.
+- [x] **TASK-611:** Implement Host screen reconnection resilience in `server/socket.js`: if the projector browser refreshes mid-game, immediately re-send current `phase`, `worldKey`, `gdwHistory`, and active `resolution` or `game:end` payload.
+- [x] **TASK-612:** Implement `host:playAgain` socket event in `server/socket.js` allowing the teacher to reset the room for the next class period without restarting the Node process.
+- [x] **TASK-613:** Add configurable debate timer toggle (`60s` vs `90s`) via URL query parameter or Host Lobby setting (`host:config`) in `server/gameEngine.js` so the teacher can choose between the 13.5-minute and 16-minute game lengths.
+- [x] **TASK-614:** Add configurable `showForecastBeforeVote` toggle in `host:config` in `server/gameEngine.js`.
+- [x] **TASK-615:** Add custom `seed` override support in `host:start` payload (`{ seed? }`) in `server/gameEngine.js` so a class can replay an exact historical seed.
+- [x] **TASK-616:** Audit all phase timers in `server/gameEngine.js` to ensure zero race conditions if a player submits a vote or policy at the exact millisecond a timer expires.
+- [x] **TASK-617:** Add mutex/lock guard `isTransitioning` in `server/gameEngine.js` around asynchronous `RESOLUTION` and `FINALE_MOD` transitions.
+- [x] **TASK-618:** Verify that if Wi-Fi internet drops completely mid-game (while local LAN hotspot stays up), `server/gameEngine.js` never crashes on DNS/socket errors from `server/loom.js`.
+- [x] **TASK-619:** Add global `uncaughtException` and `unhandledRejection` safety nets in `server/server.js` that log errors without crashing an active classroom game.
+- [x] **TASK-620:** Write unit test in `server/` verifying `game:end` winner calculation for a single winner, a 2-way tie (shared win), and a GDW 0% shutdown (no winner).
+- [x] **TASK-621:** Write unit test verifying `game:end` grade classification at boundary values (`0`, `1`, `34`, `35`, `59`, `60`, `100`).
+- [x] **TASK-622:** Write unit test verifying phone disconnect and reconnect during `VOTE`, `FINALE_WRITE`, and `FINALE_RANK` restores full state.
+- [x] **TASK-623:** Write unit test verifying `host:playAgain` clears all scores, overrides, votes, and resets GDW to `25`.
+- [x] **TASK-624:** Update `README.md` with final setup instructions, hotspot/travel router tips for classroom Wi-Fi, environment variables, and exact 13.5–16 minute timing breakdown.
+- [x] **TASK-625:** Verify all backend endpoints and socket events strictly match the MVP specification.
+- [x] **TASK-626:** Test replaying a game with a fixed seed and identical votes to confirm identical final scores and GDW.
+- [x] **TASK-627:** Test 5 phones reconnecting simultaneously after a simulated mobile sleep/wake cycle.
+- [x] **TASK-628:** Verify `server/server.js` startup banner prints the exact local LAN URL (`http://192.168.x.x:3000/mobile`) for the teacher.
+- [x] **TASK-629:** Confirm zero console warnings or deprecations on Node startup.
+- [x] **TASK-630:** Run full backend test suite (Tasks 001–630 verification).
+- [x] **TASK-631:** Verify `NODE-01`..`NODE-05` anonymization holds across all server logs.
+- [x] **TASK-632:** Check that late `lobby:join` attempts after the game has started (6th phone) receive a polite `"GAME IN PROGRESS"` spectator/full message instead of corrupting the 5 nodes.
+- [x] **TASK-633:** Add `spectator` read-only socket handling if a 6th student connects in a larger group.
+- [x] **TASK-634:** Verify `FINALE_MOD` timer pauses countdown while awaiting Gemini (up to 8s max) before starting the 60s `FINALE_DEBATE` timer.
+- [x] **TASK-635:** Verify `RESOLUTION` phase waits for `loom.narrate` (up to 8s max) before starting the 20s resolution playback timer so animations never get cut short.
+- [x] **TASK-636:** Test rapid phase skipping in debug mode to confirm timers clean up properly.
+- [x] **TASK-637:** Verify `authors` reveal in `game:end` includes fallback status if Cycle 5 fell back to binary A/B.
+- [x] **TASK-638:** Ensure `closingMessage` in `game:end` always has a valid citizen name, district, and text even in offline mode.
+- [x] **TASK-639:** Check CORS and Socket.io pingInterval/pingTimeout settings (`pingTimeout: 20000`, `pingInterval: 5000`) for mobile classroom Wi-Fi stability.
+- [x] **TASK-640:** Verify static file caching headers in `server/server.js` allow instant reloads during demo.
+- [x] **TASK-641:** Audit `server/gameEngine.js` line count and comments.
+- [x] **TASK-642:** Audit `server/socket.js` line count and comments.
+- [x] **TASK-643:** Audit `server/server.js` line count and comments.
+- [x] **TASK-644:** Run automated stress test: 10 sequential full games on the same server instance.
+- [x] **TASK-645:** Verify memory heap returns to baseline after `host:playAgain`.
+- [x] **TASK-646:** Verify all 14 socket event names match the spec table character-for-character.
+- [x] **TASK-647:** Verify payload keys for all 14 socket events match the spec table character-for-character.
+- [x] **TASK-648:** Double-check Shutdown Ending skips straight from the collapsed cycle's resolution to `game:end`.
+- [x] **TASK-649:** Double-check Catalyst does not score on the cycle where GDW hits 0%.
+- [x] **TASK-650:** Double-check Borda points and Author bonus on `game:end`.
+- [x] **TASK-651:** Verify `.gitignore` excludes `node_modules/` and `.env`.
+- [x] **TASK-652:** Verify `npm start` launches the server cleanly on port 3000 (or `process.env.PORT`).
+- [x] **TASK-653:** Perform final backend code freeze review.
+- [x] **TASK-654:** Confirm all Thursday backend tasks complete.
 - [ ] **TASK-655:** Prepare `feature/backend` Thursday branch state for final merge.
 
 ### Agent 2: Host & Mobile UI (`feature/frontend` — 60 Tasks)
-- [ ] **TASK-656:** Build the 30-second animated Intro Crawl in `public/index.html` and `public/js/host.js` (Loom online, all labor automated, survival guaranteed, purpose uncomputable, GDW at 25%, 94% revolt forecast, 5 secret trustees summoned).
-- [ ] **TASK-657:** Style the Intro Crawl in `public/css/styles.css` with cinematic typography, staggered fade-ins, and a live schematic pulse of the 5 districts.
-- [ ] **TASK-658:** Add a "SKIP INTRO" subtle button on the Host Intro screen for repeat classroom sessions.
-- [ ] **TASK-659:** Build the Host End Screen (`#view-end`) in `public/index.html` structured into three dramatic beats over 60 seconds:
+- [x] **TASK-656:** Build the 30-second animated Intro Crawl in `public/index.html` and `public/js/host.js` (Loom online, all labor automated, survival guaranteed, purpose uncomputable, GDW at 25%, 94% revolt forecast, 5 secret trustees summoned).
+- [x] **TASK-657:** Style the Intro Crawl in `public/css/styles.css` with cinematic typography, staggered fade-ins, and a live schematic pulse of the 5 districts.
+- [x] **TASK-658:** Add a "SKIP INTRO" subtle button on the Host Intro screen for repeat classroom sessions.
+- [x] **TASK-659:** Build the Host End Screen (`#view-end`) in `public/index.html` structured into three dramatic beats over 60 seconds:
   1. Five-Year Recap (GDW history chart across all 5 cycles, World Reached badge, Class Grade badge, and Closing Citizen Message)
   2. Secret Roles & Write-in Authors Reveal table (`NODE-01`..`NODE-05`, Player Name, Secret Role, Write-in Policy & Borda Rank, Total Points)
   3. Winner Banner (or crimson `"THE LOOM HAS SHUT DOWN"` total-loss screen if GDW hit 0%)
-- [ ] **TASK-660:** Implement `drawFullHistoryChart(gdwHistory)` in `public/js/charts.js` plotting the 5-year (60-month) realized GDW line across Cycles 1–5 with vertical cycle dividers and threshold bands (`60+ Thriving`, `35-59 Stable`, `1-34 Fragile`, `0 Shutdown`).
-- [ ] **TASK-661:** Animate the End Screen reveal sequence in `public/js/host.js` so the 5-year GDW recap appears first, followed by the Role & Author reveal 15 seconds later, and the Winner announcement 10 seconds after that.
-- [ ] **TASK-662:** Display the game's replay `seed` badge on the Host End Screen and add a "NEW SESSION / PLAY AGAIN" button emitting `host:playAgain`.
+- [x] **TASK-660:** Implement `drawFullHistoryChart(gdwHistory)` in `public/js/charts.js` plotting the 5-year (60-month) realized GDW line across Cycles 1–5 with vertical cycle dividers and threshold bands (`60+ Thriving`, `35-59 Stable`, `1-34 Fragile`, `0 Shutdown`).
+- [x] **TASK-661:** Animate the End Screen reveal sequence in `public/js/host.js` so the 5-year GDW recap appears first, followed by the Role & Author reveal 15 seconds later, and the Winner announcement 10 seconds after that.
+- [x] **TASK-662:** Display the game's replay `seed` badge on the Host End Screen and add a "NEW SESSION / PLAY AGAIN" button emitting `host:playAgain`.
 - [ ] **TASK-663:** Build the Mobile End Screen in `public/mobile.html` showing the player's final score, whether they won (or if The Loom shut down), their full cycle-by-cycle point breakdown, and the final class grade.
 - [ ] **TASK-664:** Add Lobby configuration controls on Host Lobby screen in `public/index.html`: Debate Length toggle (`60s Fast [13.5m]` vs `90s Standard [16m]`), Pre-Vote Forecast toggle, and optional Replay Seed input box.
 - [ ] **TASK-665:** Implement automatic phone reconnection UI in `public/js/mobile.js`: if the socket disconnects briefly, show a non-destructive `"RECONNECTING TO LOOM..."` top banner and seamlessly restore the active phase view upon reconnect.
