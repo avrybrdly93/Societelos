@@ -41,11 +41,11 @@ function loadMap() {
 
 const IDS = ['D1', 'D2', 'D3', 'D4', 'D5'];
 
-test('wellbeingToColor spans critical red -> amber -> thriving teal', () => {
+test('wellbeingToColor spans critical red -> amber -> thriving sage', () => {
   const { map } = loadMap();
   assert.equal(map.wellbeingToColor(0.1), 'rgb(229, 72, 77)');
   assert.equal(map.wellbeingToColor(0.4), 'rgb(240, 164, 48)');
-  assert.equal(map.wellbeingToColor(0.9), 'rgb(43, 196, 160)');
+  assert.equal(map.wellbeingToColor(0.9), 'rgb(181, 204, 120)');
   assert.notEqual(map.wellbeingToColor(0.3), map.wellbeingToColor(0.35), 'interpolates between stops');
 });
 
