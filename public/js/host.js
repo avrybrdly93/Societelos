@@ -1779,6 +1779,53 @@
     gdwMeter.frame = requestAnimationFrame(step);
   }
   setGdw(25);
+
+  // host:playAgain sends the room back to LOBBY: wipe everything Game #1
+  // painted so the projector looks like a fresh lobby and Game #2 opens at
+  // GDW 25% on a baseline map, blank charts and an empty feed (TASK-692,
+  // TASK-694, TASK-695). Hidden views are emptied too, so no stale proposal,
+  // Borda bar or End Screen row can flash up before Game #2 repaints it.
+  const START_GDW = 25;
+  let previousHostPhase = state.phase;
+  function resetForNewGame() {
+    clearEndBeats();
+    stopResolutionAnimations();
+    clearFeedTimers();
+    resetFeed();
+    clearInterval(nudgeTimer);
+    clearTimeout(enactTimer);
+    if (window.SocietelosMap && window.SocietelosMap.reset) window.SocietelosMap.reset();
+    if (window.SocietelosCharts && window.SocietelosCharts.reset) {
+      window.SocietelosCharts.reset(document.getElementById('forecast-chart'), document.getElementById('end-history-chart'));
+    }
+    const pill = document.getElementById('gdw-delta-pill');
+    pill.hidden = true;
+    pill.classList.remove('is-visible', 'is-up', 'is-down');
+    pill.textContent = '';
+    gdwMeter.shown = START_GDW;
+    setGdw(START_GDW);
+    paintGdw(START_GDW);
+    document.body.classList.remove('is-unrest', 'alarm-flash');
+    state.endData = null;
+    state.worldKey = null;
+    applyWorldTheme(null);
+    ['incident-banner', 'debate-panel', 'policy-panel', 'resolution-panel', 'finale-callout', 'finale-fallback-notice'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
+    ['proposal-cards', 'borda-bars', 'enact-cards', 'end-roles-body'].forEach((id) => { document.getElementById(id).textContent = ''; });
+    const endView = document.getElementById('view-end');
+    endView.classList.remove('beat-1', 'beat-2', 'beat-3', 'is-shutdown', 'no-writein');
+    document.getElementById('end-winner').classList.remove('is-shared');
+    document.getElementById('end-roles-body').classList.remove('is-shared');
+    document.getElementById('end-chart-inspection').textContent = 'Hover over or tap a cycle marker to inspect its enacted policy.';
+    const endChart = document.getElementById('end-history-chart');
+    endChart.onpointermove = endChart.onpointerdown = endChart.onkeydown = null;
+  }
+  socket.on('phase', (payload) => {
+    if (payload.phase === 'LOBBY' && previousHostPhase && previousHostPhase !== 'LOBBY') resetForNewGame();
+    previousHostPhase = payload.phase;
+  });
   // GDW follows the realized run month by month during Resolution (see
   // onResolutionMonth); without a trajectory it jumps to the final value.
   socket.on('resolution', (payload) => {
