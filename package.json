@@ -24,6 +24,7 @@
     "smoke": "node -e \"require('./server/gameEngine').smokeTest({ quiet: true }).catch((e) => { console.error(e.message); process.exit(1); })\"",
     "e2e:ui": "node scripts/e2e-ui.js",
     "e2e:finale": "node scripts/e2e-finale.js",
+    "e2e:finale-flow": "node scripts/e2e-finale-flow.js",
     "loom:test": "node -e \"require('dotenv').config({ quiet: true }); require('./server/loom').testConnection().then((r) => { console.log(r); process.exit(r.ok ? 0 : 1); })\""
   },
   "dependencies": {
