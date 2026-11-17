@@ -948,11 +948,10 @@
           "targetGdwDelta": 5
         },
         "B": {
-          "name": "Merit & Contribution Allocation",
+          "name": "Community Contribution Allocation",
           "text": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
           "roles": [
-            "artisan",
-            "ghost"
+            "artisan"
           ],
           "effects": {
             "purpose": 0.8,
