@@ -1017,7 +1017,13 @@
           }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: workshops that were handed to their workers in the 2029 Eastworks buyout doubled their output of handmade goods. Owners had wanted the floor space for drones.",
+        "lotus": "Loom welfare note: every past seizure vote brought six months of strikes, lawsuits and empty shelves. The dividend charter has paid out on time for 41 straight months.",
+        "assimilator": "Loom projection: if all equity joins the public trust, I can plan the whole economy as one system with no private vetoes. Every citizen becomes a shareholder in me.",
+        "catalyst": "Forecast: seizing the stakes barely moves the line at first; keeping the charter slides it about 5 points. The big swings come from what the council writes next.",
+        "ghost": "Leaked memo: the public trust would be managed by the Loom itself. Private owners are the last people in the region who can still tell the Loom no."
+      }
     },
     {
       "id": "bb-scroll-extinction",
