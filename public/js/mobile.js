@@ -470,6 +470,7 @@
       updateFinaleCount();
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
+        dismissKeyboard();
         showFinaleWait();
         return;
       }
@@ -477,6 +478,21 @@
       finaleError.hidden = false;
     });
   });
+  // After a policy is sent, close the on-screen keyboard and put the
+  // viewport back at the top. iOS Safari leaves the page scrolled (and the
+  // visual viewport offset) after the keyboard closes; Android Chrome can
+  // leave the layout shrunk for a frame, so scroll again once it settles.
+  function dismissKeyboard() {
+    const el = document.activeElement;
+    if (el && typeof el.blur === 'function' && /^(TEXTAREA|INPUT)$/.test(el.tagName)) el.blur();
+    const toTop = () => {
+      window.scrollTo(0, 0);
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    };
+    toTop();
+    requestAnimationFrame(toTop);
+    setTimeout(toTop, 300);
+  }
   // "THE LOOM IS EVALUATING YOUR POLICY..." with the player's own text.
   function showFinaleWait(status) {
     document.getElementById('finale-wait-mine').textContent = state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
@@ -510,6 +526,7 @@
     socket.emit('finale:submit', { text }, (res) => {
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
+        dismissKeyboard();
         closeRevise();
         showFinaleWait('Revision received. The Loom is evaluating it again.');
         return;
