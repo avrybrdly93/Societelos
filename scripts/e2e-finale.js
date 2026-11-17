@@ -26,6 +26,10 @@ const { server } = require(path.join(__dirname, '..', 'server', 'server.js'));
 const WRITEIN = { id: 'mock-finale', title: 'The Vote to Seize', mode: 'writein', incident: 'A ballot measure would confiscate the owners’ stakes.' };
 const LONG = (s) => (s + ' '.repeat(140)).slice(0, 140).trimEnd().padEnd(140, '.');
 
+// Player-written text that would run script if it were ever parsed as HTML.
+const XSS = '<img src=x onerror="window.__xss=1"><script>window.__xss=1</script>';
+const pwned = (page) => page.evaluate(() => !!window.__xss || document.querySelectorAll('#m-main img, #host-main img:not(#qr-image), .proposal-card img, .enact-card img, .rank-card img, script:not([src])').length > 0);
+
 const failures = [];
 function check(label, ok, detail = '') {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${label}${!ok && detail ? ` (${detail})` : ''}`);
@@ -97,6 +101,16 @@ async function phoneChecks(browser, shot) {
   check('phone lock enabled with ranks 1-4', await page.evaluate(() => !document.getElementById('rank-submit').disabled));
   check('phone ballot shows Borda badges', /\+4 PTS/.test(await page.evaluate(() => [...document.querySelectorAll('.rank-card')].map((c) => c.dataset.points).join(' '))));
   await shot(page, 'phone-3-ballot');
+
+  // XSS: policies, private feedback and the player's own text render as text.
+  await page.evaluate((x) => {
+    debugMobileEvent('finale:ballot', { policies: [1, 2, 3, 4].map((n) => ({ id: `POLICY-${n}`, text: x })) });
+    debugMobilePhase('FINALE_MOD', { seconds: 25, cycle: 5 });
+    debugMobileEvent('finale:feedback', { status: 'revise', feedback: x });
+    debugMobileEvent('finale:feedback', { status: 'reject', feedback: x });
+  }, XSS);
+  await page.waitForTimeout(200);
+  check('phone renders hostile policy text as text (ballot, feedback)', !(await pwned(page)) && (await text('#finale-wait-status')) === XSS);
 
   // Fallback: Gemini failed during moderation -> authored A/B debate and vote.
   await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'DEBATE', crisis, endsAt: Date.now() + 60000, options: { A: { key: 'A', name: 'Pass it' }, B: { key: 'B', name: 'Reject it' } } }), WRITEIN);
@@ -190,6 +204,24 @@ async function hostChecks(browser, shot) {
   check('host enactment hands over to the chart, map and feed', (await activeView()) === 'view-chamber' && await visible('#resolution-panel'));
   check('host resolution panel lists the enacted package', (await page.locator('#resolution-enacted li').count()) === 3);
   await shot(page, 'host-4-resolution');
+
+  // XSS: hostile policy text on the proposal cards, enactment and resolution.
+  const hostile = [1, 2, 3, 4, 5].map((n) => ({ id: `POLICY-${n}`, text: XSS }));
+  await phase('FINALE_DEBATE', { seconds: 60, policies: hostile });
+  await page.evaluate((x) => {
+    debugTriggerPhase('FINALE_ENACT', { cycle: 5, isFinale: true, seconds: 40 });
+    debugTriggerEvent('resolution', { result: { finale: true, policy: x, tally: [], enacted: [{ id: 'POLICY-1', text: x, place: 'first', weight: 0.5, points: 9, roleTags: [x] }] }, gdw: 30, messages: [{ name: x, district: 'D1', text: x }] });
+    debugTriggerEvent('lobby:update', { players: [{ node: 'NODE-01', name: x, connected: true }] });
+  }, XSS);
+  await page.waitForTimeout(400);
+  check('host renders hostile policy text as text (proposals, enactment, names)', !(await pwned(page)) && (await text('#proposal-cards')).includes(XSS));
+
+  // The intro narrator re-tokenizes its authored crawl each time (cloned nodes).
+  const words = () => page.evaluate(() => document.querySelectorAll('#intro-crawl .crawl-word').length);
+  await page.evaluate(() => { debugTriggerPhase('INTRO', { cycle: 0, seconds: 30 }); });
+  const first = await words();
+  await page.evaluate(() => { debugTriggerPhase('INTRO', { cycle: 0, seconds: 30 }); });
+  check('host intro crawl re-tokenizes cleanly on replay', first > 20 && (await words()) === first, `${first} vs ${await words()}`);
 
   // Fallback: Gemini failed -> binary DEBATE with the authored options.
   await phase('DEBATE', { seconds: 60, options: { A: { key: 'A', name: 'Pass it', text: 'Seize the stakes.' }, B: { key: 'B', name: 'Reject it', text: 'Property rights stand.' } } });

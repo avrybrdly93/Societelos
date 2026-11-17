@@ -302,11 +302,14 @@
       }
     }
 
+    // The crawl's authored nodes, kept as clones so each narration restarts
+    // from the original markup (no innerHTML anywhere in public/js).
+    const originalNodes = new WeakMap();
     function tokenizeParagraph(pElement) {
-      if (!pElement.dataset.originalHtml) {
-        pElement.dataset.originalHtml = pElement.innerHTML;
+      if (!originalNodes.has(pElement)) {
+        originalNodes.set(pElement, Array.from(pElement.childNodes).map((n) => n.cloneNode(true)));
       } else {
-        pElement.innerHTML = pElement.dataset.originalHtml;
+        pElement.replaceChildren(...originalNodes.get(pElement).map((n) => n.cloneNode(true)));
       }
 
       const wordSpans = [];
