@@ -28,8 +28,31 @@
 
   const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
 
-  socket.on('connect', () => console.debug('[mobile] connected'));
-  socket.on('disconnect', (reason) => console.warn('[mobile] disconnected:', reason));
+  // Brief drops (Wi-Fi blip, screen lock): show a top banner instead of
+  // tearing down the screen. Socket.IO reconnects on its own; the server
+  // then replays this seat's state (state:sync, role, phase, intel, ballot)
+  // and the normal handlers repaint the active view.
+  const reconnectBanner = document.getElementById('m-reconnect');
+  let reconnectTimer = null;
+  function setReconnecting(on) {
+    clearTimeout(reconnectTimer);
+    if (!on) {
+      reconnectBanner.hidden = true;
+      document.body.classList.remove('is-reconnecting');
+      return;
+    }
+    // A short grace period so a sub-second blip never flashes the banner.
+    reconnectTimer = setTimeout(() => {
+      reconnectBanner.hidden = false;
+      document.body.classList.add('is-reconnecting');
+    }, 700);
+  }
+  socket.on('connect', () => { console.debug('[mobile] connected'); setReconnecting(false); });
+  socket.on('disconnect', (reason) => {
+    console.warn('[mobile] disconnected:', reason);
+    if (reason !== 'io client disconnect') setReconnecting(true);
+  });
+  socket.io.on('reconnect_attempt', () => { if (!socket.connected) setReconnecting(true); });
 
   // A stale token (server restarted, new game) means starting from the join form.
   socket.on('session:invalid', () => {
@@ -165,7 +188,8 @@
     WORLD_REVEAL: 'm-view-world',
     FINALE_WRITE: 'm-view-finale-write',
     FINALE_MOD: 'm-view-finale-wait',
-    FINALE_RANK: 'm-view-finale-rank'
+    FINALE_RANK: 'm-view-finale-rank',
+    END: 'm-view-end'
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
@@ -249,6 +273,20 @@
 
   socket.on('phase', onPhase);
 
+  // Cycle 5 fallback: if Gemini fails during moderation the server sends the
+  // write-in crisis through DEBATE with authored A/B options. The phone has
+  // already switched to the debate screen (PHASE_SCREENS); explain why.
+  // The server reports the crisis as "binary" once it falls back, so a cycle
+  // that went through FINALE_WRITE / FINALE_MOD and then reaches DEBATE is it.
+  let writeinCycle = null;
+  socket.on('phase', (payload) => {
+    if (!payload) return;
+    if (['LOBBY', 'INCIDENT'].includes(payload.phase)) writeinCycle = null;
+    if (['FINALE_WRITE', 'FINALE_MOD'].includes(payload.phase)) writeinCycle = payload.cycle;
+    const fallback = writeinCycle !== null && payload.cycle === writeinCycle && ['DEBATE', 'VOTE'].includes(payload.phase);
+    document.getElementById('m-finale-fallback').hidden = !(fallback && payload.phase === 'DEBATE');
+  });
+
   // Subtle haptics (Android Chrome; silently ignored where unsupported, e.g. iOS).
   function buzz(pattern = 50) {
     try {
@@ -281,6 +319,21 @@
   const debateClock = document.getElementById('debate-clock');
   let phaseDurationMs = 0;
   let durationFor = null;
+  // Finale timer bars (write screen, resubmit modal): a thick bar and the
+  // seconds left, from the same endsAt as the header countdown. Amber under
+  // 15 s, crimson under 5 s.
+  const finaleTimers = Array.from(document.querySelectorAll('.finale-timer'));
+  function renderFinaleTimers(fraction, secs, remaining) {
+    const on = !!state.endsAt;
+    finaleTimers.forEach((el) => {
+      el.querySelector('.finale-timer-fill').style.transform = `scaleX(${on ? fraction.toFixed(4) : 0})`;
+      const secsEl = el.querySelector('.finale-timer-secs');
+      const secsText = on ? String(secs) : '--';
+      if (secsEl.textContent !== secsText) secsEl.textContent = secsText;
+      el.classList.toggle('is-warn', on && remaining > 0 && remaining < 15000);
+      el.classList.toggle('is-low', on && remaining > 0 && remaining < 5000);
+    });
+  }
   function tick() {
     const remaining = state.endsAt ? Math.max(0, state.endsAt - Date.now()) : 0;
     if (durationFor !== state.endsAt) {
@@ -291,11 +344,15 @@
     const fraction = phaseDurationMs > 0 ? remaining / phaseDurationMs : 0;
     countdownFill.style.transform = `scaleX(${fraction.toFixed(4)})`;
     const secs = Math.ceil(remaining / 1000);
-    debateClock.textContent = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    // Text is written only when it changes (a same-value write still forces
+    // a layout every frame on the phone).
+    const clockText = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    if (debateClock.textContent !== clockText) debateClock.textContent = clockText;
     state.remainingMs = remaining;
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
     countdownFill.classList.toggle('is-low', low);
     debateClock.classList.toggle('is-low', low);
+    renderFinaleTimers(fraction, secs, remaining);
 
     const mSessionTimer = document.getElementById('m-session-timer');
     if (mSessionTimer) {
@@ -303,7 +360,8 @@
         mSessionTimer.hidden = false;
         const sRem = Math.max(0, state.sessionEndsAt - Date.now());
         const sSecs = Math.ceil(sRem / 1000);
-        mSessionTimer.textContent = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
+        const sessionText = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
+        if (mSessionTimer.textContent !== sessionText) mSessionTimer.textContent = sessionText;
         mSessionTimer.classList.toggle('is-low', sRem > 0 && sRem < 30000);
       } else {
         mSessionTimer.hidden = true;
@@ -399,6 +457,59 @@
   });
 
   // ---------------------------------------------------------------------------
+  // End Screen (game:end): this phone's final score, whether it won (or the
+  // Loom shut down), its cycle-by-cycle points and the class grade. Only this
+  // node's row is shown; the projector reveals everyone.
+  // ---------------------------------------------------------------------------
+  const GRADE_LABELS = { SHUTDOWN: 'SHUTDOWN', Fragile: 'FRAGILE', Stable: 'STABLE', Thriving: 'THRIVING' };
+
+  function renderEnd(data) {
+    if (!data) return;
+    state.endData = data;
+    const me = (data.roles || []).find((r) => r.node === state.node) || null;
+    const winners = data.winner || [];
+    const won = !data.shutdown && winners.includes(state.node);
+    const card = document.getElementById('end-card');
+    card.classList.toggle('is-won', won);
+    card.classList.toggle('is-lost', !!data.shutdown);
+    card.classList.toggle('is-shared', won && winners.length > 1);
+    document.getElementById('end-node').textContent = state.node || 'NODE';
+    const outcome = document.getElementById('end-outcome');
+    const headline = document.getElementById('end-headline');
+    if (data.shutdown) {
+      outcome.textContent = 'THE LOOM HAS SHUT DOWN';
+      headline.textContent = 'Everyone lost.';
+    } else if (won) {
+      outcome.textContent = winners.length > 1 ? 'SHARED VICTORY' : 'YOU WON';
+      headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
+    } else {
+      outcome.textContent = 'NOT THIS TIME';
+      headline.textContent = 'Another agenda shaped the future.';
+    }
+    document.getElementById('end-role').textContent = me && me.role ? `You were ${me.role.name || me.role.key}.` : '';
+    document.getElementById('end-score').textContent = me ? String(me.total) : '—';
+    const list = document.getElementById('end-breakdown');
+    list.textContent = '';
+    for (const c of (me && me.perCycle) || []) {
+      const li = document.createElement('li');
+      const parts = [];
+      if (c.role) parts.push(`+${c.role} role`);
+      if (c.catalyst) parts.push(`+${c.catalyst} catalyst`);
+      if (c.author) parts.push(`+${c.author} author`);
+      const gained = (c.role || 0) + (c.catalyst || 0) + (c.author || 0);
+      li.className = gained ? 'is-scored' : '';
+      li.textContent = `CYCLE ${c.cycle}: ${parts.length ? parts.join(', ') : '0'}`;
+      list.appendChild(li);
+    }
+    const grade = document.getElementById('end-grade');
+    grade.textContent = GRADE_LABELS[data.grade] || data.grade || '—';
+    grade.dataset.grade = data.grade || '';
+    document.getElementById('end-gdw').textContent = typeof data.finalGdw === 'number' ? `GDW ${data.finalGdw.toFixed(1)}%` : '';
+    document.getElementById('end-world').textContent = data.worldName ? `World reached: ${data.worldName}.` : '';
+  }
+  socket.on('game:end', renderEnd);
+
+  // ---------------------------------------------------------------------------
   // World reveal card: the world the first two votes built and what changes.
   // ---------------------------------------------------------------------------
   const WORLD_IMPACT = {
@@ -461,6 +572,7 @@
       updateFinaleCount();
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
+        dismissKeyboard();
         showFinaleWait();
         return;
       }
@@ -468,9 +580,25 @@
       finaleError.hidden = false;
     });
   });
+  // After a policy is sent, close the on-screen keyboard and put the
+  // viewport back at the top. iOS Safari leaves the page scrolled (and the
+  // visual viewport offset) after the keyboard closes; Android Chrome can
+  // leave the layout shrunk for a frame, so scroll again once it settles.
+  function dismissKeyboard() {
+    const el = document.activeElement;
+    if (el && typeof el.blur === 'function' && /^(TEXTAREA|INPUT)$/.test(el.tagName)) el.blur();
+    const toTop = () => {
+      window.scrollTo(0, 0);
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    };
+    toTop();
+    requestAnimationFrame(toTop);
+    setTimeout(toTop, 300);
+  }
   // "THE LOOM IS EVALUATING YOUR POLICY..." with the player's own text.
   function showFinaleWait(status) {
-    document.getElementById('finale-wait-mine').textContent = state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
+    // (After a refresh the phone knows only that it submitted, not the text.)
+    document.getElementById('finale-wait-mine').textContent = typeof state.finaleSubmitted === 'string' && state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
     document.getElementById('finale-wait-status').textContent = status || (state.phase === 'FINALE_MOD'
       ? 'Cleaning language. Translating intent into numbers.'
       : 'Submitted. Waiting for the other council members.');
@@ -501,6 +629,7 @@
     socket.emit('finale:submit', { text }, (res) => {
       if (res && res.ok) {
         state.finaleSubmitted = res.text || text;
+        dismissKeyboard();
         closeRevise();
         showFinaleWait('Revision received. The Loom is evaluating it again.');
         return;
@@ -576,10 +705,16 @@
       text.textContent = p.text;
       li.append(head, text);
       // Tap-to-rank: tapping an unranked card gives it the next free place
-      // (1st, 2nd, ...); tapping a ranked card clears it and every place after.
+      // (1st, 2nd, ...); tapping a ranked card unranks just that card and the
+      // places after it shift up (3rd -> 2nd, 4th -> 3rd).
       li.setAttribute('role', 'button');
       li.tabIndex = 0;
       li.addEventListener('click', () => toggleRank(p.id));
+      li.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        toggleRank(p.id);
+      });
       list.appendChild(li);
     });
     renderRanks();
@@ -589,9 +724,16 @@
   function toggleRank(id) {
     if (ballot.locked) return;
     const at = ballot.order.indexOf(id);
-    if (at >= 0) ballot.order = ballot.order.slice(0, at);
+    if (at >= 0) ballot.order.splice(at, 1);
     else if (ballot.order.length < ballot.policies.length) ballot.order.push(id);
     renderRanks();
+  }
+  // A ballot can be locked only when every one of the (4) proposals has a
+  // distinct place 1-4: exactly the ids on this ballot, each once.
+  function ballotComplete() {
+    const ids = ballot.policies.map((p) => p.id);
+    return ids.length > 0 && ballot.order.length === ids.length
+      && new Set(ballot.order).size === ids.length && ballot.order.every((id) => ids.includes(id));
   }
   function renderRanks() {
     document.querySelectorAll('.rank-card').forEach((card) => {
@@ -603,7 +745,7 @@
       card.setAttribute('aria-label', `${proposalName(card.dataset.policy)}${place >= 0 ? `, ranked ${PLACE_NAMES[place]}` : ', not ranked yet'}`);
     });
     const left = ballot.policies.length - ballot.order.length;
-    document.getElementById('rank-submit').disabled = !!ballot.locked || left !== 0 || !ballot.policies.length;
+    document.getElementById('rank-submit').disabled = !!ballot.locked || !ballotComplete();
     document.getElementById('rank-help').textContent = left
       ? `Tap the proposals in order of preference: ${PLACE_NAMES[ballot.order.length]} next. Tap a ranked one to undo.`
       : 'All four ranked. Tap one to change it, or lock in.';
@@ -611,7 +753,7 @@
   // LOCK IN RANKINGS -> finale:rank { order: [id1, id2, id3, id4] }.
   const rankSubmit = document.getElementById('rank-submit');
   rankSubmit.addEventListener('click', () => {
-    if (ballot.locked || ballot.order.length !== ballot.policies.length) return;
+    if (ballot.locked || !ballotComplete()) return;
     ballot.locked = true;
     rankSubmit.disabled = true;
     document.getElementById('rank-error').hidden = true;
@@ -619,7 +761,16 @@
       if (res && res.ok) {
         document.getElementById('rank-cards').hidden = true;
         rankSubmit.hidden = true;
+        // Confirmation: the ballot as cast (place, proposal, Borda points).
+        const summary = document.getElementById('rank-locked-order');
+        summary.textContent = '';
+        ballot.order.forEach((id, i) => {
+          const li = document.createElement('li');
+          li.textContent = `${PLACE_NAMES[i]}  ${proposalName(id)}  +${BORDA_POINTS[i]}`;
+          summary.appendChild(li);
+        });
         document.getElementById('rank-locked').hidden = false;
+        document.getElementById('m-view-finale-rank').classList.add('is-locked');
         buzz(50);
         return;
       }
@@ -636,6 +787,7 @@
     ballot.locked = false;
     rankSubmit.hidden = false;
     document.getElementById('rank-locked').hidden = true;
+    document.getElementById('m-view-finale-rank').classList.remove('is-locked');
     document.getElementById('rank-cards').hidden = false;
     renderBallot();
   });
@@ -784,8 +936,43 @@
     { id: 'POLICY-1', text: 'Every district elects a repair council that controls its own grid.' },
     { id: 'POLICY-3', text: 'Publish every staged challenge and let citizens vote on future ones.' },
     { id: 'POLICY-4', text: 'Keep the challenges but let anyone opt out of them.' },
-    { id: 'POLICY-5', text: 'Continue current policy unchanged while the council reviews its options.' }
+    { id: 'POLICY-5', text: 'Maintain current regional administrative protocols without structural changes.' }
   ] });
+
+  // ---------------------------------------------------------------------------
+  // Refresh / reconnect re-hydration. On resume the server replays this
+  // seat's state in order: state:sync { phase, cycle, voted, submitted,
+  // ranked }, role:assigned, phase, intel:drop, override:status, ballot...
+  // The normal handlers repaint role, intel, timer and ballot; this restores
+  // what only the server remembers: a vote, write-in or ranking already in.
+  // (Registered last so it runs after every other 'phase' handler.)
+  // ---------------------------------------------------------------------------
+  socket.on('state:sync', (sync) => { state.sync = sync || null; });
+  const syncApplies = (phase) => state.sync && state.sync.phase === phase && state.sync.cycle === state.cycle;
+  socket.on('phase', (payload) => {
+    if (!payload || !state.sync) return;
+    if (state.sync.phase !== payload.phase || state.sync.cycle !== (payload.cycle || 0)) { state.sync = null; return; }
+    if (payload.phase === 'VOTE' && state.sync.voted) {
+      state.voteLockedCycle = state.cycle;
+      setVoteButtonsDisabled(true);
+      setVoteLocked(true);
+      document.getElementById('vote-lock-choice').textContent = 'Your vote was recorded before you reconnected.';
+    }
+    if (payload.phase === 'FINALE_WRITE' && state.sync.submitted) {
+      state.finaleSubmitted = state.finaleSubmitted || true;
+      state.finaleCycle = payload.cycle;
+      showFinaleWait('Your policy was received before you reconnected.');
+    }
+  });
+  socket.on('finale:ballot', () => {
+    if (!syncApplies('FINALE_RANK') || !state.sync.ranked) return;
+    ballot.locked = true;
+    document.getElementById('rank-cards').hidden = true;
+    rankSubmit.hidden = true;
+    document.getElementById('rank-locked-order').textContent = '';
+    document.getElementById('rank-locked').hidden = false;
+    document.getElementById('m-view-finale-rank').classList.add('is-locked');
+  });
 
   window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();

@@ -186,6 +186,26 @@ body.host .label {
 }
 .node-card.is-disconnected { border-style: solid; border-color: var(--alert-crimson-dim); color: var(--danger); }
 
+/* Lobby session settings (host:config + replay seed). */
+.lobby-config { margin: 8px 0 0; padding: 12px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-sunken); display: grid; gap: 10px; max-width: 640px; }
+.lobby-config legend { padding: 0 6px; }
+.config-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 18px; color: var(--text-muted); }
+.config-name { min-width: 130px; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
+.config-seg { position: relative; cursor: pointer; }
+.config-seg input { position: absolute; opacity: 0; pointer-events: none; }
+.config-seg span { display: inline-block; padding: 6px 14px; border: 1px solid var(--slate-600); border-radius: var(--radius); font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); }
+.config-seg input:checked + span { border-color: var(--accent); color: var(--slate-950); background: var(--accent); font-weight: 700; }
+.config-seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.config-check { cursor: pointer; font-size: 16px; }
+.config-seed { flex: 1; min-width: 200px; font-size: 18px; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--slate-600); background: var(--bg); color: var(--text); }
+.config-seed:focus { outline: none; border-color: var(--accent); }
+.config-seed:invalid { border-color: var(--danger); }
+.lobby-config .config-status { margin: 0; font-size: 15px; line-height: 1.3; min-height: 1.3em; }
+/* Make room for the settings under the QR code. */
+.lobby-join .qr-container { width: 300px; height: 300px; margin: 16px 0; }
+.lobby-join .qr-container img { width: 270px; height: 270px; }
+.lobby-join .join-url, .lobby-join .join-room { margin: 8px 0; }
+
 .dev-controls {
   margin: 8px 0;
   padding: 12px 18px;
@@ -287,12 +307,84 @@ body.host .label {
   color: var(--danger);
   text-shadow: 0 0 18px var(--alert-crimson), 0 0 32px rgba(229, 72, 77, 0.45);
 }
+/* Cinematic typography: wide-tracked transmission label, soft glow on text. */
+.crawl p { letter-spacing: 0.01em; text-shadow: 0 0 28px rgba(63, 216, 230, 0.08); }
+.crawl p.label { letter-spacing: 0.32em; text-transform: uppercase; }
+/* Staggered fade-in: each line rises into place in turn as the view opens. */
+.view.is-active .crawl p { animation: crawl-line-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.view.is-active .crawl p:nth-child(2) { animation-delay: 0.15s; }
+.view.is-active .crawl p:nth-child(3) { animation-delay: 0.3s; }
+.view.is-active .crawl p:nth-child(4) { animation-delay: 0.45s; }
+.view.is-active .crawl p:nth-child(5) { animation-delay: 0.6s; }
+.view.is-active .crawl p:nth-child(6) { animation-delay: 0.75s; }
+.view.is-active .crawl p:nth-child(7) { animation-delay: 0.9s; }
+.view.is-active .crawl p:nth-child(8) { animation-delay: 1.05s; }
+@keyframes crawl-line-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Live schematic pulse of the 5 districts under the transmission. */
+#view-intro { position: relative; }
+.intro-schematic {
+  position: absolute;
+  left: 40px;
+  bottom: 24px;
+  width: 440px;
+  height: auto;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.schematic-links line {
+  stroke: var(--loom-cyan-dim);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  animation: schematic-flow 2.4s linear infinite;
+}
+.schematic-node circle {
+  fill: var(--node-color);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: schematic-pulse 2s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+.schematic-node text {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  text-anchor: middle;
+}
+@keyframes schematic-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.75; filter: drop-shadow(0 0 0 transparent); }
+  50% { transform: scale(1.35); opacity: 1; filter: drop-shadow(0 0 8px var(--node-color)); }
+}
+@keyframes schematic-flow { to { stroke-dashoffset: -20; } }
+@media (prefers-reduced-motion: reduce) {
+  .view.is-active .crawl p, .schematic-node circle, .schematic-links line { animation: none; }
+}
+
 .intro-controls {
   position: absolute;
   bottom: 24px;
   right: 40px;
   z-index: 10;
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
+/* Subtle on purpose: visible to the teacher, not a call to action. */
+.btn-skip-intro {
+  background: transparent;
+  border: 1px solid var(--slate-700);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  padding: 10px 18px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.btn-skip-intro:hover, .btn-skip-intro:focus-visible { opacity: 1; color: var(--text); border-color: var(--accent); }
+.btn-skip-intro:disabled { opacity: 0.3; cursor: default; }
 .btn-voice-toggle {
   background: rgba(13, 17, 23, 0.85);
   border: 1px solid var(--slate-700);
@@ -320,6 +412,7 @@ body.host .label {
 /* Role assignment: encryption locks per node; role names are never shown here. */
 .lock-cards { list-style: none; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; }
 .lock-card {
+  position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 16px;
   padding: 36px 16px;
   border: 2px solid var(--border);
@@ -337,15 +430,17 @@ body.host .label {
   width: 40px; height: 36px; transform: translateX(-50%);
   border: 6px solid var(--accent); border-bottom: none; border-radius: 22px 22px 0 0;
 }
-.view.is-active .lock-card { animation: lock-scan 1.6s ease-in-out infinite; }
-.view.is-active .lock-card:nth-child(2) { animation-delay: 0.2s; }
-.view.is-active .lock-card:nth-child(3) { animation-delay: 0.4s; }
-.view.is-active .lock-card:nth-child(4) { animation-delay: 0.6s; }
-.view.is-active .lock-card:nth-child(5) { animation-delay: 0.8s; }
-@keyframes lock-scan {
-  0%, 100% { box-shadow: 0 0 0 transparent; border-color: var(--border); }
-  50% { box-shadow: 0 0 28px var(--loom-glow); border-color: var(--accent); }
+/* Scan pulse: a pre-drawn glow ring whose opacity pulses (compositor-only). */
+.lock-card::after {
+  content: ""; position: absolute; inset: -2px; border-radius: inherit; pointer-events: none;
+  border: 2px solid var(--accent); box-shadow: 0 0 28px var(--loom-glow); opacity: 0;
 }
+.view.is-active .lock-card::after { animation: lock-scan 1.6s ease-in-out infinite; }
+.view.is-active .lock-card:nth-child(2)::after { animation-delay: 0.2s; }
+.view.is-active .lock-card:nth-child(3)::after { animation-delay: 0.4s; }
+.view.is-active .lock-card:nth-child(4)::after { animation-delay: 0.6s; }
+.view.is-active .lock-card:nth-child(5)::after { animation-delay: 0.8s; }
+@keyframes lock-scan { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
 /* Council chamber: map | crisis + policies | feed + forecast */
 .chamber-grid {
@@ -385,7 +480,9 @@ body.host .label {
 .map-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6; opacity: 0.45; }
 
 /* Phone controller base */
-body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; }
+body.mobile { font-size: 18px; min-height: 100vh; min-height: 100dvh; overscroll-behavior-y: contain; }
+/* No accidental pull-to-refresh on the phone controller (would drop the socket mid-vote). */
+html:has(body.mobile) { overscroll-behavior-y: contain; }
 .m-main { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
 .m-kicker { font-size: 13px; color: var(--accent); letter-spacing: 0.14em; margin: 8px 0 4px; }
 .m-title { font-size: 32px; margin: 0 0 8px; }
@@ -719,7 +816,7 @@ body.host .world-tagline { font-size: 44px; margin: 0 0 40px; }
 body.host .world-problem { font-size: 32px; color: var(--text-muted); }
 .world-problem .mono { color: var(--danger); font-weight: 700; }
 .view-world.is-active .world-name { animation: world-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-@keyframes world-in { from { opacity: 0; letter-spacing: 0.3em; filter: blur(8px); } to { opacity: 1; letter-spacing: normal; filter: none; } }
+@keyframes world-in { from { opacity: 0; transform: scale(1.12); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
 
 /* Region map world recolour (map.js setWorld): border, links and HUD accents. */
 .region-map { --map-accent: var(--accent); border-radius: var(--radius); outline: 3px solid transparent; transition: outline-color 0.8s; }
@@ -858,13 +955,17 @@ body.host::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 50;
   border: 0 solid var(--danger); opacity: 0;
 }
-body.host.is-unrest::after { border-width: 10px; opacity: 1; animation: alarm-border 1.2s ease-in-out infinite; }
+body.host.is-unrest::after {
+  border-width: 10px; opacity: 1; box-shadow: inset 0 0 80px rgba(229, 72, 77, 0.55);
+  animation: alarm-border 1.2s ease-in-out infinite; will-change: opacity;
+}
 body.host.alarm-flash::before {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 49;
   background: rgba(229, 72, 77, 0.35);
   animation: alarm-flash 0.9s ease-out 2 forwards;
 }
-@keyframes alarm-border { 0%, 100% { box-shadow: inset 0 0 0 transparent; opacity: 1; } 50% { box-shadow: inset 0 0 80px rgba(229, 72, 77, 0.55); opacity: 0.55; } }
+/* Opacity only, so the full-stage frame pulses on the compositor. */
+@keyframes alarm-border { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 @keyframes alarm-flash { from { opacity: 1; } to { opacity: 0; } }
 
 /* Mobile world reveal card (themed by body[data-world]). */
@@ -1171,3 +1272,339 @@ body.host .enact-wait { font-size: 32px; text-align: center; color: var(--theme-
   color: var(--danger, #ff4d4f);
   border-color: var(--danger, #ff4d4f);
 }
+
+/* Cycle 5 fallback (Gemini failed during moderation): authored A/B debate. */
+.finale-fallback-notice, .m-finale-fallback {
+  color: var(--amber); border: 1px solid rgba(240, 164, 48, 0.5); border-radius: var(--radius);
+  background: rgba(240, 164, 48, 0.08); letter-spacing: 0.08em; margin: 0 0 12px;
+}
+body.host .finale-fallback-notice { font-size: 16px; padding: 8px 12px; }
+.m-finale-fallback { font-size: 12px; padding: 8px 10px; text-align: center; }
+
+/* Floating month indicator over the region map during month-by-month playback. */
+.map-container { position: relative; }
+.map-month {
+  position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 18px; letter-spacing: 0.12em;
+  color: var(--map-accent, var(--loom-cyan, #3fd8e6)); background: rgba(8, 11, 16, 0.82);
+  border: 1px solid currentColor; border-radius: var(--radius); pointer-events: none;
+}
+.map-month[hidden] { display: none; }
+.map-month.is-tick #map-month-num { display: inline-block; animation: map-month-tick 0.35s ease-out; }
+.map-month.is-final { color: var(--slate-50, #eef2f6); }
+@keyframes map-month-tick { from { transform: translateY(-4px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .map-month.is-tick #map-month-num { animation: none; } }
+
+/* District pulse ring: a large one-month wellbeing shift (map.js PULSE_THRESHOLD). */
+.district-pulse {
+  fill: none; stroke-width: 4; pointer-events: none; transform-box: fill-box; transform-origin: center;
+  animation: district-pulse 1.4s ease-out forwards;
+}
+.district-pulse.is-up { stroke: var(--teal, #2bc4a0); }
+.district-pulse.is-down { stroke: var(--alert-crimson, #e5484d); }
+@keyframes district-pulse { from { transform: scale(0.6); opacity: 0.95; } to { transform: scale(4.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .district-pulse { animation-duration: 0.01s; } }
+
+/* Cohort breakdown legend under the host region map. */
+.cohort-legend {
+  list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 4px 0; font-size: 15px; color: var(--slate-400, #7d8a9a); letter-spacing: 0;
+}
+.cohort-legend li, body.host .cohort-legend li { padding: 0 8px; white-space: nowrap; font-size: 15px; }
+.cohort-legend li + li { border-left: 1px solid var(--slate-700, #222b38); }
+.cohort-legend b { color: var(--slate-50, #eef2f6); font-weight: 700; }
+
+/* Finale timer bar on the phone (write screen and resubmit modal). */
+.finale-timer { position: sticky; top: 0; z-index: 2; margin: 0 0 12px; padding: 6px 0 4px; background: var(--bg, var(--slate-950, #080b10)); }
+.finale-timer-track { height: 10px; border-radius: 5px; background: var(--slate-800, #161c25); overflow: hidden; }
+.finale-timer-fill { height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+.finale-timer-label { margin: 4px 0 0; font-size: 12px; letter-spacing: 0.12em; color: var(--slate-400, #7d8a9a); text-align: right; }
+.finale-timer-secs { color: var(--slate-50, #eef2f6); font-weight: 700; }
+.finale-timer.is-warn .finale-timer-fill { background: var(--amber); }
+.finale-timer.is-warn .finale-timer-secs { color: var(--amber); }
+.finale-timer.is-low .finale-timer-fill { background: var(--danger); animation: low-time-pulse 0.8s ease-in-out infinite; }
+.finale-timer.is-low .finale-timer-secs { color: var(--danger); }
+.finale-revise .finale-timer { background: rgba(8, 11, 16, 0.96); }
+
+/* World BA, The Uneasy Republic: amber/brass (the owners' polish) against
+   industrial rust (the workers' districts). Brass stays the text accent
+   (--theme-ba, WCAG-checked); rust is decorative only. */
+body[data-world="BA"] {
+  --theme-brass: #f0a430;
+  --theme-brass-deep: #b8862b;
+  --theme-rust: #b4532a;
+  --theme-secondary: var(--theme-rust);
+}
+body.host[data-world="BA"] {
+  background-image:
+    radial-gradient(ellipse at 50% 35%, rgba(26, 14, 8, 0.72) 0%, rgba(10, 8, 6, 0.93) 100%),
+    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+}
+body[data-world="BA"] .topbar {
+  border-image: linear-gradient(90deg, var(--theme-brass), var(--theme-rust) 55%, var(--theme-brass-deep)) 1;
+}
+body.host[data-world="BA"] .chamber-col {
+  background: linear-gradient(180deg, rgba(240, 164, 48, 0.06), rgba(180, 83, 42, 0.07)), var(--bg-raised);
+  border-color: color-mix(in srgb, var(--theme-brass) 35%, var(--theme-rust));
+  box-shadow: inset 0 1px 0 rgba(240, 164, 48, 0.18);
+}
+body.host[data-world="BA"] .label { color: color-mix(in srgb, var(--theme-brass) 70%, var(--text-muted)); }
+body.host[data-world="BA"] .world-name {
+  background: linear-gradient(180deg, #ffd27a 0%, var(--theme-brass) 45%, var(--theme-rust) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 0 28px rgba(240, 164, 48, 0.45));
+}
+body[data-world="BA"] .phase-crumbs li.is-current { background: linear-gradient(90deg, var(--theme-brass), var(--theme-brass-deep)); }
+body[data-world="BA"] .policy-card { border-color: color-mix(in srgb, var(--theme-rust) 55%, var(--border)); }
+body.mobile[data-world="BA"] .world-card {
+  background: linear-gradient(160deg, rgba(240, 164, 48, 0.10), rgba(180, 83, 42, 0.14)), var(--bg-raised);
+}
+
+/* World BB, The Gilded Cage: opulent gold over velvet violet. Violet stays
+   the text accent (--theme-bb, WCAG-checked); gold trims the frames. */
+body[data-world="BB"] {
+  --theme-gold: #e3b341;
+  --theme-gold-pale: #f6dc8a;
+  --theme-velvet: #4a1f6e;
+  --theme-secondary: var(--theme-gold);
+}
+body.host[data-world="BB"] {
+  background-image:
+    radial-gradient(ellipse at 50% 35%, rgba(30, 10, 44, 0.70) 0%, rgba(12, 6, 18, 0.93) 100%),
+    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+}
+body[data-world="BB"] .topbar {
+  border-image: linear-gradient(90deg, var(--theme-gold), var(--theme-bb) 50%, var(--theme-gold)) 1;
+}
+body.host[data-world="BB"] .chamber-col {
+  background: linear-gradient(180deg, rgba(74, 31, 110, 0.22), rgba(74, 31, 110, 0.08)), var(--bg-raised);
+  border-color: color-mix(in srgb, var(--theme-gold) 55%, var(--theme-velvet));
+  box-shadow: inset 0 0 0 1px rgba(227, 179, 65, 0.12), 0 0 24px rgba(74, 31, 110, 0.35);
+}
+body.host[data-world="BB"] .label { color: color-mix(in srgb, var(--theme-gold) 70%, var(--text-muted)); }
+body.host[data-world="BB"] .world-name {
+  background: linear-gradient(180deg, var(--theme-gold-pale) 0%, var(--theme-gold) 50%, #a77a1c 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.55));
+}
+body[data-world="BB"] .phase-crumbs li.is-current { background: linear-gradient(90deg, var(--theme-gold), var(--theme-gold-pale)); }
+body[data-world="BB"] .policy-card { border-color: color-mix(in srgb, var(--theme-gold) 45%, var(--border)); background: linear-gradient(180deg, rgba(74, 31, 110, 0.18), transparent), var(--bg-raised); }
+body.mobile[data-world="BB"] .world-card {
+  border-color: var(--theme-gold);
+  background: linear-gradient(160deg, rgba(74, 31, 110, 0.35), rgba(227, 179, 65, 0.08)), var(--bg-raised);
+}
+
+/* World reveal: themed accents ease into the new world's colours instead of
+   snapping (AA / AB / BA / BB all retint the same elements). */
+body.host .topbar-brand, body.host .loom-line, body.host .topbar, body.host .chamber-col,
+body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .world-card {
+  transition: color 0.9s ease, border-color 0.9s ease, background-color 0.9s ease, box-shadow 0.9s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.host .topbar-brand, body.host .loom-line, body.host .topbar, body.host .chamber-col,
+  body.host #citizens-online, body.host .label, .phase-crumbs li, .policy-card, .world-card { transition: none; }
+}
+
+/* The Loom's active computation: a faint cyan grid drifting behind the
+   projector UI (transform-only, so it stays on the compositor). It speeds up
+   while the Loom is simulating or moderating. */
+.loom-grid { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.loom-grid::before {
+  content: ""; position: absolute; inset: -64px;
+  background-image:
+    linear-gradient(rgba(63, 216, 230, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 216, 230, 0.09) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 80%);
+  opacity: 0.7;
+  animation: loom-grid-drift 16s linear infinite;
+  will-change: transform;
+}
+body.host[data-phase="RESOLUTION"] .loom-grid::before,
+body.host[data-phase="FINALE_MOD"] .loom-grid::before,
+body.host[data-phase="FINALE_ENACT"] .loom-grid::before { animation-duration: 5s; opacity: 1; }
+@keyframes loom-grid-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(64px, 64px, 0); } }
+@media (prefers-reduced-motion: reduce) { .loom-grid::before { animation: none; } }
+
+/* Finale enactment feed: package impact chips and the region summary card. */
+.feed-item.is-package { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-current, var(--accent)) 30%, transparent); }
+.feed-impact {
+  margin-left: 10px; padding: 1px 8px; font-size: 16px; border-radius: 6px; white-space: nowrap;
+  color: var(--slate-400); border: 1px solid currentColor;
+}
+.feed-impact.is-up { color: var(--teal); }
+.feed-impact.is-down { color: var(--danger); }
+.feed-package { border-left-color: var(--theme-current, var(--accent)); background: color-mix(in srgb, var(--theme-current, var(--accent)) 10%, var(--bg-sunken)); }
+body.host .feed-package-title { margin: 0 0 8px; font-size: 18px; letter-spacing: 0.08em; color: var(--theme-current, var(--accent)); }
+.feed-package-rows { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
+body.host .feed-package-rows li { font-size: 18px; color: var(--slate-400); }
+body.host .feed-package-rows li.is-up { color: var(--teal); }
+body.host .feed-package-rows li.is-down { color: var(--danger); }
+body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(--slate-200); }
+
+/* Player-written policies can be one unbroken 140-character string: wrap
+   anywhere rather than overflow the card (host proposals and enactment,
+   phone ballot and wait screen, resolution headline). */
+.proposal-text, .enact-text, .rank-text, .finale-mine, #resolution-policy, .feed-text { overflow-wrap: anywhere; }
+
+/* Long ballots (four 140-character policies on a 375 px phone) scroll; the
+   lock-in button stays pinned to the bottom of the screen. */
+#rank-submit {
+  position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2;
+  box-shadow: 0 -12px 24px 8px var(--bg, #0d1117);
+}
+
+/* Finale enactment: role tag badges revealed on the three enacted policies. */
+.enact-roles { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.role-badge {
+  padding: 3px 10px; border-radius: 999px; font-size: 16px; letter-spacing: 0.08em; white-space: nowrap;
+  color: var(--slate-950); background: var(--theme-current, var(--accent));
+  animation: role-badge-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.role-badge.is-none { color: var(--slate-400); background: transparent; border: 1px solid var(--slate-700); animation-delay: 1.2s; }
+@keyframes role-badge-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .role-badge { animation: none; } }
+.resolution-enacted { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.resolution-enacted[hidden] { display: none; }
+.resolution-enacted-item { display: flex; align-items: center; gap: 10px; }
+body.host .resolution-enacted-item { font-size: 18px; }
+.resolution-enacted-label { color: var(--slate-200); letter-spacing: 0.06em; }
+.resolution-enacted .enact-roles { margin: 0; }
+.resolution-enacted .role-badge { font-size: 14px; padding: 2px 8px; }
+
+/* Top bar: optional items (Blitz session clock, Call Finale) really hide
+   (.topbar-item's display:flex was overriding [hidden], which pushed the GDW
+   badge off the 1920 px stage). */
+.topbar-item[hidden], .btn-fullscreen[hidden] { display: none; }
+
+/* [ ⛶ ] fullscreen toggle in the top bar's right-hand corner. */
+.btn-fullscreen {
+  flex-shrink: 0; align-self: center; padding: 6px 8px; font-size: 20px; line-height: 1;
+  color: var(--slate-400); background: transparent; border: 1px solid var(--slate-700); border-radius: var(--radius);
+  cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.btn-fullscreen:hover, .btn-fullscreen:focus-visible { color: var(--theme-current, var(--accent)); border-color: currentColor; }
+.btn-fullscreen[aria-pressed="true"] { color: var(--theme-current, var(--accent)); }
+/* Idle breadcrumbs (lobby, finale) give their width back to the top bar. */
+.phase-crumbs.is-idle { display: none; }
+.topbar-brand:has(+ .phase-crumbs.is-idle) { margin-right: auto; }
+/* Crowded top bar (Blitz session clock + Call Finale showing). */
+.topbar.is-crowded { gap: 20px; padding: 0 24px; }
+.topbar.is-crowded .topbar-brand { font-size: 24px; }
+.topbar.is-crowded .topbar-brand .muted { display: none; }
+.topbar.is-crowded .phase-crumbs { margin-left: 12px; }
+body.host .topbar.is-crowded .phase-crumbs li { font-size: 16px; padding: 3px 5px; }
+.topbar.is-crowded .phase-crumbs li + li::before { margin-right: 4px; }
+.topbar.is-crowded .topbar-value, .topbar.is-crowded .gdw-badge { font-size: 32px; }
+
+/* Ballot cast: "BALLOT ENCRYPTED — AWAITING ENACTMENT" with the order as cast. */
+#m-view-finale-rank.is-locked .rank-help, #m-view-finale-rank.is-locked .borda-legend { display: none; }
+#m-view-finale-rank.is-locked .vote-locked { padding-top: 6vh; }
+.rank-locked-order {
+  list-style: none; margin: 16px auto; padding: 12px 16px; max-width: 300px; text-align: left;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-raised);
+}
+.rank-locked-order li { display: block; padding: 4px 0; font-size: 15px; letter-spacing: 0.06em; color: var(--slate-200); white-space: pre; }
+.rank-locked-order li + li { border-top: 1px solid var(--slate-800); }
+.rank-locked-order li:first-child { color: var(--accent); font-weight: 700; }
+
+/* Finale: "CYCLE 5/5 — FINALE" in the top bar. */
+.cycle-finale-tag { color: var(--theme-current, var(--accent)); text-shadow: 0 0 18px color-mix(in srgb, var(--theme-current, var(--accent)) 55%, transparent); }
+.topbar.is-finale { gap: 28px; }
+.topbar.is-finale .phase-crumbs { margin-left: 12px; }
+body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px; }
+.topbar.is-finale .topbar-brand .muted { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* End Screen: three beats (recap, roles & authors reveal, winner).    */
+/* ------------------------------------------------------------------ */
+.view-end { display: none; padding: 18px 48px; gap: 14px; flex-direction: column; overflow: hidden; }
+.view-end.is-active { display: flex; }
+.end-beat { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 22px; }
+.end-beat > .label { margin: 0 0 8px; }
+.end-recap-grid { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 20px; align-items: stretch; }
+.end-chart-wrap { position: relative; min-height: 230px; }
+.end-chart { display: block; width: 100%; height: 230px; }
+.end-badges { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; }
+.end-badges .end-closing { grid-column: 1 / -1; }
+.end-badge { display: flex; flex-direction: column; gap: 0; padding: 6px 14px; border-radius: var(--radius); background: var(--bg-sunken); border-left: 4px solid var(--theme-current, var(--accent)); }
+.end-badge-value { font-size: 28px; line-height: 1.15; }
+.end-badge-grade[data-grade="Thriving"] { border-left-color: var(--teal); }
+.end-badge-grade[data-grade="Stable"] { border-left-color: var(--accent); }
+.end-badge-grade[data-grade="Fragile"] { border-left-color: var(--amber); }
+.end-badge-grade[data-grade="SHUTDOWN"] { border-left-color: var(--danger); }
+.end-badge-grade[data-grade="SHUTDOWN"] .end-badge-value { color: var(--danger); }
+.end-closing { margin: 0; padding: 4px 14px; border-left: 4px solid var(--slate-600); font-size: 20px; line-height: 1.3; }
+.end-closing p { margin: 0 0 6px; }
+.end-closing footer { font-size: 16px; }
+.end-table { width: 100%; border-collapse: collapse; font-size: 22px; }
+.end-table th { text-align: left; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.end-table td { padding: 5px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
+.end-table td.col-points, .end-table th.col-points { text-align: right; font-family: var(--font-mono); }
+.end-table .end-role { white-space: nowrap; }
+.end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
+.end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+.end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
+.end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
+.view-end.no-writein .col-author { display: none; }
+.end-winner { text-align: center; padding-top: 8px; padding-bottom: 8px; }
+.end-winner .label { margin: 0; }
+.end-winner-title { font-size: 44px; line-height: 1.1; margin: 0; color: var(--teal); }
+.end-winner-sub { font-size: 20px; margin: 0; display: inline; }
+/* Seed badge and the teacher's next-game buttons. */
+.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.end-seed-badge { font-size: 16px; letter-spacing: 0.08em; padding: 6px 12px; border: 1px dashed var(--slate-600); border-radius: var(--radius); color: var(--text-muted); }
+.end-seed-badge:empty { display: none; }
+.btn-end { font-size: 20px; padding: 10px 22px; letter-spacing: 0.08em; }
+.end-action-hint { font-size: 15px; }
+.view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
+.view-end.is-shutdown .end-winner-title { color: var(--danger); }
+
+/* End Screen reveal: beats 2 and 3 keep their space but stay hidden until
+   host.js adds .beat-2 (15 s) and .beat-3 (25 s) to #view-end. */
+.view-end .end-beat { transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.view-end .end-recap, .view-end .end-reveal, .view-end .end-winner { opacity: 0; transform: translateY(18px); }
+.view-end.beat-1 .end-recap,
+.view-end.beat-2 .end-reveal,
+.view-end.beat-3 .end-winner { opacity: 1; transform: none; }
+.view-end.beat-2 .end-reveal tbody tr { animation: end-row-in 0.6s ease both; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(2) { animation-delay: 0.5s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(3) { animation-delay: 1s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(4) { animation-delay: 1.5s; }
+.view-end.beat-2 .end-reveal tbody tr:nth-child(5) { animation-delay: 2s; }
+@keyframes end-row-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+.view-end.beat-3 .end-winner-title { animation: end-winner-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes end-winner-in { from { opacity: 0; transform: scale(0.92); letter-spacing: 0.2em; } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .view-end .end-beat { transition: none; transform: none; }
+  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title { animation: none; }
+}
+
+/* Mobile End Screen. */
+.end-card .end-headline { font-size: 26px; margin: 8px 0 4px; }
+.end-card .end-role { margin: 0; font-size: 16px; }
+.end-score { display: flex; align-items: baseline; justify-content: space-between; margin: 20px 0 8px; }
+.end-score-value { font-size: 48px; font-weight: 700; color: var(--accent); }
+.end-breakdown { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 6px; font-size: 16px; }
+.end-breakdown li { padding: 8px 12px; border-radius: var(--radius); background: var(--bg-raised); color: var(--text-muted); }
+.end-breakdown li.is-scored { color: var(--text); border-left: 3px solid var(--teal); }
+.end-grade-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.end-grade-row .m-label { flex: 1 0 100%; }
+.end-grade { font-size: 28px; font-weight: 700; }
+.end-grade[data-grade="Thriving"] { color: var(--teal); }
+.end-grade[data-grade="Stable"] { color: var(--accent); }
+.end-grade[data-grade="Fragile"] { color: var(--amber); }
+.end-grade[data-grade="SHUTDOWN"] { color: var(--danger); }
+.end-world { margin: 12px 0 0; font-size: 16px; }
+
+/* Phone reconnect banner: pinned under the header, the screen below stays. */
+.m-reconnect {
+  position: sticky; top: 0; z-index: 20;
+  margin: 0; padding: 10px 16px;
+  background: var(--amber); color: var(--slate-950);
+  font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-align: center;
+  animation: low-time-pulse 1.4s ease-in-out infinite;
+}
+body.is-reconnecting .m-main { opacity: 0.6; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .m-reconnect { animation: none; } }

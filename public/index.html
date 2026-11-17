@@ -8,6 +8,7 @@
 </head>
 <body class="host">
   <!-- Host projector screen, designed for a 1920x1080 classroom projector. -->
+  <div class="loom-grid" aria-hidden="true"></div>
   <header id="host-topbar" class="topbar" aria-label="Session status">
     <div class="topbar-brand mono">SOCIETELOS <span class="muted">// THE LOOM</span></div>
     <ol id="phase-crumbs" class="phase-crumbs mono" aria-label="Cycle progress">
@@ -40,6 +41,7 @@
       <span class="label">GDW</span>
       <span id="gdw-badge" class="gdw-badge mono">25%</span>
     </div>
+    <button id="btn-fullscreen" class="btn-fullscreen mono" type="button" aria-pressed="false" title="Toggle fullscreen (F11)" aria-label="Toggle fullscreen">[ &#x26F6; ]</button>
   </header>
 
   <main id="host-main" class="host-main">
@@ -54,6 +56,23 @@
           </div>
           <p class="join-url">Or open <span id="join-url" class="mono accent">http://…/mobile</span></p>
           <p class="join-room">Room code <span id="lobby-room-code" class="mono accent">----</span></p>
+          <fieldset id="lobby-config" class="lobby-config">
+            <legend class="label">Session settings</legend>
+            <div class="config-row" role="radiogroup" aria-label="Debate length">
+              <span class="config-name mono">Debate</span>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-60" value="60"><span>60s Fast [13.5m]</span></label>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-90" value="90" checked><span>90s Standard [16m]</span></label>
+            </div>
+            <label class="config-row config-check" for="forecast-toggle">
+              <input type="checkbox" id="forecast-toggle" class="dev-checkbox">
+              <span class="mono">Show the Loom's forecast before the vote</span>
+            </label>
+            <label class="config-row" for="seed-input">
+              <span class="config-name mono">Replay seed</span>
+              <input type="text" id="seed-input" class="config-seed mono" maxlength="64" placeholder="optional" autocomplete="off" spellcheck="false" pattern="[A-Za-z0-9_-]{1,64}">
+            </label>
+            <p id="config-status" class="config-status mono muted" aria-live="polite"></p>
+          </fieldset>
         </div>
         <div class="lobby-nodes">
           <p class="label">Council nodes <span id="lobby-count" class="mono">0/5</span></p>
@@ -92,7 +111,22 @@
           <p class="accent">Five crises. Five years. Do not let well-being reach zero.</p>
         </div>
       </div>
+      <!-- Live schematic of the 5 districts: nodes and spillover links pulse while the Loom speaks. -->
+      <svg class="intro-schematic" viewBox="0 0 520 150" role="img" aria-label="Schematic of the five districts">
+        <g class="schematic-links">
+          <line x1="60" y1="40" x2="190" y2="60" /><line x1="60" y1="40" x2="230" y2="115" />
+          <line x1="190" y1="60" x2="230" y2="115" /><line x1="190" y1="60" x2="340" y2="70" />
+          <line x1="230" y1="115" x2="340" y2="70" /><line x1="230" y1="115" x2="460" y2="105" />
+          <line x1="340" y1="70" x2="460" y2="105" />
+        </g>
+        <g class="schematic-node" style="--node-color: var(--district-d1); --delay: 0s"><circle cx="60" cy="40" r="9" /><text x="60" y="20">D1</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d2); --delay: 0.4s"><circle cx="190" cy="60" r="11" /><text x="190" y="38">D2</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d3); --delay: 0.8s"><circle cx="230" cy="115" r="12" /><text x="230" y="145">D3</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d4); --delay: 1.2s"><circle cx="340" cy="70" r="11" /><text x="340" y="48">D4</text></g>
+        <g class="schematic-node" style="--node-color: var(--district-d5); --delay: 1.6s"><circle cx="460" cy="105" r="8" /><text x="460" y="85">D5</text></g>
+      </svg>
       <div class="intro-controls">
+        <button id="btn-skip-intro" class="btn-skip-intro" type="button" aria-label="Skip the intro (S)">SKIP INTRO ›</button>
         <button id="btn-voice-toggle" class="btn-voice-toggle is-active" type="button" aria-label="Toggle Loom Voice">
           <span id="voice-icon" aria-hidden="true">🔊</span> <span id="voice-label">LOOM VOICE: ACTIVE</span>
         </button>
@@ -174,7 +208,14 @@
                 <line class="map-link" data-link="D4-D5" x1="335" y1="135" x2="205" y2="385"/>
               </g>
             </svg>
+            <div id="map-month" class="map-month mono" aria-live="off" hidden>MONTH <span id="map-month-num">1</span> / <span id="map-month-total">12</span></div>
           </div>
+          <ul id="cohort-legend" class="cohort-legend mono" aria-label="Population by cohort">
+            <li title="Ages 15-29">Youth <b>25%</b></li>
+            <li title="Ages 30-59">Former Workers <b>45%</b></li>
+            <li title="Ages 60+">Elders <b>29%</b></li>
+            <li title="Any age">Former Elite <b>1%</b></li>
+          </ul>
         </aside>
         <section class="chamber-col chamber-center" aria-label="Crisis and policies">
           <div id="crisis-panel" class="crisis-panel">
@@ -188,6 +229,7 @@
           </div>
           <div id="debate-panel" class="debate-panel" hidden>
             <div class="debate-hook">
+              <p id="finale-fallback-notice" class="finale-fallback-notice mono" role="status" hidden>THE LOOM COULD NOT INTERPRET THE WRITE-INS. THE COUNCIL WILL DECIDE BETWEEN TWO AUTHORED PROTOCOLS.</p>
               <p class="label accent">Debate // argue for your agenda</p>
               <p id="debate-hook" class="debate-hook-text"></p>
             </div>
@@ -239,6 +281,7 @@
               <span id="badge-override" class="res-badge res-badge-override mono" hidden>&#9888; OVERRIDE DETECTED IN TALLY</span>
             </div>
             <p id="governance-line" class="governance-line" hidden></p>
+            <ul id="resolution-enacted" class="resolution-enacted" aria-label="Enacted policies and the agendas they serve" hidden></ul>
             <blockquote id="resolution-loom" class="loom-line resolution-loom">The Loom is simulating 12 months…</blockquote>
             <p id="forecast-banner" class="forecast-banner mono">LOOM FORECAST: --% CHANCE OF STABILITY | P(UNREST): --%</p>
             <div id="chart-wrap" class="chart-wrap">
@@ -307,7 +350,55 @@
       <ol id="enact-cards" class="enact-cards"></ol>
       <p id="enact-wait" class="enact-wait mono">THE LOOM IS COUNTING BALLOTS...</p>
     </section>
-    <section id="view-end" class="view" aria-label="End of session"></section>
+    <section id="view-end" class="view view-end" aria-label="End of session">
+      <!-- Beat 1: Five-Year Recap -->
+      <div id="end-recap" class="end-beat end-recap">
+        <p class="label accent">Five-year recap</p>
+        <div class="end-recap-grid">
+          <div class="end-chart-wrap">
+            <canvas id="end-history-chart" class="end-chart" aria-label="Realized GDW over five years"></canvas>
+          </div>
+          <aside class="end-badges">
+            <div class="end-badge end-badge-world">
+              <span class="label">World reached</span>
+              <strong id="end-world-name" class="end-badge-value"></strong>
+              <span id="end-world-key" class="mono muted"></span>
+            </div>
+            <div class="end-badge end-badge-grade">
+              <span class="label">Class grade</span>
+              <strong id="end-grade" class="end-badge-value"></strong>
+              <span id="end-final-gdw" class="mono"></span>
+            </div>
+            <blockquote id="end-closing" class="end-closing">
+              <p id="end-closing-text"></p>
+              <footer id="end-closing-who" class="mono muted"></footer>
+            </blockquote>
+          </aside>
+        </div>
+      </div>
+      <!-- Beat 2: Secret Roles & Write-in Authors -->
+      <div id="end-reveal" class="end-beat end-reveal">
+        <p class="label accent">Secret roles &amp; write-in authors</p>
+        <table id="end-table" class="end-table">
+          <thead>
+            <tr><th>Node</th><th>Player</th><th>Secret role</th><th class="col-author">Write-in policy &middot; Borda rank</th><th class="col-points">Points</th></tr>
+          </thead>
+          <tbody id="end-roles-body"></tbody>
+        </table>
+      </div>
+      <!-- Beat 3: Winner (or the Shutdown total loss) -->
+      <div id="end-winner" class="end-beat end-winner">
+        <p id="end-winner-label" class="label"></p>
+        <h2 id="end-winner-title" class="end-winner-title"></h2>
+        <p id="end-winner-sub" class="end-winner-sub muted"></p>
+        <div class="end-actions">
+          <span id="end-seed" class="end-seed-badge mono" title="Replay this exact game: enter the seed in the lobby"></span>
+          <button id="btn-play-again" class="btn btn-primary btn-end" type="button">PLAY AGAIN</button>
+          <button id="btn-new-session" class="btn btn-end" type="button">NEW SESSION</button>
+          <span id="end-action-hint" class="end-action-hint mono muted"></span>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>

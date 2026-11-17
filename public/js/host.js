@@ -18,8 +18,37 @@
     document.body.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   }
   document.documentElement.classList.add('host-stage');
-  window.addEventListener('resize', fitStage);
+  // Fullscreen (F11 or the corner button) and window resizes change the
+  // stage scale: refit, then repaint the chart at the new resolution once
+  // the layout has settled (a finished chart is otherwise left stretched).
+  let redrawFrame = null;
+  function onStageResize() {
+    fitStage();
+    cancelAnimationFrame(redrawFrame);
+    redrawFrame = requestAnimationFrame(() => {
+      if (window.SocietelosCharts && window.SocietelosCharts.redraw) window.SocietelosCharts.redraw();
+    });
+  }
+  window.addEventListener('resize', onStageResize);
+  document.addEventListener('fullscreenchange', onStageResize);
   fitStage();
+
+  // [ ⛶ ] corner button: toggle browser fullscreen for the projector page
+  // (hidden where the Fullscreen API is unavailable). F11 still works too.
+  const fullscreenBtn = document.getElementById('btn-fullscreen');
+  const canFullscreen = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen);
+  fullscreenBtn.hidden = !canFullscreen;
+  function syncFullscreenButton() {
+    const on = !!document.fullscreenElement;
+    fullscreenBtn.setAttribute('aria-pressed', String(on));
+    fullscreenBtn.title = on ? 'Exit fullscreen' : 'Toggle fullscreen (F11)';
+  }
+  fullscreenBtn.addEventListener('click', () => {
+    const request = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    if (request && request.catch) request.catch((err) => console.warn('[host] fullscreen refused:', err && err.message));
+    fullscreenBtn.blur();
+  });
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
 
   const socket = window.io({ auth: { clientType: 'host', roomCode: savedRoom || undefined } });
 
@@ -123,6 +152,9 @@
     const inGame = state.phase !== 'LOBBY' && state.phase !== 'END';
     const show = inGame && state.sessionTimerEnabled && state.sessionEndsAt;
     if (sessionBadge) sessionBadge.hidden = !show;
+    // Blitz mode adds the session clock and Call Finale: compact the top bar
+    // so the GDW badge and the fullscreen button stay on the 1920 px stage.
+    document.getElementById('host-topbar').classList.toggle('is-crowded', !!show);
     if (sessionActions) sessionActions.hidden = !show || state.isFinale;
     if (callFinaleBtn && state.isFinale) callFinaleBtn.disabled = true;
   }
@@ -180,14 +212,47 @@
     }
   });
 
-  // START COUNCIL SESSION -> host:start
+  // Lobby session settings -> host:config { debateSeconds, showForecastBeforeVote }.
+  // The server echoes the room's config (host:room / host:config) so a
+  // refreshed projector shows what is actually set.
+  const configStatus = document.getElementById('config-status');
+  const debateRadios = Array.from(document.querySelectorAll('input[name="debate-length"]'));
+  const forecastToggle = document.getElementById('forecast-toggle');
+  const seedInput = document.getElementById('seed-input');
+  function showConfig(config) {
+    if (!config) return;
+    debateRadios.forEach((r) => { r.checked = Number(r.value) === config.debateSeconds; });
+    if (typeof config.showForecastBeforeVote === 'boolean') forecastToggle.checked = config.showForecastBeforeVote;
+  }
+  function sendConfig(change) {
+    socket.emit('host:config', change, (res) => {
+      if (res && res.ok) {
+        showConfig(res.config);
+        configStatus.textContent = `Saved: ${res.config.debateSeconds}s debate, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote.`;
+      } else {
+        configStatus.textContent = `Not saved: ${(res && res.reason) || 'no response'}`;
+      }
+    });
+  }
+  debateRadios.forEach((r) => r.addEventListener('change', () => { if (r.checked) sendConfig({ debateSeconds: Number(r.value) }); }));
+  forecastToggle.addEventListener('change', () => sendConfig({ showForecastBeforeVote: forecastToggle.checked }));
+  socket.on('host:room', (info) => showConfig(info && info.config));
+  socket.on('host:config', showConfig);
+  const SEED_RE = /^[A-Za-z0-9_-]{1,64}$/;
+  seedInput.addEventListener('input', () => {
+    const v = seedInput.value.trim();
+    configStatus.textContent = !v ? '' : SEED_RE.test(v) ? `Replaying seed ${v}: same votes, same game.` : 'Seeds use letters, digits, - and _ only.';
+  });
+
+  // START COUNCIL SESSION -> host:start { seed? }
   const startBtn = document.getElementById('btn-start');
   startBtn.addEventListener('click', () => {
     startBtn.disabled = true;
     if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
-    socket.emit('host:start', {}, (res) => {
+    const seed = seedInput.value.trim();
+    socket.emit('host:start', seed && SEED_RE.test(seed) ? { seed } : {}, (res) => {
       if (!res || !res.ok) {
         startBtn.disabled = false;
         document.getElementById('start-hint').textContent = `Cannot start: ${(res && res.reason) || 'no response'}`;
@@ -270,11 +335,14 @@
       }
     }
 
+    // The crawl's authored nodes, kept as clones so each narration restarts
+    // from the original markup (no innerHTML anywhere in public/js).
+    const originalNodes = new WeakMap();
     function tokenizeParagraph(pElement) {
-      if (!pElement.dataset.originalHtml) {
-        pElement.dataset.originalHtml = pElement.innerHTML;
+      if (!originalNodes.has(pElement)) {
+        originalNodes.set(pElement, Array.from(pElement.childNodes).map((n) => n.cloneNode(true)));
       } else {
-        pElement.innerHTML = pElement.dataset.originalHtml;
+        pElement.replaceChildren(...originalNodes.get(pElement).map((n) => n.cloneNode(true)));
       }
 
       const wordSpans = [];
@@ -588,6 +656,17 @@
     });
   }
 
+  // SKIP INTRO: for repeat sessions with a class that has seen the crawl.
+  // host:skipIntro -> the server moves INTRO on to ROLE_ASSIGN.
+  const btnSkipIntro = document.getElementById('btn-skip-intro');
+  function skipIntro() {
+    if (state.phase !== 'INTRO' || !btnSkipIntro || btnSkipIntro.disabled) return;
+    btnSkipIntro.disabled = true;
+    LoomVoice.stop();
+    socket.emit('host:skipIntro', {}, () => { btnSkipIntro.disabled = false; });
+  }
+  if (btnSkipIntro) btnSkipIntro.addEventListener('click', (e) => { e.stopPropagation(); skipIntro(); });
+
   const introView = document.getElementById('view-intro');
   if (introView) {
     introView.addEventListener('click', () => {
@@ -607,10 +686,17 @@
     state.isFinale = !!payload.isFinale;
     showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
     document.body.dataset.phase = payload.phase;
-    const cycleText = state.sessionTimerEnabled
-      ? `POLICY ${state.cycle}${state.isFinale ? ' (FINALE)' : ''}`
-      : `CYCLE ${state.cycle}/5`;
-    document.getElementById('cycle-indicator').textContent = cycleText;
+    const cycleText = state.sessionTimerEnabled ? `POLICY ${state.cycle}` : `CYCLE ${state.cycle}/5`;
+    // Finale: "CYCLE 5/5 — FINALE", the tag in the theme accent.
+    const cycleEl = document.getElementById('cycle-indicator');
+    cycleEl.textContent = cycleText;
+    if (state.isFinale && payload.phase !== 'END') {
+      const tag = document.createElement('span');
+      tag.className = 'cycle-finale-tag';
+      tag.textContent = ' \u2014 FINALE';
+      cycleEl.appendChild(tag);
+    }
+    document.getElementById('host-topbar').classList.toggle('is-finale', !!state.isFinale);
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
     updateSessionControls();
 
@@ -632,20 +718,42 @@
     }));
     const map = window.SocietelosMap;
     if (map) map.renderDistricts(districts.length ? districts : map.DISTRICT_IDS.map((id) => ({ id, wellbeing: BASELINE_WELLBEING })));
+    renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
     document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
   }
 
   socket.on('phase', onPhase);
 
+  // Cohort legend under the map (Youth 25% | Former Workers 45% | ...). The
+  // static markup matches data/sim.json; a region payload carrying
+  // cohorts [{ name, share, ages }] replaces it.
+  function renderCohortLegend(cohorts) {
+    if (!Array.isArray(cohorts) || !cohorts.length) return;
+    const list = document.getElementById('cohort-legend');
+    list.textContent = '';
+    cohorts.forEach((c) => {
+      if (!c || typeof c.share !== 'number') return;
+      const li = document.createElement('li');
+      if (c.ages) li.title = `Ages ${c.ages}`;
+      li.append(document.createTextNode(`${c.name || c.id} `));
+      const pct = document.createElement('b');
+      pct.textContent = `${Math.round(c.share * 100)}%`;
+      li.appendChild(pct);
+      list.appendChild(li);
+    });
+  }
+
   // Breadcrumbs INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION: past steps
   // dimmed-done, current lit; hidden outside a binary cycle.
   const CRUMB_ORDER = ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
   function renderCrumbs(payload) {
     const crumbs = document.getElementById('phase-crumbs');
-    // The write-in finale has its own flow, so the binary breadcrumbs hide.
+    // The write-in finale has its own flow, so the binary breadcrumbs hide --
+    // unless the Loom failed and the finale fell back to DEBATE -> VOTE -> RESOLUTION.
     const writein = payload.crisis && payload.crisis.mode === 'writein';
-    const idx = writein ? -1 : CRUMB_ORDER.indexOf(payload.phase);
+    const finaleFlow = writein && !isFinaleFallbackPhase(payload);
+    const idx = finaleFlow ? -1 : CRUMB_ORDER.indexOf(payload.phase);
     crumbs.classList.toggle('is-idle', idx < 0);
     crumbs.querySelectorAll('li').forEach((li, i) => {
       li.classList.toggle('is-done', idx >= 0 && i < idx);
@@ -655,6 +763,22 @@
     });
   }
   socket.on('phase', renderCrumbs);
+
+  // Cycle 5 fallback: Gemini failed during moderation, so the server sent the
+  // write-in finale back through the binary DEBATE -> VOTE -> RESOLUTION flow
+  // with its authored A/B options (and now reports the crisis as "binary").
+  // A cycle that went through FINALE_WRITE / FINALE_MOD and then reaches
+  // DEBATE is that fallback. The projector says so above the debate.
+  let writeinCycle = null;
+  function isFinaleFallbackPhase(payload) {
+    if (!payload) return false;
+    if (['LOBBY', 'INCIDENT'].includes(payload.phase)) writeinCycle = null;
+    if (['FINALE_WRITE', 'FINALE_MOD'].includes(payload.phase)) writeinCycle = payload.cycle;
+    return writeinCycle !== null && payload.cycle === writeinCycle && ['DEBATE', 'VOTE', 'RESOLUTION'].includes(payload.phase);
+  }
+  socket.on('phase', (payload) => {
+    document.getElementById('finale-fallback-notice').hidden = !(isFinaleFallbackPhase(payload) && payload.phase === 'DEBATE');
+  });
 
   // One feed card: avatar badge (initials), name, age, district tag, message.
   function feedItemElement(item) {
@@ -701,12 +825,67 @@
     } else {
       body.append(meta, text);
     }
+    // Finale enactment: how the 50/25/25 package moved this citizen's district.
+    if (typeof item.impact === 'number') {
+      li.classList.add('is-package');
+      const dir = item.impact > 0.05 ? 'up' : item.impact < -0.05 ? 'down' : 'flat';
+      const chip = document.createElement('span');
+      chip.className = `feed-impact mono is-${dir}`;
+      chip.textContent = `PACKAGE ${dir === 'up' ? '\u25B2' : dir === 'down' ? '\u25BC' : '\u25C6'} ${item.impact >= 0 ? '+' : ''}${item.impact.toFixed(1)}`;
+      meta.appendChild(chip);
+    }
     li.append(avatar, body);
     return li;
   }
 
   // Citizen feed (newest at the top, capped so the column never overflows).
   const FEED_MAX = 6;
+  // Finale: each district's wellbeing change (W x 100) over the package's
+  // 12 months, from the resolution payload's month-by-month districts.
+  const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+  function districtShifts(districts) {
+    const first = Array.isArray(districts) && districts[0];
+    const last = Array.isArray(districts) && districts[districts.length - 1];
+    if (!first || !last || districts.length < 2) return null;
+    const out = {};
+    Object.keys(DISTRICT_NAMES).forEach((id) => {
+      if (typeof first[id] === 'number' && typeof last[id] === 'number') out[id] = Math.round((last[id] - first[id]) * 1000) / 10;
+    });
+    return Object.keys(out).length ? out : null;
+  }
+  // Closing card of the finale feed: the package's effect on every district,
+  // best to worst, with the biggest winner and the hardest hit called out.
+  function addPackageSummary(shifts) {
+    const list = document.getElementById('citizen-feed');
+    const ranked = Object.entries(shifts).sort((a, b) => b[1] - a[1]);
+    const li = document.createElement('li');
+    li.className = 'feed-item feed-package';
+    const body = document.createElement('div');
+    body.className = 'feed-body';
+    const head = document.createElement('p');
+    head.className = 'feed-package-title mono';
+    head.textContent = 'THE COUNCIL PACKAGE // 50 / 25 / 25 ACROSS THE REGION';
+    const rows = document.createElement('ul');
+    rows.className = 'feed-package-rows mono';
+    ranked.forEach(([id, delta]) => {
+      const row = document.createElement('li');
+      row.dataset.district = id;
+      row.className = delta > 0.05 ? 'is-up' : delta < -0.05 ? 'is-down' : 'is-flat';
+      row.textContent = `${id} ${DISTRICT_NAMES[id]} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+      rows.appendChild(row);
+    });
+    const verdict = document.createElement('p');
+    verdict.className = 'feed-package-verdict';
+    const [best, worst] = [ranked[0], ranked[ranked.length - 1]];
+    verdict.textContent = best[1] - worst[1] < 0.1
+      ? 'The package touched every district about equally.'
+      : `Biggest winner: ${DISTRICT_NAMES[best[0]]}. Hardest hit: ${DISTRICT_NAMES[worst[0]]}.`;
+    body.append(head, rows, verdict);
+    li.appendChild(body);
+    list.prepend(li);
+    while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
+    list.scrollTop = 0;
+  }
   function resetFeed() {
     document.getElementById('citizen-feed').textContent = '';
   }
@@ -1004,18 +1183,23 @@
     const weight = (totals.A || 0) + (totals.B || 0);
     const cast = NODE_IDS.length - (typeof r.abstained === 'number' ? r.abstained : 0);
     document.getElementById('badge-override').hidden = !(weight > cast);
+    renderResolutionEnacted(r.finale ? r.enacted : null);
     document.getElementById('resolution-policy').textContent = r.finale ? (r.policy || 'The Council Package') : `Policy ${r.winner}: ${r.policy || ''}`;
     typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
     // Reactions replace the incident posts and appear one by one, spread
     // across the 12 simulated months as they play out.
     clearFeedTimers();
     resetFeed();
-    const messages = payload.messages || [];
     const span = RESOLUTION_MONTH_MS * 12;
+    // Finale: tag each reaction with its district's package impact and close
+    // with a region-wide summary card once the 12 months have played.
+    const shifts = r.finale ? districtShifts(payload.districts) : null;
+    const messages = (payload.messages || []).map((m) => (shifts && m && typeof shifts[m.district] === 'number' ? { ...m, impact: shifts[m.district] } : m));
     messages.forEach((m, i) => {
       const at = Math.round(((i + 0.5) / messages.length) * span);
       feedTimers.push(setTimeout(() => addFeedItem(m), at));
     });
+    if (shifts) feedTimers.push(setTimeout(() => addPackageSummary(shifts), span + 400));
     // The map replays the 12 months in step with the realized line.
     if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS, (payload.realized && payload.realized.shocks) || []);
     renderForecastBanner(payload.forecast);
@@ -1150,6 +1334,48 @@
 
   // Finale enactment reveal: the top three by Borda score with their weights.
   const PLACE_LABELS = { first: '1ST PLACE', second: '2ND PLACE', third: '3RD PLACE' };
+  // Role tag reveal: once rankings are locked and the package enacted, each
+  // enacted policy shows which agendas it served (badges pop in one by one).
+  const ROLE_TAG_LABELS = {
+    artisan: '\u25B3 THE ARTISAN', lotus: '\u273A THE LOTUS-EATER', assimilator: '\u232C THE ASSIMILATOR',
+    ghost: '\u2641 THE GHOST', catalyst: '\u2042 THE CATALYST'
+  };
+  function roleTagRow(tags) {
+    const row = document.createElement('p');
+    row.className = 'enact-roles';
+    const list = Array.isArray(tags) ? tags.filter((t) => ROLE_TAG_LABELS[t]) : [];
+    if (!list.length) {
+      const none = document.createElement('span');
+      none.className = 'role-badge is-none mono';
+      none.textContent = 'SERVES NO AGENDA';
+      row.appendChild(none);
+      return row;
+    }
+    list.forEach((t, i) => {
+      const badge = document.createElement('span');
+      badge.className = `role-badge role-${t} mono`;
+      badge.style.animationDelay = `${1.2 + i * 0.25}s`;
+      badge.textContent = ROLE_TAG_LABELS[t];
+      row.appendChild(badge);
+    });
+    return row;
+  }
+  // Resolution panel (finale only): the three enacted proposals, their
+  // weights and role tag badges, under the Council Package headline.
+  function renderResolutionEnacted(enacted) {
+    const list = document.getElementById('resolution-enacted');
+    list.textContent = '';
+    list.hidden = !(Array.isArray(enacted) && enacted.length);
+    (enacted || []).forEach((e) => {
+      const li = document.createElement('li');
+      li.className = `resolution-enacted-item is-${e.place}`;
+      const label = document.createElement('span');
+      label.className = 'resolution-enacted-label mono';
+      label.textContent = `${proposalLabel(e.id)} \u00B7 ${Math.round(e.weight * 100)}%`;
+      li.append(label, roleTagRow(e.roleTags));
+      list.appendChild(li);
+    });
+  }
   function renderEnacted(enacted) {
     const list = document.getElementById('enact-cards');
     list.textContent = '';
@@ -1165,7 +1391,7 @@
       const text = document.createElement('p');
       text.className = 'enact-text';
       text.textContent = e.text;
-      li.append(head, name, text);
+      li.append(head, name, text, roleTagRow(e.roleTags));
       list.appendChild(li);
     });
     document.getElementById('enact-wait').hidden = !!(enacted && enacted.length);
@@ -1173,6 +1399,144 @@
   socket.on('phase', (payload) => {
     if (payload.phase === 'FINALE_ENACT') renderEnacted([]);
   });
+  // ---------------------------------------------------------------------
+  // End Screen (game:end): 1) five-year recap, 2) secret roles and write-in
+  // authors, 3) winner banner or the Shutdown total loss. Everything reaches
+  // the DOM through textContent (player names and write-ins are user text).
+  // ---------------------------------------------------------------------
+  const END_GRADE_LABELS = { SHUTDOWN: 'SHUTDOWN', Fragile: 'FRAGILE', Stable: 'STABLE', Thriving: 'THRIVING' };
+
+  function endCell(text, className) {
+    const td = document.createElement('td');
+    if (className) td.className = className;
+    if (text !== undefined && text !== null) td.textContent = String(text);
+    return td;
+  }
+
+  function renderEndRecap(data) {
+    document.getElementById('end-world-name').textContent = data.worldName || (data.shutdown ? 'Never formed' : '\u2014');
+    document.getElementById('end-world-key').textContent = data.worldKey ? `WORLD ${data.worldKey}` : '';
+    const grade = document.getElementById('end-grade');
+    grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
+    grade.parentElement.dataset.grade = data.grade || '';
+    document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL GDW ${data.finalGdw.toFixed(1)}%` : '';
+    const closing = data.closingMessage || {};
+    document.getElementById('end-closing-text').textContent = closing.text ? `\u201C${closing.text}\u201D` : '';
+    const who = [closing.name, typeof closing.age === 'number' ? closing.age : null, closing.districtName || closing.district].filter((v) => v !== null && v !== undefined && v !== '');
+    document.getElementById('end-closing-who').textContent = who.length ? `\u2014 ${who.join(', ')}` : '';
+  }
+
+  function renderEndTable(data) {
+    const body = document.getElementById('end-roles-body');
+    body.textContent = '';
+    const authorsByNode = {};
+    for (const a of data.authors || []) authorsByNode[a.node] = a;
+    const winners = new Set(data.winner || []);
+    for (const r of data.roles || []) {
+      const tr = document.createElement('tr');
+      tr.dataset.node = r.node;
+      if (winners.has(r.node)) tr.classList.add('is-winner');
+      const role = endCell(null, 'end-role');
+      if (r.role) {
+        const icon = document.createElement('span');
+        icon.className = 'end-role-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = r.role.icon || '';
+        role.append(icon, document.createTextNode(r.role.name || r.role.key));
+      }
+      const policy = endCell(null, 'col-author end-policy');
+      const a = authorsByNode[r.node];
+      if (a) {
+        policy.append(document.createTextNode(`${proposalLabel(a.id)}: ${a.text}`));
+        const rank = document.createElement('span');
+        rank.className = 'end-policy-rank';
+        rank.textContent = `RANK #${a.place} \u00B7 ${a.points} BORDA PTS${a.weight ? ` \u00B7 ENACTED ${Math.round(a.weight * 100)}%` : ''}`;
+        policy.appendChild(rank);
+      }
+      tr.append(endCell(r.node, 'mono'), endCell(r.name), role, policy, endCell(r.total, 'col-points'));
+      body.appendChild(tr);
+    }
+  }
+
+  function renderEndWinner(data) {
+    const label = document.getElementById('end-winner-label');
+    const title = document.getElementById('end-winner-title');
+    const sub = document.getElementById('end-winner-sub');
+    const names = {};
+    for (const r of data.roles || []) names[r.node] = r.name;
+    if (data.shutdown || !data.winner) {
+      label.textContent = 'Total loss';
+      title.textContent = 'THE LOOM HAS SHUT DOWN';
+      sub.textContent = 'Gross Domestic Well-Being reached 0%. Every agenda failed.';
+    } else {
+      const who = data.winner.map((n) => `${names[n] || n} (${n})`);
+      label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Architect of telos';
+      title.textContent = who.join(' & ');
+      const top = (data.scores && data.scores[data.winner[0]]) || 0;
+      sub.textContent = `${top} point${top === 1 ? '' : 's'}${data.winner.length > 1 ? ' each' : ''}. The region survived five years.`;
+    }
+    document.getElementById('end-seed').textContent = data.seed ? `SEED ${data.seed}` : '';
+  }
+
+  // Next game without restarting the server (host:playAgain):
+  //  PLAY AGAIN  -> the same five stay seated and ready up again;
+  //  NEW SESSION -> seats are released for the next class period.
+  function playAgain(keepPlayers) {
+    const hint = document.getElementById('end-action-hint');
+    const buttons = [document.getElementById('btn-play-again'), document.getElementById('btn-new-session')];
+    buttons.forEach((b) => { b.disabled = true; });
+    hint.textContent = 'RESETTING THE COUNCIL...';
+    socket.emit('host:playAgain', { keepPlayers }, (res) => {
+      buttons.forEach((b) => { b.disabled = false; });
+      hint.textContent = res && res.ok ? '' : `Could not reset: ${(res && res.reason) || 'no response'}`;
+    });
+  }
+  document.getElementById('btn-play-again').addEventListener('click', () => playAgain(true));
+  document.getElementById('btn-new-session').addEventListener('click', () => playAgain(false));
+
+  // The canvas has no size until #view-end is shown, so draw on the next
+  // frame (and again whenever the projector stage is resized).
+  function drawEndChart() {
+    const data = state.endData;
+    if (!data || !window.SocietelosCharts || !window.SocietelosCharts.drawFullHistoryChart) return;
+    requestAnimationFrame(() => {
+      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, document.getElementById('end-history-chart'), { cycleMarkers: data.cycleMarkers });
+    });
+  }
+  window.addEventListener('resize', () => { if (state.phase === 'END') drawEndChart(); });
+
+  // Reveal sequence: beat 1 (five-year recap) at once, beat 2 (secret roles
+  // and write-in authors) 15 s later, beat 3 (winner / shutdown) 10 s after.
+  const END_BEAT_DELAYS_MS = [0, 15000, 25000];
+  let endBeatTimers = [];
+  function clearEndBeats() {
+    endBeatTimers.forEach(clearTimeout);
+    endBeatTimers = [];
+  }
+  function playEndBeats(view) {
+    clearEndBeats();
+    view.classList.remove('beat-1', 'beat-2', 'beat-3');
+    END_BEAT_DELAYS_MS.forEach((ms, i) => {
+      endBeatTimers.push(setTimeout(() => view.classList.add(`beat-${i + 1}`), ms));
+    });
+  }
+  socket.on('phase', (payload) => { if (payload.phase !== 'END') clearEndBeats(); });
+
+  function renderEnd(data) {
+    if (!data) return;
+    state.endData = data;
+    const view = document.getElementById('view-end');
+    playEndBeats(view);
+    view.classList.toggle('is-shutdown', !!data.shutdown);
+    view.classList.toggle('no-writein', data.finaleMode !== 'writein');
+    if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);
+    renderEndRecap(data);
+    drawEndChart();
+    renderEndTable(data);
+    renderEndWinner(data);
+  }
+  socket.on('game:end', renderEnd);
+
   // Borda tally: one bar per proposal (max 16 points), growing from zero.
   const BORDA_MAX = 16;
   function renderBordaBars(tally) {
@@ -1257,7 +1621,10 @@
     const sessionRemaining = state.sessionEndsAt ? Math.max(0, state.sessionEndsAt - Date.now()) : null;
     const sessionTimerEl = document.getElementById('session-timer-display');
     if (sessionTimerEl) {
-      sessionTimerEl.textContent = sessionRemaining === null ? '--:--' : formatClock(sessionRemaining);
+      // Write text only when it changes: a same-value textContent write still
+      // forces a layout every frame.
+      const sessionText = sessionRemaining === null ? '--:--' : formatClock(sessionRemaining);
+      if (sessionTimerEl.textContent !== sessionText) sessionTimerEl.textContent = sessionText;
       sessionTimerEl.classList.toggle('is-low', sessionRemaining !== null && sessionRemaining > 0 && sessionRemaining < 30000);
     }
     requestAnimationFrame(tick);

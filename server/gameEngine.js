@@ -3,6 +3,23 @@
 // Societelos — Stream 1 authoritative game state machine.
 // The server is the only source of truth: this module owns game state and
 // phase timers. socket.js translates client events into calls on it.
+//
+// Map of this file (search for the names):
+//   constants ........ NODE_IDS, PHASES, PHASE_STARTERS, DEFAULT_PHASE_SECONDS
+//   pure helpers ..... hashSeed, seededShuffle, gradeFor, determineWinners,
+//                      breakTie, catalystScores, selectCrisis, sanitizeForBroadcast
+//   GameState
+//     timers ......... startPhaseTimer, clearPhaseTimer, beginTransition (isTransitioning)
+//     phase flow ..... advancePhase -> nextPhase -> start*Phase (one per phase)
+//     voting ......... castVote, tallyVotes, startResolutionPhase, narrateAndBroadcast
+//     finale ......... submitPolicy, runFinaleModeration, resubmitPolicy,
+//                      rankPolicies, startFinaleEnactPhase (Borda math in finale.js)
+//     scoring ........ awardRolePoints, awardCatalystPoints, scoreFinale
+//     end screen ..... startEndPhase, compileEndData (game:end), endRoles, endAuthors
+//     reconnects ..... findReconnectSeat, reconnectPlayer, privateSyncFor, hostSync
+//     teacher ........ configure (host:config), setSeed, playAgain, resetGame
+//   room registry .... createRoom, getRoom, findSession, closeRoom
+//   smokeTest ........ npm run smoke
 
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
@@ -73,7 +90,8 @@ const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
-const PLACEHOLDER_POLICY = 'Continue current policy unchanged while the council reviews its options.';
+// The standard protocol policy that replaces a rejected write-in (loom.getPlaceholderPolicy).
+const PLACEHOLDER_POLICY = loom.PLACEHOLDER_TEXT;
 const ZERO_EFFECTS = Object.freeze({ purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
 const FINALE_RESUBMIT_MS = 25000; // one resubmit window for "revise" write-ins
 const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review them again next year.';
@@ -117,7 +135,8 @@ const PHASE_STARTERS = {
   FINALE_MOD: 'startFinaleModPhase',
   FINALE_DEBATE: 'startFinaleDebatePhase',
   FINALE_RANK: 'startFinaleRankPhase',
-  FINALE_ENACT: 'startFinaleEnactPhase'
+  FINALE_ENACT: 'startFinaleEnactPhase',
+  END: 'startEndPhase'
 };
 
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
@@ -138,6 +157,9 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   FINALE_RANK: 30,
   FINALE_ENACT: 20
 });
+
+// Teacher-selectable debate lengths (host:config): 60 s or 90 s.
+const DEBATE_CHOICES = Object.freeze([60, 90]);
 
 // Debug: FAST_TIMERS=true shrinks every phase to this many seconds.
 const FAST_TIMER_SECONDS = 3;
@@ -183,6 +205,11 @@ function generateRoomCode(taken = new Set()) {
  */
 function generateGameId() {
   return crypto.randomBytes(6).toString('hex');
+}
+
+/** A replay seed (game id): 1-64 letters, digits, '-' or '_'. */
+function isValidSeed(seed) {
+  return typeof seed === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(seed);
 }
 
 /**
@@ -370,7 +397,7 @@ function sanitizeForBroadcast(value, allow = []) {
 
 // ---------------------------------------------------------------------------
 // Stream 4 interfaces. The real simulate() from server/sim drives every
-// resolution; the Loom stub below remains only as a last-resort fallback.
+// resolution; the narration stub below is only a last-resort fallback.
 // ---------------------------------------------------------------------------
 
 /** The simulation entry point used by the engine (server/sim/index.js). */
@@ -392,7 +419,8 @@ function createSimState(simConfig) {
 /**
  * Last-resort canned narration, used only if server/loom.js itself throws
  * (it already falls back to authored lines when Gemini is unavailable).
- * Both are async to match the real Gemini-backed interface.
+ * Async to match the real Gemini-backed interface. (Moderation needs no
+ * stub: a failed loom.moderate falls back to the authored A/B finale.)
  */
 const loomStub = {
   async narrate(context = {}) {
@@ -408,23 +436,45 @@ const loomStub = {
       ],
       stub: true
     };
-  },
-  async moderate(submissions = []) {
-    return submissions.map((s) => ({
-      node: s.node,
-      status: 'ok',
-      cleaned: String(s.text || '').trim().slice(0, 140),
-      feedback: '',
-      roles: [],
-      effects: { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 },
-      stub: true
-    }));
   }
 };
 
 /** The Loom module used by the engine (server/loom.js, Gemini with offline fallback). */
 function resolveLoom() {
   return loom;
+}
+
+/**
+ * Shared class grade from the final realized GDW: 0 "SHUTDOWN" (the Loom
+ * has shut down), up to 34 "Fragile", 35-59 "Stable", 60+ "Thriving".
+ * GDW is reported to one decimal, so the bands are cut at 35 and 60.
+ */
+const GRADE_TEXT = Object.freeze({
+  SHUTDOWN: 'The Loom has shut down',
+  Fragile: 'Fragile: the region survived, barely',
+  Stable: 'Stable: the region holds together',
+  Thriving: 'Thriving: the region found something worth living for'
+});
+
+function gradeFor(gdw) {
+  const g = Number(gdw);
+  if (!Number.isFinite(g) || g <= 0) return 'SHUTDOWN';
+  if (g < 35) return 'Fragile';
+  if (g < 60) return 'Stable';
+  return 'Thriving';
+}
+
+/**
+ * End-of-game winners. GDW <= 0: the Loom shut down and everyone loses
+ * (null). Otherwise every node tied on the top total score wins together.
+ * `scores` is { node: total }; returns a sorted node array or null.
+ */
+function determineWinners(scores = {}, finalGdw = 0) {
+  if (!(Number(finalGdw) > 0)) return null;
+  const entries = Object.entries(scores).filter(([, v]) => Number.isFinite(v));
+  if (!entries.length) return null;
+  const top = Math.max(...entries.map(([, v]) => v));
+  return entries.filter(([, v]) => v === top).map(([node]) => node).sort();
 }
 
 const CATALYST_SWING = 10;
@@ -507,10 +557,17 @@ class GameState extends EventEmitter {
 
     // Society.
     this.gdw = STARTING_GDW;
+    this.cycleMarkers = []; // [{ cycle, index, gdw }]: where each cycle ends in gdwHistory
     this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
     this.worldKey = null;
     this.ending = null; // 'shutdown' once GDW reaches 0
+    this.endData = null; // End Screen data, compiled when END starts
+    this.isTransitioning = false; // a Loom call for RESOLUTION / FINALE_MOD / FINALE_ENACT is in flight
+    this.transition = null; // { phase, cycle, promise } of that call
+    this.lastPhasePayload = null; // last 'phase' broadcast, for reconnects
+    this.intelByNode = {}; // node -> { cycle, text }: this cycle's private intel
+    this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
     // Current cycle.
@@ -658,11 +715,46 @@ class GameState extends EventEmitter {
    * Phase-specific starters (start*Phase) are looked up in PHASE_STARTERS;
    * any phase without one just gets its timer and a broadcast.
    */
+  /**
+   * isTransitioning lock around the asynchronous transitions (RESOLUTION
+   * and FINALE_ENACT narration, FINALE_MOD moderation). While it is held,
+   * a second start of the same phase returns the in-flight promise instead
+   * of re-running the simulation, scoring or Loom call; the lock is
+   * released when the call settles, or dropped when the game moves on.
+   */
+  beginTransition(phase, work) {
+    if (this.isTransitioning && this.transition && this.transition.phase === phase && this.transition.cycle === this.cycle && this.transition.gameId === this.gameId) {
+      return this.transition.promise;
+    }
+    const transition = { phase, cycle: this.cycle, gameId: this.gameId, promise: null };
+    this.isTransitioning = true;
+    this.transition = transition;
+    const release = () => {
+      if (this.transition === transition) {
+        this.isTransitioning = false;
+        this.transition = null;
+      }
+    };
+    transition.promise = Promise.resolve().then(work).finally(release);
+    return transition.promise;
+  }
+
+  /** True while `phase`'s async transition for this cycle is still in flight. */
+  transitionPending(phase) {
+    return this.isTransitioning && !!this.transition && this.transition.phase === phase && this.transition.cycle === this.cycle;
+  }
+
   advancePhase() {
     const from = this.phase;
     const to = this.nextPhase();
     this.clearPhaseTimer();
     if (from === PHASES.END) return to;
+    // Leaving the phase abandons its in-flight Loom call: whatever it
+    // returns later is ignored (see narrateAndBroadcast / onFinaleModeration).
+    if (this.transition && this.transition.phase === from) {
+      this.isTransitioning = false;
+      this.transition = null;
+    }
     if (process.env.LOG_PHASES === 'true' || from === PHASES.RESOLUTION || to === PHASES.END) {
       console.log(`[game ${this.roomCode}] ${from} -> ${to} (cycle ${this.cycle})`);
     }
@@ -677,6 +769,150 @@ class GameState extends EventEmitter {
       this.enterPhase(to);
     }
     return to;
+  }
+
+  /**
+   * END: broadcast the closing citizen for the End Screen - the citizen whose
+   * cohort changed most over the whole game, with their own words.
+   */
+  startEndPhase() {
+    const extra = {};
+    try {
+      const pick = sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
+      if (pick && pick.text) {
+        extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text: pick.text, sentiment: pick.band }), change: pick.change, band: pick.band };
+      }
+    } catch (err) {
+      console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
+    }
+    // Always a closing voice with a name, district and text, even with no
+    // simulation state or Loom (offline, early shutdown, missing data).
+    if (!extra.closing || !extra.closing.text || !extra.closing.name || !extra.closing.district) {
+      extra.closing = this.fallbackClosingMessage();
+    }
+    // Compile the End Screen data before END is broadcast, so a host that
+    // asks for it on the END phase already finds it.
+    this.endData = this.compileEndData(extra.closing || null);
+    this.enterPhase(PHASES.END, extra);
+    this.emit('game:end', this.endData);
+  }
+
+  /**
+   * The End Screen trajectory: the starting GDW (25) and every realized
+   * month, 60 points after 5 cycles, cut at the first month that hits 0 on
+   * a shutdown. Markers give each cycle's last index into gdwHistory.
+   */
+  endGdwHistory() {
+    let history = this.gdwHistory.slice();
+    const zero = history.findIndex((g, i) => i > 0 && g <= 0);
+    if (zero > 0) history = history.slice(0, zero + 1);
+    const last = history.length - 1;
+    const cycleMarkers = this.cycleMarkers
+      .map((m) => ({ cycle: m.cycle, index: Math.min(m.index, last) }))
+      .map((m) => ({ ...m, gdw: history[m.index] }))
+      .filter((m, i, a) => i === 0 || a[i - 1].index < m.index);
+    return { gdwHistory: history, cycleMarkers };
+  }
+
+  /**
+   * End Screen role reveal: NODE-01..NODE-05 in order with the player's
+   * display name (shown only now, on the local projector; never sent to the
+   * Loom), their secret role and their per-cycle score breakdown.
+   */
+  endRoles() {
+    const breakdown = this.scoreBreakdown();
+    return Object.keys(this.players).sort().map((node) => {
+      const role = (this.roleAssignment && this.roleAssignment[node]) || null;
+      const { total, perCycle } = breakdown[node];
+      return {
+        node,
+        name: this.players[node].name,
+        role: role ? { key: role.key, name: role.name || role.designation || role.key, icon: role.icon || '' } : null,
+        total,
+        perCycle
+      };
+    });
+  }
+
+  /**
+   * End Screen authors reveal: each Cycle 5 write-in (POLICY-1..5, in id
+   * order) with its author, Borda points, rank placement (1-5), enacted
+   * weight and the Loom's role tags. Empty if no write-in finale was ranked.
+   */
+  endAuthors() {
+    const finale = this.finale;
+    if (!finale || !Array.isArray(finale.policies) || !Array.isArray(finale.rows)) return [];
+    const placeOf = Object.fromEntries(finale.rows.map((r, i) => [r.id, i + 1]));
+    const pointsOf = Object.fromEntries(finale.rows.map((r) => [r.id, r.points]));
+    const weightOf = Object.fromEntries((finale.enacted || []).map((e) => [e.id, e.weight]));
+    return finale.policies
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))
+      .map((p) => ({
+        id: p.id,
+        text: p.text,
+        node: p.node,
+        name: (this.players[p.node] && this.players[p.node].name) || p.node,
+        points: pointsOf[p.id] || 0,
+        place: placeOf[p.id] || null,
+        weight: weightOf[p.id] || 0,
+        roles: (p.roles || []).filter((r) => typeof r === 'string').slice(0, 2),
+        placeholder: !!p.placeholder,
+        fallback: false
+      }));
+  }
+
+  /** 'writein' | 'fallback' | 'none': how (or whether) Cycle 5 was decided. */
+  endFinaleMode() {
+    if (!this.finale) return 'none'; // created only when the finale cycle starts
+    if (this.finaleFallback) return 'fallback';
+    return Array.isArray(this.finale.rows) ? 'writein' : 'none';
+  }
+
+  /**
+   * END data compiler: everything the End Screen reveals, gathered once
+   * after Cycle 5's FINALE_ENACT / RESOLUTION, or straight after the cycle
+   * whose realized GDW hit 0. Stored as this.endData and emitted as
+   * 'game:end'. Server-side until the game is over: it reveals scores.
+   */
+  compileEndData(closingMessage = null) {
+    const finalGdw = roundGdw(this.gdw);
+    const shutdown = this.ending === 'shutdown' || finalGdw <= 0;
+    const world = this.worldInfo();
+    const grade = shutdown ? 'SHUTDOWN' : gradeFor(finalGdw);
+    const scores = Object.fromEntries(Object.keys(this.players).sort().map((node) => [node, this.scores[node] || 0]));
+    const winners = shutdown ? null : determineWinners(scores, finalGdw);
+    const finaleMode = this.endFinaleMode();
+    return {
+      gameId: this.gameId,
+      // Replay: every run in the game is seeded from the game id, so
+      // the same game id and the same votes replay it exactly.
+      // cycleSeeds are the per-cycle 32-bit realized-run seeds, for discussion.
+      seed: this.gameId,
+      cycleSeeds: Array.from({ length: Math.max(0, this.cycle) }, (_, i) => hashSeed(this.gameId, i + 1)),
+      cyclesPlayed: this.cycle,
+      finalGdw,
+      grade,
+      gradeText: GRADE_TEXT[grade],
+      shutdown,
+      worldKey: this.worldKey || null,
+      worldName: world.name || null,
+      closingMessage,
+      ...this.endGdwHistory(),
+      roles: this.endRoles(),
+      authors: this.endAuthors(),
+      // How Cycle 5 was decided: 'writein' (authors above), 'fallback' (the
+      // Loom was unavailable, so the authored A/B finale was voted and there
+      // are no write-in authors to reveal) or 'none' (the game ended before
+      // Cycle 5, e.g. a shutdown).
+      finaleMode,
+      finaleFallback: finaleMode === 'fallback',
+      scores,
+      // winner: null on a shutdown (everyone loses); otherwise every node
+      // tied on the top score, so a shared win is an array of 2+ nodes.
+      winner: winners,
+      sharedWin: !!winners && winners.length > 1
+    };
   }
 
   /**
@@ -697,6 +933,7 @@ class GameState extends EventEmitter {
       crisis: this.publicCrisis(),
       ...extra
     }, ['name']);
+    this.lastPhasePayload = payload; // replayed to reconnecting clients
     this.emit('phase', payload);
     return endsAt;
   }
@@ -725,6 +962,7 @@ class GameState extends EventEmitter {
     for (const node of NODE_IDS) {
       const role = this.roleAssignment && this.roleAssignment[node];
       const text = (role && intel[role.key]) || FALLBACK_INTEL;
+      this.intelByNode[node] = { cycle: this.cycle, text };
       this.emit('intel:drop', { node, text });
     }
     this.enterPhase(PHASES.INTEL);
@@ -800,9 +1038,10 @@ class GameState extends EventEmitter {
 
   /** FINALE_MOD: writing closes (defaults filled) while the Loom moderates. */
   startFinaleModPhase() {
+    if (this.phase === PHASES.FINALE_MOD && this.transitionPending(PHASES.FINALE_MOD)) return this.transition.promise;
     this.closeFinaleWriting();
     this.enterPhase(PHASES.FINALE_MOD);
-    return this.runFinaleModeration();
+    return this.beginTransition(PHASES.FINALE_MOD, () => this.runFinaleModeration());
   }
 
   /**
@@ -879,7 +1118,8 @@ class GameState extends EventEmitter {
       // "reject", a second "revise", or a resubmit that never came / timed
       // out: a safe, bland placeholder so nothing unmoderated is shown.
       if (m.status !== 'ok') {
-        return { id: `POLICY-${i + 1}`, node, text: PLACEHOLDER_POLICY, roles: [], effects: { ...ZERO_EFFECTS }, placeholder: true };
+        const ph = loom.getPlaceholderPolicy(node);
+        return { id: `POLICY-${i + 1}`, node, text: ph.cleaned, roles: ph.roles, effects: ph.effects, placeholder: true };
       }
       return {
         id: `POLICY-${i + 1}`,
@@ -976,10 +1216,13 @@ class GameState extends EventEmitter {
   /** Forecast median end GDW of one finale policy on its own (Borda tie-breaker). */
   finaleMedianOf(policyId) {
     const policy = this.finale.policies.find((p) => p.id === policyId);
-    const r = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, (policy && policy.effects) || {}, {
-      runs: 200, seed: hashSeed(this.gameId, this.cycle, policyId), volatility: this.volatility
-    });
-    return forecastMedianEnd(r);
+    const effects = (policy && policy.effects) || {};
+    const seed = hashSeed(this.gameId, this.cycle, policyId);
+    // sim.getForecastMedian: forecast runs only (no realized run or fan).
+    if (this.simState && typeof sim.getForecastMedian === 'function') {
+      return sim.getForecastMedian({ gdw: this.gdw, simState: this.simState }, effects, seed, { runs: 200, volatility: this.volatility });
+    }
+    return forecastMedianEnd(resolveSimulate()({ gdw: this.gdw, simState: this.simState }, effects, { runs: 200, seed, volatility: this.volatility }));
   }
 
   /**
@@ -987,6 +1230,7 @@ class GameState extends EventEmitter {
    * and their 50/25/25 package is simulated as cycle 5's realized run.
    */
   startFinaleEnactPhase() {
+    if (this.phase === PHASES.FINALE_ENACT && this.transitionPending(PHASES.FINALE_ENACT)) return this.transition.promise;
     this.closeRanking();
     const finale = this.finale;
     const byId = Object.fromEntries(finale.policies.map((p) => [p.id, p]));
@@ -1019,7 +1263,12 @@ class GameState extends EventEmitter {
     };
     // Public Borda tally (best first) and the enacted top three; no authors.
     const tally = finale.rows.map((r) => ({ id: r.id, points: r.points, places: r.places.slice() }));
-    const enacted = finale.enacted.map((e) => ({ id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points }));
+    // roleTags: the agendas each enacted policy serves (the Loom's role tags),
+    // revealed only now that the ballots are locked; still no authors.
+    const enacted = finale.enacted.map((e) => ({
+      id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points,
+      roleTags: ((byId[e.id] && byId[e.id].roles) || []).filter((r) => typeof r === 'string').slice(0, 2)
+    }));
     const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
     const scoreUpdates = Object.keys(this.players).map((node) => {
       const role = finale.awards.role[node] || 0;
@@ -1027,7 +1276,7 @@ class GameState extends EventEmitter {
       const catalyst = finale.awards.catalyst[node] || 0;
       return { node, cycle: this.cycle, gained: role + author + catalyst, role, author, catalyst, total: this.scores[node] || 0 };
     });
-    finale.narrated = this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates });
+    finale.narrated = this.beginTransition(PHASES.FINALE_ENACT, () => this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates }));
     return finale.narrated;
   }
 
@@ -1305,6 +1554,8 @@ class GameState extends EventEmitter {
     const monthly = trajectory && typeof trajectory.length === 'number' ? Array.from(trajectory).slice(1).map(roundGdw) : [];
     if (monthly.length) monthly[monthly.length - 1] = this.gdw;
     this.gdwHistory.push(...(monthly.length ? monthly : [this.gdw]));
+    // Cycle boundary marker: the gdwHistory index of this cycle's last month.
+    this.cycleMarkers.push({ cycle: this.cycle, index: this.gdwHistory.length - 1, gdw: this.gdw });
   }
 
   /**
@@ -1345,20 +1596,24 @@ class GameState extends EventEmitter {
     for (const node of Object.keys(this.players)) {
       out[node] = {
         total: this.scores[node] || 0,
-        perCycle: this.scoreLedger.map((e) => ({ cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0 }))
+        perCycle: this.scoreLedger.map((e) => ({
+          cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0, author: (e.author && e.author[node]) || 0
+        }))
       };
     }
     return out;
   }
 
   /**
-   * RESOLUTION: close voting, run the simulation (stub until server/sim is
-   * merged) on the winning option and broadcast 'resolution' once the Loom's
+   * RESOLUTION: close voting, run the seeded simulation (server/sim) on the
+   * winning option and broadcast 'resolution' once the Loom's
    * narration is ready. A safety timer starts immediately so a slow Loom
    * never stalls the game; once the payload is out, the timer restarts for
    * the full RESOLUTION duration so the 20 s month-by-month animation plays.
    */
   startResolutionPhase() {
+    // Re-entrancy: never simulate, score or narrate the same cycle twice.
+    if (this.phase === PHASES.RESOLUTION && this.transitionPending(PHASES.RESOLUTION)) return this.transition.promise;
     this.votingOpen = false;
     const { totals, tie, abstained, winner: provisional } = this.tallyVotes();
     let winner = provisional;
@@ -1416,7 +1671,7 @@ class GameState extends EventEmitter {
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
     const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
-    return this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates });
+    return this.beginTransition(PHASES.RESOLUTION, () => this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates }));
   }
 
   /**
@@ -1433,6 +1688,8 @@ class GameState extends EventEmitter {
     const moods = new Map(sim.citizenMoods(stateBefore, this.simState, this.data.citizens).map((m) => [m.id, m]));
     const citizens = (this.data.citizens || []).map((c) => ({ ...c, ...(moods.get(c.id) || {}) }));
     const context = { crisis: this.publicCrisis(), winningOption: option, simSummary: simResult.summary, worldKey: this.worldKey, citizens };
+    // Finale: the Loom comments on the enacted 50/25/25 package as a whole (texts and weights, no authors).
+    if (result && result.finale && Array.isArray(result.enacted)) context.enacted = result.enacted.map((e) => ({ text: e.text, weight: e.weight, place: e.place }));
     return Promise.resolve()
       .then(() => resolveLoom().narrate(context))
       .catch((err) => {
@@ -1447,6 +1704,13 @@ class GameState extends EventEmitter {
         }
         // Stale: the game was reset or moved on while the Loom was thinking.
         if (this.gameId !== gameIdAtStart || this.cycle !== cycleAtStart) return null;
+        // Same cycle but the phase already moved on (e.g. RESOLUTION ->
+        // WORLD_REVEAL / END): a late resolution would repaint the wrong
+        // screen, so only the private score updates still go out.
+        if (this.phase !== phase) {
+          for (const update of scoreUpdates) this.emit('score:update', update);
+          return null;
+        }
         // Only aggregate totals leave the server; sanitizing strips any
         // per-node vote or Override field that might slip into the payload.
         this.lastResolution = sanitizeForBroadcast({
@@ -1461,9 +1725,7 @@ class GameState extends EventEmitter {
         }, ['name']);
         // The month-by-month animation starts when clients receive this
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
-        if (this.phase === phase && this.cycle === cycleAtStart) {
-          this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
-        }
+        this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
         this.emit('resolution', this.lastResolution);
         for (const update of scoreUpdates) this.emit('score:update', update);
         return this.lastResolution;
@@ -1533,12 +1795,17 @@ class GameState extends EventEmitter {
     this.lastResolution = null;
     if (cycleNumber === 1) {
       this.simState = createSimState(this.data.sim);
+      this.simStateStart = this.simState; // for the End Screen's closing citizen
       this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
       this.gdwHistory = [this.gdw];
+      this.cycleMarkers = [];
       this.volatility = 1.0;
       this.voteHistory = {};
       this.worldKey = null;
       this.ending = null;
+      this.endData = null;
+      this.finale = null;
+      this.intelByNode = {};
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
@@ -1564,9 +1831,16 @@ class GameState extends EventEmitter {
     this.simState = null;
     this.gdw = STARTING_GDW;
     this.gdwHistory = [];
+    this.cycleMarkers = [];
     this.volatility = 1.0;
     this.worldKey = null;
     this.ending = null;
+    this.endData = null;
+    this.finale = null;
+    this.intelByNode = {};
+    this.lastPhasePayload = null;
+    this.isTransitioning = false;
+    this.transition = null;
     this.voteHistory = {};
     this.scoreLedger = [];
     this.roleAssignment = null;
@@ -1575,6 +1849,9 @@ class GameState extends EventEmitter {
     this.sessionEndsAt = null;
     this.manualFinaleTriggered = false;
     this._designatedFinaleCycle = null;
+    this.debateReady = new Set();
+    this.simStateStart = null;
+    this.endsAt = null;
     for (const [node, player] of Object.entries(this.players)) {
       player.ready = false;
       player.role = null;
@@ -1584,6 +1861,86 @@ class GameState extends EventEmitter {
     console.log(`[game ${this.roomCode}] reset (gameId ${this.gameId})`);
     this.emit('phase', { cycle: 0, phase: PHASES.LOBBY, endsAt: null, crisis: null });
     return true;
+  }
+
+  /**
+   * Replay a historical game: every seeded run (realized months, forecasts,
+   * shuffles) derives from the game id, so the same seed and the same votes
+   * reproduce the same game. Lobby only. Returns true if applied.
+   */
+  setSeed(seed) {
+    if (this.phase !== PHASES.LOBBY || !isValidSeed(seed)) return false;
+    this.gameId = seed;
+    console.log(`[game ${this.roomCode}] replaying seed ${seed}`);
+    return true;
+  }
+
+  /**
+   * Teacher settings from the host lobby (host:config). Only in LOBBY, so a
+   * running game never changes pace mid-cycle. debateSeconds is 60 (~13.5
+   * min game) or 90 (~16 min game). Returns { ok, config } or a reason.
+   */
+  configure(settings = {}) {
+    if (this.phase !== PHASES.LOBBY) return { ok: false, reason: 'GAME_IN_PROGRESS' };
+    if (settings.debateSeconds !== undefined) {
+      if (!DEBATE_CHOICES.includes(settings.debateSeconds)) return { ok: false, reason: 'BAD_DEBATE_SECONDS' };
+      this.durations.DEBATE = settings.debateSeconds * 1000;
+    }
+    if (settings.showForecastBeforeVote !== undefined) {
+      if (typeof settings.showForecastBeforeVote !== 'boolean') return { ok: false, reason: 'BAD_SHOW_FORECAST' };
+      this.showForecastBeforeVote = settings.showForecastBeforeVote;
+    }
+    return { ok: true, config: this.getConfig() };
+  }
+
+  /** Current teacher settings: { debateSeconds, showForecastBeforeVote }. */
+  getConfig() {
+    return { debateSeconds: Math.round(this.durations.DEBATE / 1000), showForecastBeforeVote: !!this.showForecastBeforeVote };
+  }
+
+  /**
+   * host:playAgain: reset the room for another game without restarting
+   * Node. By default the seats are cleared too (a new class period brings
+   * new students); `keepPlayers: true` keeps the same five seated so they
+   * can replay. Returns { ok, gameId, keptPlayers, released: [node] }.
+   */
+  playAgain({ keepPlayers = false } = {}) {
+    const released = [];
+    if (!keepPlayers) {
+      for (const node of Object.keys(this.players)) {
+        if (!this.players[node].isBot) released.push(node);
+        delete this.players[node];
+        delete this.scores[node];
+        delete this.overridesUsed[node];
+      }
+    }
+    this.resetGame();
+    if (this.botsEnabled) this.fillBots();
+    return { ok: true, gameId: this.gameId, keptPlayers: !!keepPlayers, released };
+  }
+
+  /**
+   * Deterministic closing citizen when the simulation pick is unavailable:
+   * one authored line from data/citizens.json chosen by the final GDW band
+   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Old Harbour
+   * voice if the citizen data itself is missing.
+   */
+  fallbackClosingMessage() {
+    const band = this.gdw <= 0 || this.ending === 'shutdown' ? 'bad' : this.gdw >= 35 ? 'good' : 'mixed';
+    const citizens = (Array.isArray(this.data.citizens) ? this.data.citizens : [])
+      .filter((c) => c && c.id && c.name && c.district && c.lines && Array.isArray(c.lines[band]) && c.lines[band].length);
+    if (citizens.length) {
+      const c = citizens[hashSeed(this.gameId, 'closing') % citizens.length];
+      const lines = c.lines[band];
+      const text = lines[hashSeed(this.gameId, 'closing-line') % lines.length];
+      return { ...this.citizenMessage({ citizenId: c.id, text, sentiment: band }), change: 0, band, fallback: true };
+    }
+    const text = band === 'bad'
+      ? 'The lights went out on the harbour tonight. Nobody came to turn them back on.'
+      : band === 'good'
+        ? 'Five years ago I had nothing to do. Tonight I am tired from doing something that mattered.'
+        : 'We are still here. Some days that feels like enough. Some days it does not.';
+    return { citizenId: 'closing', name: 'A citizen of Old Harbour', age: null, district: 'D1', districtName: 'Old Harbour', cohort: null, text, sentiment: band, change: 0, band, fallback: true };
   }
 
   /**
@@ -1802,6 +2159,82 @@ class GameState extends EventEmitter {
     return true;
   }
 
+  /**
+   * Mid-game reconnect without a token (the phone lost its storage): find
+   * the disconnected seat whose player name matches (trimmed, any case),
+   * optionally pinned to the phone's saved `node`. Only an offline seat can
+   * be reclaimed, so a live player can never be bumped. Returns node or null.
+   */
+  findReconnectSeat({ name, node } = {}) {
+    if (this.phase === PHASES.LOBBY) return null;
+    const wanted = String(name || '').trim().toLowerCase();
+    if (!wanted) return null;
+    const matches = Object.values(this.players).filter((p) => !p.isBot && !p.connected &&
+      String(p.name || '').trim().toLowerCase() === wanted && (!node || p.node === node));
+    // Two offline seats with the same name: ambiguous, so require the token.
+    return matches.length === 1 ? matches[0].node : null;
+  }
+
+  /**
+   * Re-hydration for a reconnecting phone: the private events it would
+   * have received for the current moment of the game, in order, as
+   * [[event, payload], ...]. Payloads carry no `node` (they go to one
+   * socket). Never includes anything belonging to another node.
+   */
+  privateSyncFor(node) {
+    const player = this.players[node];
+    if (!player) return [];
+    const events = [];
+    const inGame = this.phase !== PHASES.LOBBY;
+    events.push(['state:sync', {
+      node,
+      cycle: this.cycle,
+      phase: this.phase,
+      voted: !!(this.votes && this.votes[node]),
+      submitted: !!(this.finale && this.finale.submissions && this.finale.submissions[node]),
+      ranked: !!(this.finale && this.finale.ranks && this.finale.ranks[node])
+    }]);
+    const role = this.roleAssignment && this.roleAssignment[node];
+    if (inGame && role) events.push(['role:assigned', { role }]);
+    if (inGame && this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
+    const intel = this.intelByNode[node];
+    if (inGame && this.phase !== PHASES.END && intel && intel.cycle === this.cycle) events.push(['intel:drop', { text: intel.text }]);
+    if (this.phase === PHASES.VOTE) events.push(['override:status', { overrideAvailable: this.overrideAvailable(node) }]);
+    const finale = this.finale;
+    if (finale && this.phase === PHASES.FINALE_MOD && finale.revise && finale.revise[node] === 'pending') {
+      const m = finale.moderation[node] || {};
+      events.push(['finale:feedback', { status: 'revise', feedback: String(m.feedback || 'Please rephrase your policy as one clear, school-appropriate sentence.') }]);
+    }
+    if (finale && this.phase === PHASES.FINALE_RANK && finale.ballots && finale.ballots[node]) {
+      const texts = Object.fromEntries((finale.policies || []).map((p) => [p.id, p.text]));
+      events.push(['finale:ballot', { policies: finale.ballots[node].map((id) => ({ id, text: texts[id] })) }]);
+    }
+    if (this.phase === PHASES.END && this.endData) events.push(['game:end', this.endData]);
+    return events;
+  }
+
+  /**
+   * Re-hydration for a projector that refreshed mid-game: only public
+   * state, as [[event, payload], ...]: host:sync (phase, world and the GDW
+   * line so far), the current phase broadcast, then the active resolution
+   * or, once the game is over, game:end.
+   */
+  hostSync() {
+    if (this.phase === PHASES.LOBBY) return [];
+    const events = [['host:sync', {
+      cycle: this.cycle,
+      phase: this.phase,
+      gdw: this.gdw,
+      worldKey: this.worldKey || null,
+      gdwHistory: this.gdwHistory.slice(),
+      cycleMarkers: this.cycleMarkers.slice()
+    }]];
+    if (this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
+    if (this.phase === PHASES.END && this.endData) events.push(['game:end', this.endData]);
+    else if (this.lastResolution) events.push(['resolution', this.lastResolution]);
+    return events;
+  }
+
   /** Find the node id a socket is seated at, or null. */
   findNodeBySocket(socketId) {
     const player = Object.values(this.players).find((p) => p.socketId === socketId);
@@ -1925,6 +2358,7 @@ module.exports = {
   normalizeCrisis,
   generateRoomCode,
   generateGameId,
+  isValidSeed,
   hashSeed,
   createPrng,
   seededShuffle,
@@ -1935,6 +2369,9 @@ module.exports = {
   forecastMedianEnd,
   computeWorldKey,
   catalystScores,
+  gradeFor,
+  GRADE_TEXT,
+  determineWinners,
   bordaCount,
   rankBorda,
   selectEnacted,
@@ -1953,6 +2390,7 @@ module.exports = {
   REGION,
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
+  DEBATE_CHOICES,
   DEFAULT_FINALE_POLICY,
   PLACEHOLDER_POLICY,
   buildPhaseDurations

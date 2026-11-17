@@ -182,8 +182,100 @@
     return active;
   }
 
+  /**
+   * Glowing dot at the realized line's tip: a soft halo that breathes with
+   * the animation clock `t` (months), a blurred glow and a bright core.
+   */
+  function drawEndpointDot(ctx, g, m, v, t = 0) {
+    if (typeof v !== 'number') return;
+    const x = g.x(m);
+    const y = g.y(v);
+    const breathe = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+    ctx.save();
+    ctx.fillStyle = 'rgba(240, 164, 48, 0.22)';
+    ctx.beginPath();
+    ctx.arc(x, y, 13 + 5 * breathe, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = COLORS.realized;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = COLORS.realized;
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff4dc';
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /**
+   * Month-12 verdict beside the realized endpoint: "BEAT FORECAST BY +X%"
+   * (teal) or "MISSED FORECAST BY -X%" (crimson), X = realized minus the
+   * forecast median at the last month, in GDW points.
+   */
+  function forecastVerdict(realizedEnd, medianEnd) {
+    if (typeof realizedEnd !== 'number' || typeof medianEnd !== 'number') return null;
+    const diff = Math.round((realizedEnd - medianEnd) * 10) / 10;
+    const beat = diff >= 0;
+    return { beat, diff, text: beat ? `BEAT FORECAST BY +${diff.toFixed(1)}%` : `MISSED FORECAST BY ${diff.toFixed(1)}%` };
+  }
+  function drawForecastCallout(ctx, g, m, realizedEnd, medianEnd) {
+    const verdict = forecastVerdict(realizedEnd, medianEnd);
+    if (!verdict) return null;
+    const x = g.x(m);
+    const y = g.y(realizedEnd);
+    ctx.save();
+    ctx.font = '700 20px ui-monospace, Menlo, Consolas, monospace';
+    const measured = ctx.measureText ? ctx.measureText(verdict.text) : null;
+    const tw = (measured && measured.width) || verdict.text.length * 12;
+    const boxW = tw + 24;
+    const boxH = 34;
+    // Left of the endpoint; above it unless that would leave the plot.
+    const bx = Math.max(PAD.left + 4, x - 18 - boxW);
+    const by = y - 22 - boxH < PAD.top ? y + 22 : y - 22 - boxH;
+    const color = verdict.beat ? '#2bc4a0' : COLORS.danger;
+    ctx.fillStyle = 'rgba(8, 11, 16, 0.88)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(bx, by, boxW, boxH);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(verdict.text, bx + 12, by + boxH / 2 + 1);
+    ctx.restore();
+    return verdict;
+  }
+
+  /** Crimson X and "LOOM SHUTDOWN // MONTH c" where the realized line hit 0. */
+  function drawCollapseMark(chart, endMonth, months) {
+    const { ctx, g } = chart;
+    ctx.save();
+    ctx.strokeStyle = COLORS.danger;
+    ctx.lineWidth = 3;
+    const x = g.x(endMonth);
+    const y = g.y(0);
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12);
+    ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
+    ctx.stroke();
+    ctx.fillStyle = COLORS.danger;
+    ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
+    ctx.restore();
+  }
+
   // Running realized-line animation (one at a time).
   let animation = null;
+  // The last realized line that finished drawing, so redraw() can repaint
+  // it after a resize: { chart, values, months, endMonth, collapsed }.
+  let finished = null;
 
   /** Stop the running realized-line animation, if any. */
   function cancelAnimation() {
@@ -200,6 +292,7 @@
    */
   function animateRealizedLine(realized, onMonthTick, { durationMs = 12000, canvas, onCollapse } = {}) {
     cancelAnimation();
+    finished = null;
     const values = Array.from((realized && (realized.gdw || realized)) || []);
     // Collapse: if GDW reaches 0 mid-cycle the line halts there (month c).
     const collapseAt = values.findIndex((v, m) => m > 0 && v <= 0);
@@ -237,34 +330,14 @@
         return i === 0 ? ctx.moveTo(g.x(0), g.y(v)) : ctx.lineTo(g.x(m), g.y(v));
       });
       ctx.stroke();
-      // Leading dot.
-      const tipM = Math.min(t, months);
-      const tipV = partial[partial.length - 1];
-      ctx.fillStyle = COLORS.realized;
-      ctx.beginPath();
-      ctx.arc(g.x(tipM), g.y(tipV), 7, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
+      // Glowing endpoint dot on the leading edge of the realized line.
+      const tipM = Math.min(t, months);
+      drawEndpointDot(ctx, g, tipM, partial[partial.length - 1], t);
     }
 
     function drawCollapse() {
-      const current = active || chart;
-      const { ctx, g } = current;
-      ctx.save();
-      ctx.strokeStyle = COLORS.danger;
-      ctx.lineWidth = 3;
-      const x = g.x(endMonth);
-      const y = g.y(0);
-      ctx.beginPath();
-      ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12);
-      ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12);
-      ctx.stroke();
-      ctx.fillStyle = COLORS.danger;
-      ctx.font = '700 22px ui-monospace, Menlo, Consolas, monospace';
-      ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
-      ctx.restore();
+      drawCollapseMark(active || chart, endMonth, months);
     }
 
     function frame(now) {
@@ -280,13 +353,40 @@
         return;
       }
       animation = null;
+      finished = { chart: active || chart, values, months, endMonth, collapsed: collapseAt > 0, drawUpTo };
       if (collapseAt > 0) {
         drawCollapse();
         if (typeof onCollapse === 'function') onCollapse(endMonth);
+      } else {
+        const current = active || chart;
+        const median = current.forecast && current.forecast.median;
+        drawForecastCallout(current.ctx, current.g, months, values[months], median && median[months]);
       }
     }
     state.frame = requestAnimationFrame(frame);
     return { cancel: () => { if (animation === state) cancelAnimation(); } };
+  }
+
+  /**
+   * Repaint the chart on screen at the canvas's current size, e.g. after the
+   * projector window is resized or the teacher toggles fullscreen (F11). A
+   * running animation needs nothing (every frame refits the canvas); a
+   * finished one is redrawn in full, with its callout or shutdown mark.
+   */
+  function redraw() {
+    if (animation || !active) return;
+    if (!finished || finished.chart.canvas !== active.canvas) {
+      drawForecastFan(active.forecast, active.canvas);
+      return;
+    }
+    const f = finished;
+    f.drawUpTo(f.endMonth);
+    const current = active;
+    if (f.collapsed) drawCollapseMark(current, f.endMonth, f.months);
+    else {
+      const median = current.forecast && current.forecast.median;
+      drawForecastCallout(current.ctx, current.g, f.months, f.values[f.months], median && median[f.months]);
+    }
   }
 
   /**
@@ -297,8 +397,113 @@
     if (!canvas || !canvas.getContext || !payload) return;
     const chart = drawForecastFan(payload.forecast, canvas);
     const realized = (payload.realized && payload.realized.gdw) || [];
-    if (chart) line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
+    if (!chart) return;
+    line(chart.ctx, chart.g, realized, { color: COLORS.realized, width: 4 });
+    const last = realized.length - 1;
+    const median = payload.forecast && payload.forecast.median;
+    if (last > 0 && realized.every((v, m) => m === 0 || v > 0)) drawForecastCallout(chart.ctx, chart.g, last, realized[last], median && median[last]);
   }
 
-  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render };
+  // Class-grade bands for the five-year chart (final GDW thresholds).
+  const GRADE_BANDS = [
+    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(43, 196, 160, 0.10)', text: '#2bc4a0' },
+    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(63, 216, 230, 0.07)', text: '#3fd8e6' },
+    { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(240, 164, 48, 0.08)', text: '#f0a430' },
+    { from: 0, to: 1, label: '0 SHUTDOWN', fill: 'rgba(229, 72, 77, 0.35)', text: '#e5484d' }
+  ];
+  const MONTHS_PER_CYCLE = 12;
+
+  /**
+   * End Screen: the whole game's realized GDW (start + up to 60 months) on a
+   * fixed 5-year axis, with the class-grade threshold bands, a vertical
+   * divider at the end of each cycle and YEAR 1..5 labels. A game that shut
+   * down early draws its line up to the collapse and leaves the rest empty.
+   * `cycleMarkers` ([{ cycle, index }]) place the dividers; without them the
+   * dividers fall every 12 months. Returns { ctx, g } or null.
+   */
+  function drawFullHistoryChart(gdwHistory, canvas, { cycleMarkers = null, cycles = 5, lineColor = COLORS.realized } = {}) {
+    if (!canvas && typeof document !== 'undefined') canvas = document.getElementById('end-history-chart');
+    if (!canvas || !canvas.getContext) return null;
+    const history = (Array.isArray(gdwHistory) ? gdwHistory : []).filter((v) => typeof v === 'number' && isFinite(v));
+    const months = Math.max(cycles * MONTHS_PER_CYCLE, history.length - 1);
+    const { ctx } = fitCanvas(canvas);
+    // Like geometry(), with a right margin that holds the band labels, so
+    // the GDW line never runs over them.
+    const LABEL_MARGIN = 150;
+    const w = canvas.cssWidth || canvas.width;
+    const h = canvas.cssHeight || canvas.height;
+    const plotW = w - PAD.left - PAD.right - LABEL_MARGIN;
+    const plotH = h - PAD.top - PAD.bottom;
+    const g = {
+      w, h, months,
+      x: (m) => PAD.left + (m / months) * plotW,
+      y: (gdw) => PAD.top + (1 - Math.max(0, Math.min(100, gdw)) / 100) * plotH
+    };
+    clear(ctx, g);
+    ctx.save();
+    // Threshold bands, labelled in the right margin.
+    ctx.font = '600 14px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (const b of GRADE_BANDS) {
+      const top = g.y(b.to);
+      const bottom = b.from === 0 ? g.y(0) + 1 : g.y(b.from);
+      ctx.fillStyle = b.fill;
+      ctx.fillRect(g.x(0), top, g.x(months) - g.x(0), Math.max(2, bottom - top));
+      ctx.fillStyle = b.text;
+      const labelY = b.from === 0 ? g.y(0) : (top + bottom) / 2;
+      ctx.fillText(b.label, g.x(months) + 12, labelY);
+    }
+    ctx.textAlign = 'right';
+    // Gridlines and GDW labels every 20%.
+    ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
+    for (let v = 0; v <= 100; v += 20) {
+      ctx.strokeStyle = v === 0 ? COLORS.axis : COLORS.grid;
+      ctx.lineWidth = v === 0 ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(g.x(0), g.y(v));
+      ctx.lineTo(g.x(months), g.y(v));
+      ctx.stroke();
+      ctx.fillStyle = COLORS.text;
+      ctx.fillText(`${v}%`, g.x(0) - 10, g.y(v));
+    }
+    // Cycle dividers (dashed) and YEAR labels centred in each cycle.
+    const ends = cycleMarkers && cycleMarkers.length
+      ? cycleMarkers.map((m) => m.index)
+      : Array.from({ length: cycles }, (_, i) => (i + 1) * MONTHS_PER_CYCLE);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.setLineDash([5, 6]);
+    for (let c = 0; c < cycles; c++) {
+      const start = c * MONTHS_PER_CYCLE;
+      const end = (c + 1) * MONTHS_PER_CYCLE;
+      if (c < cycles - 1) {
+        ctx.strokeStyle = 'rgba(125, 138, 154, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(g.x(end), g.y(100));
+        ctx.lineTo(g.x(end), g.y(0));
+        ctx.stroke();
+      }
+      ctx.fillStyle = c < ends.length ? COLORS.text : 'rgba(125, 138, 154, 0.45)';
+      ctx.fillText(`YEAR ${c + 1}`, g.x((start + end) / 2), g.y(0) + 10);
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+    // The realized line, with a dot on each cycle's closing month.
+    line(ctx, g, history, { color: lineColor, width: 4 });
+    ctx.save();
+    ctx.fillStyle = lineColor;
+    for (const i of ends) {
+      if (i < history.length) {
+        ctx.beginPath();
+        ctx.arc(g.x(i), g.y(history[i]), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    return { ctx, g, months };
+  }
+
+  window.SocietelosCharts = { COLORS, PAD, fitCanvas, geometry, drawAxes, line, band, drawForecastFan, animateRealizedLine, cancelAnimation, render, forecastVerdict, redraw, drawFullHistoryChart, GRADE_BANDS };
 })();

@@ -1031,6 +1031,9 @@ test('loom.narrate is called with the enacted 50/25/25 package and its simulatio
       assert.ok(ctx.winningOption.text.includes(`${e.weight * 100}%: ${text}`));
     }
     assert.equal(ctx.simSummary, game.finale.simResult.summary);
+    // The package itself, best first, for one commentary on the whole (TASK-551).
+    assert.deepEqual(ctx.enacted.map((e) => [e.place, e.weight]), [['first', 0.5], ['second', 0.25], ['third', 0.25]]);
+    assert.ok(ctx.enacted.every((e) => typeof e.text === 'string' && !('node' in e) && !('author' in e)));
     assert.equal(ctx.citizens.length, 10);
     assert.equal(typeof ctx.citizens[0].mood, 'number');
   } finally {
@@ -1052,6 +1055,8 @@ test('FINALE_ENACT broadcasts a resolution with the Borda tally, enacted 50/25/2
   assert.deepEqual(r.result.enacted.map((e) => [e.place, e.weight]), [['first', 0.5], ['second', 0.25], ['third', 0.25]]);
   assert.deepEqual(r.result.enacted.map((e) => e.id), r.result.tally.slice(0, 3).map((t) => t.id));
   for (const e of r.result.enacted) assert.ok(e.text.length > 0);
+  // Role tags are revealed on the enacted policies (TASK-493), under roleTags.
+  for (const e of r.result.enacted) assert.deepEqual(e.roleTags, ['artisan']);
   assert.equal(r.forecast.median.length, 13);
   assert.equal(r.realized.gdw.length, 13);
   assert.equal(r.districts.length, 13);
@@ -1158,4 +1163,23 @@ test('when moderation settles each author is told privately: ok, or reject (plac
   } finally {
     restore();
   }
+});
+
+test('END broadcasts the closing citizen for the End Screen (name, district, words, change)', async () => {
+  const game = await enactedFinale();
+  const phases = [];
+  game.on('phase', (p) => phases.push(p));
+  await game.finale.narrated;
+  quiet(() => game.advancePhase()); // FINALE_ENACT -> END
+  game.stop();
+  const end = phases[phases.length - 1];
+  assert.equal(end.phase, 'END');
+  assert.ok(end.closing, 'closing citizen present');
+  const citizens = require('../../data/citizens.json');
+  const c = citizens.find((x) => x.id === end.closing.citizenId);
+  assert.ok(c, 'a real citizen');
+  assert.equal(end.closing.name, c.name);
+  assert.equal(end.closing.text, c.lines[end.closing.band][0]);
+  assert.equal(typeof end.closing.change, 'number');
+  assert.equal(end.endsAt, null, 'END has no timer');
 });

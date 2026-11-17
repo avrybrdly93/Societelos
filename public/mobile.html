@@ -16,6 +16,8 @@
     <span id="m-session-timer" class="m-session-timer mono" hidden>--:--</span>
     <div id="m-countdown" class="m-countdown" aria-hidden="true"><div id="m-countdown-fill" class="m-countdown-fill"></div></div>
   </header>
+  <!-- Non-destructive: the current screen stays put underneath while the socket reconnects. -->
+  <div id="m-reconnect" class="m-reconnect mono" role="status" aria-live="polite" hidden>RECONNECTING TO LOOM…</div>
 
   <!-- Persistent role drawer: check your hidden agenda in any phase. -->
   <details id="role-drawer" class="role-drawer" hidden>
@@ -86,6 +88,7 @@
     </section>
     <section id="m-view-debate" class="m-view" aria-label="Debate">
       <div class="m-center">
+        <p id="m-finale-fallback" class="m-finale-fallback mono" role="status" hidden>THE LOOM COULD NOT INTERPRET THE WRITE-INS. VOTE A OR B ON THE AUTHORED PROTOCOLS.</p>
         <p class="m-kicker mono">DEBATE IN PERSON</p>
         <h2 class="m-title">Look at the projector</h2>
         <div id="debate-clock" class="m-clock mono">--:--</div>
@@ -135,6 +138,10 @@
       </article>
     </section>
     <section id="m-view-finale-write" class="m-view" aria-label="Write your policy">
+      <div class="finale-timer" role="timer" aria-label="Time left to write">
+        <div class="finale-timer-track"><div class="finale-timer-fill"></div></div>
+        <p class="finale-timer-label mono"><span class="finale-timer-secs">--</span>s LEFT TO WRITE</p>
+      </div>
       <p class="m-kicker mono">FINALE // THE LOOM CANNOT COMPUTE AN ANSWER</p>
       <h2 class="m-title">Write your policy</h2>
       <div id="finale-goal" class="finale-goal" hidden>
@@ -159,6 +166,10 @@
       </div>
       <!-- "revise": the Loom's private feedback and one chance to rephrase. -->
       <div id="finale-revise" class="finale-revise" role="dialog" aria-modal="true" aria-labelledby="finale-revise-title" hidden>
+        <div class="finale-timer" role="timer" aria-label="Time left to revise">
+          <div class="finale-timer-track"><div class="finale-timer-fill"></div></div>
+          <p class="finale-timer-label mono"><span class="finale-timer-secs">--</span>s LEFT TO REVISE</p>
+        </div>
         <p id="finale-revise-title" class="m-kicker mono">THE LOOM ASKS YOU TO REVISE</p>
         <p id="finale-feedback" class="finale-feedback"></p>
         <form id="finale-revise-form" class="m-form" autocomplete="off">
@@ -180,8 +191,9 @@
       <p id="rank-error" class="m-error danger" role="alert" hidden></p>
       <div id="rank-locked" class="vote-locked" hidden>
         <div class="vote-lock-icon mono" aria-hidden="true">&#10003;</div>
-        <p class="vote-lock-title mono">RANKINGS LOCKED</p>
-        <p class="muted">Waiting for the other nodes…</p>
+        <p class="vote-lock-title mono">BALLOT ENCRYPTED — AWAITING ENACTMENT</p>
+        <ol id="rank-locked-order" class="rank-locked-order mono" aria-label="Your ranking"></ol>
+        <p class="muted">Waiting for the other nodes. The top three are enacted 50 / 25 / 25.</p>
       </div>
     </section>
     <section id="m-view-result" class="m-view" aria-label="Resolution">
@@ -198,6 +210,25 @@
       </div>
       <p id="result-score" class="result-score mono" hidden>+1 AGENDA POINT</p>
       <p id="result-total" class="result-total muted"></p>
+    </section>
+    <section id="m-view-end" class="m-view" aria-label="Session complete">
+      <p class="m-kicker mono">SESSION COMPLETE // <span id="end-node">NODE</span></p>
+      <div id="end-card" class="result-card end-card">
+        <p id="end-outcome" class="result-outcome mono">THE LOOM IS TALLYING…</p>
+        <h2 id="end-headline" class="end-headline">Look at the projector.</h2>
+        <p id="end-role" class="end-role muted"></p>
+      </div>
+      <div class="end-score">
+        <span class="m-label mono">Your final score</span>
+        <span id="end-score" class="end-score-value mono">—</span>
+      </div>
+      <ol id="end-breakdown" class="end-breakdown mono" aria-label="Points by cycle"></ol>
+      <div class="end-grade-row">
+        <span class="m-label mono">Class grade</span>
+        <span id="end-grade" class="end-grade mono">—</span>
+        <span id="end-gdw" class="end-gdw mono muted"></span>
+      </div>
+      <p id="end-world" class="end-world muted"></p>
     </section>
   </main>
 

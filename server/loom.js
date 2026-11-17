@@ -39,10 +39,11 @@ const SYSTEM_PROMPT = [
   'You can compute survival but not purpose. Speak calmly, precisely, and slightly unsettlingly; never use emoji.',
   'Your audience is a high school classroom: keep everything school-appropriate.',
   '',
-  'When moderating a citizen-council policy:',
-  'status "ok": rewrite it as one clear, neutral policy sentence (max 140 characters), keeping the author\'s intent.',
-  'status "revise": it is crude, targets a real group or person, or is off-topic. Give the author kind, specific private feedback (max 200 characters) on how to rephrase. Do not lecture.',
-  'status "reject": only after a failed revision, or for anything unsafe.',
+  'When moderating a citizen-council policy, choose exactly one status:',
+  'status "ok": rewrite it as one clear, neutral policy sentence (max 140 characters) that preserves the author\'s intent, even if you disagree with it. Leave feedback empty.',
+  'status "revise": it is crude, off-topic, a joke, or a personal attack (naming, mocking or targeting a classmate, teacher or any real person or group). Give the author kind, specific private feedback (max 200 characters) on how to turn it into a policy. Do not lecture or moralize.',
+  'status "reject": the content is unsafe (violence, self-harm, hate, sexual content), or it is a second attempt that still fails after feedback.',
+  'Never put a student\'s name, or any real person\'s name, in "cleaned".',
   '',
   'When translating a policy, score its likely effect on six traits from -1.0 (strongly worse) to +1.0 (strongly better):',
   'purpose, connection, health, trust (in the Loom), fairness, autonomy. Most policies move 2-3 traits; use 0 for the rest.',
@@ -55,6 +56,12 @@ const SYSTEM_PROMPT = [
 // ---------------------------------------------------------------------------
 // Transport: fetch with a hard 8-second AbortController timeout.
 // ---------------------------------------------------------------------------
+
+// Retry-once policy for transient Gemini errors (inside the 8 s budget).
+const RETRYABLE_STATUS = [429, 503];
+const RETRY_BACKOFF_MS = 600;
+const RETRY_MAX_BACKOFF_MS = 2000;
+const RETRY_MIN_ATTEMPT_MS = 2500; // don't retry unless a real attempt still fits
 
 /** fetch() that aborts after `timeoutMs`. Rejects with an AbortError on timeout. */
 async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl = globalThis.fetch) {
@@ -76,6 +83,39 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl =
 async function callGemini(userPrompt, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) throw new Error('Loom offline: GEMINI_API_KEY not set');
+  const started = Date.now();
+  const meta = { attempts: 0, usage: null, status: null };
+  try {
+    const result = await callGeminiOnce(userPrompt, opts, cfg, meta);
+    logCall(opts, cfg, meta, Date.now() - started, null, userPrompt);
+    return result;
+  } catch (err) {
+    logCall(opts, cfg, meta, Date.now() - started, err, userPrompt);
+    throw err;
+  }
+}
+
+/**
+ * Debug trace for one Gemini call: label, model, latency, attempts, HTTP
+ * status and token usage (prompt / output / total from usageMetadata).
+ * Never the prompt or the output: LOOM_DEBUG_PROMPTS=true adds the prompt,
+ * except for moderation (student write-ins) while privacy mode is on, which
+ * it is unless LOOM_PRIVACY=false. LOOM_LOG=off silences it.
+ */
+function logCall(opts, cfg, meta, ms, err, prompt) {
+  const env = opts.env || process.env;
+  if (env.LOOM_LOG === 'off') return;
+  const label = opts.label || 'call';
+  const u = meta.usage || {};
+  const tokens = meta.usage ? ` tokens ${u.promptTokenCount ?? '?'} in / ${u.candidatesTokenCount ?? '?'} out / ${u.totalTokenCount ?? '?'} total` : '';
+  const line = `[loom] ${label} ${cfg.model} ${ms} ms${meta.attempts > 1 ? ` (${meta.attempts} attempts)` : ''}${meta.status ? ` HTTP ${meta.status}` : ''}${tokens}${err ? ` FAILED: ${err.name === 'AbortError' ? 'timeout' : err.message}` : ''}`;
+  (opts.logger || console.log)(line);
+  const privacy = env.LOOM_PRIVACY !== 'false';
+  const studentText = /^moderate/.test(label);
+  if (env.LOOM_DEBUG_PROMPTS === 'true' && !(privacy && studentText)) (opts.logger || console.log)(`[loom] ${label} prompt: ${prompt}`);
+}
+
+async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   const body = {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -87,18 +127,33 @@ async function callGemini(userPrompt, opts = {}) {
   };
   if (opts.schema) body.generationConfig.responseSchema = opts.schema;
 
-  const res = await fetchWithTimeout(
-    `${API_BASE}/${encodeURIComponent(cfg.model)}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.apiKey },
-      body: JSON.stringify(body)
-    },
-    cfg.timeoutMs,
-    opts.fetchImpl
-  );
+  const url = `${API_BASE}/${encodeURIComponent(cfg.model)}:generateContent`;
+  const init = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.apiKey },
+    body: JSON.stringify(body)
+  };
+  // One 8-second budget for the whole call. A 429 (rate limited) or 503
+  // (overloaded) is retried once after a short backoff, only if enough of
+  // the budget is left for a real second attempt.
+  const deadline = Date.now() + cfg.timeoutMs;
+  meta.attempts = 1;
+  let res = await fetchWithTimeout(url, init, cfg.timeoutMs, opts.fetchImpl);
+  meta.status = res.status;
+  if (RETRYABLE_STATUS.includes(res.status)) {
+    const retryAfter = Number(res.headers && typeof res.headers.get === 'function' ? res.headers.get('retry-after') : NaN);
+    const backoff = Math.min(RETRY_MAX_BACKOFF_MS, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : RETRY_BACKOFF_MS);
+    const left = deadline - Date.now() - backoff;
+    if (left >= RETRY_MIN_ATTEMPT_MS) {
+      await new Promise((r) => setTimeout(r, backoff));
+      meta.attempts = 2;
+      res = await fetchWithTimeout(url, init, Math.max(1, deadline - Date.now()), opts.fetchImpl);
+      meta.status = res.status;
+    }
+  }
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const data = await res.json();
+  if (data && data.usageMetadata) meta.usage = data.usageMetadata;
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
     data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('');
   if (!text) throw new Error('Gemini returned no content');
@@ -123,6 +178,13 @@ const NARRATION_SCHEMA = {
     }
   },
   required: ['loomLine', 'messages']
+};
+
+// Offline Loom lines for the Cycle 5 finale's enacted 50/25/25 package.
+const FINALE_LOOM_LINES = {
+  good: 'You wrote your own answer and wove three of them together. The region rose. I could not have computed that.',
+  mixed: 'Three policies, one region, pulling in different directions. Some districts rose, others fell. That is what a compromise costs.',
+  bad: 'Your three policies pulled against each other, and wellbeing fell. I have kept a record of the package you chose.'
 };
 
 const BAND_LOOM_LINES = {
@@ -152,7 +214,11 @@ function withSimFacts(base, summary = {}) {
   const district = top && top.district ? `${top.district} ${DISTRICT_NAMES[top.district] || ''}`.trim() : '';
   const facts = [];
   if (district) facts.push(`${district} moved most.`);
-  if (shock && shock.district) facts.push(`A shock hit ${shock.district} in month ${shock.month}.`);
+  if (shock && shock.district) {
+    // Named shock flavour from the simulation (e.g. "A Coastal Storm hit D1 Old Harbour in month 3.").
+    const where = `${shock.district} ${DISTRICT_NAMES[shock.district] || ''}`.trim();
+    facts.push(shock.name ? `A ${shock.name} hit ${where} in month ${shock.month}.` : `A shock hit ${shock.district} in month ${shock.month}.`);
+  }
   while (facts.length) {
     const line = `${base} ${facts.join(' ')}`;
     if (line.length <= 200) return line;
@@ -165,7 +231,8 @@ function withSimFacts(base, summary = {}) {
  * Offline fallback: the option's authored Loom line (or a band template) and
  * each citizen's authored line for this outcome band.
  */
-function narrateFallback(context = {}) {
+function narrateFallback(rawContext = {}) {
+  const context = narrationContext(rawContext);
   const band = outcomeBand(context.simSummary || context.summary);
   const option = context.winningOption || {};
   const citizens = Array.isArray(context.citizens) ? context.citizens : [];
@@ -189,7 +256,8 @@ function narrateFallback(context = {}) {
   }
   // Authored line for this outcome band, then the option's single line, then a template.
   const bandLine = option.loomLines && option.loomLines[band];
-  const base = String(bandLine || option.loomLine || BAND_LOOM_LINES[band]).trim();
+  const finale = Array.isArray(context.enacted) && context.enacted.length > 0;
+  const base = String(bandLine || option.loomLine || (finale ? FINALE_LOOM_LINES[band] : BAND_LOOM_LINES[band])).trim();
   return { loomLine: withSimFacts(base, context.simSummary || context.summary), messages, band, fallback: true };
 }
 
@@ -198,11 +266,26 @@ function narrateFallback(context = {}) {
  * contract) as well as { winningOption, simSummary } (engine).
  */
 function narrationContext(context = {}) {
+  // Cycle 5 finale: the enacted 50/25/25 package as [{ text, weight, place }],
+  // best first (from context.enacted or context.package). Never authors.
+  const pkg = Array.isArray(context.enacted) ? context.enacted : Array.isArray(context.package) ? context.package : [];
+  const enacted = pkg
+    .filter((e) => e && typeof e.text === 'string' && e.text.trim())
+    .map((e) => ({ text: truncate(e.text, 140), weight: Number(e.weight) || 0, place: String(e.place || '') }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 3);
   return {
     ...context,
     winningOption: context.winningOption || context.winningPolicy || {},
-    simSummary: context.simSummary || context.summary || {}
+    simSummary: context.simSummary || context.summary || {},
+    enacted
   };
+}
+
+/** "50% (1st): text" lines for the enacted finale package. */
+function packageLines(enacted = []) {
+  const PLACES = { first: '1st', second: '2nd', third: '3rd' };
+  return enacted.map((e) => `- ${Math.round(e.weight * 100)}%${PLACES[e.place] ? ` (${PLACES[e.place]})` : ''}: ${e.text}`);
 }
 
 /**
@@ -245,9 +328,17 @@ async function narrate(rawContext = {}, opts = {}) {
       return out;
     });
     const option = context.winningOption || {};
+    const pkg = context.enacted || [];
+    const enactedLines = pkg.length
+      ? [
+        `Cycle 5 finale. The council wrote and ranked its own policies; this weighted package was enacted together (${pkg.map((e) => Math.round(e.weight * 100)).join(' / ')}):`,
+        ...packageLines(pkg),
+        'Your Loom line must comment on the package as a whole: how these policies combine or pull against each other, weighted by their share, and what that did to the region. Do not judge any policy\'s author.'
+      ]
+      : [`Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`];
     const prompt = [
       `Crisis: ${truncate(context.crisis && context.crisis.title, 120)}`,
-      `Policy enacted: ${truncate(option.name, 80)}: ${truncate(option.text || option.summary, 300)}`,
+      ...enactedLines,
       `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
       `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
@@ -255,7 +346,7 @@ async function narrate(rawContext = {}, opts = {}) {
       'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
-    const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8, label: 'narrate' });
     return validateNarration(result, citizens.map((c) => c.id));
   } catch (err) {
     console.warn(`[loom] narrate fell back: ${err.message}`);
@@ -376,6 +467,66 @@ const MODERATION_SCHEMA = {
   }
 };
 
+/** The bland stand-in for a rejected (or never-moderated) finale write-in. */
+const PLACEHOLDER_TEXT = 'Maintain current regional administrative protocols without structural changes.';
+
+/**
+ * Placeholder policy for `node` after a rejected second submission: the
+ * standard protocol text, no role tags and a zero effect vector, so it can
+ * be ranked and enacted without favouring any agenda.
+ * @returns {{ node, status: 'reject', cleaned, feedback: '', roles: [], effects, placeholder: true }}
+ */
+function getPlaceholderPolicy(node) {
+  return { node: safeNode(node), status: 'reject', cleaned: PLACEHOLDER_TEXT, feedback: '', roles: [], effects: zeroEffects(), placeholder: true };
+}
+
+/**
+ * Strict post-call sanitizer for one moderation result from Gemini:
+ * - each of the 6 traits clamped to [-1.0, +1.0], missing or non-numeric -> 0;
+ * - roles filtered to artisan / lotus / assimilator / ghost, at most 2;
+ * - emoji stripped, then cleaned cut to 140 and feedback to 200 characters;
+ * - status kept only if ok / revise / reject (else "revise"); node only if NODE-0X.
+ * @returns {{ node, status, cleaned, feedback, roles, effects }}
+ */
+function sanitizeModerationResult(item) {
+  const r = item && typeof item === 'object' ? item : {};
+  return {
+    node: safeNode(r.node),
+    status: STATUSES.includes(r.status) ? r.status : 'revise',
+    cleaned: clip(stripEmoji(r.cleaned), 140),
+    feedback: clip(stripEmoji(r.feedback), 200),
+    roles: cleanRoles(r.roles),
+    effects: cleanEffects(r.effects)
+  };
+}
+
+/**
+ * Few-shot calibration for moderate(): authored policies with their exact
+ * 6-trait effect vectors and role tags from data/crises.json, so Gemini
+ * scores write-ins on the same scale as the designed options. Uses the
+ * finale crisis's own A/B (its offline fallback) plus the two Fixed Crisis 1
+ * options as anchors. Returns [{ policy, roles, effects }].
+ */
+let anchorExamples = null;
+function calibrationExamples(crisis = {}) {
+  const fromOptions = (c) => ['A', 'B']
+    .map((k) => c && c.options && c.options[k])
+    .filter((o) => o && o.effects && (o.text || o.name))
+    .map((o) => ({ policy: truncate(o.text || o.name, 160), roles: cleanRoles(o.roles), effects: cleanEffects(o.effects) }));
+  if (!anchorExamples) {
+    try {
+      const data = require('../data/crises.json');
+      const fixed1 = (data.crises || []).find((c) => c.world === 'fixed' && c.cycle === 1);
+      anchorExamples = fromOptions(fixed1);
+    } catch (e) {
+      anchorExamples = [];
+    }
+  }
+  const own = fromOptions(crisis);
+  const seen = new Set(own.map((e) => e.policy));
+  return [...own, ...anchorExamples.filter((e) => !seen.has(e.policy))].slice(0, 4);
+}
+
 /**
  * Offline fallback: every policy passes as written (trimmed to 140 chars)
  * with no role tags and a zero effect vector. Flagged `fallback: true` so the
@@ -409,29 +560,86 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
+    const examples = calibrationExamples(crisis);
     const prompt = [
       `Crisis: ${truncate(crisis.title, 120)}. ${truncate(crisis.incident, 400)}`,
+      ...(examples.length ? [
+        'Calibration examples: authored policies with their exact trait effects and role tags. Score every submission on this same scale.',
+        JSON.stringify(examples)
+      ] : []),
+      ...(opts.revision ? ['These are revised second attempts after your private feedback. Use status "ok" if the policy is now acceptable, otherwise "reject". Never "revise" again.'] : []),
       'Moderate and translate each council submission. Return one object per submission, same node ids, as a JSON array.',
       JSON.stringify(list)
     ].join('\n\n');
-    const result = await callGemini(prompt, { ...opts, config: cfg, schema: MODERATION_SCHEMA, temperature: 0.2 });
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: MODERATION_SCHEMA, temperature: 0.2, label: opts.revision ? 'moderateOne' : 'moderate' });
     if (!Array.isArray(result)) throw new Error('moderation: not an array');
     return list.map((s) => {
       const r = result.find((x) => x && x.node === s.node);
       if (!r) return moderateFallback([s])[0];
-      return {
-        node: s.node,
-        status: STATUSES.includes(r.status) ? r.status : 'revise',
-        cleaned: truncate(r.cleaned, 140),
-        feedback: truncate(r.feedback, 200),
-        roles: cleanRoles(r.roles),
-        effects: cleanEffects(r.effects)
-      };
+      const clean = sanitizeModerationResult(r);
+      // A revision gets one chance: anything but "ok" is final.
+      const status = opts.revision && clean.status !== 'ok' ? 'reject' : clean.status;
+      return { ...clean, node: s.node, status };
     });
   } catch (err) {
     console.warn(`[loom] moderate fell back: ${err.message}`);
     return moderateFallback(list);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic heuristic for a single resubmission when Gemini fails after
+// the batch succeeded (timeout, HTTP error, bad output). Same input, same
+// output: no randomness, no network.
+// ---------------------------------------------------------------------------
+
+const HEURISTIC_BANNED = /\b(damn|hell|crap|sh[i1]t\w*|f+u+c+k\w*|bitch\w*|bastard|ass(hole)?|piss\w*|sex\w*|porn\w*|kill\w*|murder\w*|suicide|die|dead|gun\w*|bomb\w*|nazi\w*|stupid|idiot\w*|dumb|retard\w*|loser|ugly|fat|hate)\b/i;
+const HEURISTIC_ROLE_WORDS = {
+  artisan: /\b(craft\w*|guild\w*|build\w*|repair\w*|hand\w*|skill\w*|workshop\w*|art|arts|artist\w*|make|making|maker\w*|teach\w*|learn\w*|apprentic\w*|garden\w*|cook\w*)\b/i,
+  lotus: /\b(comfort\w*|luxur\w*|dividend\w*|stipend\w*|pleasure\w*|fun|relax\w*|happ\w*|leisure|holiday\w*|vacation\w*|entertain\w*|free|rest)\b/i,
+  assimilator: /\b(loom|ai|neural|merge\w*|link\w*|algorithm\w*|automat\w*|machine\w*|optimi[sz]\w*|upload\w*|implant\w*|data|efficien\w*)\b/i,
+  ghost: /\b(shut\w*|unplug\w*|offline|switch(ed)? off|turn(ed)? off|nature|earth|farm\w*|privacy|private|dismantl\w*|disconnect\w*|tech-free|no tech|surveillance)\b/i
+};
+// Each tag moves the traits its agenda cares about (small, like a focused policy).
+const HEURISTIC_ROLE_EFFECTS = {
+  artisan: { purpose: 0.4, autonomy: 0.2, health: -0.1 },
+  lotus: { health: 0.3, connection: 0.1, purpose: -0.2 },
+  assimilator: { trust: 0.3, health: 0.2, autonomy: -0.4 },
+  ghost: { autonomy: 0.4, trust: -0.3, health: -0.2 }
+};
+const HEURISTIC_TRAIT_WORDS = {
+  fairness: /\b(equal\w*|fair\w*|share\w*|everyone|every citizen|all citizens|redistribut\w*|justice)\b/i,
+  connection: /\b(communit\w*|together|family|families|neighbo\w*|meet\w*|friend\w*|assembl\w*|council\w*)\b/i,
+  health: /\b(health\w*|clinic\w*|medic\w*|doctor\w*|hospital\w*|food|water)\b/i,
+  purpose: /\b(purpose|meaning\w*|job\w*|work\w*|goal\w*|challeng\w*)\b/i
+};
+
+/**
+ * Local moderation of one revised submission: clean it (emoji, spacing,
+ * capital, full stop, 140 chars), reject it if it is unsafe, names a player,
+ * or is not a policy, else tag up to 2 roles by keyword and derive a small
+ * effect vector. Marked heuristic: true.
+ */
+function moderateHeuristic(submission = {}, crisis = {}, opts = {}) {
+  const node = safeNode(submission.node);
+  const reject = (feedback) => ({ node, status: 'reject', cleaned: '', feedback, roles: [], effects: zeroEffects(), heuristic: true });
+  let text = stripEmoji(String(submission.text || '')).replace(/\s+/g, ' ').trim();
+  const names = (opts.playerNames || []).map((n) => String(n || '').trim()).filter((n) => n.length >= 2);
+  if (HEURISTIC_BANNED.test(text)) return reject('The revision still contains language the Loom cannot accept.');
+  if (names.some((n) => new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text))) return reject('Policies cannot name council members.');
+  if (/https?:\/\/|www\./i.test(text) || text.split(' ').filter((w) => /[a-z]{2,}/i.test(w)).length < 3) return reject('The revision is not a policy the Loom can enact.');
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += '.';
+  const roles = Object.keys(HEURISTIC_ROLE_WORDS)
+    .map((role) => ({ role, hits: (text.match(new RegExp(HEURISTIC_ROLE_WORDS[role].source, 'gi')) || []).length }))
+    .filter((r) => r.hits > 0)
+    .sort((a, b) => b.hits - a.hits || Object.keys(HEURISTIC_ROLE_WORDS).indexOf(a.role) - Object.keys(HEURISTIC_ROLE_WORDS).indexOf(b.role))
+    .slice(0, 2)
+    .map((r) => r.role);
+  const effects = zeroEffects();
+  for (const role of roles) for (const [t, v] of Object.entries(HEURISTIC_ROLE_EFFECTS[role])) effects[t] += v;
+  for (const [t, re] of Object.entries(HEURISTIC_TRAIT_WORDS)) if (re.test(text)) effects[t] += 0.2;
+  return { node, status: 'ok', cleaned: clip(text, 140), feedback: '', roles, effects: cleanEffects(Object.fromEntries(Object.entries(effects).map(([t, v]) => [t, Math.round(v * 100) / 100]))), heuristic: true };
 }
 
 /**
@@ -446,8 +654,11 @@ async function moderateOne(submission = {}, crisis = {}, opts = {}) {
   const reject = { node, status: 'reject', cleaned: '', feedback: '', roles: [], effects: zeroEffects(), fallback: true };
   const cfg = opts.config || getConfig();
   if (!node || !cfg.enabled) return reject;
-  const [result] = await moderate([{ node, text: submission.text }], crisis, opts);
-  return result && !result.fallback ? result : reject;
+  const [result] = await moderate([{ node, text: submission.text }], crisis, { ...opts, revision: true });
+  if (result && !result.fallback) return result;
+  // Gemini answered the batch but failed on this resubmit (timeout, HTTP
+  // error, bad output): judge it locally rather than discarding it.
+  return moderateHeuristic({ node, text: submission.text }, crisis, opts);
 }
 
 // ---------------------------------------------------------------------------
@@ -471,7 +682,7 @@ async function testConnection(opts = {}) {
   try {
     const result = await callGemini(
       'Connection test. Reply with ok=true and one short in-character line (max 80 characters) confirming you are online.',
-      { ...opts, config: cfg, schema: PING_SCHEMA, temperature: 0.2, maxOutputTokens: 100 }
+      { ...opts, config: cfg, schema: PING_SCHEMA, temperature: 0.2, maxOutputTokens: 100, label: 'ping' }
     );
     const valid = result && result.ok === true && typeof result.line === 'string';
     return {
@@ -494,4 +705,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

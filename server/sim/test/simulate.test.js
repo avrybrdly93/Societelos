@@ -127,3 +127,52 @@ test('realized run clamps GDW at 0% and records collapsed: true when W <= 0.20 a
   const ok = simulate(createInitialState(simConfig), EFFECTS, { runs: 20, seed: 5 });
   assert.equal(ok.realized.collapsed, false);
 });
+
+test('simulate() forecasts a single write-in policy (sparse, unscaled effects) for the Borda tie-breaker', () => {
+  const start = createInitialState(simConfig);
+  // A moderated write-in typically moves 2-3 traits and leaves the rest out.
+  const writeIn = { purpose: 0.4, autonomy: 0.3 };
+  const r = simulate({ gdw: 25, simState: start }, writeIn, { runs: 200, seed: 99 });
+  const end = r.forecast.median[r.forecast.median.length - 1];
+  assert.ok(Number.isFinite(end) && end > 25, `a purpose/autonomy write-in lifts the median (${end.toFixed(1)})`);
+  assert.equal(r.forecast.runs, 200);
+  // Same seed, same median: the tie-breaker is deterministic.
+  assert.equal(simulate({ gdw: 25, simState: start }, writeIn, { runs: 200, seed: 99 }).forecast.median[12], r.forecast.median[12]);
+  // Two different write-ins are distinguishable, so a Borda tie can be broken.
+  const other = simulate({ gdw: 25, simState: start }, { trust: -0.4, fairness: -0.3 }, { runs: 200, seed: 99 });
+  assert.ok(other.forecast.median[12] < end - 1);
+  // An empty (placeholder) vector is a valid input too.
+  assert.ok(Number.isFinite(simulate(start, {}, { runs: 50, seed: 1 }).forecast.median[12]));
+});
+
+test('getForecastMedian(state, effects, seed) matches simulate()\'s month-12 median, with no extra work', () => {
+  const { getForecastMedian } = require('../index');
+  const start = createInitialState(simConfig);
+  const effects = { purpose: 0.4, autonomy: 0.3, trust: -0.1 };
+  for (const [seed, vol] of [[99, 1], [12345, 1.5]]) {
+    const full = simulate({ gdw: 25, simState: start }, effects, { runs: 200, seed, volatility: vol }).forecast.median[12];
+    assert.equal(getForecastMedian({ gdw: 25, simState: start }, effects, seed, { volatility: vol }), full, `seed ${seed}`);
+  }
+});
+
+test('closingCitizen picks the citizen whose cohort changed most over the game, with their own line', () => {
+  const { closingCitizen } = require('../index');
+  const citizens = require('../../../data/citizens.json');
+  const start = createInitialState(simConfig);
+  // Four cycles that favour fairness hard: D4's former workers gain most.
+  let end = start;
+  for (let i = 0; i < 4; i++) end = simulate(end, { fairness: 0.9, purpose: 0.3 }, { runs: 20, seed: i }).finalState;
+  const pick = closingCitizen(start, end, citizens);
+  const changes = citizens.map((c) => {
+    const { getCitizenMood } = require('../index');
+    return { id: c.id, d: Math.abs(getCitizenMood(end, c).wellbeing - getCitizenMood(start, c).wellbeing) };
+  });
+  const max = Math.max(...changes.map((x) => x.d));
+  assert.equal(pick.citizenId, changes.find((x) => x.d === max).id);
+  assert.equal(pick.band, pick.change >= 2 ? 'good' : pick.change <= -2 ? 'bad' : 'mixed');
+  const c = citizens.find((x) => x.id === pick.citizenId);
+  assert.equal(pick.text, c.lines[pick.band][0]);
+  assert.ok(Math.abs(pick.wellbeingEnd - pick.wellbeingStart - pick.change) < 0.11);
+  assert.equal(closingCitizen(null, end, citizens), null);
+  assert.equal(closingCitizen(start, end, []), null);
+});

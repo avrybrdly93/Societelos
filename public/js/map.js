@@ -114,17 +114,72 @@
   function startPlayback(districtsByMonth, msPerMonth = 1000, shocks = []) {
     clearShocks();
     clearDeltas();
+    clearPulses();
     playback = { months: Array.isArray(districtsByMonth) ? districtsByMonth : [], msPerMonth, shocks: Array.isArray(shocks) ? shocks : [] };
     const svg = document.getElementById('region-map');
     if (svg) svg.style.setProperty('--district-transition', `${Math.max(200, msPerMonth * 0.9)}ms`);
     showMonth(0);
   }
 
+  // Floating month indicator (MONTH 1 / 12 .. MONTH 12 / 12), stepped by the
+  // same onMonthTick that advances the chart line so the two stay in sync.
+  function setMonthIndicator(monthIndex) {
+    const box = document.getElementById('map-month');
+    const num = document.getElementById('map-month-num');
+    if (!box || !num) return;
+    if (monthIndex === null) { box.hidden = true; return; }
+    const total = playback ? Math.max(1, playback.months.length - 1) : 12;
+    const month = Math.min(total, Math.max(1, monthIndex));
+    const totalEl = document.getElementById('map-month-total');
+    if (totalEl) totalEl.textContent = String(total);
+    if (box.hidden || num.textContent !== String(month)) {
+      num.textContent = String(month);
+      box.classList.remove('is-tick');
+      void box.offsetWidth; // restart the tick animation
+      box.classList.add('is-tick');
+    }
+    box.hidden = false;
+    box.classList[month >= total ? 'add' : 'remove']('is-final');
+  }
+
+  // Pulse rings: a district whose wellbeing jumps or drops by at least
+  // PULSE_THRESHOLD (W, so 0.015 = 1.5 points) in one month emits an
+  // expanding teal (up) or crimson (down) ring from its centre.
+  const PULSE_THRESHOLD = 0.015;
+  const PULSE_MS = 1400;
+  function showPulse(id, direction) {
+    const group = districtGroup(id);
+    if (!group) return;
+    const { x, y } = districtCenter(group);
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('class', `district-pulse is-${direction}`);
+    ring.setAttribute('cx', String(x));
+    ring.setAttribute('cy', String(y));
+    ring.setAttribute('r', '18');
+    group.parentNode.appendChild(ring); // above every district
+    setTimeout(() => ring.remove(), PULSE_MS);
+  }
+  function pulseLargeShifts(prev, next) {
+    if (!prev || !next) return;
+    DISTRICT_IDS.forEach((id) => {
+      if (typeof prev[id] !== 'number' || typeof next[id] !== 'number') return;
+      const delta = next[id] - prev[id];
+      if (Math.abs(delta) >= PULSE_THRESHOLD) showPulse(id, delta > 0 ? 'up' : 'down');
+    });
+  }
+  function clearPulses() {
+    document.querySelectorAll('#region-map .district-pulse').forEach((r) => r.remove());
+  }
+
   /** onMonthTick(monthIndex): colour all 5 districts for that month. */
   function showMonth(monthIndex) {
     if (!playback) return;
-    const values = playback.months[Math.min(monthIndex, playback.months.length - 1)];
+    const index = Math.min(monthIndex, playback.months.length - 1);
+    const values = playback.months[index];
     if (values) renderDistricts(values);
+    if (index > 0 && index !== playback.lastIndex) pulseLargeShifts(playback.months[index - 1], values);
+    playback.lastIndex = index;
+    setMonthIndicator(monthIndex);
     playback.shocks.filter((sh) => sh.month === monthIndex).forEach(showShock);
     if (monthIndex >= playback.months.length - 1) showDeltas(playback.months[0], values);
   }
@@ -159,6 +214,7 @@
   /** Stop playback (colours stay where they are). */
   function stopPlayback() {
     playback = null;
+    setMonthIndicator(null);
   }
 
   // World accent colours (match the --theme-* tokens in styles.css).
@@ -185,5 +241,5 @@
     if (color) svg.classList.add('is-recoloring');
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas };
+  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas, showPulse, PULSE_THRESHOLD };
 })();

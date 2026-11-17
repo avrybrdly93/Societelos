@@ -40,3 +40,28 @@ test('server/sim/calibrate.js runs standalone without starting Express', () => {
   assert.equal(out.options.length, 5, '1A, 1B, 2A, 2B after 1A, 2B after 1B');
   assert.deepEqual(out.paths.map((p) => p.path), ['AA', 'AB', 'BA', 'BB']);
 });
+
+test('trajectory sweep: deterministic, every game lands in exactly one final-GDW band', () => {
+  const { sweepGames, SWEEP_BANDS } = require('../calibrate');
+  const simConfig = require('../../../data/sim.json');
+  const crisesData = require('../../../data/crises.json');
+  const a = sweepGames(simConfig, crisesData, { games: 60 });
+  const b = sweepGames(simConfig, crisesData, { games: 60 });
+  assert.deepEqual(a.counts, b.counts, 'same seed, same result');
+  assert.equal(Object.values(a.counts).reduce((x, y) => x + y, 0), 60);
+  assert.deepEqual(Object.keys(a.counts), SWEEP_BANDS.map((x) => x.key));
+  assert.ok(a.finals.every((g) => g >= 0 && g <= 100));
+});
+
+test('every crisis (the 14 core and the Blitz extras) loads into calibrate.js with valid forecasts', () => {
+  const { calibrateCrises } = require('../calibrate');
+  const rows = calibrateCrises(simConfig, crises);
+  const ids = new Set(rows.map((r) => r.id));
+  assert.equal(ids.size, crises.crises.length);
+  const core = crises.crises.filter((c) => c.world === 'fixed' || (c.mode === 'binary' && c.cycle <= 4) || Object.values(crises.worlds).some((w) => w.finale === c.id));
+  assert.equal(core.length, 14);
+  for (const c of core) assert.ok(rows.filter((r) => r.id === c.id).length === 2, `${c.id}: both options forecast`);
+  const bad = rows.filter((r) => !r.ok);
+  assert.deepEqual(bad.map((r) => `${r.id} ${r.option}: ${r.problems.join('; ')}`), []);
+  assert.ok(rows.every((r) => Number.isFinite(r.medianDelta) && r.spread >= 0));
+});

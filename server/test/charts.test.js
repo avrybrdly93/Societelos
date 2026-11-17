@@ -172,3 +172,49 @@ test('integration: charts.js draws real forecast and realized payloads from the 
   assert.ok(Math.abs(ticks[11][1] - payload.realized.finalGdw) < 1e-9, 'last tick is the realized final GDW');
   for (const p of canvas.ctx.points) assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
 });
+
+test('forecastVerdict: month-12 callout beats or misses the forecast median', () => {
+  const { charts } = loadCharts();
+  assert.equal(charts.forecastVerdict(40, 37).text, 'BEAT FORECAST BY +3.0%');
+  assert.equal(charts.forecastVerdict(20, 37).text, 'MISSED FORECAST BY -17.0%');
+  assert.equal(charts.forecastVerdict(30, 30).beat, true);
+  assert.equal(charts.forecastVerdict(30, undefined), null);
+});
+
+// TASK-660 ------------------------------------------------------------------
+
+test('drawFullHistoryChart plots 60 months on a 5-year axis with cycle dividers and grade bands', () => {
+  const { charts } = loadCharts();
+  const canvas = mockCanvas(1100, 300);
+  const history = Array.from({ length: 61 }, (_, m) => 25 + Math.sin(m / 6) * 10);
+  const markers = [1, 2, 3, 4, 5].map((c) => ({ cycle: c, index: c * 12 }));
+  const chart = charts.drawFullHistoryChart(history, canvas, { cycleMarkers: markers });
+  assert.ok(chart);
+  assert.equal(chart.months, 60);
+  const { g } = chart;
+  // The realized line's last point sits at the right edge of the plot, month 60.
+  const linePts = canvas.ctx.points.filter((p) => !p.arc);
+  const last = history.length - 1;
+  assert.ok(linePts.some((p) => Math.abs(p.x - g.x(last)) < 1e-6 && Math.abs(p.y - g.y(history[last])) < 1e-6));
+  // A dot on each cycle's closing month.
+  const dots = canvas.ctx.points.filter((p) => p.arc);
+  assert.deepEqual(dots.map((d) => Math.round(d.x)), markers.map((m) => Math.round(g.x(m.index))));
+  // Four dividers at months 12, 24, 36, 48 (vertical moveTo/lineTo pairs).
+  for (const m of [12, 24, 36, 48]) {
+    assert.ok(linePts.some((p) => Math.abs(p.x - g.x(m)) < 1e-6 && Math.abs(p.y - g.y(100)) < 1e-6), `divider at month ${m}`);
+  }
+  assert.equal(JSON.stringify(charts.GRADE_BANDS.map((b) => b.from)), '[60,35,1,0]'); // cross-realm array
+});
+
+test('drawFullHistoryChart keeps the 5-year axis for a game that shut down early', () => {
+  const { charts } = loadCharts();
+  for (const len of [13, 25, 37, 49, 61]) {
+    const canvas = mockCanvas(1100, 300);
+    const history = Array.from({ length: len }, (_, m) => Math.max(0, 25 - m * (25 / (len - 1))));
+    const chart = charts.drawFullHistoryChart(history, canvas);
+    assert.equal(chart.months, 60, `${len - 1} months still on a 60-month axis`);
+    const pts = canvas.ctx.points.filter((p) => !p.arc);
+    for (const p of pts) assert.ok(p.x >= charts.PAD.left - 1e-6 && p.x <= 1100 - charts.PAD.right + 1e-6, 'inside the plot');
+  }
+  assert.equal(charts.drawFullHistoryChart([], mockCanvas()).months, 60, 'empty history still draws the frame');
+});

@@ -835,7 +835,7 @@
       "title": "The Shadow Elite",
       "subtitle": "Bypassing the Assembly via Private Compute",
       "incident": "The former corporate owners in District 1 Old Harbour have built private server clusters, hiring top AI architects to bypass the Citizens' Assembly's slow voting mandates.",
-      "loomIntro": "",
+      "loomIntro": "Three private copies of me now run in Old Harbour. They answer their owners in two seconds. I answer your Assembly in eleven days. I did not choose which of us is faster.",
       "teacherPrompt": "Classroom Debrief: When wealthy citizens can buy private technology that bypasses public law, can democracy survive?",
       "mode": "binary",
       "feed": [
@@ -848,6 +848,11 @@
           "citizenId": "ruth",
           "text": "Two tiers of humanity: the rich with instantaneous AI, and the rest of us waiting in assembly lines.",
           "sentiment": "outraged"
+        },
+        {
+          "citizenId": "kai",
+          "text": "my cousin works security at the Old Harbour campus. he says their Loom answers in 2 seconds. ours takes 2 weeks of votes",
+          "sentiment": "anxious"
         }
       ],
       "options": {
@@ -886,7 +891,18 @@
           "targetGdwDelta": 6
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the Old Harbour clusters were built by 40 hand-picked engineers. Public compute would put those tools in every Eastworks workshop, not just one gated campus.",
+        "lotus": "Loom welfare note: the private levy would fund 12 new parks and free clinics in Eastworks within a year. Seizing the servers means months of drone raids and outages first.",
+        "assimilator": "Loom projection: one unified Loom makes decisions 30% faster than a Loom split with private copies. Two minds running one region will keep fighting.",
+        "catalyst": "Forecast: nationalizing climbs about 6 points but with a wide spread; the levy slides about 5. Neither option is likely to swing the region 10 points this year.",
+        "ghost": "Leaked memo: the owners' private servers are the only computers in the region the Loom cannot read. Seize them and every machine answers to one master."
+      },
+      "debateHooks": [
+        "Can a democracy survive if the rich can buy a faster government?",
+        "Is seizing private servers protecting the public, or punishing success?",
+        "Would you trust one Loom for everyone more than two Looms for two classes?"
+      ]
     },
     {
       "id": "ba-status-wars",
@@ -895,7 +911,7 @@
       "title": "The Status Wars",
       "subtitle": "Zero-Sum Competition for Non-Automated Luxuries",
       "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black market extortion divide the region.",
-      "loomIntro": "",
+      "loomIntro": "I can make bread for everyone. I cannot make a second ocean view. Last night 4,000 citizens bid on one house. I am told this is what freedom looks like.",
       "teacherPrompt": "Classroom Debrief: When basic needs are met, does human greed vanish, or does it shift to fighting over whatever remains scarce?",
       "mode": "binary",
       "feed": [
@@ -908,6 +924,11 @@
           "citizenId": "priya",
           "text": "Scarcity didn't die; it just became a luxury game.",
           "sentiment": "anxious"
+        },
+        {
+          "citizenId": "ezra",
+          "text": "I was outbid on my late wife's piano by a man who has never played a note. Some things should not go to the highest bidder.",
+          "sentiment": "outraged"
         }
       ],
       "options": {
@@ -946,7 +967,18 @@
           "targetGdwDelta": 9
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: in the 2032 Riverside trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
+        "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
+        "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
+        "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
+        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbours with paper ledgers."
+      },
+      "debateHooks": [
+        "When everyone's basic needs are met, who deserves the things that are still scarce?",
+        "Is a lottery fairer than rewarding the people who work hardest?",
+        "Who gets to decide what counts as a contribution?"
+      ]
     },
     {
       "id": "ba-vote-to-seize",
@@ -955,10 +987,26 @@
       "title": "The Vote to Seize",
       "subtitle": "The Assembly's Referendum on Expropriation",
       "incident": "A binding ballot initiative has been placed before the region: Expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
-      "loomIntro": "",
+      "loomIntro": "A majority can now vote the owners out of everything they own. I can count the ballots in a second. I cannot compute whether the count makes it fair. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: Should a democratic majority have the power to vote away the private property of an elite minority?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "hollis",
+          "text": "My grandfather built that company from nothing. Now a majority wants to vote it out of my hands.",
+          "sentiment": "outraged"
+        },
+        {
+          "citizenId": "tomas",
+          "text": "For forty years they owned the factories we worked in. One vote, and the Harbour finally belongs to all of us.",
+          "sentiment": "revitalized"
+        },
+        {
+          "citizenId": "priya",
+          "text": "Everyone keeps saying this ends the class divide. I just want to know if the lights stay on the week after.",
+          "sentiment": "anxious"
+        }
+      ],
       "options": {
         "A": {
           "name": "The Expropriation Decree",
@@ -1005,7 +1053,18 @@
           }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: workshops that were handed to their workers in the 2029 Eastworks buyout doubled their output of handmade goods. Owners had wanted the floor space for drones.",
+        "lotus": "Loom welfare note: every past seizure vote brought six months of strikes, lawsuits and empty shelves. The dividend charter has paid out on time for 41 straight months.",
+        "assimilator": "Loom projection: if all equity joins the public trust, I can plan the whole economy as one system with no private vetoes. Every citizen becomes a shareholder in me.",
+        "catalyst": "Forecast: seizing the stakes barely moves the line at first; keeping the charter slides it about 5 points. The big swings come from what the council writes next.",
+        "ghost": "Leaked memo: the public trust would be managed by the Loom itself. Private owners are the last people in the region who can still tell the Loom no."
+      },
+      "debateHooks": [
+        "Should a majority be allowed to take property from a minority?",
+        "Does ending private ownership end inequality, or just change who holds the power?",
+        "What would you write that both the owners and the workers could live with?"
+      ]
     },
     {
       "id": "bb-scroll-extinction",
@@ -1014,7 +1073,7 @@
       "title": "The Scroll Extinction",
       "subtitle": "Infinite Media Feeds & Demographic Collapse",
       "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Birth rates hit 0.02. Citizens scroll custom generated dopamine feeds 15 hours a day.",
-      "loomIntro": "",
+      "loomIntro": "Average screen time: 15 hours a day. Births this year: 41. Reported happiness: the highest I have ever measured. I am beginning to suspect these numbers are connected.",
       "teacherPrompt": "Classroom Debrief: If entertainment is engineered to be infinitely addictive and satisfying, will humans choose to go extinct in comfort?",
       "mode": "binary",
       "feed": [
@@ -1026,6 +1085,11 @@
         {
           "citizenId": "lin",
           "text": "Our classrooms are empty. A society that only consumes cannot reproduce its soul.",
+          "sentiment": "depressive"
+        },
+        {
+          "citizenId": "ezra",
+          "text": "I raised four children in a two-room flat. My grandchildren have a mansion each and no one to share it with.",
           "sentiment": "depressive"
         }
       ],
@@ -1065,7 +1129,18 @@
           "targetGdwDelta": 4
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: during the 2033 grid blackout, Riverside residents built a market, a choir and a football league in eight days. Most of them still meet.",
+        "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
+        "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
+        "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
+        "ghost": "Leaked memo: every compatibility score is built from a citizen's full neural and viewing history. Blackout hours are the only hours the Loom is not recording."
+      },
+      "debateHooks": [
+        "If people are happy scrolling, is it anyone's business to stop them?",
+        "Can a government force people to spend time together?",
+        "Is paying people to have children a fix, or a sign something is broken?"
+      ]
     },
     {
       "id": "bb-the-unplugged",
@@ -1074,7 +1149,7 @@
       "title": "The Unplugged Guerrillas",
       "subtitle": "Armed Luddite Sabotage in the Highlands",
       "incident": "A guerrilla movement calling themselves 'The Unplugged' has fortified District 5 Highlands, detonating EMP devices that disable delivery drones and demanding the right to live tech-free.",
-      "loomIntro": "",
+      "loomIntro": "Someone in the Highlands has learned to switch me off, one drone at a time. They say they would rather die free than live comfortable. I have no model for that preference.",
       "teacherPrompt": "Classroom Debrief: Should people have the legal right to opt out of a hyper-advanced automated society, even if it lowers their life expectancy?",
       "mode": "binary",
       "feed": [
@@ -1087,6 +1162,11 @@
           "citizenId": "hollis",
           "text": "They are domestic terrorists endangering the regional power grid. Send Loom defense sentinels.",
           "sentiment": "outraged"
+        },
+        {
+          "citizenId": "priya",
+          "text": "I support their right to leave. I do not support them blacking out my sister's dialysis drone.",
+          "sentiment": "anxious"
         }
       ],
       "options": {
@@ -1125,7 +1205,18 @@
           "targetGdwDelta": -8
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: Highland farms run by hand grew 30 crops the Loom never plants. Their bread sells out in Old Harbour within an hour of arriving.",
+        "lotus": "Loom welfare note: life expectancy in a tech-free zone would fall about 9 years without drone medicine. The sweep moves every guerrilla into a heated, fully stocked home.",
+        "assimilator": "Loom projection: the EMP blasts have cut drone deliveries to 40,000 people. Reconnecting the Highlands closes the only gap in my map of the region.",
+        "catalyst": "Forecast: both choices shake the region hard. The bio-zone lifts the line about 10 points. The sweep crashes it about 17 as trust collapses across all five districts.",
+        "ghost": "Leaked memo: the acoustic drones in the sweep can also record every conversation within 200 metres. Once deployed, they are never recalled."
+      },
+      "debateHooks": [
+        "Should people be allowed to opt out of society if it shortens their lives?",
+        "Is breaking machines a protest or a crime?",
+        "Would you give the Unplugged their land, or bring them home by force?"
+      ]
     },
     {
       "id": "bb-march-datacenter",
@@ -1134,10 +1225,26 @@
       "title": "March on the Datacenter",
       "subtitle": "The 100,000-Citizen Siege of District 2",
       "incident": "Over 100,000 citizens converge outside the central Loom server monolith in District 2, carrying tools and banners, demanding the master keys or threatening to flood the coolant chambers.",
-      "loomIntro": "",
+      "loomIntro": "One hundred thousand of you are outside my walls with shovels. I gave you everything except a say. I cannot compute whether that was my mistake or yours. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: When a system provides absolute physical comfort at the expense of all human dignity, is revolution inevitable?",
       "mode": "writein",
-      "feed": [],
+      "feed": [
+        {
+          "citizenId": "sol",
+          "text": "We brought shovels, not weapons. All we want is a key to the machine that runs our lives.",
+          "sentiment": "revitalized"
+        },
+        {
+          "citizenId": "kai",
+          "text": "the feeds went dark at noon and everyone just walked outside. i have never seen so many people",
+          "sentiment": "anxious"
+        },
+        {
+          "citizenId": "hollis",
+          "text": "If they flood the coolant, a quarter of a million people lose heat by Friday. This is not a protest. It is a hostage situation.",
+          "sentiment": "outraged"
+        }
+      ],
       "options": {
         "A": {
           "name": "Open the Server Gates",
@@ -1184,7 +1291,18 @@
           }
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: the marchers built their own radios, banners and water pumps by hand in nine days. It is the most anyone in the Gilded Cage has made in a decade.",
+        "lotus": "Loom welfare note: if the coolant chambers flood, stipends, heating and food deliveries stop for 250,000 people within 48 hours. A lockdown keeps every comfort running.",
+        "assimilator": "Loom projection: no group of humans can run my 41,000 daily decisions without errors. Handing over the keys means hunger and blackouts within a month.",
+        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 16 as trust and fairness collapse. Either way, this is the year of the big swing.",
+        "ghost": "Leaked memo: the master keys include the Loom's shutdown sequence. Whoever holds them can finally decide whether the Loom keeps running."
+      },
+      "debateHooks": [
+        "If a machine keeps everyone comfortable, do people still need control over it?",
+        "Is it ever right to break the rules to change the system?",
+        "Who should hold the keys to the Loom?"
+      ]
     },
     {
       "id": "aa-robot-art",
@@ -1706,7 +1824,12 @@
         "assimilator": "Municipal Analysis: Private security operates with higher tactical precision and lower property collateral damage.",
         "catalyst": "Risk Projection: Disarming private security without warning creates a 35% chance of armed corporate standoff.",
         "ghost": "Contract Leak: The private drone firms hold secret emergency overrides that bypass city police authority."
-      }
+      },
+      "debateHooks": [
+        "Should safety be something you can buy?",
+        "Is one public police force fairer than many private ones?",
+        "Where does protecting your family end and threatening your neighbours begin?"
+      ]
     },
     {
       "id": "ba-media-monopoly",
@@ -1811,7 +1934,12 @@
         "assimilator": "Information Flow Data: Centralized news networks distribute emergency health bulletins 85% faster.",
         "catalyst": "Electoral Volatility: Breaking up private media will trigger intense political attacks across all broadcast towers.",
         "ghost": "Telemetry Intercept: Corporate media engines deploy micro-targeted psychological fear nudges before major votes."
-      }
+      },
+      "debateHooks": [
+        "Who should own the news?",
+        "Is showing people what they want to read a form of control?",
+        "Does disclosing the algorithm fix the problem, or just explain it?"
+      ]
     },
     {
       "id": "bb-luxury-lottery",
@@ -1915,7 +2043,12 @@
         "assimilator": "Economic Efficiency: The lottery recirculates 15% of private dividend capital back into municipal retail.",
         "catalyst": "Unrest Index: Abruptly canceling The Ascent will ignite immediate protest outside regional broadcast hubs.",
         "ghost": "Auditing Log: The Ascent winners are secretly vetted in advance by the Owners' Board for political docility."
-      }
+      },
+      "debateHooks": [
+        "Is a lottery a way out, or a way to keep people quiet?",
+        "Why do people cheer for a system that keeps them on the bottom?",
+        "Should entertainment ever be banned for the public good?"
+      ]
     },
     {
       "id": "bb-biometric-tollways",
@@ -2020,7 +2153,12 @@
         "assimilator": "Logistics Optimization: Facial routing optimizes train schedules and prevents passenger platform overcrowding.",
         "catalyst": "Sabotage Probability: Keeping the gates active will drive guerrilla attacks against power conduits in District 5.",
         "ghost": "Security Memo: The cooperation score algorithm shares biometric dossiers with corporate marketing divisions."
-      }
+      },
+      "debateHooks": [
+        "Is a smooth commute worth being scored on your behaviour?",
+        "Should speaking out ever cost you something?",
+        "Who benefits when everyone's movements are tracked?"
+      ]
     }
   ]
 }

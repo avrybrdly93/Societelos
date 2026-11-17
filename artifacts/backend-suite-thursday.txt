@@ -1,0 +1,112 @@
+# Full backend test suite run (TASK-630: verification of Tasks 001-630)
+# Command: npm run check:all
+# Run: 2026-11-17T07:12Z, node v22.23.4, no GEMINI_API_KEY (offline fallbacks)
+# Result: exit 0, pass 224 of 224 tests
+# ([loom] log lines from mocked-fetch tests omitted)
+
+syntax ok: 53 files
+data/*.json valid (14 core crises complete)
+js/host.js: all ids found in index.html
+js/map.js: all ids found in index.html
+js/charts.js: all ids found in index.html
+js/mobile.js: all ids found in mobile.html
+index.html: scripts load in order (/socket.io/socket.io.js -> /js/map.js -> /js/charts.js -> /js/host.js)
+mobile.html: scripts load in order (/socket.io/socket.io.js -> /js/mobile.js)
+index.html: no duplicate ids
+mobile.html: no duplicate ids
+js/host.js: all queried classes exist
+js/map.js: all queried classes exist
+js/charts.js: all queried classes exist
+js/mobile.js: all queried classes exist
+index.html: all 25 Cycle 5 elements present
+mobile.html: all 25 Cycle 5 elements present
+All 4 world themes meet WCAG AA (>= 4.5:1) on projector surfaces
+public/js: no innerHTML / outerHTML / insertAdjacentHTML / document.write / eval sinks
+host.js -> map.js: 6 members used, all exported
+host.js -> charts.js: 4 members used, all exported
+public/js: strict-mode IIFEs, cross-module references and debug helpers OK
+No external CDN dependencies in public/
+server/sim: no Math.random(), no I/O, no network
+# [game TEST] narration failed: boom
+# [game TEST] narration returned no loomLine; using fallback
+# [game TEST] narration returned no loomLine; using fallback
+# [game TEST] finale moderation 1 ms: 0 ok, 0 revise, 0 reject, 5 fallback
+# [game TEST] finale falls back to authored A/B (moderation unavailable)
+# [game TEST] finale moderation 1 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 1 ms: 0 ok, 0 revise, 0 reject, 5 fallback
+# [game TEST] finale falls back to authored A/B (moderation unavailable)
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 4 ok, 1 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 4 ok, 1 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 4 ok, 1 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 2 ok, 2 revise, 1 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale Borda: POLICY-1 16 [4/0/0/0], POLICY-2 13 [1/3/0/0], POLICY-3 10 [0/2/2/0], POLICY-4 7 [0/0/3/1], POLICY-5 4 [0/0/0/4]
+# [game TEST] finale enacted POLICY-1 50%, POLICY-2 25%, POLICY-3 25%; GDW 25 -> 24.1
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# [game TEST] finale Borda: POLICY-1 16 [4/0/0/0], POLICY-2 13 [1/3/0/0], POLICY-3 10 [0/2/2/0], POLICY-4 7 [0/0/3/1], POLICY-5 4 [0/0/0/4]
+# [game TEST] finale enacted POLICY-1 50%, POLICY-2 25%, POLICY-3 25%; GDW 25 -> 24.1
+# [game TEST] finale moderation 0 ms: 4 ok, 0 revise, 1 reject, 0 fallback
+# [game TEST] finale moderation 0 ms: 5 ok, 0 revise, 0 reject, 0 fallback
+# tests 224
+# suites 0
+# pass 224
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22403.528279
+single realized run          0.118 ms
+single forecast run          0.082 ms
+simulate (500 + 1 runs)      41.458 ms
+PASS (targets: run < 0.2 ms, cycle < 50 ms)
+heap after each 24 cycles (MB): 4.9, 4.9, 5.0, 5.0
+PASS: heap flat across consecutive cycles (growth 0.0 MB)
+heap after each 50 simulate() calls (MB): 5.1, 5.1, 5.1
+PASS: no leak across consecutive simulate() calls (growth 0.0 MB)
+[smoke] OK: LOBBY -> INTRO -> ROLE_ASSIGN -> CHAMBER -> INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION; winner A; GDW 25 -> 20.2
+
+# Test files:
+#   server/sim/test/calibration.test.js
+#   server/sim/test/prng.test.js
+#   server/sim/test/sensitivity.test.js
+#   server/sim/test/simulate.test.js
+#   server/sim/test/state.test.js
+#   server/sim/test/step.test.js
+#   server/sim/test/stream4-validation.test.js
+#   server/test/charts.test.js
+#   server/test/contracts.test.js
+#   server/test/endGame.test.js
+#   server/test/finaleMath.test.js
+#   server/test/gameEndSocket.test.js
+#   server/test/gameEngine.test.js
+#   server/test/hostConfig.test.js
+#   server/test/integration.test.js
+#   server/test/loom.test.js
+#   server/test/map.test.js
+#   server/test/playthrough.test.js
+#   server/test/reconnect.test.js
+#   server/test/safetyNets.test.js
+#   server/test/socket.test.js
+#   server/test/socketFlow.test.js
+#   server/test/specContract.test.js
+#   server/test/startup.test.js
+#   server/test/timerRaces.test.js
+#   server/test/worlds.test.js

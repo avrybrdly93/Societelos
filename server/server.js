@@ -3,6 +3,11 @@
 // Societelos — Stream 1 (Network & State) server entry point.
 // Express app, static assets and HTTP routes. Socket wiring lives in socket.js,
 // game state in gameEngine.js.
+//
+// Routes: /  and /host (projector), /mobile (phones), /health (liveness),
+// /api/qr (join QR code), /api/state (debug, off in production), and the
+// static files in /public. Run as main (npm start) it also installs the
+// crash safety nets, prints the LAN join URL and listens on PORT (3000).
 
 require('dotenv').config({ quiet: true });
 
@@ -48,14 +53,19 @@ function getJoinUrl(port = PORT) {
 }
 
 // Serve /public static assets (host screen, mobile controller, css, js).
-app.use(express.static(PUBLIC_DIR));
+// Cache-Control: no-cache + ETag: browsers keep a copy but revalidate on
+// every load, so a reload during a demo is instant (304, no body) and an
+// edited file is picked up at once, never a stale cached version.
+const STATIC_CACHE_CONTROL = 'no-cache';
+const noCache = (res) => res.setHeader('Cache-Control', STATIC_CACHE_CONTROL);
+app.use(express.static(PUBLIC_DIR, { etag: true, lastModified: true, setHeaders: noCache }));
 
 // Send the first page in `candidates` that exists in /public.
 // Lets new pages (mobile.html) replace legacy ones (player.html) without breaking routes.
 function sendPublicPage(res, candidates) {
   const file = candidates.map((name) => path.join(PUBLIC_DIR, name)).find((p) => fs.existsSync(p));
   if (!file) return res.status(404).send('Page not found');
-  return res.sendFile(file);
+  return res.sendFile(file, { headers: { 'Cache-Control': STATIC_CACHE_CONTROL } });
 }
 
 // Mobile controller for the 5 phones.
@@ -99,7 +109,16 @@ app.get('/api/qr', async (req, res) => {
 
 // HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+// Classroom Wi-Fi settings: a heartbeat every 5 s, and a phone counts as gone
+// only after 20 s of silence, so a brief Wi-Fi blip or a phone switching
+// access points does not drop the seat. CORS is open because phones load the
+// pages from this same LAN server (there is no other origin to protect).
+const SOCKET_OPTIONS = Object.freeze({
+  cors: { origin: '*' },
+  pingInterval: 5000,
+  pingTimeout: 20000
+});
+const io = new Server(server, { ...SOCKET_OPTIONS, cors: { ...SOCKET_OPTIONS.cors } }); // a copy: Socket.IO adds its own defaults
 initSockets(io, gameEngine);
 
 // Graceful shutdown: hooks (e.g. clearing game timers) run first, then sockets
@@ -122,9 +141,44 @@ function shutdown(signal) {
   setTimeout(() => process.exit(0), 3000).unref();
 }
 
+/**
+ * Classroom safety nets: a stray exception or rejected promise is logged
+ * (with a running count) instead of killing a live game for 30 students.
+ * Returns an uninstall function. Installed only when run as the server.
+ */
+function installSafetyNets(proc = process, log = console.error) {
+  const counts = { uncaughtException: 0, unhandledRejection: 0 };
+  const describe = (err) => (err && err.stack) || (err && err.message) || String(err);
+  const onException = (err) => {
+    counts.uncaughtException++;
+    log(`[server] uncaughtException #${counts.uncaughtException} (game kept running): ${describe(err)}`);
+  };
+  const onRejection = (reason) => {
+    counts.unhandledRejection++;
+    log(`[server] unhandledRejection #${counts.unhandledRejection} (game kept running): ${describe(reason)}`);
+  };
+  proc.on('uncaughtException', onException);
+  proc.on('unhandledRejection', onRejection);
+  const uninstall = () => {
+    proc.off('uncaughtException', onException);
+    proc.off('unhandledRejection', onRejection);
+  };
+  uninstall.counts = counts;
+  return uninstall;
+}
+
 if (require.main === module) {
+  installSafetyNets();
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
+  // A port clash at start-up is not a classroom-game error: say so and stop.
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`[server] Port ${PORT} is already in use. Close the other server or set PORT in .env.`);
+      process.exit(1);
+    }
+    console.error(`[server] HTTP server error: ${err && err.message}`);
+  });
   server.listen(PORT, () => {
     const port = server.address().port;
     console.log(`[server] Societelos listening on http://localhost:${port}`);
@@ -132,4 +186,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl };
+module.exports = { app, server, io, PORT, PUBLIC_DIR, shutdownHooks, shutdown, getLanIp, getJoinUrl, installSafetyNets, SOCKET_OPTIONS };

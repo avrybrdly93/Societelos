@@ -3,17 +3,36 @@
 // Societelos — Stream 1 Socket.IO layer.
 // Translates client events into gameEngine calls and relays engine events
 // back to the right sockets. Holds no game state of its own.
+//
+// Clients (handshake auth.clientType): 'host' (projector), 'phone' (one of
+// the five seats) or 'spectator' (read-only). Every inbound event is checked
+// by onValid(): rate limit, payload schema, and a crash-proof handler.
+//
+//   host -> server    host:start { seed? }, host:skipIntro, host:config, host:playAgain,
+//                     host:toggleBots, host:configureSession, host:triggerFinale
+//   phone -> server   lobby:join, lobby:ready, session:resume, spectate:join,
+//                     vote:cast, debate:ready, finale:submit, finale:rank
+//   server -> room    phase, lobby:update, resolution, world:reveal, game:end,
+//                     vote:progress, debate:progress, finale:progress, host:config
+//   server -> one     role:assigned, intel:drop, override:status, score:update,
+//                     finale:feedback, finale:ballot, state:sync (reconnect)
+//   server -> host    host:room, host:sync (projector refresh), host:error
 
 const crypto = require('crypto');
-const CLIENT_TYPES = ['host', 'phone'];
+const CLIENT_TYPES = ['host', 'phone', 'spectator'];
 
-/** Socket.IO room names for a game. */
+/**
+ * Socket.IO room names for a game: everyone in the game (host, phones,
+ * spectators) is in roomChannel; the projector is also in hostChannel,
+ * reserved for host-only broadcasts (none needed for the MVP).
+ */
 const roomChannel = (code) => `room:${code}`;
 const hostChannel = (code) => `host:${code}`;
 
 /**
- * Work out whether a socket is the projector ('host') or a controller
- * ('phone') from the handshake (auth first, then query string). Defaults to phone.
+ * Work out whether a socket is the projector ('host'), a controller
+ * ('phone') or a read-only 'spectator' from the handshake (auth first, then
+ * query string). Defaults to phone.
  */
 function detectClientType(socket) {
   const hs = socket.handshake || {};
@@ -97,6 +116,30 @@ const FINALE_SCHEMAS = Object.freeze({
 });
 
 /** Role card fields a phone may see (accepts spec and legacy role schemas). */
+// Polite refusals for a phone that cannot take a seat (e.g. a 6th student).
+// The seated five are never touched; the phone may still watch the projector.
+const JOIN_REFUSALS = Object.freeze({
+  GAME_IN_PROGRESS: 'GAME IN PROGRESS. This council already has its five trustees. Watch the projector; you can join the next game.',
+  ROOM_FULL: 'COUNCIL FULL. All five nodes are taken. Watch the projector; you can join the next game.'
+});
+
+function joinRefusal(reason) {
+  return { ok: false, reason, message: JOIN_REFUSALS[reason] || 'Could not join this council.', canSpectate: reason in JOIN_REFUSALS };
+}
+
+/** The game:end broadcast: the spec's keys first, then End Screen extras. */
+const GAME_END_KEYS = Object.freeze([
+  'gdwHistory', 'finalGdw', 'grade', 'worldKey', 'worldName', 'closingMessage',
+  'roles', 'authors', 'scores', 'winner', 'shutdown', 'seed',
+  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin', 'finaleMode', 'finaleFallback'
+]);
+
+function gameEndPayload(data = {}) {
+  const out = {};
+  for (const key of GAME_END_KEYS) if (data[key] !== undefined) out[key] = data[key];
+  return out;
+}
+
 function roleCard(role) {
   return {
     key: role.key,
@@ -195,6 +238,13 @@ function initSockets(io, gameEngine) {
     game.on('intel:drop', ({ node, text }) => {
       emitToNode(game, node, 'intel:drop', { text });
     });
+
+    // game:end { gdwHistory, finalGdw, grade, worldKey, worldName,
+    // closingMessage, roles, authors, scores, winner, shutdown, seed } to the
+    // room once END starts: the game is over, so roles and authors are revealed.
+    game.on('game:end', (data) => {
+      io.to(roomChannel(game.roomCode)).emit('game:end', gameEndPayload(data));
+    });
   }
 
   function triggerBotVotes(game) {
@@ -282,11 +332,17 @@ function initSockets(io, gameEngine) {
       phase: game.phase,
       botsEnabled: !!game.botsEnabled,
       sessionTimerEnabled: !!game.sessionTimerEnabled,
-      sessionDurationSec: game.sessionDurationSec
+      sessionDurationSec: game.sessionDurationSec,
+      config: game.getConfig()
     });
     // A projector reloading mid-game gets the world it missed.
     if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
     broadcastLobby(game);
+    // ...and the current phase, the GDW line so far and the active
+    // resolution or game:end, so the screen redraws where the class is.
+    for (const [event, payload] of game.hostSync()) {
+      socket.emit(event, event === 'game:end' ? gameEndPayload(payload) : payload);
+    }
     console.log(`[socket] host connected to room ${game.roomCode}`);
 
     // host:toggleBots { enabled: boolean } -> dev mode toggle to fill remaining slots with bots
@@ -310,8 +366,48 @@ function initSockets(io, gameEngine) {
       reply({ ok: true });
     });
 
-    // host:start {} -> begin the phase flow once all 5 nodes have joined.
-    onValid(socket, 'host:start', {}, (payload, reply) => {
+    // host:config { debateSeconds?: 60 | 90, showForecastBeforeVote?: boolean }
+    // -> teacher settings, lobby only. The ack carries the full config;
+    // everyone in the room gets host:config.
+    onValid(socket, 'host:config', { debateSeconds: 'number?', showForecastBeforeVote: 'boolean?' }, (payload, reply) => {
+      const result = game.configure(payload);
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('host:config', result.config);
+      return reply(result);
+    });
+
+    // host:playAgain { keepPlayers? } -> reset this room for the next game
+    // (next class period) without restarting Node. Unless keepPlayers, every
+    // phone is released from its seat and must join again.
+    onValid(socket, 'host:playAgain', { keepPlayers: 'boolean?' }, (payload, reply) => {
+      const keepPlayers = payload.keepPlayers === true;
+      if (!keepPlayers) {
+        // Local adapter: the room's sockets are in this process.
+        const ids = io.sockets.adapter.rooms.get(roomChannel(game.roomCode)) || new Set();
+        for (const id of Array.from(ids)) {
+          const s = io.sockets.sockets.get(id);
+          if (!s || !s.data.node) continue;
+          s.emit('session:invalid', { reason: 'ROOM_RESET' });
+          s.data.node = null;
+          s.data.roomCode = null;
+          s.leave(roomChannel(game.roomCode));
+        }
+      }
+      const result = game.playAgain({ keepPlayers });
+      broadcastLobby(game);
+      return reply(result);
+    });
+
+    // host:skipIntro {} -> cut the 30 s intro crawl short (repeat classes).
+    onValid(socket, 'host:skipIntro', {}, (payload, reply) => {
+      if (game.phase !== 'INTRO') return reply({ ok: false, reason: 'NOT_IN_INTRO' });
+      game.advancePhase();
+      return reply({ ok: true, phase: game.phase });
+    });
+
+    // host:start { seed? } -> begin the phase flow once all 5 nodes have
+    // joined. `seed` (a past game:end seed) replays that game's runs exactly.
+    onValid(socket, 'host:start', { seed: 'string?' }, (payload, reply) => {
+      if (payload.seed !== undefined && !gameEngine.isValidSeed(payload.seed)) return reply({ ok: false, reason: 'BAD_SEED' });
       const joined = Object.keys(game.players).length;
       const humanCount = Object.values(game.players).filter((p) => !p.isBot).length;
       if (joined < gameEngine.MAX_PLAYERS || (game.botsEnabled && humanCount < 1)) {
@@ -319,8 +415,10 @@ function initSockets(io, gameEngine) {
         socket.emit('host:error', { reason, joined, humanCount });
         return reply({ ok: false, reason, joined });
       }
+      if (game.phase !== 'LOBBY') return reply({ ok: false, reason: 'ALREADY_STARTED' });
+      if (payload.seed !== undefined) game.setSeed(payload.seed);
       if (!game.startIntroPhase()) return reply({ ok: false, reason: 'ALREADY_STARTED' });
-      return reply({ ok: true });
+      return reply({ ok: true, seed: game.gameId });
     });
   }
 
@@ -333,7 +431,13 @@ function initSockets(io, gameEngine) {
   function resumeSession(socket, token) {
     const session = gameEngine.findSession(token);
     if (!session) return false;
-    const { game, node } = session;
+    bindPhone(socket, session.game, session.node);
+    return true;
+  }
+
+  // Bind this socket to an existing seat (new socket.id -> NODE-0X) and
+  // tell the phone where the game is.
+  function bindPhone(socket, game, node) {
     wireRoom(game);
     game.reconnectPlayer(node, socket.id);
     socket.data.roomCode = game.roomCode;
@@ -351,7 +455,47 @@ function initSockets(io, gameEngine) {
       world: game.worldKey ? game.worldInfo() : null
     });
     broadcastLobby(game);
-    return true;
+    syncPhone(socket, game, node);
+  }
+
+  // state:sync: replay this node's private state to its new socket
+  // (role, current phase, this cycle's intel, Override status, revise
+  // feedback, finale ballot, game:end), shaped exactly like the live events.
+  function syncPhone(socket, game, node) {
+    for (const [event, payload] of game.privateSyncFor(node)) {
+      if (event === 'role:assigned') socket.emit(event, { role: roleCard(payload.role) });
+      else if (event === 'override:status') socket.emit(event, { overrideAvailable: !!payload.overrideAvailable });
+      else if (event === 'game:end') socket.emit(event, gameEndPayload(payload));
+      else socket.emit(event, payload);
+    }
+  }
+
+  // Spectators (e.g. a 6th student in a larger group): read-only. They get
+  // the same public broadcasts as the projector's room channel (phase,
+  // resolution, world:reveal, lobby:update, progress, game:end) and nothing
+  // private: no seat, no role, no intel, no ballot, and no actions.
+  function addSpectator(socket, game) {
+    wireRoom(game);
+    socket.data.roomCode = game.roomCode;
+    socket.data.spectator = true;
+    socket.join(roomChannel(game.roomCode));
+    socket.emit('spectate:joined', { roomCode: game.roomCode, phase: game.phase, cycle: game.cycle });
+    if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
+    for (const [event, payload] of game.hostSync()) {
+      socket.emit(event, event === 'game:end' ? gameEndPayload(payload) : payload);
+    }
+  }
+
+  function handleSpectator(socket) {
+    socket.emit('client:type', { clientType: 'spectator' });
+    const hs = socket.handshake || {};
+    const code = (hs.auth && hs.auth.roomCode) || (hs.query && hs.query.roomCode);
+    const game = findPhoneRoom(code);
+    if (!game) {
+      socket.emit('spectate:error', { reason: 'NO_ROOM' });
+      return;
+    }
+    addSpectator(socket, game);
   }
 
   function handlePhone(socket) {
@@ -370,14 +514,23 @@ function initSockets(io, gameEngine) {
     });
 
     // lobby:join { name, room? } -> seat the phone in a NODE slot.
-    onValid(socket, 'lobby:join', { name: nonEmptyString, room: 'string?' }, (payload, reply) => {
+    // Mid-game, a phone that lost its token may reclaim its own offline seat
+    // by the same name (and its saved node id, if it still has it).
+    onValid(socket, 'lobby:join', { name: nonEmptyString, room: 'string?', node: 'string?' }, (payload, reply) => {
       if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
       const game = findPhoneRoom(payload.room);
       if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
-      if (game.phase !== 'LOBBY') return reply({ ok: false, reason: 'GAME_IN_PROGRESS' });
+      if (game.phase !== 'LOBBY') {
+        const node = game.findReconnectSeat({ name: payload.name, node: payload.node });
+        if (!node) return reply(joinRefusal('GAME_IN_PROGRESS'));
+        bindPhone(socket, game, node);
+        const rejoined = { ok: true, node, roomCode: game.roomCode, token: game.players[node].token, resumed: true };
+        socket.emit('lobby:joined', rejoined);
+        return reply(rejoined);
+      }
 
       const seat = game.addPlayer(socket.id, payload.name);
-      if (!seat.ok) return reply(seat);
+      if (!seat.ok) return reply(joinRefusal(seat.reason));
 
       wireRoom(game);
       socket.data.roomCode = game.roomCode;
@@ -387,6 +540,16 @@ function initSockets(io, gameEngine) {
       socket.emit('lobby:joined', joined);
       reply(joined);
       return broadcastLobby(game);
+    });
+
+    // spectate:join { room? } -> a phone that could not take a seat watches
+    // read-only instead (it can still lobby:join the next game in LOBBY).
+    onValid(socket, 'spectate:join', { room: 'string?' }, (payload, reply) => {
+      if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
+      const game = findPhoneRoom(payload.room);
+      if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
+      addSpectator(socket, game);
+      return reply({ ok: true, roomCode: game.roomCode, phase: game.phase });
     });
 
     // vote:cast { choice: 'A' | 'B', override: bool } -> record a blind vote.
@@ -475,10 +638,11 @@ function initSockets(io, gameEngine) {
     const clientType = detectClientType(socket);
     socket.data.clientType = clientType;
     if (clientType === 'host') handleHost(socket);
+    else if (clientType === 'spectator') handleSpectator(socket);
     else handlePhone(socket);
   });
 
   return io;
 }
 
-module.exports = { initSockets, detectClientType, roomChannel, hostChannel, roleCard, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
+module.exports = { initSockets, joinRefusal, JOIN_REFUSALS, detectClientType, roomChannel, hostChannel, roleCard, gameEndPayload, GAME_END_KEYS, isValidPayload, allowEvent, RATE_BURST, RATE_PER_SECOND, FINALE_SCHEMAS };
