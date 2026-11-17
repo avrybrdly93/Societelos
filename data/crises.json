@@ -1171,8 +1171,7 @@
           "name": "Highland Autonomous Bio-Zone",
           "text": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
           "roles": [
-            "ghost",
-            "artisan"
+            "ghost"
           ],
           "effects": {
             "purpose": 0.6,
