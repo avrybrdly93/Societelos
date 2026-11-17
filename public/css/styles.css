@@ -1625,3 +1625,13 @@ body.is-reconnecting .m-main { opacity: 0.6; pointer-events: none; }
 .role-card[data-role="ghost"] { --accent: #70c08a; }
 .role-card[data-role="catalyst"] { --accent: #f07856; }
 .end-table .end-author-bonus { display: inline-block; margin: 0 8px; padding: 2px 7px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); font-size: 13px; white-space: nowrap; }
+
+/* Respect reduced-motion preferences for every transition and keyframe. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
