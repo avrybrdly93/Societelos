@@ -182,6 +182,34 @@
     return active;
   }
 
+  /**
+   * Glowing dot at the realized line's tip: a soft halo that breathes with
+   * the animation clock `t` (months), a blurred glow and a bright core.
+   */
+  function drawEndpointDot(ctx, g, m, v, t = 0) {
+    if (typeof v !== 'number') return;
+    const x = g.x(m);
+    const y = g.y(v);
+    const breathe = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+    ctx.save();
+    ctx.fillStyle = 'rgba(240, 164, 48, 0.22)';
+    ctx.beginPath();
+    ctx.arc(x, y, 13 + 5 * breathe, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = COLORS.realized;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = COLORS.realized;
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff4dc';
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   // Running realized-line animation (one at a time).
   let animation = null;
 
@@ -237,14 +265,10 @@
         return i === 0 ? ctx.moveTo(g.x(0), g.y(v)) : ctx.lineTo(g.x(m), g.y(v));
       });
       ctx.stroke();
-      // Leading dot.
-      const tipM = Math.min(t, months);
-      const tipV = partial[partial.length - 1];
-      ctx.fillStyle = COLORS.realized;
-      ctx.beginPath();
-      ctx.arc(g.x(tipM), g.y(tipV), 7, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
+      // Glowing endpoint dot on the leading edge of the realized line.
+      const tipM = Math.min(t, months);
+      drawEndpointDot(ctx, g, tipM, partial[partial.length - 1], t);
     }
 
     function drawCollapse() {
