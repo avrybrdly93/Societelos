@@ -317,3 +317,18 @@ test('loom.moderate requests temperature 0.2 and a JSON responseSchema of { node
   assert.deepEqual([...item.properties.effects.required].sort(), ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust']);
   assert.ok(calls[0].url.endsWith(':generateContent'));
 });
+
+test('moderation rules: ok rewrites (140), revise for crude/off-topic/personal attacks with kind feedback (200, no lecturing), reject for unsafe or a failed revision', async () => {
+  const sp = loom.SYSTEM_PROMPT;
+  assert.match(sp, /status "ok": rewrite it as one clear, neutral policy sentence \(max 140 characters\) that preserves the author's intent/);
+  assert.match(sp, /status "revise": it is crude, off-topic, a joke, or a personal attack/);
+  assert.match(sp, /kind, specific private feedback \(max 200 characters\)/);
+  assert.match(sp, /Do not lecture/);
+  assert.match(sp, /status "reject": the content is unsafe .*or it is a second attempt that still fails after feedback/);
+  // The system prompt rides on every moderation request.
+  const { calls, fetchImpl } = recordingFetch((body) => okFor(JSON.parse(body.contents[0].parts[0].text.split('\n\n').pop())));
+  await loom.moderate(FIVE, FINALE_CRISIS, { config: ONLINE, fetchImpl });
+  assert.equal(calls[0].body.systemInstruction.parts[0].text, sp);
+  assert.doesNotMatch(calls[0].prompt, /second attempts/);
+});
+
