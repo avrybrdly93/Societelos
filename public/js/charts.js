@@ -427,12 +427,23 @@
     const history = (Array.isArray(gdwHistory) ? gdwHistory : []).filter((v) => typeof v === 'number' && isFinite(v));
     const months = Math.max(cycles * MONTHS_PER_CYCLE, history.length - 1);
     const { ctx } = fitCanvas(canvas);
-    const g = geometry(canvas, months);
+    // Like geometry(), with a right margin that holds the band labels, so
+    // the GDW line never runs over them.
+    const LABEL_MARGIN = 150;
+    const w = canvas.cssWidth || canvas.width;
+    const h = canvas.cssHeight || canvas.height;
+    const plotW = w - PAD.left - PAD.right - LABEL_MARGIN;
+    const plotH = h - PAD.top - PAD.bottom;
+    const g = {
+      w, h, months,
+      x: (m) => PAD.left + (m / months) * plotW,
+      y: (gdw) => PAD.top + (1 - Math.max(0, Math.min(100, gdw)) / 100) * plotH
+    };
     clear(ctx, g);
     ctx.save();
-    // Threshold bands with their labels at the right edge.
-    ctx.font = '600 13px ui-monospace, Menlo, Consolas, monospace';
-    ctx.textAlign = 'right';
+    // Threshold bands, labelled in the right margin.
+    ctx.font = '600 14px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     for (const b of GRADE_BANDS) {
       const top = g.y(b.to);
@@ -440,9 +451,10 @@
       ctx.fillStyle = b.fill;
       ctx.fillRect(g.x(0), top, g.x(months) - g.x(0), Math.max(2, bottom - top));
       ctx.fillStyle = b.text;
-      const labelY = b.from === 0 ? g.y(0) - 9 : top + 10; // top of the band, clear of the line below
-      ctx.fillText(b.label, g.x(months) - 8, labelY);
+      const labelY = b.from === 0 ? g.y(0) : (top + bottom) / 2;
+      ctx.fillText(b.label, g.x(months) + 12, labelY);
     }
+    ctx.textAlign = 'right';
     // Gridlines and GDW labels every 20%.
     ctx.font = '15px ui-monospace, Menlo, Consolas, monospace';
     for (let v = 0; v <= 100; v += 20) {
