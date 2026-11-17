@@ -54,3 +54,22 @@ Findings and changes:
   ever sent with `emitToNode` / to one socket; covered by
   `server/test/specContract.test.js` and `server/test/reconnect.test.js`.
 - No dead code found.
+
+## server/server.js (TASK-643)
+
+| | |
+| :--- | ---: |
+| Lines | 189 |
+| Comment lines | 40 (~21%) |
+
+Findings and changes:
+- Small and single-purpose. Added a **route list** to the file header
+  (`/`, `/host`, `/mobile`, `/health`, `/api/qr`, `/api/state`, static
+  `/public`) and what happens when it runs as main.
+- Every block already carries a comment: LAN IP choice, static caching
+  (no-cache + ETag), page fallback (`mobile.html` before the legacy
+  `player.html`), debug endpoint gating, QR route, Socket.IO heartbeat and
+  CORS, graceful shutdown, crash safety nets, port-clash exit.
+- `require('dotenv').config({ quiet: true })` keeps start-up output to the
+  two banner lines (no dotenv tips), checked by `server/test/startup.test.js`.
+- No dead code found.

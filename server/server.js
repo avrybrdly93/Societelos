@@ -3,6 +3,11 @@
 // Societelos — Stream 1 (Network & State) server entry point.
 // Express app, static assets and HTTP routes. Socket wiring lives in socket.js,
 // game state in gameEngine.js.
+//
+// Routes: /  and /host (projector), /mobile (phones), /health (liveness),
+// /api/qr (join QR code), /api/state (debug, off in production), and the
+// static files in /public. Run as main (npm start) it also installs the
+// crash safety nets, prints the LAN join URL and listens on PORT (3000).
 
 require('dotenv').config({ quiet: true });
 
