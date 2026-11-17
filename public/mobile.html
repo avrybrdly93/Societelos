@@ -14,34 +14,39 @@
   <header id="m-header" class="m-header" aria-label="Node status">
     <span class="m-brand mono">SOCIETELOS</span>
     <span id="m-node-label" class="m-node-label mono">NOT CONNECTED</span>
+    <span id="m-score" class="m-score mono" hidden aria-live="polite"><b id="m-score-value">0</b> PTS</span>
     <span id="m-session-timer" class="m-session-timer mono" hidden>--:--</span>
     <div id="m-countdown" class="m-countdown" aria-hidden="true"><div id="m-countdown-fill" class="m-countdown-fill"></div></div>
   </header>
   <!-- Non-destructive: the current screen stays put underneath while the socket reconnects. -->
   <div id="m-reconnect" class="m-reconnect mono" role="status" aria-live="polite" hidden>RECONNECTING TO LOOM…</div>
 
-  <!-- Persistent role drawer: check your hidden agenda in any phase. -->
+  <!-- Persistent character drawer: your character's goal and how you score. -->
   <details id="role-drawer" class="role-drawer" hidden>
-    <summary class="role-drawer-toggle mono">MY AGENDA <span id="drawer-role-name" class="muted"></span></summary>
+    <summary class="role-drawer-toggle mono">MY CHARACTER <span id="drawer-role-name" class="muted"></span></summary>
     <div class="role-drawer-body">
-      <p><span class="mono accent">WANT</span> <span id="drawer-goal"></span></p>
-      <p><span class="mono accent">+1 WHEN</span> <span id="drawer-win"></span></p>
+      <p><span class="mono accent">GOAL</span> <span id="drawer-goal"></span></p>
+      <p><span class="mono accent">SCORING</span> <span id="drawer-win"></span></p>
     </div>
   </details>
 
-  <!-- This cycle's secret intel, re-readable while debating and voting. -->
-  <details id="intel-drawer" class="role-drawer intel-drawer" hidden>
-    <summary class="role-drawer-toggle mono">MY INTEL <span id="intel-drawer-ref" class="muted"></span></summary>
+  <!-- The Loom's live feed: everything the Loom has said this game. -->
+  <details id="loom-drawer" class="role-drawer loom-drawer" hidden>
+    <summary class="role-drawer-toggle mono">THE LOOM SPEAKS <span id="loom-drawer-latest" class="muted"></span></summary>
     <div class="role-drawer-body">
-      <p id="intel-drawer-text" class="intel-drawer-text"></p>
+      <ol id="m-loom-feed-drawer" class="m-loom-feed"></ol>
     </div>
   </details>
 
   <main id="m-main" class="m-main">
     <section id="m-view-join" class="m-view is-active" aria-label="Join">
-      <p class="m-kicker mono">THE LOOM // SECURE CHANNEL</p>
+      <p class="m-kicker mono">THE LOOM · SECURE CHANNEL</p>
       <h1 class="m-title">Council Access</h1>
-      <p class="muted">Enter a name. Only the Loom will see it; the projector shows your node number.</p>
+      <p class="muted">The year is 2121. Enter a name. Only the Loom will see it; the projector shows your seat number.</p>
+      <div class="m-goal">
+        <p class="m-label mono">The goal</p>
+        <p id="m-goal-text" class="m-goal-text">Steer society through five crises, one a year from 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points: every round, up to 100 for how well the winning policy fits your character and the council's shared goal.</p>
+      </div>
       <form id="join-form" class="m-form" autocomplete="off">
         <label for="join-name" class="m-label mono">Trustee name</label>
         <input id="join-name" class="m-input" name="name" type="text" maxlength="24" required placeholder="First name" enterkeyhint="go">
@@ -57,35 +62,30 @@
         <p class="muted">Keep this screen open. The projector will start the session.</p>
       </div>
     </section>
-    <section id="m-view-role" class="m-view" aria-label="Secret role">
-      <p class="m-kicker mono">CLASSIFIED // EYES ONLY</p>
-      <article id="role-card" class="role-card shieldable">
-        <input type="checkbox" id="shield-role" class="shield-toggle" aria-label="Hide role card">
-        <label for="shield-role" class="shield-button mono">TAP TO HIDE</label>
-        <label for="shield-role" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
-        <div id="role-icon" class="role-icon" aria-hidden="true"></div>
-        <h2 id="role-title" class="role-title">Decrypting…</h2>
-        <p id="role-flavor" class="role-flavor muted"></p>
-        <h3 class="role-heading mono">What you want</h3>
+    <section id="m-view-role" class="m-view" aria-label="Your character">
+      <p class="m-kicker mono">YOUR CHARACTER</p>
+      <article id="role-card" class="role-card char-profile">
+        <img id="role-portrait" class="m-portrait" alt="">
+        <div class="m-char-head">
+          <h2 id="role-title" class="role-title m-char-name">Dealing…</h2>
+          <p id="role-motto" class="m-char-motto"></p>
+        </div>
+        <p id="role-flavor" class="role-flavor"></p>
+        <h3 class="role-heading mono">Your ideas</h3>
+        <ul id="role-ideas" class="m-ideas" aria-label="Your character's ideas"></ul>
+        <h3 class="role-heading mono">What drives your score</h3>
+        <div class="m-balance" aria-hidden="true"><span id="role-balance-fill" class="m-balance-fill"></span></div>
+        <p id="role-balance-label" class="m-balance-label mono"></p>
+        <h3 class="role-heading mono">Your goal</h3>
         <p id="role-goal" class="role-text"></p>
-        <h3 class="role-heading mono">+1 score when</h3>
+        <h3 class="role-heading mono">How you score</h3>
         <p id="role-win" class="role-text"></p>
       </article>
     </section>
-    <section id="m-view-intel" class="m-view" aria-label="Intel">
-      <p class="m-kicker mono">INTEL DROP // DECRYPTED</p>
-      <article id="intel-memo" class="intel-memo shieldable">
-        <input type="checkbox" id="shield-intel" class="shield-toggle" aria-label="Hide intel">
-        <label for="shield-intel" class="shield-button mono">TAP TO HIDE</label>
-        <label for="shield-intel" class="shield-cover" aria-hidden="true"><span class="mono">HIDDEN — TAP TO REVEAL</span></label>
-        <header class="memo-head mono">
-          <span>LOOM ARCHIVE</span>
-          <span id="intel-ref">REF ----</span>
-        </header>
-        <p class="memo-meta mono">CLEARANCE: <span id="intel-node">NODE-0?</span> ONLY</p>
-        <p id="intel-text" class="memo-body">Awaiting decryption…</p>
-        <p class="memo-foot mono muted">Use it. Or bury it.</p>
-      </article>
+    <section id="m-view-loom" class="m-view" aria-label="The Loom speaks">
+      <p class="m-kicker mono">THE LOOM SPEAKS</p>
+      <ol id="m-loom-feed" class="m-loom-feed m-loom-feed-main" aria-live="polite"></ol>
+      <p class="muted m-loom-hint">Watch the projector. The council debates next.</p>
     </section>
     <section id="m-view-debate" class="m-view" aria-label="Debate">
       <div class="m-center">
@@ -143,12 +143,12 @@
         <div class="finale-timer-track"><div class="finale-timer-fill"></div></div>
         <p class="finale-timer-label mono"><span class="finale-timer-secs">--</span>s LEFT TO WRITE</p>
       </div>
-      <p class="m-kicker mono">FINALE // THE LOOM CANNOT COMPUTE AN ANSWER</p>
+      <p class="m-kicker mono">THE FINALE · THE LOOM CANNOT COMPUTE AN ANSWER</p>
       <h2 class="m-title">Write your policy</h2>
       <div id="finale-goal" class="finale-goal" hidden>
-        <p class="m-label mono">Your agenda</p>
+        <p class="m-label mono">Your character</p>
         <p id="finale-goal-text" class="finale-goal-text"></p>
-        <p class="finale-goal-hint muted">Policies tagged with your role score you points if they are enacted.</p>
+        <p class="finale-goal-hint muted">You score from how well the enacted package fits your ideas and how it serves the council's shared goal.</p>
       </div>
       <form id="finale-form" class="m-form finale-form" autocomplete="off">
         <label for="finale-text" class="m-label mono">One sentence the Loom will enact</label>
@@ -181,7 +181,7 @@
       </div>
     </section>
     <section id="m-view-finale-rank" class="m-view" aria-label="Rank the proposals">
-      <p class="m-kicker mono">FINALE // RANK THE PROPOSALS</p>
+      <p class="m-kicker mono">THE FINALE · RANK THE PROPOSALS</p>
       <h2 class="m-title">Your ballot</h2>
       <p id="rank-help" class="muted rank-help">The four policies you did not write. Your own is hidden.</p>
       <ul class="borda-legend mono" aria-label="Points per place">
@@ -198,22 +198,27 @@
       </div>
     </section>
     <section id="m-view-result" class="m-view" aria-label="Resolution">
-      <p class="m-kicker mono">RESOLUTION // CYCLE <span id="result-cycle">1</span></p>
+      <p class="m-kicker mono">RESOLUTION · CYCLE <span id="result-cycle">1</span></p>
       <div id="result-card" class="result-card">
         <p id="result-outcome" class="result-outcome mono">THE LOOM IS SIMULATING…</p>
         <h2 id="result-policy" class="result-policy">—</h2>
         <p id="result-yours" class="result-yours muted"></p>
       </div>
       <div class="result-gdw">
-        <span class="m-label mono">Gross Domestic Well-Being</span>
+        <span class="m-label mono">Societal Satisfaction</span>
         <span id="result-gdw" class="result-gdw-value mono">--%</span>
         <span id="result-gdw-delta" class="result-gdw-delta mono"></span>
       </div>
-      <p id="result-score" class="result-score mono" hidden>+1 AGENDA POINT</p>
+      <p id="result-score" class="result-score mono" hidden>+0 POINTS</p>
+      <p id="result-score-why" class="result-score-why muted"></p>
       <p id="result-total" class="result-total muted"></p>
+      <div class="m-scores">
+        <p class="m-label mono">Council scores</p>
+        <ol id="m-scoreboard" class="m-scoreboard"></ol>
+      </div>
     </section>
     <section id="m-view-end" class="m-view" aria-label="Session complete">
-      <p class="m-kicker mono">SESSION COMPLETE // <span id="end-node">NODE</span></p>
+      <p class="m-kicker mono">SESSION COMPLETE · <span id="end-node">NODE</span></p>
       <div id="end-card" class="result-card end-card">
         <p id="end-outcome" class="result-outcome mono">THE LOOM IS TALLYING…</p>
         <h2 id="end-headline" class="end-headline">Look at the projector.</h2>
@@ -223,7 +228,11 @@
         <span class="m-label mono">Your final score</span>
         <span id="end-score" class="end-score-value mono">—</span>
       </div>
-      <ol id="end-breakdown" class="end-breakdown mono" aria-label="Points by cycle"></ol>
+      <ol id="end-breakdown" class="end-breakdown mono" aria-label="Points by year"></ol>
+      <div class="m-scores">
+        <p class="m-label mono">Final leaderboard</p>
+        <ol id="m-end-scoreboard" class="m-scoreboard"></ol>
+      </div>
       <div class="end-grade-row">
         <span class="m-label mono">Class grade</span>
         <span id="end-grade" class="end-grade mono">—</span>
@@ -235,6 +244,7 @@
 
   <script src="config.js"></script>
   <script src="vendor/socket.io.min.js"></script>
+  <script src="js/mathbold.js"></script>
   <script src="js/mobile.js"></script>
 </body>
 </html>

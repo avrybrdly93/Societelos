@@ -11,8 +11,8 @@ const ROOT = path.join(__dirname, '..', 'public');
 
 // script(s) -> page they run on
 const PAIRS = [
-  { page: 'index.html', scripts: ['js/host.js', 'js/map.js', 'js/charts.js', 'js/cinematic.js'] },
-  { page: 'mobile.html', scripts: ['js/mobile.js'] }
+  { page: 'index.html', scripts: ['js/host.js', 'js/charts.js', 'js/cinematic.js', 'js/council.js', 'js/mathbold.js'] },
+  { page: 'mobile.html', scripts: ['js/mobile.js', 'js/mathbold.js'] }
 ];
 
 function idsInHtml(html) {
@@ -43,8 +43,8 @@ for (const { page, scripts } of PAIRS) {
 // Script load order: each page must load its helpers before the controller
 // that uses them (host.js reads window.SocietelosMap and SocietelosCharts).
 const ORDER = [
-  { page: 'index.html', scripts: ['/socket.io/socket.io.js', '/js/map.js', '/js/charts.js', '/js/host.js'] },
-  { page: 'mobile.html', scripts: ['/socket.io/socket.io.js', '/js/mobile.js'] }
+  { page: 'index.html', scripts: ['/vendor/socket.io.min.js', '/js/charts.js', '/js/council.js', '/js/host.js'] },
+  { page: 'mobile.html', scripts: ['/vendor/socket.io.min.js', '/js/mobile.js'] }
 ];
 for (const { page, scripts } of ORDER) {
   const html = fs.readFileSync(path.join(ROOT, page), 'utf8');

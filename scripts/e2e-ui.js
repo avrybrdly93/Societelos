@@ -90,7 +90,7 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   process.stderr.write(JSON.stringify({ phases: hostPhases.join(' '), voteHistory: game.voteHistory, worldKey: game.worldKey, hostWorld: hostText, gdw: game.gdw }) + '\n');
   const problems = consoleMsgs.filter((m) => / (error|PAGEERROR)/.test(m));
   for (const c of [1, 2, 3, 4]) {
-    for (const p of ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION']) {
+    for (const p of ['INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION']) {
       if (!seen.has(`${c}:${p}`)) problems.push(`missing ${c}:${p}`);
     }
   }

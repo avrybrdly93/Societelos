@@ -251,7 +251,7 @@
     return verdict;
   }
 
-  /** Crimson X and "LOOM SHUTDOWN // MONTH c" where the realized line hit 0. */
+  /** Crimson X and "LOOM SHUTDOWN · MONTH c" where the realized line hit 0. */
   function drawCollapseMark(chart, endMonth, months) {
     const { ctx, g } = chart;
     ctx.save();
@@ -267,7 +267,7 @@
     ctx.font = '300 22px Montserrat, sans-serif';
     ctx.textAlign = endMonth > months / 2 ? 'right' : 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`LOOM SHUTDOWN // MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
+    ctx.fillText(`LOOM SHUTDOWN · MONTH ${endMonth}`, x + (endMonth > months / 2 ? -18 : 18), y - 16);
     ctx.restore();
   }
 

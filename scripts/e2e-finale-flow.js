@@ -48,14 +48,14 @@ const FINALE_SECONDS = { INCIDENT: 2, FINALE_WRITE: 8, FINALE_MOD: 6, FINALE_DEB
 // Screens each phase may show (a transition may pass through the previous
 // phase's screen for a frame, which is fine; anything else is a flash).
 const HOST_VIEWS = {
-  INTRO: ['view-intro'], ROLE_ASSIGN: ['view-roles'], CHAMBER: ['view-chamber'], INTEL: ['view-chamber'], WORLD_REVEAL: ['view-world'],
+  INTRO: ['view-intro'], ROLE_ASSIGN: ['view-roles'], CHAMBER: ['view-chamber'], WORLD_REVEAL: ['view-world'],
   INCIDENT: ['view-chamber'], FINALE_WRITE: ['view-chamber'], FINALE_MOD: ['view-chamber'],
   FINALE_DEBATE: ['view-finale'], FINALE_RANK: ['view-finale'], FINALE_ENACT: ['view-enact', 'view-chamber'],
   DEBATE: ['view-chamber'], VOTE: ['view-chamber'], RESOLUTION: ['view-chamber'], END: ['view-end']
 };
 const PHONE_VIEWS = {
-  INTRO: ['m-view-wait'], ROLE_ASSIGN: ['m-view-role'], CHAMBER: ['m-view-wait'], INTEL: ['m-view-intel'], WORLD_REVEAL: ['m-view-world'],
-  INCIDENT: ['m-view-wait'], FINALE_WRITE: ['m-view-finale-write', 'm-view-finale-wait'], FINALE_MOD: ['m-view-finale-wait'],
+  INTRO: ['m-view-wait'], ROLE_ASSIGN: ['m-view-role'], CHAMBER: ['m-view-wait'], WORLD_REVEAL: ['m-view-world'],
+  INCIDENT: ['m-view-loom'], FINALE_WRITE: ['m-view-finale-write', 'm-view-finale-wait'], FINALE_MOD: ['m-view-finale-wait'],
   FINALE_DEBATE: ['m-view-wait'], FINALE_RANK: ['m-view-finale-rank'], FINALE_ENACT: ['m-view-wait'],
   DEBATE: ['m-view-debate'], VOTE: ['m-view-vote'], RESOLUTION: ['m-view-result'], END: ['m-view-wait', 'm-view-end']
 };
@@ -155,7 +155,7 @@ const POLICIES = [
   const real = Object.entries(counts).filter(([p, n]) => n >= 3 || /^(write|rank):/.test(p)).map(([p, n]) => `${p} (x${n})`);
   const finale = sequence.filter((k) => k.startsWith('5:')).map((k) => k.slice(2));
   for (const c of [1, 2, 3, 4]) {
-    for (const ph of ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION']) if (!sequence.includes(`${c}:${ph}`)) real.push(`missing ${c}:${ph}`);
+    for (const ph of ['INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION']) if (!sequence.includes(`${c}:${ph}`)) real.push(`missing ${c}:${ph}`);
   }
   if (!sequence.includes('2:WORLD_REVEAL')) real.push('missing 2:WORLD_REVEAL');
   const expected = FALLBACK ? ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'DEBATE', 'VOTE', 'RESOLUTION'] : ['INCIDENT', 'FINALE_WRITE', 'FINALE_MOD', 'FINALE_DEBATE', 'FINALE_RANK', 'FINALE_ENACT'];

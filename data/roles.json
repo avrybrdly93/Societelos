@@ -1,42 +1,97 @@
 [
   {
-    "id": "artisan",
-    "name": "The Artisan",
-    "icon": "△",
-    "goal": "Human effort and creative struggle over machine efficiency.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged artisan.",
-    "cardText": "Your grandmother built boats by hand. The Loom builds better ones in four minutes. You believe the four minutes stole something. Push the council toward work that can fail, hands that ache, and things people make themselves."
+    "id": "optimist",
+    "name": "The Optimist",
+    "icon": "✵",
+    "motto": "Progress for all.",
+    "portrait": "img/characters/optimist.webp",
+    "ideas": {
+      "purpose": 0.8,
+      "connection": 0.4,
+      "health": 0.5,
+      "trust": 0.7,
+      "fairness": 0.3,
+      "autonomy": 0.2
+    },
+    "groupWeight": 0.6,
+    "goal": "Bold progress that gives every citizen a purpose, using the Loom's power for good.",
+    "winCondition": "Each round you earn up to 100 points: 60% from how the enacted policy serves the whole society, 40% from how well it matches your ideals.",
+    "cardText": "You believe the Loom is the greatest tool humanity ever built. The problem is not the machine: it is that nobody has given people something worth doing with it. Push the council toward progress, invention and hope."
   },
   {
-    "id": "lotus",
-    "name": "The Lotus-Eater",
-    "icon": "✺",
-    "goal": "Frictionless comfort and pleasure.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged lotus.",
-    "cardText": "Suffering was a bug, and the Loom patched it. You see no reason to reinstall it. Steer the council toward comfort, calm and pleasure, and away from anyone who thinks struggle is good for the soul."
+    "id": "traditionalist",
+    "name": "The Traditionalist",
+    "icon": "⌂",
+    "motto": "Preserve what matters.",
+    "portrait": "img/characters/traditionalist.webp",
+    "ideas": {
+      "purpose": 0.5,
+      "connection": 0.9,
+      "health": 0.3,
+      "trust": -0.3,
+      "fairness": 0.1,
+      "autonomy": 0.4
+    },
+    "groupWeight": 0.4,
+    "goal": "Protect family, community and the human ways of living the Loom is quietly erasing.",
+    "winCondition": "Each round you earn up to 100 points: 40% from how the enacted policy serves the whole society, 60% from how well it matches your ideals.",
+    "cardText": "You remember neighbourhoods where people knew each other's names. The Loom made life easier and emptier. Steer the council toward community, continuity and caution about handing the machine any more of your lives."
   },
   {
-    "id": "assimilator",
-    "name": "The Assimilator",
-    "icon": "⌬",
-    "goal": "Humanity merging with the Loom.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged assimilator.",
-    "cardText": "The Loom does not make mistakes. People do. You think the next step for humanity is to stop resisting and join it. Hand the machine more of the decisions, and more of the mind."
+    "id": "pragmatist",
+    "name": "The Pragmatist",
+    "icon": "≡",
+    "motto": "Stability above all.",
+    "portrait": "img/characters/pragmatist.webp",
+    "ideas": {
+      "purpose": 0.2,
+      "connection": 0.3,
+      "health": 0.9,
+      "trust": 0.6,
+      "fairness": 0.3,
+      "autonomy": -0.2
+    },
+    "groupWeight": 0.75,
+    "goal": "Keep people healthy and the system running. Avoid gambles that could break the region.",
+    "winCondition": "Each round you earn up to 100 points: 75% from how the enacted policy serves the whole society, 25% from how well it matches your ideals.",
+    "cardText": "Ideals are lovely until the lights go out. You care about what works: health, order and a society that does not lurch from crisis to crisis. Back the option that keeps 250,000 people safe, even when it is dull."
   },
   {
-    "id": "catalyst",
-    "name": "The Catalyst",
-    "icon": "⁂",
-    "goal": "Resilience through crisis.",
-    "winCondition": "You score +1 each cycle GDW moves by 10 or more and stays above 0.",
-    "cardText": "Calm societies grow brittle. You want shocks, swings and arguments, because only a society that is tested learns to bend without breaking. Just never let it break: if well-being hits zero, everyone loses, you included."
+    "id": "radical",
+    "name": "The Radical",
+    "icon": "✧",
+    "motto": "A bolder future.",
+    "portrait": "img/characters/radical.webp",
+    "ideas": {
+      "purpose": 0.5,
+      "connection": 0.1,
+      "health": 0.0,
+      "trust": -0.6,
+      "fairness": 0.8,
+      "autonomy": 0.9
+    },
+    "groupWeight": 0.25,
+    "goal": "Break the old structures of power: more freedom and fairness, even if it costs comfort.",
+    "winCondition": "Each round you earn up to 100 points: 25% from how the enacted policy serves the whole society, 75% from how well it matches your ideals.",
+    "cardText": "A perfect world run by a machine and a handful of owners is still a cage. You want people free to choose, and power shared fairly, even if the road is rough. Push the council to take risks for a fairer future."
   },
   {
-    "id": "ghost",
-    "name": "The Ghost",
-    "icon": "♁",
-    "goal": "Dismantling the Loom; a return to the earth.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged ghost.",
-    "cardText": "You remember soil, weather and silence. The Loom is a cage with perfect climate control. Quietly push the council to pull the plug, piece by piece, and return people to the earth."
+    "id": "humanist",
+    "name": "The Humanist",
+    "icon": "❦",
+    "motto": "People, not systems.",
+    "portrait": "img/characters/humanist.webp",
+    "ideas": {
+      "purpose": 0.4,
+      "connection": 0.8,
+      "health": 0.6,
+      "trust": -0.1,
+      "fairness": 0.7,
+      "autonomy": 0.4
+    },
+    "groupWeight": 0.5,
+    "goal": "Put human connection, care and fairness ahead of efficiency in every decision.",
+    "winCondition": "Each round you earn up to 100 points: 50% from how the enacted policy serves the whole society, 50% from how well it matches your ideals.",
+    "cardText": "Every number on the Loom's dashboard is a person. You want policies that bring people together, look after the vulnerable and treat everyone fairly. Remind the council who all of this is for."
   }
 ]

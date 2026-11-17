@@ -8,7 +8,8 @@ const fs = require('fs');
 const path = require('path');
 
 const DATA = path.join(__dirname, '..', 'data');
-const ROLE_KEYS = ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost'];
+const ROLE_KEYS = ['optimist', 'traditionalist', 'pragmatist', 'radical', 'humanist']; // the five council characters
+const AGENDA_KEYS = ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost']; // legacy keys still used by crisis data
 const TAGS = ['artisan', 'lotus', 'assimilator', 'ghost'];
 const TRAITS = ['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy'];
 const DISTRICTS = ['D1', 'D2', 'D3', 'D4', 'D5'];
@@ -45,7 +46,9 @@ function checkRoles(roles) {
   const ids = roles.map((r) => r.id);
   for (const key of ROLE_KEYS) if (!ids.includes(key)) err('roles.json', `missing role "${key}"`);
   roles.forEach((r, i) => {
-    for (const f of ['id', 'name', 'icon', 'goal', 'winCondition', 'cardText']) if (!isStr(r[f])) err(`roles.json[${i}]`, `"${f}" required`);
+    for (const f of ['id', 'name', 'icon', 'goal', 'winCondition', 'cardText', 'motto', 'portrait']) if (!isStr(r[f])) err(`roles.json[${i}]`, `"${f}" required`);
+    if (!r.ideas || TRAITS.some((t) => typeof r.ideas[t] !== 'number' || r.ideas[t] < -1 || r.ideas[t] > 1)) err(`roles.json[${i}]`, '"ideas" needs all six traits in [-1, 1]');
+    if (!(typeof r.groupWeight === 'number' && r.groupWeight >= 0 && r.groupWeight <= 1)) err(`roles.json[${i}]`, '"groupWeight" must be in [0, 1]');
   });
   return undefined;
 }
@@ -134,7 +137,7 @@ function checkCrises(data, citizenIds) {
     (c.feed || []).forEach((m, j) => {
       if (!citizenIds.has(m.citizenId)) err(`${where}.feed[${j}]`, `unknown citizen "${m.citizenId}"`);
     });
-    if (c.intel) for (const k of Object.keys(c.intel)) if (!ROLE_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
+    if (c.intel) for (const k of Object.keys(c.intel)) if (!AGENDA_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
   });
   for (const w of ['fixed', ...WORLDS]) {
     const cycles = w === 'fixed' ? [1, 2] : [3, 4];
@@ -169,8 +172,6 @@ function checkCoreCrises(data) {
       if (!o.effects && !o.effectsByWorld) err(where, `option ${k} has no effects`);
       if (!(o.roles || o.rolesByWorld)) err(where, `option ${k} has no role tags`);
     }
-    const missingIntel = ROLE_KEYS.filter((r) => !isStr((c.intel || {})[r]));
-    if (missingIntel.length) err(where, `intel missing for ${missingIntel.join(', ')}`);
     if (!Array.isArray(c.feed) || c.feed.length < 2) err(where, 'needs at least 2 citizen feed lines');
     if (c.world !== 'fixed' && (!Array.isArray(c.debateHooks) || c.debateHooks.length < 2)) err(where, 'needs at least 2 debate hooks');
   }

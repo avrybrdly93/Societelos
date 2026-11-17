@@ -137,9 +137,9 @@ async function phoneChecks(browser, shot) {
 
   await page.evaluate((x) => {
     debugMobileEvent('lobby:update', { players: [{ node: 'NODE-03', name: x, connected: true }, { node: x, name: x }] });
-    debugMobileEvent('intel:drop', { text: x });
+    debugMobileEvent('loom:line', { kind: 'voice', year: 2121, text: x });
   }, XSS);
-  check('phone renders hostile lobby names and intel as text', !(await pwned(page)));
+  check('phone renders hostile lobby names and Loom lines as text', !(await pwned(page)));
 
   // Fallback: Gemini failed during moderation -> authored A/B debate and vote.
   await page.evaluate((crisis) => debugMobileEvent('phase', { cycle: 5, phase: 'DEBATE', crisis, endsAt: Date.now() + 60000, options: { A: { key: 'A', name: 'Pass it' }, B: { key: 'B', name: 'Reject it' } } }), FELL_BACK);

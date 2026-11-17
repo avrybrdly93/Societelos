@@ -36,7 +36,7 @@
 
   // Brief drops (Wi-Fi blip, screen lock): show a top banner instead of
   // tearing down the screen. Socket.IO reconnects on its own; the server
-  // then replays this seat's state (state:sync, role, phase, intel, ballot)
+  // then replays this seat's state (state:sync, role, phase, Loom feed, scores, ballot)
   // and the normal handlers repaint the active view.
   const reconnectBanner = document.getElementById('m-reconnect');
   let reconnectTimer = null;
@@ -112,7 +112,6 @@
   function setNodeLabel(node) {
     document.getElementById('m-node-label').textContent = node || 'NOT CONNECTED';
     document.getElementById('wait-node').textContent = node || 'NODE-0?';
-    document.getElementById('intel-node').textContent = node || 'NODE-0?';
   }
 
   // Join form -> lobby:join { name }
@@ -163,19 +162,47 @@
     }
   });
 
-  // role:assigned { role } -> fill the secret role card and the agenda drawer.
+  // role:assigned { role } -> fill the character profile and the drawer.
+  const IDEA_LABELS = { purpose: 'Purpose', connection: 'Community', health: 'Wellbeing', trust: 'Trust in the Loom', fairness: 'Fairness', autonomy: 'Freedom' };
   function renderRole(role) {
     if (!role) return;
     state.role = role;
-    document.getElementById('role-icon').textContent = role.icon || '';
-    document.getElementById('role-title').textContent = role.name || 'Unknown role';
+    const img = document.getElementById('role-portrait');
+    if (role.portrait) img.src = role.portrait;
+    img.hidden = !role.portrait;
+    document.getElementById('role-title').textContent = role.name || 'Your character';
+    document.getElementById('role-motto').textContent = role.motto ? `\u201c${role.motto}\u201d` : '';
     document.getElementById('role-flavor').textContent = role.cardText || '';
     document.getElementById('role-goal').textContent = role.goal || '';
     document.getElementById('role-win').textContent = role.winCondition || '';
+    const ideas = document.getElementById('role-ideas');
+    ideas.textContent = '';
+    Object.entries(role.ideas || {}).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+      const li = document.createElement('li');
+      li.className = 'm-idea';
+      const name = document.createElement('span');
+      name.className = 'm-idea-name';
+      name.textContent = IDEA_LABELS[k] || k;
+      const bar = document.createElement('span');
+      bar.className = 'm-idea-bar';
+      const fill = document.createElement('span');
+      fill.className = `m-idea-fill${v < 0 ? ' is-neg' : ''}`;
+      fill.style.width = `${Math.round(Math.abs(v) * 100)}%`;
+      bar.appendChild(fill);
+      const val = document.createElement('span');
+      val.className = 'm-idea-val mono';
+      val.textContent = `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
+      li.append(name, bar, val);
+      ideas.appendChild(li);
+    });
+    const gw = typeof role.groupWeight === 'number' ? Math.round(role.groupWeight * 100) : 50;
+    document.getElementById('role-balance-fill').style.width = `${gw}%`;
+    document.getElementById('role-balance-label').textContent = `${gw}% COUNCIL GOAL \u00b7 ${100 - gw}% YOUR IDEAS`;
     document.getElementById('drawer-role-name').textContent = role.name || '';
     document.getElementById('drawer-goal').textContent = role.goal || '';
     document.getElementById('drawer-win').textContent = role.winCondition || '';
     document.getElementById('role-drawer').hidden = false;
+    document.getElementById('m-score').hidden = false;
   }
 
   socket.on('role:assigned', (payload) => {
@@ -187,7 +214,7 @@
   // Phases without a phone screen show the waiting view with a status line.
   const PHASE_SCREENS = {
     ROLE_ASSIGN: 'm-view-role',
-    INTEL: 'm-view-intel',
+    INCIDENT: 'm-view-loom',
     DEBATE: 'm-view-debate',
     VOTE: 'm-view-vote',
     RESOLUTION: 'm-view-result',
@@ -377,30 +404,86 @@
   }
   requestAnimationFrame(tick);
 
-  // intel:drop { text } -> this player's role-slanted research snippet.
-  socket.on('intel:drop', (payload) => {
-    const text = (payload && payload.text) || 'No intel received.';
-    document.getElementById('intel-text').textContent = text;
-    document.getElementById('intel-ref').textContent = `REF C${state.cycle || 0}-${(state.node || 'NODE-00').slice(-2)}`;
-    document.getElementById('shield-intel').checked = false;
-    // Keep it in the intel drawer for DEBATE and VOTE.
-    document.getElementById('intel-drawer-text').textContent = text;
-    document.getElementById('intel-drawer-ref').textContent = `CYCLE ${state.cycle || 0}`;
+  // The Loom's live feed (loom:line / loom:history): everything the Loom has
+  // said this game, newest first, on the INCIDENT screen and in a drawer.
+  const LOOM_KIND = { voice: 'THE LOOM', crisis: 'CRISIS', verdict: 'VERDICT', world: 'WORLD', end: 'THE RECORD' };
+  const loomLines = [];
+  function loomItem(line) {
+    const li = document.createElement('li');
+    li.className = `m-loom-item is-${line.kind || 'voice'}`;
+    const meta = document.createElement('span');
+    meta.className = 'm-loom-meta mono';
+    meta.textContent = `${LOOM_KIND[line.kind] || 'THE LOOM'} \u00b7 ${line.year || ''}`;
+    const text = document.createElement('p');
+    text.className = 'm-loom-text';
+    text.textContent = line.text;
+    li.append(meta, text);
+    return li;
+  }
+  function renderLoomFeed() {
+    for (const id of ['m-loom-feed', 'm-loom-feed-drawer']) {
+      const list = document.getElementById(id);
+      list.textContent = '';
+      loomLines.slice(-20).reverse().forEach((line) => list.appendChild(loomItem(line)));
+    }
+    const latest = loomLines[loomLines.length - 1];
+    document.getElementById('loom-drawer-latest').textContent = latest ? `\u00b7 ${latest.year || ''}` : '';
+    document.getElementById('loom-drawer').hidden = !loomLines.length || state.phase === 'LOBBY';
+  }
+  socket.on('loom:line', (line) => {
+    if (!line || !line.text) return;
+    loomLines.push(line);
+    renderLoomFeed();
   });
-
-  // The intel drawer is available from DEBATE through VOTE of the cycle it
-  // belongs to; a new INCIDENT clears it.
+  socket.on('loom:history', (payload) => {
+    loomLines.length = 0;
+    ((payload && payload.lines) || []).forEach((l) => { if (l && l.text) loomLines.push(l); });
+    renderLoomFeed();
+  });
   socket.on('phase', (payload) => {
     if (!payload) return;
-    const drawer = document.getElementById('intel-drawer');
-    if (payload.phase === 'INCIDENT') {
-      document.getElementById('intel-drawer-text').textContent = '';
-      drawer.open = false;
-    }
-    const hasIntel = !!document.getElementById('intel-drawer-text').textContent;
-    drawer.hidden = !(hasIntel && ['DEBATE', 'VOTE'].includes(payload.phase));
-    if (drawer.hidden) drawer.open = false;
+    if (payload.phase === 'LOBBY') { loomLines.length = 0; renderLoomFeed(); }
+    document.getElementById('loom-drawer').hidden = !loomLines.length || payload.phase === 'LOBBY';
+    document.getElementById('loom-drawer').open = false;
   });
+
+  // Public scoreboard (scores), shown between rounds and at the end.
+  function renderScoreboard(listId, rows) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.textContent = '';
+    (rows || []).forEach((r, i) => {
+      const li = document.createElement('li');
+      li.className = `m-score-row${r.node === state.node ? ' is-me' : ''}`;
+      const rank = document.createElement('span');
+      rank.className = 'm-score-rank mono';
+      rank.textContent = String(i + 1);
+      const img = document.createElement('img');
+      img.className = 'm-score-portrait';
+      img.alt = '';
+      if (r.character && r.character.portrait) img.src = r.character.portrait;
+      const name = document.createElement('span');
+      name.className = 'score-name';
+      name.textContent = `${(r.character && r.character.name) || r.node}${r.node === state.node ? ' (you)' : ''}`;
+      const pts = document.createElement('span');
+      pts.className = 'm-score-pts mono';
+      pts.textContent = `${r.round ? `+${r.round} \u00b7 ` : ''}${r.total}`;
+      li.append(rank, img, name, pts);
+      list.appendChild(li);
+    });
+  }
+  socket.on('scores', (payload) => {
+    if (!payload) return;
+    state.scores = payload;
+    renderScoreboard('m-scoreboard', payload.rows);
+    const me = (payload.rows || []).find((r) => r.node === state.node);
+    if (me) setScore(me.total);
+  });
+  function setScore(total) {
+    state.score = total;
+    document.getElementById('m-score-value').textContent = String(total || 0);
+    if (state.role) document.getElementById('m-score').hidden = false;
+  }
 
   // Policy names arrive with the DEBATE phase; label the vote buttons with them.
   socket.on('phase', (payload) => {
@@ -418,7 +501,7 @@
   });
 
   // ---------------------------------------------------------------------------
-  // Resolution: did my policy win, current GDW, and my private score update.
+  // Resolution: did my policy win, Societal Satisfaction, and my points.
   // ---------------------------------------------------------------------------
   function resetResult(cycle) {
     document.getElementById('result-cycle').textContent = cycle || state.cycle || 1;
@@ -427,6 +510,7 @@
     document.getElementById('result-yours').textContent = '';
     document.getElementById('result-card').className = 'result-card';
     document.getElementById('result-score').hidden = true;
+    document.getElementById('result-score-why').textContent = '';
   }
   socket.on('phase', (payload) => { if (payload && payload.phase === 'RESOLUTION') resetResult(payload.cycle); });
   socket.on('resolution', (payload) => {
@@ -452,14 +536,18 @@
     deltaEl.textContent = delta === null ? '' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
     deltaEl.className = `result-gdw-delta mono ${delta < 0 ? 'is-down' : 'is-up'}`;
   });
-  // score:update { cycle, gained, total } arrives privately with the resolution.
+  // score:update { cycle, gained, personal, group, total } arrives with the resolution.
   socket.on('score:update', (payload) => {
     if (!payload) return;
-    state.score = payload.total;
+    setScore(payload.total);
     const el = document.getElementById('result-score');
-    el.hidden = !(payload.gained > 0);
-    el.textContent = `+${payload.gained} AGENDA POINT${payload.gained === 1 ? '' : 'S'}`;
-    document.getElementById('result-total').textContent = `Your agenda score: ${payload.total}`;
+    el.hidden = false;
+    el.textContent = `+${payload.gained} POINTS THIS YEAR`;
+    const pct = (x) => `${Math.round((Number(x) || 0) * 100)}%`;
+    document.getElementById('result-score-why').textContent = typeof payload.personal === 'number'
+      ? `Fit with your ideas ${pct(payload.personal)} \u00b7 council goal ${pct(payload.group)}`
+      : '';
+    document.getElementById('result-total').textContent = `Your total: ${payload.total} of 500`;
   });
 
   // ---------------------------------------------------------------------------
@@ -487,30 +575,30 @@
       headline.textContent = 'Everyone lost.';
     } else if (won) {
       outcome.textContent = winners.length > 1 ? 'SHARED VICTORY' : 'YOU WON';
-      headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
+      headline.textContent = winners.length > 1 ? `You share the top score with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'You earned the highest score.';
     } else {
       outcome.textContent = 'NOT THIS TIME';
-      headline.textContent = 'Another agenda shaped the future.';
+      headline.textContent = 'Another council member scored higher.';
     }
     document.getElementById('end-role').textContent = me && me.role ? `You were ${me.role.name || me.role.key}.` : '';
-    document.getElementById('end-score').textContent = me ? String(me.total) : '—';
+    document.getElementById('end-score').textContent = me ? `${me.total} / ${data.maxScore || 500}` : '\u2014';
+    if (me) setScore(me.total);
     const list = document.getElementById('end-breakdown');
     list.textContent = '';
+    const startYear = data.startYear || 2121;
     for (const c of (me && me.perCycle) || []) {
       const li = document.createElement('li');
-      const parts = [];
-      if (c.role) parts.push(`+${c.role} role`);
-      if (c.catalyst) parts.push(`+${c.catalyst} catalyst`);
-      if (c.author) parts.push(`+${c.author} author`);
-      const gained = (c.role || 0) + (c.catalyst || 0) + (c.author || 0);
-      li.className = gained ? 'is-scored' : '';
-      li.textContent = `CYCLE ${c.cycle}: ${parts.length ? parts.join(', ') : '0'}`;
+      li.className = c.points ? 'is-scored' : '';
+      li.textContent = `${startYear + c.cycle - 1}: +${c.points || 0}`;
       list.appendChild(li);
     }
+    const rows = (data.roles || []).map((r) => ({ node: r.node, character: r.role ? { name: r.role.name, portrait: r.role.portrait } : null, total: r.total, round: 0 }))
+      .sort((a, b) => b.total - a.total);
+    renderScoreboard('m-end-scoreboard', rows);
     const grade = document.getElementById('end-grade');
     grade.textContent = GRADE_LABELS[data.grade] || data.grade || '—';
     grade.dataset.grade = data.grade || '';
-    document.getElementById('end-gdw').textContent = typeof data.finalGdw === 'number' ? `GDW ${data.finalGdw.toFixed(1)}%` : '';
+    document.getElementById('end-gdw').textContent = typeof data.finalGdw === 'number' ? `SATISFACTION ${data.finalGdw.toFixed(1)}%` : '';
     document.getElementById('end-world').textContent = data.worldName ? `World reached: ${data.worldName}.` : '';
   }
   socket.on('game:end', renderEnd);
@@ -534,7 +622,7 @@
     const list = document.getElementById('m-world-impact');
     list.textContent = '';
     const lines = (WORLD_IMPACT[world.worldKey] || []).slice();
-    if (world.problemLeft) lines.push(`Problem left unsolved: ${world.problemLeft}. Your agenda still scores the same way.`);
+    if (world.problemLeft) lines.push(`Problem left unsolved: ${world.problemLeft}. You still score the same way.`);
     lines.forEach((text) => {
       const li = document.createElement('li');
       li.textContent = text;
@@ -687,6 +775,7 @@
       const goal = state.role && (state.role.goal || state.role.winCondition);
       document.getElementById('finale-goal').hidden = !goal;
       document.getElementById('finale-goal-text').textContent = goal ? `${state.role.name}: ${state.role.goal}` : '';
+      // (the same goal the character profile shows)
     }
   });
 
@@ -907,7 +996,7 @@
 
   // ---------------------------------------------------------------------------
   // Debug mock tester for standalone screen checks, from the console:
-  //   debugMobilePhase('VOTE')   debugMobilePhase('INTEL')   debugMobilePhase('ROLE_ASSIGN')
+  //   debugMobilePhase('VOTE')   debugMobilePhase('INCIDENT')   debugMobilePhase('ROLE_ASSIGN')
   // Seats a fake NODE-03 and feeds the same handlers real events would.
   // ---------------------------------------------------------------------------
   const MOCK_ROLE = {
@@ -925,7 +1014,7 @@
       setNodeLabel(state.node);
     }
     if (phase === 'ROLE_ASSIGN') debugEmit('role:assigned', { role: MOCK_ROLE });
-    if (phase === 'INTEL') debugEmit('intel:drop', { text: 'Loom archive: districts that ran their own repair councils reported the highest sense of purpose in the region.' });
+    if (phase === 'INCIDENT') debugEmit('loom:line', { kind: 'voice', year: 2121, text: 'Wealth and ownership: who owns the Loom?' });
     const payload = { cycle, phase, endsAt: seconds ? Date.now() + seconds * 1000 : null };
     if (phase === 'VOTE' || phase === 'DEBATE') {
       payload.options = {
@@ -948,8 +1037,8 @@
   // ---------------------------------------------------------------------------
   // Refresh / reconnect re-hydration. On resume the server replays this
   // seat's state in order: state:sync { phase, cycle, voted, submitted,
-  // ranked }, role:assigned, phase, intel:drop, override:status, ballot...
-  // The normal handlers repaint role, intel, timer and ballot; this restores
+  // ranked }, role:assigned, phase, loom:history, scores, override:status, ballot...
+  // The normal handlers repaint role, Loom feed, timer and ballot; this restores
   // what only the server remembers: a vote, write-in or ranking already in.
   // (Registered last so it runs after every other 'phase' handler.)
   // ---------------------------------------------------------------------------

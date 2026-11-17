@@ -14,7 +14,8 @@
 //                     vote:cast, debate:ready, finale:submit, finale:rank
 //   server -> room    phase, lobby:update, resolution, world:reveal, game:end,
 //                     vote:progress, debate:progress, finale:progress, host:config
-//   server -> one     role:assigned, intel:drop, override:status, score:update,
+//   server -> room    council, scores, loom:line (public: characters are public)
+//   server -> one     role:assigned, override:status, score:update,
 //                     finale:feedback, finale:ballot, state:sync (reconnect)
 //   server -> host    host:room, host:sync (projector refresh), host:error
 
@@ -131,7 +132,8 @@ function joinRefusal(reason) {
 const GAME_END_KEYS = Object.freeze([
   'gdwHistory', 'finalGdw', 'grade', 'worldKey', 'worldName', 'closingMessage',
   'roles', 'authors', 'scores', 'winner', 'shutdown', 'seed',
-  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin', 'finaleMode', 'finaleFallback'
+  'gameId', 'gradeText', 'cycleMarkers', 'cycleSeeds', 'cyclesPlayed', 'sharedWin', 'finaleMode', 'finaleFallback',
+  'champion', 'maxScore', 'startYear'
 ]);
 
 function gameEndPayload(data = {}) {
@@ -147,7 +149,12 @@ function roleCard(role) {
     icon: role.icon || '',
     goal: role.goal || role.agenda || '',
     winCondition: role.winCondition || '',
-    cardText: role.cardText || role.archetype || ''
+    cardText: role.cardText || role.archetype || '',
+    motto: role.motto || '',
+    seat: role.seat || '',
+    portrait: role.portrait || '',
+    ideas: role.ideas || null,
+    groupWeight: Number.isFinite(role.groupWeight) ? role.groupWeight : null
   };
 }
 
@@ -211,9 +218,24 @@ function initSockets(io, gameEngine) {
       emitToNode(game, node, 'override:status', { overrideAvailable: !!overrideAvailable });
     });
 
-    // score:update { cycle, gained, role, catalyst, total } privately to its phone.
-    game.on('score:update', ({ node, cycle, gained, role, catalyst, total }) => {
-      emitToNode(game, node, 'score:update', { cycle, gained, role, catalyst, total });
+    // score:update { cycle, gained, personal, group, total } to its phone.
+    game.on('score:update', ({ node, cycle, gained, personal, group, total }) => {
+      emitToNode(game, node, 'score:update', { cycle, gained, personal, group, total });
+    });
+
+    // council { members } to the room: the five seats and their public characters.
+    game.on('council', (payload) => {
+      io.to(roomChannel(game.roomCode)).emit('council', payload);
+    });
+
+    // scores { cycle, rows, maxTotal } to the room after every round.
+    game.on('scores', (payload) => {
+      io.to(roomChannel(game.roomCode)).emit('scores', payload);
+    });
+
+    // loom:line { cycle, year, phase, kind, text } to the room: the Loom's live feed.
+    game.on('loom:line', (line) => {
+      io.to(roomChannel(game.roomCode)).emit('loom:line', line);
     });
 
     // finale:feedback { status, feedback } privately to the author asked to revise.
@@ -232,11 +254,6 @@ function initSockets(io, gameEngine) {
     // finale:ballot { policies: [{ id, text }] x4 } privately to each phone.
     game.on('finale:ballot', ({ node, policies }) => {
       emitToNode(game, node, 'finale:ballot', { policies });
-    });
-
-    // intel:drop { text } privately, chosen by the node's secret role.
-    game.on('intel:drop', ({ node, text }) => {
-      emitToNode(game, node, 'intel:drop', { text });
     });
 
     // game:end { gdwHistory, finalGdw, grade, worldKey, worldName,

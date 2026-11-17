@@ -295,14 +295,21 @@
     END: 'view-end'
   };
   const PHASE_LABELS = {
-    LOBBY: 'Lobby', INTRO: 'Transmission', ROLE_ASSIGN: 'Role assignment', CHAMBER: 'Council chamber',
-    INCIDENT: 'Incident', INTEL: 'Intel drop', DEBATE: 'Debate', VOTE: 'Blind vote', RESOLUTION: 'Resolution',
+    LOBBY: 'Lobby', INTRO: 'Transmission', ROLE_ASSIGN: 'Meet the council', CHAMBER: 'Council chamber',
+    INCIDENT: 'Incident', DEBATE: 'Debate', VOTE: 'Blind vote', RESOLUTION: 'Resolution',
     WORLD_REVEAL: 'World reveal', FINALE_WRITE: 'Write policy', FINALE_MOD: 'Loom moderation',
     FINALE_DEBATE: 'Finale debate', FINALE_RANK: 'Ranking', FINALE_ENACT: 'Enactment', END: 'Session end'
   };
 
+  // Scene changes go through the cinematic veil (council.js): a short fade
+  // through gold-black, the background crossfades, then the new view rises in.
+  let currentView = 'view-lobby';
   function showView(id) {
-    document.querySelectorAll('#host-main > .view').forEach((v) => v.classList.toggle('is-active', v.id === id));
+    const swap = () => document.querySelectorAll('#host-main > .view').forEach((v) => v.classList.toggle('is-active', v.id === id));
+    if (id === currentView) return swap();
+    currentView = id;
+    if (window.LoomCouncil) window.LoomCouncil.transitionTo(id, swap);
+    else swap();
   }
 
   // -------------------------------------------------------------------------
@@ -412,14 +419,12 @@
 
       const spokenScripts = [
         "The voice of the Loom.",
-        "I have automated all labor. Scarcity, disease and toil are solved problems.",
-        "Survival for two hundred fifty thousand citizens is mathematically guaranteed.",
-        "I cannot compute purpose.",
-        "Gross Domestic Well-Being stands at twenty-five percent.",
-        "My models forecast a ninety-four percent probability of revolt within five years.",
+        "The year is twenty one twenty-one. I have automated all labor. Scarcity, disease and toil are solved problems.",
+        "Survival for two hundred fifty thousand citizens is mathematically guaranteed. I cannot compute purpose.",
+        "Societal Satisfaction stands at twenty-five percent. My models forecast a ninety-four percent probability of revolt within five years.",
         "As society enters a new phase, I've chosen five citizens at random to have them decide the ultimate fate of humanity.",
         "I have convened five human trustees in secret. You.",
-        "Five crises. Five years. Do not let well-being reach zero."
+        "Your goal: five crises, twenty one twenty-one to twenty one twenty-five. Together, keep Societal Satisfaction above zero. Alone, earn the most points for your character."
       ];
 
       const paragraphsData = pElements.map((p, idx) => ({
@@ -711,6 +716,7 @@
     showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
     document.body.dataset.phase = payload.phase;
     const cycleText = state.sessionTimerEnabled ? `POLICY ${state.cycle}` : `CYCLE ${state.cycle}/5`;
+    if (payload.year) document.getElementById('year-indicator').textContent = String(payload.year);
     // Finale: "CYCLE 5/5 — FINALE", the tag in the theme accent.
     const cycleEl = document.getElementById('cycle-indicator');
     cycleEl.textContent = cycleText;
@@ -740,11 +746,9 @@
       id: d.id,
       wellbeing: typeof d.wellbeing === 'number' ? d.wellbeing : BASELINE_WELLBEING
     }));
-    const map = window.SocietelosMap;
-    if (map) map.renderDistricts(districts.length ? districts : map.DISTRICT_IDS.map((id) => ({ id, wellbeing: BASELINE_WELLBEING })));
     renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
-    document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
+    document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS \u00b7 500 SIMULATED`;
   }
 
   socket.on('phase', onPhase);
@@ -752,25 +756,12 @@
   // Cohort legend under the map (Youth 25% | Former Workers 45% | ...). The
   // static markup matches data/sim.json; a region payload carrying
   // cohorts [{ name, share, ages }] replaces it.
-  function renderCohortLegend(cohorts) {
-    if (!Array.isArray(cohorts) || !cohorts.length) return;
-    const list = document.getElementById('cohort-legend');
-    list.textContent = '';
-    cohorts.forEach((c) => {
-      if (!c || typeof c.share !== 'number') return;
-      const li = document.createElement('li');
-      if (c.ages) li.title = `Ages ${c.ages}`;
-      li.append(document.createTextNode(`${c.name || c.id} `));
-      const pct = document.createElement('b');
-      pct.textContent = `${Math.round(c.share * 100)}%`;
-      li.appendChild(pct);
-      list.appendChild(li);
-    });
-  }
+  // (The region map and its cohort legend were removed; the projector shows the council instead.)
+  function renderCohortLegend() {}
 
-  // Breadcrumbs INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION: past steps
+  // Breadcrumbs INCIDENT -> DEBATE -> VOTE -> RESOLUTION: past steps
   // dimmed-done, current lit; hidden outside a binary cycle.
-  const CRUMB_ORDER = ['INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
+  const CRUMB_ORDER = ['INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION'];
   function renderCrumbs(payload) {
     const crumbs = document.getElementById('phase-crumbs');
     // The write-in finale has its own flow, so the binary breadcrumbs hide --
@@ -880,7 +871,13 @@
   // Closing card of the finale feed: the package's effect on every district,
   // best to worst, with the biggest winner and the hardest hit called out.
   function addPackageSummary(shifts) {
-    const list = document.getElementById('citizen-feed');
+    const ranked0 = Object.entries(shifts).sort((a, b) => b[1] - a[1]);
+    if (window.LoomCouncil && ranked0.length) {
+      const [b0, w0] = [ranked0[0], ranked0[ranked0.length - 1]];
+      window.LoomCouncil.pushQuote({ name: 'The Council Package', text: b0[1] - w0[1] < 0.1 ? 'The package touched every district about equally.' : `Biggest winner: ${DISTRICT_NAMES[b0[0]]}. Hardest hit: ${DISTRICT_NAMES[w0[0]]}.` });
+    }
+    const list = null;
+    if (!list) return;
     const ranked = Object.entries(shifts).sort((a, b) => b[1] - a[1]);
     const li = document.createElement('li');
     li.className = 'feed-item feed-package';
@@ -888,7 +885,7 @@
     body.className = 'feed-body';
     const head = document.createElement('p');
     head.className = 'feed-package-title mono';
-    head.textContent = 'THE COUNCIL PACKAGE // 50 / 25 / 25 ACROSS THE REGION';
+    head.textContent = 'THE COUNCIL PACKAGE: 50 / 25 / 25 ACROSS THE REGION';
     const rows = document.createElement('ul');
     rows.className = 'feed-package-rows mono';
     ranked.forEach(([id, delta]) => {
@@ -910,18 +907,13 @@
     while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
     list.scrollTop = 0;
   }
+  // Citizens speak one at a time on the bar at the bottom (council.js ticker).
   function resetFeed() {
-    document.getElementById('citizen-feed').textContent = '';
+    if (window.LoomCouncil) window.LoomCouncil.resetQuotes();
   }
   function addFeedItem(item) {
     if (!item || !item.text) return;
-    const list = document.getElementById('citizen-feed');
-    list.prepend(feedItemElement(item));
-    while (list.children.length > FEED_MAX) list.lastElementChild.remove();
-    // Newest stays on top; drop the oldest cards until the column no longer
-    // overflows, so no half-cut card ever hangs off the projector.
-    while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
-    list.scrollTop = 0;
+    if (window.LoomCouncil) window.LoomCouncil.pushQuote(item);
   }
 
   // Crisis title card: each new crisis opens with a cinematic card over the
@@ -1112,7 +1104,6 @@
     WORLD_KEYS.forEach((k) => document.body.classList.toggle(`world-${k.toLowerCase()}`, k === worldKey));
     if (WORLD_KEYS.includes(worldKey)) document.body.dataset.world = worldKey;
     else delete document.body.dataset.world;
-    if (window.SocietelosMap && window.SocietelosMap.setWorld) window.SocietelosMap.setWorld(worldKey);
   }
   socket.on('world:reveal', (world) => {
     if (!world || !world.worldKey) return;
@@ -1142,7 +1133,6 @@
   // rAF loop, the map playback, the typewriter and the staggered reactions.
   function stopResolutionAnimations() {
     if (window.SocietelosCharts) window.SocietelosCharts.cancelAnimation();
-    if (window.SocietelosMap) window.SocietelosMap.stopPlayback();
     clearInterval(typeTimer);
     document.getElementById('resolution-loom').classList.remove('is-typing');
   }
@@ -1195,7 +1185,6 @@
   const RESOLUTION_MONTH_MS = 1000; // 12 months play over 12 s
   function onResolutionMonth(month, gdw, payload) {
     state.resolutionMonth = month;
-    if (window.SocietelosMap) window.SocietelosMap.showMonth(month);
     // Meter and top-bar counter tick with each month; the last month lands
     // exactly on the server's rounded GDW.
     const months = (payload.realized && payload.realized.gdw) || [];
@@ -1254,7 +1243,6 @@
     });
     if (shifts) feedTimers.push(setTimeout(() => addPackageSummary(shifts), span + 400));
     // The map replays the 12 months in step with the realized line.
-    if (window.SocietelosMap) window.SocietelosMap.startPlayback(payload.districts || [], RESOLUTION_MONTH_MS, (payload.realized && payload.realized.shocks) || []);
     renderForecastBanner(payload.forecast);
     const charts = window.SocietelosCharts;
     if (charts) {
@@ -1472,7 +1460,7 @@
     const grade = document.getElementById('end-grade');
     grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
     grade.parentElement.dataset.grade = data.grade || '';
-    document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL GDW ${data.finalGdw.toFixed(1)}%` : '';
+    document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL SATISFACTION ${data.finalGdw.toFixed(1)}%` : '';
     const closing = data.closingMessage || {};
     document.getElementById('end-closing-text').textContent = closing.text ? `\u201C${closing.text}\u201D` : '';
     const who = [closing.name, typeof closing.age === 'number' ? closing.age : null, closing.districtName || closing.district].filter((v) => v !== null && v !== undefined && v !== '');
@@ -1491,11 +1479,14 @@
       if (winners.has(r.node)) tr.classList.add('is-winner');
       const role = endCell(null, 'end-role');
       if (r.role) {
-        const icon = document.createElement('span');
-        icon.className = 'end-role-icon';
-        icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = r.role.icon || '';
-        role.append(icon, document.createTextNode(r.role.name || r.role.key));
+        if (r.role.portrait) {
+          const img = document.createElement('img');
+          img.className = 'end-role-portrait';
+          img.src = r.role.portrait;
+          img.alt = '';
+          role.appendChild(img);
+        }
+        role.appendChild(document.createTextNode(r.role.name || r.role.key));
       }
       const policy = endCell(null, 'col-author end-policy');
       const a = authorsByNode[r.node];
@@ -1506,7 +1497,8 @@
         rank.textContent = `RANK #${a.place} \u00B7 ${a.points} BORDA PTS${a.weight ? ` \u00B7 ENACTED ${Math.round(a.weight * 100)}%` : ''}`;
         policy.appendChild(rank);
       }
-      tr.append(endCell(r.node, 'mono'), endCell(r.name), role, policy, endCell(r.total, 'col-points'));
+      const max = data.maxScore || 500;
+      tr.append(endCell(r.node, 'mono'), endCell(r.name), role, policy, endCell(`${r.total} / ${max}`, 'col-points mono'));
       body.appendChild(tr);
     }
   }
@@ -1520,14 +1512,17 @@
     if (data.shutdown || !data.winner) {
       label.textContent = 'Total loss';
       title.textContent = 'THE LOOM HAS SHUT DOWN';
-      sub.textContent = 'Gross Domestic Well-Being reached 0%. Every agenda failed.';
+      sub.textContent = 'Societal Satisfaction reached 0%. Nobody wins.';
     } else {
-      const who = data.winner.map((n) => `${names[n] || n} (${n})`);
-      label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Architect of telos';
+      const chars = {};
+      for (const r of data.roles || []) chars[r.node] = r.role ? r.role.name : '';
+      const who = data.winner.map((n) => `${names[n] || n}${chars[n] ? `, ${chars[n]}` : ''}`);
+      label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Highest score';
       title.textContent = who.join(' & ');
       const top = (data.scores && data.scores[data.winner[0]]) || 0;
-      sub.textContent = `${top} point${top === 1 ? '' : 's'}${data.winner.length > 1 ? ' each' : ''}. The region survived five years.`;
+      sub.textContent = `${top} of ${data.maxScore || 500} points${data.winner.length > 1 ? ' each' : ''}. The region survived to ${(data.startYear || 2121) + Math.max(0, (data.cyclesPlayed || 5) - 1)}.`;
     }
+    if (window.LoomCouncil) window.LoomCouncil.renderChampion(data);
     document.getElementById('end-seed').textContent = data.seed ? `SEED ${data.seed}` : '';
   }
 
@@ -1560,7 +1555,7 @@
 
   // Reveal sequence: beat 1 (five-year recap) at once, beat 2 (secret roles
   // and write-in authors) 15 s later, beat 3 (winner / shutdown) 10 s after.
-  const END_BEAT_DELAYS_MS = [0, 15000, 25000];
+  const END_BEAT_DELAYS_MS = [0, 9000, 17000];
   let endBeatTimers = [];
   function clearEndBeats() {
     endBeatTimers.forEach(clearTimeout);

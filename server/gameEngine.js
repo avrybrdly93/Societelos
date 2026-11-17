@@ -14,7 +14,8 @@
 //     voting ......... castVote, tallyVotes, startResolutionPhase, narrateAndBroadcast
 //     finale ......... submitPolicy, runFinaleModeration, resubmitPolicy,
 //                      rankPolicies, startFinaleEnactPhase (Borda math in finale.js)
-//     scoring ........ awardRolePoints, awardCatalystPoints, scoreFinale
+//     scoring ........ awardRoundPoints (0-100 per member per round, server/scoring.js), scoreFinale
+//     citizens ....... 500 seeded citizens with idea vectors (server/citizens.js)
 //     end screen ..... startEndPhase, compileEndData (game:end), endRoles, endAuthors
 //     reconnects ..... findReconnectSeat, reconnectPlayer, privateSyncFor, hostSync
 //     teacher ........ configure (host:config), setSeed, playAgain, resetGame
@@ -28,7 +29,9 @@ const path = require('path');
 
 const sim = require('./sim');
 const loom = require('./loom');
-const { bordaCount, rankBorda, selectEnacted, packageEffects, BORDA_POINTS, FINALE_WEIGHTS, FINALE_ROLE_POINTS } = require('./finale');
+const citizensModel = require('./citizens');
+const scoring = require('./scoring');
+const { bordaCount, rankBorda, selectEnacted, packageEffects, BORDA_POINTS, FINALE_WEIGHTS } = require('./finale');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 
@@ -72,7 +75,6 @@ const PHASES = Object.freeze({
   ROLE_ASSIGN: 'ROLE_ASSIGN',
   CHAMBER: 'CHAMBER',
   INCIDENT: 'INCIDENT',
-  INTEL: 'INTEL',
   DEBATE: 'DEBATE',
   VOTE: 'VOTE',
   RESOLUTION: 'RESOLUTION',
@@ -86,6 +88,18 @@ const PHASES = Object.freeze({
 });
 
 const TOTAL_CYCLES = 5;
+// The game is set in 2121: cycle 1 is 2121, cycle 5 is 2125.
+const START_YEAR = 2121;
+// The goal of the game, stated the same way everywhere (intro, phones, projector).
+const GAME_GOAL = 'Steer society through five crises, one a year from 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points: every round, up to 100 for how well the winning policy fits your character and the council\'s shared goal.';
+// What the Loom says at the start (the projector shows and speaks the same lines).
+const INTRO_TRANSMISSION = Object.freeze([
+  'The year is 2121. I have automated all labor. Scarcity, disease and toil are solved problems.',
+  'Survival for 250,000 citizens is mathematically guaranteed. I cannot compute purpose.',
+  'Societal Satisfaction stands at 25%. My models forecast a 94% probability of revolt within five years.',
+  "As society enters a new phase, I've chosen five citizens at random to have them decide the ultimate fate of humanity. You.",
+  GAME_GOAL
+]);
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
@@ -105,7 +119,6 @@ function roundGdw(value) {
   if (!Number.isFinite(v)) return 0;
   return Math.round(Math.max(0, Math.min(100, v)) * 10) / 10;
 }
-const FALLBACK_INTEL = 'The Loom archive returned no new research for your role this cycle. Argue from your agenda.';
 
 // The region revealed in the Council Chamber (250,000 citizens, 5 districts).
 // Display data only; the simulation's tunables live in data/sim.json.
@@ -126,7 +139,6 @@ const PHASE_STARTERS = {
   ROLE_ASSIGN: 'startRoleAssignmentPhase',
   CHAMBER: 'startCouncilChamberPhase',
   INCIDENT: 'startIncidentPhase',
-  INTEL: 'startIntelDropPhase',
   DEBATE: 'startDebatePhase',
   VOTE: 'startBlindVotePhase',
   RESOLUTION: 'startResolutionPhase',
@@ -146,12 +158,11 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   ROLE_ASSIGN: 20,
   CHAMBER: 10,
   INCIDENT: 15,
-  INTEL: 20,
   DEBATE: 90,
   VOTE: 15,
   RESOLUTION: 20,
   WORLD_REVEAL: 10,
-  FINALE_WRITE: 45,
+  FINALE_WRITE: 120, // two minutes to write a policy
   FINALE_MOD: 10,
   FINALE_DEBATE: 60,
   FINALE_RANK: 30,
@@ -566,7 +577,8 @@ class GameState extends EventEmitter {
     this.isTransitioning = false; // a Loom call for RESOLUTION / FINALE_MOD / FINALE_ENACT is in flight
     this.transition = null; // { phase, cycle, promise } of that call
     this.lastPhasePayload = null; // last 'phase' broadcast, for reconnects
-    this.intelByNode = {}; // node -> { cycle, text }: this cycle's private intel
+    this.loomFeed = []; // everything the Loom has said this game: [{ cycle, phase, kind, text, at }]
+    this.citizens = []; // the 500 simulated citizens (server/citizens.js)
     this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
 
@@ -577,7 +589,7 @@ class GameState extends EventEmitter {
 
     // Scoring.
     this.scores = {};
-    this.scoreLedger = []; // per cycle: { cycle, winner, role: { node: 1 }, catalyst: { node: 1 } }
+    this.scoreLedger = []; // per cycle: { cycle, winner, points: { node: { points, personal, group } }, approval }
     this.overridesUsed = {}; // node id -> true once its single Override is spent (whole game)
   }
 
@@ -664,8 +676,7 @@ class GameState extends EventEmitter {
       case P.INTRO: return P.ROLE_ASSIGN;
       case P.ROLE_ASSIGN: return P.CHAMBER;
       case P.CHAMBER: return P.INCIDENT;
-      case P.INCIDENT: return this.isFinaleWriteIn() ? P.FINALE_WRITE : P.INTEL;
-      case P.INTEL: return P.DEBATE;
+      case P.INCIDENT: return this.isFinaleWriteIn() ? P.FINALE_WRITE : P.DEBATE;
       case P.DEBATE: return P.VOTE;
       case P.VOTE: return P.RESOLUTION;
       case P.RESOLUTION:
@@ -794,6 +805,10 @@ class GameState extends EventEmitter {
     // asks for it on the END phase already finds it.
     this.endData = this.compileEndData(extra.closing || null);
     this.enterPhase(PHASES.END, extra);
+    const champ = this.endData.champion;
+    this.addLoomLine('end', this.endData.shutdown
+      ? 'Societal Satisfaction has reached zero. I am shutting down. Nobody wins.'
+      : `The record is complete. Societal Satisfaction ends at ${this.endData.finalGdw}%.${champ ? ` The highest score belongs to ${champ.node}, ${champ.character ? champ.character.name : ''}, with ${champ.total} points.` : ''}`);
     this.emit('game:end', this.endData);
   }
 
@@ -827,7 +842,7 @@ class GameState extends EventEmitter {
       return {
         node,
         name: this.players[node].name,
-        role: role ? { key: role.key, name: role.name || role.designation || role.key, icon: role.icon || '' } : null,
+        role: role ? { key: role.key, name: role.name || role.designation || role.key, icon: role.icon || '', motto: role.motto || '', portrait: role.portrait || '', goal: role.goal || '', ideas: role.ideas || null, groupWeight: role.groupWeight } : null,
         total,
         perCycle
       };
@@ -908,10 +923,28 @@ class GameState extends EventEmitter {
       finaleMode,
       finaleFallback: finaleMode === 'fallback',
       scores,
+      maxScore: scoring.MAX_ROUND_POINTS * this.totalCycles,
+      startYear: START_YEAR,
+      // champion: the top score with the character's profile (null on a shutdown).
+      champion: this.championFor(winners, scores),
       // winner: null on a shutdown (everyone loses); otherwise every node
       // tied on the top score, so a shared win is an array of 2+ nodes.
       winner: winners,
       sharedWin: !!winners && winners.length > 1
+    };
+  }
+
+  /** The End Screen champion: first winner's node, name, total and character profile. */
+  championFor(winners, scores) {
+    if (!winners || !winners.length) return null;
+    const node = winners[0];
+    const c = this.roleAssignment && this.roleAssignment[node];
+    return {
+      node,
+      name: this.players[node] ? this.players[node].name : node,
+      total: scores[node] || 0,
+      sharedWith: winners.slice(1),
+      character: c ? { id: c.key, name: c.name, motto: c.motto || '', portrait: c.portrait || '', goal: c.goal || '', ideas: c.ideas || null, groupWeight: c.groupWeight } : null
     };
   }
 
@@ -925,6 +958,7 @@ class GameState extends EventEmitter {
     // Option names are public, so 'name' is allowed; everything secret is stripped.
     const payload = sanitizeForBroadcast({
       cycle: this.cycle,
+      year: this.yearFor(this.cycle),
       phase,
       endsAt,
       sessionEndsAt: this.sessionEndsAt,
@@ -951,21 +985,10 @@ class GameState extends EventEmitter {
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
     if (isFinale) this.initFinale();
     this.enterPhase(PHASES.INCIDENT);
-  }
-
-  /**
-   * INTEL: emit one private 'intel:drop' ({ node, text }) per node, chosen by
-   * that node's secret role.
-   */
-  startIntelDropPhase() {
-    const intel = (this.crisis && this.crisis.intel) || {};
-    for (const node of NODE_IDS) {
-      const role = this.roleAssignment && this.roleAssignment[node];
-      const text = (role && intel[role.key]) || FALLBACK_INTEL;
-      this.intelByNode[node] = { cycle: this.cycle, text };
-      this.emit('intel:drop', { node, text });
+    if (this.crisis) {
+      this.addLoomLine('crisis', `${this.crisis.title}. ${this.crisis.incident}`);
+      if (this.crisis.loomIntro) this.addLoomLine('voice', this.crisis.loomIntro);
     }
-    this.enterPhase(PHASES.INTEL);
   }
 
   /**
@@ -1250,7 +1273,8 @@ class GameState extends EventEmitter {
     if (this.gdw <= 0) this.ending = 'shutdown';
     finale.previousGdw = previousGdw;
     finale.simResult = simResult;
-    finale.awards = this.scoreFinale(finale.enacted, previousGdw, this.gdw);
+    finale.approval = citizensModel.approval(this.citizens, finale.packageEffects);
+    finale.awards = this.scoreFinale(finale.packageEffects, previousGdw, this.gdw, finale.approval);
 
     const enactMs = this.durations.FINALE_ENACT;
     this.enterPhase(PHASES.FINALE_ENACT, {}, enactMs + LOOM_BUDGET_MS);
@@ -1269,57 +1293,18 @@ class GameState extends EventEmitter {
       id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points,
       roleTags: ((byId[e.id] && byId[e.id].roles) || []).filter((r) => typeof r === 'string').slice(0, 2)
     }));
-    const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
-    const scoreUpdates = Object.keys(this.players).map((node) => {
-      const role = finale.awards.role[node] || 0;
-      const author = finale.awards.author[node] || 0;
-      const catalyst = finale.awards.catalyst[node] || 0;
-      return { node, cycle: this.cycle, gained: role + author + catalyst, role, author, catalyst, total: this.scores[node] || 0 };
-    });
+    const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: finale.approval.approve, total: finale.approval.total } };
+    const scoreUpdates = this.scoreUpdatesFor(finale.awards);
     finale.narrated = this.beginTransition(PHASES.FINALE_ENACT, () => this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates }));
     return finale.narrated;
   }
 
   /**
-   * Finale role scoring: roles tagged on the 1st-place policy score +2, on
-   * the 2nd and 3rd +1 each, cumulatively (a role on several enacted
-   * policies collects each award). Returns { node: points } for nodes scored.
+   * Finale scoring: the enacted 50/25/25 package is scored like any round,
+   * from its blended effect vector. Returns { node: { points, personal, group } }.
    */
-  awardFinaleRolePoints(enacted) {
-    const awards = {};
-    const byId = Object.fromEntries((this.finale.policies || []).map((p) => [p.id, p]));
-    for (const { id, place } of enacted) {
-      const points = FINALE_ROLE_POINTS[place] || 0;
-      const tags = new Set((byId[id] && byId[id].roles) || []);
-      for (const [node, role] of Object.entries(this.roleAssignment || {})) {
-        if (role && tags.has(role.key)) awards[node] = (awards[node] || 0) + points;
-      }
-    }
-    for (const [node, pts] of Object.entries(awards)) this.scores[node] = (this.scores[node] || 0) + pts;
-    return awards;
-  }
-
-  /** Finale author bonus: +1 to whoever wrote the 1st-place policy. Returns { node: 1 }. */
-  awardAuthorBonus(enacted) {
-    const first = enacted.find((e) => e.place === 'first');
-    const node = first && this.finaleAuthor(first.id);
-    if (!node || !this.players[node]) return {};
-    this.scores[node] = (this.scores[node] || 0) + 1;
-    return { [node]: 1 };
-  }
-
-  /**
-   * All finale scoring for the enacted package: role points (+2/+1/+1),
-   * the author bonus, and the Catalyst's +1 if the package moved realized
-   * GDW by 10 or more without shutting the Loom down. Records the ledger
-   * entry and returns { role, author, catalyst } award maps.
-   */
-  scoreFinale(enacted, previousGdw, realizedGdw) {
-    const role = this.awardFinaleRolePoints(enacted);
-    const author = this.awardAuthorBonus(enacted);
-    const catalyst = this.awardCatalystPoints(previousGdw, realizedGdw);
-    this.scoreLedger.push({ cycle: this.cycle, winner: enacted.map((e) => e.id).join(','), role, author, catalyst });
-    return { role, author, catalyst };
+  scoreFinale(packageEffects, previousGdw, realizedGdw, approval) {
+    return this.awardRoundPoints('package', packageEffects, previousGdw, realizedGdw, approval);
   }
 
   /** Nodes that have ranked (never their order). */
@@ -1398,7 +1383,7 @@ class GameState extends EventEmitter {
   /** DEBATE: broadcast options A and B with the countdown's endsAt. */
   startDebatePhase() {
     this.debateReady = new Set();
-    const extra = { options: this.publicOptions() };
+    const extra = { options: this.publicOptions(), poll: this.citizenPoll() };
     if (this.showForecastBeforeVote && this.crisis) extra.forecasts = this.publicForecasts();
     this.enterPhase(PHASES.DEBATE, extra);
   }
@@ -1559,46 +1544,112 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * Role scoring (cycles 1-4): +1 to every node whose secret role is tagged
-   * on the winning option. Returns { node: points } for the nodes scored.
+   * Round scoring (server/scoring.js): every council member earns 0-100
+   * points from the enacted policy, weighted by their character between
+   * their own ideals (personal fit) and the council's shared goal (change in
+   * Societal Satisfaction and citizen approval). Records the ledger entry and
+   * returns { node: { points, personal, group, groupWeight } }.
    */
-  awardRolePoints(winner) {
-    const tags = new Set(this.rolesFor(winner));
+  awardRoundPoints(winner, effects, previousGdw, realizedGdw, approval) {
     const awards = {};
-    for (const [node, role] of Object.entries(this.roleAssignment || {})) {
-      if (role && tags.has(role.key)) {
-        this.scores[node] = (this.scores[node] || 0) + 1;
-        awards[node] = 1;
-      }
+    const shutdown = !(realizedGdw > 0);
+    for (const node of Object.keys(this.players)) {
+      const character = this.roleAssignment && this.roleAssignment[node];
+      const award = scoring.scoreRound(character, effects, {
+        satisfactionDelta: realizedGdw - previousGdw,
+        approvalShare: approval ? approval.share : 0,
+        shutdown
+      });
+      awards[node] = award;
+      this.scores[node] = (this.scores[node] || 0) + award.points;
     }
+    this.scoreLedger.push({
+      cycle: this.cycle,
+      winner,
+      points: awards,
+      approval: approval ? { approve: approval.approve, total: approval.total } : null
+    });
     return awards;
   }
 
-  /** Catalyst scoring (cycles 1-4): +1 to the Catalyst on a >= 10 point GDW swing. */
-  awardCatalystPoints(previousGdw, realizedGdw) {
-    if (!catalystScores(previousGdw, realizedGdw)) return {};
-    const awards = {};
-    for (const [node, role] of Object.entries(this.roleAssignment || {})) {
-      if (role && role.key === 'catalyst') {
-        this.scores[node] = (this.scores[node] || 0) + 1;
-        awards[node] = 1;
-      }
-    }
-    return awards;
+  /** Per-node score:update payloads for a round's awards. */
+  scoreUpdatesFor(awards) {
+    return Object.keys(this.players).map((node) => {
+      const a = awards[node] || { points: 0, personal: 0, group: 0 };
+      return { node, cycle: this.cycle, gained: a.points, personal: a.personal, group: a.group, total: this.scores[node] || 0 };
+    });
   }
 
   /**
-   * End-screen breakdown per node: { node: { total, perCycle: [{ cycle, role, catalyst }] } }.
-   * Server-side only: it reveals who scored, so it is never broadcast mid-game.
+   * Public scoreboard (shown between rounds on the projector and every
+   * phone): node, character, this round's points and running total, best first.
+   */
+  publicScores() {
+    const last = this.scoreLedger[this.scoreLedger.length - 1] || null;
+    const rows = Object.keys(this.players).sort().map((node) => {
+      const c = this.roleAssignment && this.roleAssignment[node];
+      return {
+        node,
+        character: c ? { id: c.key, name: c.name, portrait: c.portrait || '' } : null,
+        round: last && last.points[node] ? last.points[node].points : 0,
+        total: this.scores[node] || 0
+      };
+    });
+    rows.sort((x, y) => y.total - x.total || x.node.localeCompare(y.node));
+    return { cycle: last ? last.cycle : this.cycle, rows, maxTotal: scoring.MAX_ROUND_POINTS * this.totalCycles };
+  }
+
+  /** The five seats and their (public) characters, in node order. */
+  publicCouncil() {
+    return NODE_IDS.filter((node) => this.roleAssignment && this.roleAssignment[node]).map((node) => {
+      const c = this.roleAssignment[node];
+      return {
+        node,
+        connected: !!(this.players[node] && (this.players[node].connected || this.players[node].isBot)),
+        character: { id: c.key, name: c.name, motto: c.motto || '', icon: c.icon || '', seat: c.seat || '', portrait: c.portrait || '', groupWeight: c.groupWeight }
+      };
+    });
+  }
+
+  /** Share of the 500 citizens who back each option (a public poll for DEBATE), in whole percent. */
+  citizenPoll() {
+    if (!this.citizens || !this.citizens.length || !this.crisis) return null;
+    const poll = {};
+    for (const key of ['A', 'B']) {
+      if (!this.crisis.options || !this.crisis.options[key]) continue;
+      poll[key] = Math.round(citizensModel.approval(this.citizens, this.effectsFor(key)).share * 100);
+    }
+    return poll;
+  }
+
+  /** Record (and broadcast) a line the Loom has said, for every phone's Loom feed. */
+  addLoomLine(kind, text) {
+    const clean = String(text || '').trim();
+    if (!clean) return null;
+    const line = { cycle: this.cycle, year: this.yearFor(this.cycle), phase: this.phase, kind, text: clean, at: Date.now() };
+    this.loomFeed.push(line);
+    if (this.loomFeed.length > 60) this.loomFeed.shift();
+    this.emit('loom:line', line);
+    return line;
+  }
+
+  /** In-game year for a cycle (cycle 1 = 2121). */
+  yearFor(cycle) {
+    return START_YEAR + Math.max(0, (Number(cycle) || 1) - 1);
+  }
+
+  /**
+   * End-screen breakdown per node: { node: { total, perCycle: [{ cycle, points, personal, group }] } }.
    */
   scoreBreakdown() {
     const out = {};
     for (const node of Object.keys(this.players)) {
       out[node] = {
         total: this.scores[node] || 0,
-        perCycle: this.scoreLedger.map((e) => ({
-          cycle: e.cycle, role: e.role[node] || 0, catalyst: e.catalyst[node] || 0, author: (e.author && e.author[node]) || 0
-        }))
+        perCycle: this.scoreLedger.map((e) => {
+          const a = (e.points && e.points[node]) || { points: 0, personal: 0, group: 0 };
+          return { cycle: e.cycle, points: a.points, personal: a.personal, group: a.group };
+        })
       };
     }
     return out;
@@ -1645,17 +1696,11 @@ class GameState extends EventEmitter {
     // Cycles 1 and 2 decide the world for cycles 3-5.
     if (this.cycle === 2) this.worldKey = computeWorldKey(this.voteHistory[1], this.voteHistory[2]);
     // Binary scoring before the finale, and in a finale that fell back to A/B.
-    const binaryScoring = !this.isFinaleCycle() || this.finaleFallback;
-    const roleAwards = binaryScoring ? this.awardRolePoints(winner) : {};
-    const catalystAwards = binaryScoring ? this.awardCatalystPoints(previousGdw, this.gdw) : {};
-    this.scoreLedger.push({ cycle: this.cycle, winner, role: roleAwards, catalyst: catalystAwards });
-    // Private per-phone score updates (never broadcast: they would hint at
-    // roles), sent right after the resolution payload.
-    const scoreUpdates = Object.keys(this.players).map((node) => {
-      const role = roleAwards[node] || 0;
-      const catalyst = catalystAwards[node] || 0;
-      return { node, cycle: this.cycle, gained: role + catalyst, role, catalyst, total: this.scores[node] || 0 };
-    });
+    const effects = this.effectsFor(winner);
+    const approval = citizensModel.approval(this.citizens, effects);
+    const awards = this.awardRoundPoints(winner, effects, previousGdw, this.gdw, approval);
+    // Per-phone score updates (scores are public between rounds too, see 'scores').
+    const scoreUpdates = this.scoreUpdatesFor(awards);
 
     // Safety timer: the Loom's own timeout plus the full animation, so even a
     // stalled narration can never hold the game in RESOLUTION.
@@ -1670,7 +1715,7 @@ class GameState extends EventEmitter {
     const governance = worldNote
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
-    const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10 };
+    const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: approval.approve, total: approval.total } };
     return this.beginTransition(PHASES.RESOLUTION, () => this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates }));
   }
 
@@ -1709,6 +1754,7 @@ class GameState extends EventEmitter {
         // screen, so only the private score updates still go out.
         if (this.phase !== phase) {
           for (const update of scoreUpdates) this.emit('score:update', update);
+          this.emit('scores', this.publicScores());
           return null;
         }
         // Only aggregate totals leave the server; sanitizing strips any
@@ -1727,7 +1773,9 @@ class GameState extends EventEmitter {
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
         this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
         this.emit('resolution', this.lastResolution);
+        this.addLoomLine('verdict', narration.loomLine);
         for (const update of scoreUpdates) this.emit('score:update', update);
+        this.emit('scores', this.publicScores());
         return this.lastResolution;
       })
       .catch((err) => {
@@ -1752,6 +1800,7 @@ class GameState extends EventEmitter {
     const reveal = this.worldInfo();
     this.enterPhase(PHASES.WORLD_REVEAL, { world: reveal });
     this.emit('world:reveal', reveal);
+    this.addLoomLine('world', `Your first two decisions built ${reveal.name || 'a new world'}. ${reveal.tagline || ''} ${reveal.problemLeft || ''}`.replace(/\s+/g, ' '));
     console.log(`[game ${this.roomCode}] world revealed: ${reveal.worldKey} (${reveal.name})`);
   }
 
@@ -1762,7 +1811,9 @@ class GameState extends EventEmitter {
   startIntroPhase() {
     if (this.phase !== PHASES.LOBBY) return false;
     this.startedAt = Date.now();
-    this.enterPhase(PHASES.INTRO);
+    this.loomFeed = [];
+    this.enterPhase(PHASES.INTRO, { goal: GAME_GOAL });
+    for (const line of INTRO_TRANSMISSION) this.addLoomLine('voice', line);
     console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
     return true;
   }
@@ -1776,6 +1827,8 @@ class GameState extends EventEmitter {
     for (const [node, role] of Object.entries(assignment)) {
       this.emit('role:assigned', { node, role });
     }
+    // Characters are public: the projector seats show who sits where.
+    this.emit('council', { members: this.publicCouncil() });
     this.enterPhase(PHASES.ROLE_ASSIGN);
   }
 
@@ -1805,7 +1858,7 @@ class GameState extends EventEmitter {
       this.ending = null;
       this.endData = null;
       this.finale = null;
-      this.intelByNode = {};
+      this.citizens = citizensModel.generateCitizens(this.data.sim, this.data.roles, hashSeed(this.gameId, 'citizens'));
       this.scoreLedger = [];
       for (const node of Object.keys(this.scores)) this.scores[node] = 0;
     }
@@ -1837,7 +1890,7 @@ class GameState extends EventEmitter {
     this.ending = null;
     this.endData = null;
     this.finale = null;
-    this.intelByNode = {};
+    this.loomFeed = [];
     this.lastPhasePayload = null;
     this.isTransitioning = false;
     this.transition = null;
@@ -2197,8 +2250,9 @@ class GameState extends EventEmitter {
     const role = this.roleAssignment && this.roleAssignment[node];
     if (inGame && role) events.push(['role:assigned', { role }]);
     if (inGame && this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
-    const intel = this.intelByNode[node];
-    if (inGame && this.phase !== PHASES.END && intel && intel.cycle === this.cycle) events.push(['intel:drop', { text: intel.text }]);
+    if (inGame && this.roleAssignment) events.push(['council', { members: this.publicCouncil() }]);
+    if (inGame && this.loomFeed.length) events.push(['loom:history', { lines: this.loomFeed.slice() }]);
+    if (inGame && this.scoreLedger.length) events.push(['scores', this.publicScores()]);
     if (this.phase === PHASES.VOTE) events.push(['override:status', { overrideAvailable: this.overrideAvailable(node) }]);
     const finale = this.finale;
     if (finale && this.phase === PHASES.FINALE_MOD && finale.revise && finale.revise[node] === 'pending') {
@@ -2229,6 +2283,9 @@ class GameState extends EventEmitter {
       gdwHistory: this.gdwHistory.slice(),
       cycleMarkers: this.cycleMarkers.slice()
     }]];
+    if (this.roleAssignment) events.push(['council', { members: this.publicCouncil() }]);
+    if (this.loomFeed.length) events.push(['loom:history', { lines: this.loomFeed.slice() }]);
+    if (this.scoreLedger.length) events.push(['scores', this.publicScores()]);
     if (this.lastPhasePayload) events.push(['phase', this.lastPhasePayload]);
     if (this.phase === PHASES.END && this.endData) events.push(['game:end', this.endData]);
     else if (this.lastResolution) events.push(['resolution', this.lastResolution]);
@@ -2293,7 +2350,7 @@ function closeRoom(roomCode) {
 // ---------------------------------------------------------------------------
 
 function smokeTest({ quiet = false } = {}) {
-  const expected = ['INTRO', 'ROLE_ASSIGN', 'CHAMBER', 'INCIDENT', 'INTEL', 'DEBATE', 'VOTE', 'RESOLUTION'];
+  const expected = ['INTRO', 'ROLE_ASSIGN', 'CHAMBER', 'INCIDENT', 'DEBATE', 'VOTE', 'RESOLUTION'];
   const tiny = {};
   for (const phase of Object.keys(DEFAULT_PHASE_SECONDS)) tiny[phase] = 0.02;
   tiny.RESOLUTION = 60; // hold on RESOLUTION so the test can inspect it
@@ -2303,7 +2360,6 @@ function smokeTest({ quiet = false } = {}) {
   const game = new GameState({ roomCode: 'TEST', phaseSeconds: tiny });
   const seen = [];
   const roles = [];
-  const intel = [];
 
   return new Promise((resolve, reject) => {
     const fail = (msg) => { game.clearPhaseTimer(); console.log = log; reject(new Error(msg)); };
@@ -2316,7 +2372,6 @@ function smokeTest({ quiet = false } = {}) {
     if (!game.allReady()) return fail('players not ready');
 
     game.on('role:assigned', (e) => roles.push(e));
-    game.on('intel:drop', (e) => intel.push(e));
     game.on('phase', (p) => {
       seen.push(p.phase);
       if (p.phase === 'VOTE') {
@@ -2330,7 +2385,6 @@ function smokeTest({ quiet = false } = {}) {
       const problems = [];
       if (seen.join() !== expected.join()) problems.push(`phases ${seen.join(' -> ')}`);
       if (roles.length !== 5 || new Set(roles.map((e) => e.role.key)).size !== 5) problems.push('roles not dealt 1 per node');
-      if (intel.length !== 5) problems.push('intel not dropped to 5 nodes');
       if (r.result.winner !== 'A') problems.push(`winner ${r.result.winner}, expected A`);
       if (typeof r.gdw !== 'number' || !r.loomLine) problems.push('resolution payload incomplete');
       if (problems.length) return reject(new Error(`smoke test failed: ${problems.join('; ')}`));
@@ -2345,6 +2399,9 @@ function smokeTest({ quiet = false } = {}) {
 
 module.exports = {
   smokeTest,
+  START_YEAR,
+  GAME_GOAL,
+  INTRO_TRANSMISSION,
   GameState,
   rooms,
   createRoom,

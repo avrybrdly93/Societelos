@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
-// TASK-666 browser check: a phone refreshed during ROLE_ASSIGN, INTEL, VOTE
+// TASK-666 browser check: a phone refreshed during ROLE_ASSIGN, INCIDENT, VOTE
 // (after voting), FINALE_WRITE (after submitting) and FINALE_RANK (after
-// ranking) lands on the same screen with its role, intel, timer and locks.
+// ranking) lands on the same screen with its role, Loom feed, timer and locks.
 // Runs the real server in-process (moderation stubbed so the write-in finale
 // runs offline), one Chromium phone (iPhone 13 profile) and 4 socket phones.
 //   npm run e2e:refresh   (needs Playwright: npm i --no-save playwright)
@@ -62,7 +62,7 @@ const { io } = require('socket.io-client');
     view: document.querySelector('.m-view.is-active').id,
     phase: window.SocietelosMobile.state.phase,
     role: (document.getElementById('drawer-role-name') || {}).textContent || '',
-    intel: (document.getElementById('intel-drawer-text') || {}).textContent || '',
+    intel: (document.getElementById('m-loom-feed') || {}).textContent || '',
     endsAt: window.SocietelosMobile.state.endsAt,
     voteLocked: !document.getElementById('vote-locked').hidden,
     rankLocked: !document.getElementById('rank-locked').hidden
@@ -76,7 +76,7 @@ const { io } = require('socket.io-client');
     results[label] = { same: before.view === after.view, before: before.view, after: after.view, role: !!after.role, timerKept: Math.abs((after.endsAt || 0) - (before.endsAt || 0)) < 50, voteLocked: after.voteLocked, rankLocked: after.rankLocked, intelSame: before.intel === after.intel };
   }
   await atPhase('ROLE_ASSIGN'); await phone.waitForTimeout(500); await refresh('ROLE_ASSIGN');
-  await atPhase('INTEL', 1); await phone.waitForTimeout(500); await refresh('INTEL');
+  await atPhase('INCIDENT', 1); await phone.waitForTimeout(500); await refresh('INCIDENT');
   await atPhase('VOTE', 1); await phone.waitForTimeout(300); await phone.click('.vote-btn >> nth=0'); await phone.waitForTimeout(400); await refresh('VOTE');
   await atPhase('FINALE_WRITE'); await phone.fill('#finale-text', 'Refresh-proof policy'); await phone.click('#finale-submit'); await phone.waitForTimeout(400); await refresh('FINALE_WRITE');
   await atPhase('FINALE_RANK');

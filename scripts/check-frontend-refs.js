@@ -6,7 +6,7 @@
 //     assignment throws instead of creating a global;
 //  2. every member of window.SocietelosMap / SocietelosCharts that host.js
 //     uses (directly or through a local alias such as `const map = ...`) is
-//     actually exported by map.js / charts.js;
+//     actually exported by council.js / charts.js;
 //  3. the debug helpers the test scripts drive are exported.
 //   npm run check:refs
 
@@ -30,7 +30,7 @@ function exportedKeys(file, globalName) {
   if (!m) { fail(`public/js/${file}: window.${globalName} export not found`); return new Set(); }
   return new Set(m[1].split(',').map((k) => k.split(':')[0].trim()).filter(Boolean));
 }
-const MODULES = { SocietelosMap: 'map.js', SocietelosCharts: 'charts.js' };
+const MODULES = { LoomCouncil: 'council.js', SocietelosCharts: 'charts.js' };
 for (const consumer of ['host.js']) {
   const js = read(consumer);
   for (const [globalName, file] of Object.entries(MODULES)) {
