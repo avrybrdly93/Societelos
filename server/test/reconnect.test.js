@@ -256,3 +256,18 @@ test('host:playAgain { keepPlayers: true } keeps the same five seated for a repl
   assert.deepEqual(Object.keys(game.players).sort(), phones.map((p) => p.node).sort());
   for (const p of Object.values(game.players)) assert.equal(p.ready, false, 'everyone readies up again');
 });
+
+// TASK-613 (socket) ---------------------------------------------------------
+
+test('host:config over Socket.IO: ack and room broadcast in the lobby, refused mid-game', { timeout: 15000 }, async () => {
+  for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
+  const host = connect({ clientType: 'host' });
+  const room = await once(host, 'host:room');
+  assert.deepEqual(room.config, { debateSeconds: engine.getRoom(room.roomCode).getConfig().debateSeconds });
+  const broadcast = once(host, 'host:config');
+  const res = await host.emitWithAck('host:config', { debateSeconds: 60 });
+  assert.equal(res.ok, true);
+  assert.equal(res.config.debateSeconds, 60);
+  assert.deepEqual(await broadcast, res.config);
+  assert.equal((await host.emitWithAck('host:config', { debateSeconds: 'x' })).reason, 'BAD_PAYLOAD');
+});

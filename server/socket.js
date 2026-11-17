@@ -302,7 +302,8 @@ function initSockets(io, gameEngine) {
       phase: game.phase,
       botsEnabled: !!game.botsEnabled,
       sessionTimerEnabled: !!game.sessionTimerEnabled,
-      sessionDurationSec: game.sessionDurationSec
+      sessionDurationSec: game.sessionDurationSec,
+      config: game.getConfig()
     });
     // A projector reloading mid-game gets the world it missed.
     if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
@@ -333,6 +334,14 @@ function initSockets(io, gameEngine) {
       game.triggerFinale();
       io.to(roomChannel(game.roomCode)).emit('session:finaleTriggered', { cycle: game.cycle });
       reply({ ok: true });
+    });
+
+    // host:config { debateSeconds?: 60 | 90 } -> teacher settings, lobby only.
+    // The ack carries the full config; everyone in the room gets host:config.
+    onValid(socket, 'host:config', { debateSeconds: 'number?' }, (payload, reply) => {
+      const result = game.configure(payload);
+      if (result.ok) io.to(roomChannel(game.roomCode)).emit('host:config', result.config);
+      return reply(result);
     });
 
     // host:playAgain { keepPlayers? } -> reset this room for the next game

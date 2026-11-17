@@ -141,6 +141,9 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   FINALE_ENACT: 20
 });
 
+// Teacher-selectable debate lengths (host:config): 60 s or 90 s.
+const DEBATE_CHOICES = Object.freeze([60, 90]);
+
 // Debug: FAST_TIMERS=true shrinks every phase to this many seconds.
 const FAST_TIMER_SECONDS = 3;
 
@@ -1781,6 +1784,25 @@ class GameState extends EventEmitter {
   }
 
   /**
+   * Teacher settings from the host lobby (host:config). Only in LOBBY, so a
+   * running game never changes pace mid-cycle. debateSeconds is 60 (~13.5
+   * min game) or 90 (~16 min game). Returns { ok, config } or a reason.
+   */
+  configure(settings = {}) {
+    if (this.phase !== PHASES.LOBBY) return { ok: false, reason: 'GAME_IN_PROGRESS' };
+    if (settings.debateSeconds !== undefined) {
+      if (!DEBATE_CHOICES.includes(settings.debateSeconds)) return { ok: false, reason: 'BAD_DEBATE_SECONDS' };
+      this.durations.DEBATE = settings.debateSeconds * 1000;
+    }
+    return { ok: true, config: this.getConfig() };
+  }
+
+  /** Current teacher settings: { debateSeconds }. */
+  getConfig() {
+    return { debateSeconds: Math.round(this.durations.DEBATE / 1000) };
+  }
+
+  /**
    * host:playAgain: reset the room for another game without restarting
    * Node. By default the seats are cleared too (a new class period brings
    * new students); `keepPlayers: true` keeps the same five seated so they
@@ -2247,6 +2269,7 @@ module.exports = {
   REGION,
   PHASE_STARTERS,
   DEFAULT_PHASE_SECONDS,
+  DEBATE_CHOICES,
   DEFAULT_FINALE_POLICY,
   PLACEHOLDER_POLICY,
   buildPhaseDurations
