@@ -428,3 +428,12 @@ test('sanitizeModerationResult clamps { purpose: 2.5, trust: -9.0 } to { purpose
   assert.deepEqual(odd, { purpose: 0, connection: -0.35, health: 0, trust: 0, fairness: 0, autonomy: 0 });
   assert.deepEqual(loom.sanitizeModerationResult(null).effects, { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
 });
+
+test('sanitizeModerationResult drops invalid role tags like "catalyst" or "hacker" and keeps at most 2 valid tags', () => {
+  const tags = (roles) => loom.sanitizeModerationResult({ roles }).roles;
+  assert.deepEqual(tags(['catalyst', 'hacker', 'ghost']), ['ghost']);
+  assert.deepEqual(tags(['artisan', 'lotus', 'assimilator', 'ghost']), ['artisan', 'lotus']);
+  assert.deepEqual(tags(['catalyst', 'hacker']), []);
+  assert.deepEqual(tags(['ARTISAN', 'Lotus ', 7, null]), [], 'exact tags only');
+  assert.deepEqual(tags('artisan'), [], 'not an array');
+});
