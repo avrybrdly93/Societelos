@@ -419,3 +419,12 @@ test('loom.narrate for the Cycle 5 finale gets the 50/25/25 package and asks for
   assert.match(prompt, /comment on the package as a whole/);
   assert.doesNotMatch(prompt, /NODE-0|Policy enacted:/, 'no authors, no single-policy line');
 });
+
+test('sanitizeModerationResult clamps { purpose: 2.5, trust: -9.0 } to { purpose: 1.0, trust: -1.0 } and zero-fills the rest', () => {
+  const r = loom.sanitizeModerationResult({ node: 'NODE-02', status: 'ok', cleaned: 'A policy.', feedback: '', roles: [], effects: { purpose: 2.5, trust: -9.0 } });
+  assert.deepEqual(r.effects, { purpose: 1.0, connection: 0, health: 0, trust: -1.0, fairness: 0, autonomy: 0 });
+  // Non-numeric, NaN and Infinity also become safe numbers in range.
+  const odd = loom.sanitizeModerationResult({ effects: { health: 'high', fairness: NaN, autonomy: Infinity, connection: -0.35 } }).effects;
+  assert.deepEqual(odd, { purpose: 0, connection: -0.35, health: 0, trust: 0, fairness: 0, autonomy: 0 });
+  assert.deepEqual(loom.sanitizeModerationResult(null).effects, { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 });
+});
