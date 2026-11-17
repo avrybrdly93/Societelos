@@ -5,7 +5,7 @@
 // back to the right sockets. Holds no game state of its own.
 
 const crypto = require('crypto');
-const CLIENT_TYPES = ['host', 'phone'];
+const CLIENT_TYPES = ['host', 'phone', 'spectator'];
 
 /** Socket.IO room names for a game. */
 const roomChannel = (code) => `room:${code}`;
@@ -105,7 +105,7 @@ const JOIN_REFUSALS = Object.freeze({
 });
 
 function joinRefusal(reason) {
-  return { ok: false, reason, message: JOIN_REFUSALS[reason] || 'Could not join this council.' };
+  return { ok: false, reason, message: JOIN_REFUSALS[reason] || 'Could not join this council.', canSpectate: reason in JOIN_REFUSALS };
 }
 
 /** The game:end broadcast: the spec's keys first, then End Screen extras. */
@@ -444,6 +444,34 @@ function initSockets(io, gameEngine) {
     }
   }
 
+  // Spectators (e.g. a 6th student in a larger group): read-only. They get
+  // the same public broadcasts as the projector's room channel (phase,
+  // resolution, world:reveal, lobby:update, progress, game:end) and nothing
+  // private: no seat, no role, no intel, no ballot, and no actions.
+  function addSpectator(socket, game) {
+    wireRoom(game);
+    socket.data.roomCode = game.roomCode;
+    socket.data.spectator = true;
+    socket.join(roomChannel(game.roomCode));
+    socket.emit('spectate:joined', { roomCode: game.roomCode, phase: game.phase, cycle: game.cycle });
+    if (game.worldKey) socket.emit('world:reveal', game.worldInfo());
+    for (const [event, payload] of game.hostSync()) {
+      socket.emit(event, event === 'game:end' ? gameEndPayload(payload) : payload);
+    }
+  }
+
+  function handleSpectator(socket) {
+    socket.emit('client:type', { clientType: 'spectator' });
+    const hs = socket.handshake || {};
+    const code = (hs.auth && hs.auth.roomCode) || (hs.query && hs.query.roomCode);
+    const game = findPhoneRoom(code);
+    if (!game) {
+      socket.emit('spectate:error', { reason: 'NO_ROOM' });
+      return;
+    }
+    addSpectator(socket, game);
+  }
+
   function handlePhone(socket) {
     socket.emit('client:type', { clientType: 'phone' });
 
@@ -486,6 +514,16 @@ function initSockets(io, gameEngine) {
       socket.emit('lobby:joined', joined);
       reply(joined);
       return broadcastLobby(game);
+    });
+
+    // spectate:join { room? } -> a phone that could not take a seat watches
+    // read-only instead (it can still lobby:join the next game in LOBBY).
+    onValid(socket, 'spectate:join', { room: 'string?' }, (payload, reply) => {
+      if (socket.data.node) return reply({ ok: false, reason: 'ALREADY_JOINED' });
+      const game = findPhoneRoom(payload.room);
+      if (!game) return reply({ ok: false, reason: 'NO_ROOM' });
+      addSpectator(socket, game);
+      return reply({ ok: true, roomCode: game.roomCode, phase: game.phase });
     });
 
     // vote:cast { choice: 'A' | 'B', override: bool } -> record a blind vote.
@@ -574,6 +612,7 @@ function initSockets(io, gameEngine) {
     const clientType = detectClientType(socket);
     socket.data.clientType = clientType;
     if (clientType === 'host') handleHost(socket);
+    else if (clientType === 'spectator') handleSpectator(socket);
     else handlePhone(socket);
   });
 

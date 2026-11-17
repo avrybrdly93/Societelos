@@ -408,11 +408,52 @@ test('a 6th phone gets a polite GAME IN PROGRESS / COUNCIL FULL message and the 
   let leaked = 0;
   sixth.on('phase', () => leaked++);
   const late = await sixth.emitWithAck('lobby:join', { name: 'Sixth student', room: roomCode });
-  assert.deepEqual(late, { ok: false, reason: 'GAME_IN_PROGRESS', message: socketModule.JOIN_REFUSALS.GAME_IN_PROGRESS });
+  assert.deepEqual(late, { ok: false, reason: 'GAME_IN_PROGRESS', message: socketModule.JOIN_REFUSALS.GAME_IN_PROGRESS, canSpectate: true });
   assert.match(late.message, /^GAME IN PROGRESS\./);
   await until(() => game.cycle >= 1, 5000);
   assert.equal(leaked, 0, 'no phase events reach the refused phone');
   assert.equal(JSON.stringify(Object.values(game.players).map((p) => [p.node, p.name, p.socketId, p.token])), seatsBefore);
   // A vote from the refused phone is not counted.
   assert.equal((await sixth.emitWithAck('vote:cast', { choice: 'A' })).reason, 'NOT_JOINED');
+});
+
+// TASK-633 ------------------------------------------------------------------
+
+test('spectators watch read-only: public broadcasts only, no private events, no actions', { timeout: 15000 }, async () => {
+  const { roomCode, game } = await startedRoom();
+  const seatsBefore = Object.keys(game.players).sort().join();
+
+  // A spectator by handshake, and a refused 6th phone that switches to watching.
+  const watcher = connect({ clientType: 'spectator', roomCode });
+  const got = { watcher: {}, sixth: {} };
+  watcher.onAny((e) => { got.watcher[e] = (got.watcher[e] || 0) + 1; });
+  const joined = await once(watcher, 'spectate:joined');
+  assert.equal(joined.roomCode, roomCode);
+
+  const sixth = connect({ clientType: 'phone' });
+  await once(sixth, 'connect');
+  const refused = await sixth.emitWithAck('lobby:join', { name: 'Sixth', room: roomCode });
+  assert.equal(refused.canSpectate, true);
+  sixth.onAny((e) => { got.sixth[e] = (got.sixth[e] || 0) + 1; });
+  const watching = await sixth.emitWithAck('spectate:join', { room: roomCode });
+  assert.equal(watching.ok, true);
+
+  const startCycle = game.cycle;
+  await until(() => game.cycle >= startCycle + 1 && game.phase === 'DEBATE', 8000);
+  for (const who of ['watcher', 'sixth']) {
+    assert.ok(got[who].phase > 0, `${who} sees phase broadcasts`);
+    for (const secret of ['role:assigned', 'intel:drop', 'override:status', 'score:update', 'finale:ballot', 'state:sync']) {
+      assert.equal(got[who][secret], undefined, `${who} never gets ${secret}`);
+    }
+  }
+  // Read-only: actions are refused and the five seats are unchanged.
+  assert.equal((await sixth.emitWithAck('vote:cast', { choice: 'A' })).reason, 'NOT_JOINED');
+  assert.equal((await sixth.emitWithAck('finale:submit', { text: 'hi' })).reason, 'NOT_JOINED');
+  assert.equal(Object.keys(game.players).sort().join(), seatsBefore);
+});
+
+test('a spectator with no room gets spectate:error', { timeout: 5000 }, async () => {
+  for (const code of Array.from(engine.rooms.keys())) engine.closeRoom(code);
+  const lone = connect({ clientType: 'spectator' });
+  assert.deepEqual(await once(lone, 'spectate:error'), { reason: 'NO_ROOM' });
 });
