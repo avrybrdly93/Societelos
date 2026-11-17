@@ -216,3 +216,19 @@ test('game:end winner: GDW 0% shutdown means nobody wins, whatever the scores', 
   assert.equal(end.shutdown, true);
   assert.equal(end.grade, 'SHUTDOWN');
 });
+
+// TASK-621 ------------------------------------------------------------------
+
+test('game:end grade at the boundary values 0, 1, 34, 35, 59, 60, 100', () => {
+  const cases = [[0, 'SHUTDOWN'], [1, 'Fragile'], [34, 'Fragile'], [35, 'Stable'], [59, 'Stable'], [60, 'Thriving'], [100, 'Thriving']];
+  for (const [gdw, grade] of cases) {
+    assert.equal(engine.gradeFor(gdw), grade, `gradeFor(${gdw})`);
+    const end = finishedGame({ 'NODE-01': 1 }, gdw, gdw === 0 ? 'shutdown' : null);
+    assert.equal(end.grade, grade, `game:end grade at GDW ${gdw}`);
+    assert.equal(end.gradeText, engine.GRADE_TEXT[grade]);
+  }
+  // One-decimal GDW between the integer bands.
+  assert.equal(engine.gradeFor(0.1), 'Fragile');
+  assert.equal(engine.gradeFor(34.9), 'Fragile');
+  assert.equal(engine.gradeFor(59.9), 'Stable');
+});
