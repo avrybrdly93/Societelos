@@ -597,7 +597,8 @@
   }
   // "THE LOOM IS EVALUATING YOUR POLICY..." with the player's own text.
   function showFinaleWait(status) {
-    document.getElementById('finale-wait-mine').textContent = state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
+    // (After a refresh the phone knows only that it submitted, not the text.)
+    document.getElementById('finale-wait-mine').textContent = typeof state.finaleSubmitted === 'string' && state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
     document.getElementById('finale-wait-status').textContent = status || (state.phase === 'FINALE_MOD'
       ? 'Cleaning language. Translating intent into numbers.'
       : 'Submitted. Waiting for the other council members.');
@@ -937,6 +938,41 @@
     { id: 'POLICY-4', text: 'Keep the challenges but let anyone opt out of them.' },
     { id: 'POLICY-5', text: 'Maintain current regional administrative protocols without structural changes.' }
   ] });
+
+  // ---------------------------------------------------------------------------
+  // Refresh / reconnect re-hydration. On resume the server replays this
+  // seat's state in order: state:sync { phase, cycle, voted, submitted,
+  // ranked }, role:assigned, phase, intel:drop, override:status, ballot...
+  // The normal handlers repaint role, intel, timer and ballot; this restores
+  // what only the server remembers: a vote, write-in or ranking already in.
+  // (Registered last so it runs after every other 'phase' handler.)
+  // ---------------------------------------------------------------------------
+  socket.on('state:sync', (sync) => { state.sync = sync || null; });
+  const syncApplies = (phase) => state.sync && state.sync.phase === phase && state.sync.cycle === state.cycle;
+  socket.on('phase', (payload) => {
+    if (!payload || !state.sync) return;
+    if (state.sync.phase !== payload.phase || state.sync.cycle !== (payload.cycle || 0)) { state.sync = null; return; }
+    if (payload.phase === 'VOTE' && state.sync.voted) {
+      state.voteLockedCycle = state.cycle;
+      setVoteButtonsDisabled(true);
+      setVoteLocked(true);
+      document.getElementById('vote-lock-choice').textContent = 'Your vote was recorded before you reconnected.';
+    }
+    if (payload.phase === 'FINALE_WRITE' && state.sync.submitted) {
+      state.finaleSubmitted = state.finaleSubmitted || true;
+      state.finaleCycle = payload.cycle;
+      showFinaleWait('Your policy was received before you reconnected.');
+    }
+  });
+  socket.on('finale:ballot', () => {
+    if (!syncApplies('FINALE_RANK') || !state.sync.ranked) return;
+    ballot.locked = true;
+    document.getElementById('rank-cards').hidden = true;
+    rankSubmit.hidden = true;
+    document.getElementById('rank-locked-order').textContent = '';
+    document.getElementById('rank-locked').hidden = false;
+    document.getElementById('m-view-finale-rank').classList.add('is-locked');
+  });
 
   window.SocietelosMobile = { openRevise, socket, state, loadSession, saveSession, clearSession, showView, setNodeLabel, renderRole, onPhase };
 })();
