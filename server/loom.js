@@ -83,6 +83,39 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl =
 async function callGemini(userPrompt, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) throw new Error('Loom offline: GEMINI_API_KEY not set');
+  const started = Date.now();
+  const meta = { attempts: 0, usage: null, status: null };
+  try {
+    const result = await callGeminiOnce(userPrompt, opts, cfg, meta);
+    logCall(opts, cfg, meta, Date.now() - started, null, userPrompt);
+    return result;
+  } catch (err) {
+    logCall(opts, cfg, meta, Date.now() - started, err, userPrompt);
+    throw err;
+  }
+}
+
+/**
+ * Debug trace for one Gemini call: label, model, latency, attempts, HTTP
+ * status and token usage (prompt / output / total from usageMetadata).
+ * Never the prompt or the output: LOOM_DEBUG_PROMPTS=true adds the prompt,
+ * except for moderation (student write-ins) while privacy mode is on, which
+ * it is unless LOOM_PRIVACY=false. LOOM_LOG=off silences it.
+ */
+function logCall(opts, cfg, meta, ms, err, prompt) {
+  const env = opts.env || process.env;
+  if (env.LOOM_LOG === 'off') return;
+  const label = opts.label || 'call';
+  const u = meta.usage || {};
+  const tokens = meta.usage ? ` tokens ${u.promptTokenCount ?? '?'} in / ${u.candidatesTokenCount ?? '?'} out / ${u.totalTokenCount ?? '?'} total` : '';
+  const line = `[loom] ${label} ${cfg.model} ${ms} ms${meta.attempts > 1 ? ` (${meta.attempts} attempts)` : ''}${meta.status ? ` HTTP ${meta.status}` : ''}${tokens}${err ? ` FAILED: ${err.name === 'AbortError' ? 'timeout' : err.message}` : ''}`;
+  (opts.logger || console.log)(line);
+  const privacy = env.LOOM_PRIVACY !== 'false';
+  const studentText = /^moderate/.test(label);
+  if (env.LOOM_DEBUG_PROMPTS === 'true' && !(privacy && studentText)) (opts.logger || console.log)(`[loom] ${label} prompt: ${prompt}`);
+}
+
+async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   const body = {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -104,18 +137,23 @@ async function callGemini(userPrompt, opts = {}) {
   // (overloaded) is retried once after a short backoff, only if enough of
   // the budget is left for a real second attempt.
   const deadline = Date.now() + cfg.timeoutMs;
+  meta.attempts = 1;
   let res = await fetchWithTimeout(url, init, cfg.timeoutMs, opts.fetchImpl);
+  meta.status = res.status;
   if (RETRYABLE_STATUS.includes(res.status)) {
     const retryAfter = Number(res.headers && typeof res.headers.get === 'function' ? res.headers.get('retry-after') : NaN);
     const backoff = Math.min(RETRY_MAX_BACKOFF_MS, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : RETRY_BACKOFF_MS);
     const left = deadline - Date.now() - backoff;
     if (left >= RETRY_MIN_ATTEMPT_MS) {
       await new Promise((r) => setTimeout(r, backoff));
+      meta.attempts = 2;
       res = await fetchWithTimeout(url, init, Math.max(1, deadline - Date.now()), opts.fetchImpl);
+      meta.status = res.status;
     }
   }
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const data = await res.json();
+  if (data && data.usageMetadata) meta.usage = data.usageMetadata;
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
     data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('');
   if (!text) throw new Error('Gemini returned no content');
@@ -299,7 +337,7 @@ async function narrate(rawContext = {}, opts = {}) {
       'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'
     ].join('\n');
-    const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8 });
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: NARRATION_SCHEMA, temperature: 0.8, label: 'narrate' });
     return validateNarration(result, citizens.map((c) => c.id));
   } catch (err) {
     console.warn(`[loom] narrate fell back: ${err.message}`);
@@ -524,7 +562,7 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
       'Moderate and translate each council submission. Return one object per submission, same node ids, as a JSON array.',
       JSON.stringify(list)
     ].join('\n\n');
-    const result = await callGemini(prompt, { ...opts, config: cfg, schema: MODERATION_SCHEMA, temperature: 0.2 });
+    const result = await callGemini(prompt, { ...opts, config: cfg, schema: MODERATION_SCHEMA, temperature: 0.2, label: opts.revision ? 'moderateOne' : 'moderate' });
     if (!Array.isArray(result)) throw new Error('moderation: not an array');
     return list.map((s) => {
       const r = result.find((x) => x && x.node === s.node);
@@ -635,7 +673,7 @@ async function testConnection(opts = {}) {
   try {
     const result = await callGemini(
       'Connection test. Reply with ok=true and one short in-character line (max 80 characters) confirming you are online.',
-      { ...opts, config: cfg, schema: PING_SCHEMA, temperature: 0.2, maxOutputTokens: 100 }
+      { ...opts, config: cfg, schema: PING_SCHEMA, temperature: 0.2, maxOutputTokens: 100, label: 'ping' }
     );
     const valid = result && result.ok === true && typeof result.line === 'string';
     return {

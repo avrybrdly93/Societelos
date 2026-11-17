@@ -530,3 +530,31 @@ test('callGemini retries once on 429/503 inside the 8 s budget, then gives up', 
     assert.equal(n, 1);
   } finally { console.warn = warn; }
 });
+
+test('every Gemini call logs latency and token usage, never student write-ins in privacy mode', async () => {
+  const lines = [];
+  const logger = (l) => lines.push(l);
+  const withUsage = async (url, init) => ({ ok: true, status: 200, json: async () => ({
+    usageMetadata: { promptTokenCount: 812, candidatesTokenCount: 96, totalTokenCount: 908 },
+    candidates: [{ content: { parts: [{ text: JSON.stringify(okFor(JSON.parse(JSON.parse(init.body).contents[0].parts[0].text.split('\n\n').pop()))) }] } }]
+  }) });
+  const secret = [{ node: 'NODE-01', text: 'My secret plan about the harbour' }];
+  await loom.moderate(secret, FINALE_CRISIS, { config: ONLINE, fetchImpl: withUsage, logger, env: { LOOM_DEBUG_PROMPTS: 'true' } });
+  assert.equal(lines.length, 1, 'privacy mode (default): metrics only');
+  assert.match(lines[0], /^\[loom\] moderate gemini-2\.5-flash \d+ ms HTTP 200 tokens 812 in \/ 96 out \/ 908 total$/);
+  assert.ok(!lines.join('\n').includes('secret plan'));
+  // Privacy off + debug: the prompt may be logged (for a teacher debugging locally).
+  lines.length = 0;
+  await loom.moderate(secret, FINALE_CRISIS, { config: ONLINE, fetchImpl: withUsage, logger, env: { LOOM_DEBUG_PROMPTS: 'true', LOOM_PRIVACY: 'false' } });
+  assert.ok(lines[1].includes('secret plan'));
+  // Failures log the latency and reason; LOOM_LOG=off is silent.
+  lines.length = 0;
+  const warn = console.warn; console.warn = () => {};
+  try {
+    await loom.narrate({ winningOption: { name: 'P' }, simSummary: {}, citizens }, { config: ONLINE, logger, fetchImpl: async () => ({ ok: false, status: 400, json: async () => ({}) }) });
+    assert.match(lines[0], /^\[loom\] narrate gemini-2\.5-flash \d+ ms HTTP 400 FAILED: Gemini HTTP 400$/);
+    lines.length = 0;
+    await loom.moderate(secret, FINALE_CRISIS, { config: ONLINE, fetchImpl: withUsage, logger, env: { LOOM_LOG: 'off' } });
+    assert.equal(lines.length, 0);
+  } finally { console.warn = warn; }
+});
