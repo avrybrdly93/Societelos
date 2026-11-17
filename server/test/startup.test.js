@@ -39,6 +39,12 @@ test('getLanIp prefers the classroom LAN (192.168/10/172.16-31) over virtual and
   assert.equal(getLanIp({ lo: [{ family: 'IPv4', address: '127.0.0.1', internal: true }] }), 'localhost', 'no network: localhost');
 });
 
+test('getJoinUrl uses PUBLIC_URL for a reverse-proxied subpath deployment', () => {
+  assert.equal(getJoinUrl(3000, 'https://avesstudios.com/the-loom'), 'https://avesstudios.com/the-loom/mobile.html');
+  assert.equal(getJoinUrl(3000, 'https://avesstudios.com/the-loom/'), 'https://avesstudios.com/the-loom/mobile.html');
+  assert.match(getJoinUrl(3000, '  '), /^http:\/\/.+:3000\/mobile$/);
+});
+
 test('getJoinUrl is the exact phone address: http://<lan-ip>:<port>/mobile', () => {
   assert.match(getJoinUrl(3000), /^http:\/\/(\d{1,3}(\.\d{1,3}){3}|localhost):3000\/mobile$/);
 });

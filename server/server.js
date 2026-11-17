@@ -47,8 +47,16 @@ function getLanIp(interfaces = os.networkInterfaces()) {
   return candidates.length ? candidates[0].address : 'localhost';
 }
 
-/** The URL phones should open, e.g. http://192.168.1.20:3000/mobile */
-function getJoinUrl(port = PORT) {
+/**
+ * The URL phones should open. With PUBLIC_URL set (e.g. a reverse-proxied
+ * deployment at https://avesstudios.com/the-loom) that wins; otherwise the
+ * classroom LAN address, e.g. http://192.168.1.20:3000/mobile.
+ */
+function getJoinUrl(port = PORT, publicUrl = process.env.PUBLIC_URL) {
+  const base = (publicUrl || '').trim().replace(/\/+$/, '');
+  // mobile.html, not /mobile: a host with trailing-slash redirects (Vercel)
+  // would turn /mobile into /mobile/ and break the page's relative assets.
+  if (base) return `${base}/mobile.html`;
   return `http://${getLanIp()}:${port}/mobile`;
 }
 
@@ -94,8 +102,10 @@ app.get('/api/state', (req, res, next) => {
   return res.json({ rooms });
 });
 
-// QR code (PNG data URL) pointing phones at http://<lan-ip>:<port>/mobile.
+// QR code (PNG data URL) pointing phones at PUBLIC_URL/mobile, or http://<lan-ip>:<port>/mobile.
 app.get('/api/qr', async (req, res) => {
+  // The host page may be served from another origin (Vercel) than this API.
+  res.set('Access-Control-Allow-Origin', '*');
   try {
     const port = (server.address() && server.address().port) || PORT;
     const joinUrl = getJoinUrl(port);

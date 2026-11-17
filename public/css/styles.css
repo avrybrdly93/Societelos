@@ -96,7 +96,7 @@ body.host {
   background-color: var(--slate-950);
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(8, 11, 16, 0.74) 0%, rgba(8, 11, 16, 0.92) 100%),
-    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+    url('../img/The%20Loom_%20A%20Perfect%20World.png');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -1343,7 +1343,7 @@ body[data-world="BA"] {
 body.host[data-world="BA"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(26, 14, 8, 0.72) 0%, rgba(10, 8, 6, 0.93) 100%),
-    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+    url('../img/The%20Loom_%20A%20Perfect%20World.png');
 }
 body[data-world="BA"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-brass), var(--theme-rust) 55%, var(--theme-brass-deep)) 1;
@@ -1376,7 +1376,7 @@ body[data-world="BB"] {
 body.host[data-world="BB"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(30, 10, 44, 0.70) 0%, rgba(12, 6, 18, 0.93) 100%),
-    url('/img/The%20Loom_%20A%20Perfect%20World.png');
+    url('../img/The%20Loom_%20A%20Perfect%20World.png');
 }
 body[data-world="BB"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-gold), var(--theme-bb) 50%, var(--theme-gold)) 1;

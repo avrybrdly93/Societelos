@@ -317,7 +317,8 @@
     <span>Post-Labor Telos Protocol</span>
   </footer>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="config.js"></script>
+  <script src="vendor/socket.io.min.js"></script>
   <script>
     const SESSION_KEY = 'societelos_node_session_id';
     let currentSessionId = sessionStorage.getItem(SESSION_KEY);
@@ -329,7 +330,12 @@
     const urlParams = new URLSearchParams(window.location.search);
     const requestedSlotFromUrl = urlParams.get('slot');
 
-    const socket = io();
+    // Socket.IO target: LOOM_CONFIG.socketUrl (the Render server when the
+    // frontend is on Vercel), else the server that served this page, under
+    // /the-loom when reverse-proxied at that subpath.
+    const socketUrl = (window.LOOM_CONFIG && window.LOOM_CONFIG.socketUrl) || '';
+    const basePath = window.location.pathname.startsWith('/the-loom') ? '/the-loom' : '';
+    const socket = window.io(socketUrl || undefined, { path: socketUrl ? '/socket.io' : `${basePath}/socket.io` });
 
     // DOM
     const connDot = document.getElementById('conn-dot');
