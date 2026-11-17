@@ -1083,7 +1083,13 @@
           "targetGdwDelta": 4
         }
       },
-      "intel": {}
+      "intel": {
+        "artisan": "Loom archive: during the 2033 grid blackout, Riverside residents built a market, a choir and a football league in eight days. Most of them still meet.",
+        "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
+        "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
+        "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
+        "ghost": "Leaked memo: every compatibility score is built from a citizen's full neural and viewing history. Blackout hours are the only hours the Loom is not recording."
+      }
     },
     {
       "id": "bb-the-unplugged",
