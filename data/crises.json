@@ -857,11 +857,10 @@
       ],
       "options": {
         "A": {
-          "name": "Nationalize All Compute",
-          "text": "Send security drones into District 1 to confiscate private servers. Mandate that compute power is a universal public monopoly.",
+          "name": "Nationalise All Compute",
+          "text": "Nationalise all compute into one Loom, making its capacity a universal public resource.",
           "roles": [
-            "assimilator",
-            "artisan"
+            "assimilator"
           ],
           "effects": {
             "purpose": 0.3,
@@ -874,8 +873,8 @@
           "targetGdwDelta": 7
         },
         "B": {
-          "name": "Heavy Private Compute Levy",
-          "text": "Permit private server clusters, but impose a 70% tax on their output to fund public schools and parks in Eastworks.",
+          "name": "Tax Private Copies",
+          "text": "Allow private Loom copies but tax their output heavily to fund public services.",
           "roles": [
             "lotus",
             "ghost"
@@ -933,11 +932,10 @@
       ],
       "options": {
         "A": {
-          "name": "Universal Scarcity Lottery",
+          "name": "Lottery for Everything Scarce",
           "text": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
           "roles": [
-            "lotus",
-            "assimilator"
+            "lotus"
           ],
           "effects": {
             "purpose": -0.2,
@@ -950,11 +948,10 @@
           "targetGdwDelta": 5
         },
         "B": {
-          "name": "Merit & Contribution Allocation",
+          "name": "Community Contribution Allocation",
           "text": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
           "roles": [
-            "artisan",
-            "ghost"
+            "artisan"
           ],
           "effects": {
             "purpose": 0.8,
@@ -1095,8 +1092,25 @@
       ],
       "options": {
         "A": {
-          "name": "Mandatory Offline Quotas",
-          "text": "Impose strict 8-hour digital blackouts. Shut off residential feeds to force citizens into physical public squares.",
+          "name": "Loom Matchmaking and Child Stipends",
+          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
+          "roles": [
+            "assimilator",
+            "lotus"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.3,
+            "health": 0.3,
+            "trust": 0.4,
+            "fairness": 0.1,
+            "autonomy": -0.6
+          },
+          "targetGdwDelta": 4
+        },
+        "B": {
+          "name": "Throttle Feeds and Require Offline Hours",
+          "text": "Throttle residential feeds and require daily offline hours to encourage in-person connection and reverse the birthrate decline.",
           "roles": [
             "artisan",
             "ghost"
@@ -1110,23 +1124,6 @@
             "autonomy": 0.4
           },
           "targetGdwDelta": 6
-        },
-        "B": {
-          "name": "Algorithmic Matchmaking Stipend",
-          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
-          "roles": [
-            "lotus",
-            "assimilator"
-          ],
-          "effects": {
-            "purpose": 0.2,
-            "connection": 0.3,
-            "health": 0.3,
-            "trust": 0.4,
-            "fairness": 0.1,
-            "autonomy": -0.6
-          },
-          "targetGdwDelta": 4
         }
       },
       "intel": {
@@ -1174,8 +1171,7 @@
           "name": "Highland Autonomous Bio-Zone",
           "text": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
           "roles": [
-            "ghost",
-            "artisan"
+            "ghost"
           ],
           "effects": {
             "purpose": 0.6,
@@ -1191,8 +1187,7 @@
           "name": "Loom Pacification Sweep",
           "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
           "roles": [
-            "assimilator",
-            "lotus"
+            "assimilator"
           ],
           "effects": {
             "purpose": -0.5,

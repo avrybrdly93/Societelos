@@ -528,7 +528,9 @@ html:has(body.mobile) { overscroll-behavior-y: contain; }
   background: linear-gradient(160deg, var(--slate-800), var(--slate-950));
   box-shadow: 0 0 32px var(--loom-glow);
 }
-.role-icon { font-size: 56px; line-height: 1; }
+.role-icon { width: 56px; height: 56px; color: var(--accent); }
+.role-icon svg { display: block; width: 100%; height: 100%; }
+.end-table .end-role-icon svg { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
 .role-title { font-size: 30px; margin: 12px 0 4px; }
 .role-flavor { font-size: 15px; margin: 0 0 16px; }
 .role-heading { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 16px 0 4px; }
@@ -696,6 +698,10 @@ body.host .view.is-active { height: 100%; }
 /* Host GDW meter: animated readout, stability label and 0-100% bar. */
 .gdw-meter { display: flex; flex-direction: column; gap: 6px; }
 .gdw-meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gdw-delta-pill { display: inline-block; padding: 4px 10px; border-radius: 999px; opacity: 0; transform: translateY(6px); transition: opacity 220ms ease, transform 220ms ease; }
+.gdw-delta-pill.is-visible { opacity: 1; transform: none; }
+.gdw-delta-pill.is-up { color: #062f28; background: var(--teal); }
+.gdw-delta-pill.is-down { color: #fff; background: var(--danger); }
 body.host .gdw-meter .label { font-size: 20px; }
 .gdw-status { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--gdw-color, var(--amber)); }
 .gdw-readout { font-size: 64px; font-weight: 700; line-height: 1; color: var(--gdw-color, var(--amber)); }
@@ -714,8 +720,8 @@ body.host .gdw-meter .label { font-size: 20px; }
   --district-d1: #5b8def; /* Old Harbour */
   --district-d2: #3fd8e6; /* The Grid */
   --district-d3: #2bc4a0; /* Riverside */
-  --district-d4: #f0a430; /* Eastworks */
-  --district-d5: #c084fc; /* Highlands */
+  --district-d4: #d97745; /* Eastworks */
+  --district-d5: #d7a941; /* Highlands */
 }
 .feed-item {
   --district-color: var(--slate-600);
@@ -1447,6 +1453,12 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
    phone ballot and wait screen, resolution headline). */
 .proposal-text, .enact-text, .rank-text, .finale-mine, #resolution-policy, .feed-text { overflow-wrap: anywhere; }
 
+/* Authored crisis copy on the 16:9 projector: long titles, subtitles and
+   policy descriptions wrap onto new lines (even at an unbroken word)
+   instead of clipping at the panel edge. */
+.incident-title, .incident-subtitle, .incident-text, .loom-line, .debate-hook-text,
+.policy-name, .policy-text, .world-name, .world-tagline, .world-problem, .end-badge-value { overflow-wrap: anywhere; min-width: 0; }
+
 /* Long ballots (four 140-character policies on a 375 px phone) scroll; the
    lock-in button stays pinned to the bottom of the screen. */
 #rank-submit {
@@ -1518,13 +1530,15 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 /* ------------------------------------------------------------------ */
 /* End Screen: three beats (recap, roles & authors reveal, winner).    */
 /* ------------------------------------------------------------------ */
-.view-end { display: none; padding: 18px 48px; gap: 14px; flex-direction: column; overflow: hidden; }
+.view-end { display: none; padding: 4px 48px 8px; gap: 10px; flex-direction: column; overflow: hidden; }
 .view-end.is-active { display: flex; }
+/* Reclaim most of #host-main's padding: the End Screen needs every row of the 1080p projector. */
+.view-end { margin-top: -24px; height: calc(100% + 48px); }
 .end-beat { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 22px; }
 .end-beat > .label { margin: 0 0 8px; }
 .end-recap-grid { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 20px; align-items: stretch; }
-.end-chart-wrap { position: relative; min-height: 230px; }
-.end-chart { display: block; width: 100%; height: 230px; }
+.end-chart-wrap { position: relative; min-height: 200px; }
+.end-chart { display: block; width: 100%; height: 200px; }
 .end-badges { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; }
 .end-badges .end-closing { grid-column: 1 / -1; }
 .end-badge { display: flex; flex-direction: column; gap: 0; padding: 6px 14px; border-radius: var(--radius); background: var(--bg-sunken); border-left: 4px solid var(--theme-current, var(--accent)); }
@@ -1539,12 +1553,22 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-closing footer { font-size: 16px; }
 .end-table { width: 100%; border-collapse: collapse; font-size: 22px; }
 .end-table th { text-align: left; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
-.end-table td { padding: 5px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
+.end-table td { padding: 3px 10px; border-bottom: 1px solid var(--slate-700); vertical-align: top; }
 .end-table td.col-points, .end-table th.col-points { text-align: right; font-family: var(--font-mono); }
 .end-table .end-role { white-space: nowrap; }
 .end-table .end-role-icon { display: inline-block; width: 1.4em; color: var(--accent); }
 .end-table .end-policy { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
-.end-table .end-policy-rank { display: block; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+.end-table .end-policy-rank { display: inline-block; margin-left: 10px; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); white-space: nowrap; }
+.end-table td:first-child, .end-table td:nth-child(2) { white-space: nowrap; }
+.end-chart-inspection { min-height: 2.8em; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); color: var(--text); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+/* body.host p (28 px) would otherwise win and push the winner beat below
+   the bottom of a 1080p projector; this secondary readout stays compact. */
+/* The End Screen holds three beats on one 1080p projector screen, so its
+   secondary copy is sized here rather than by body.host p (28 px). */
+body.host .end-closing p { font-size: 22px; }
+body.host .end-winner-sub { font-size: 22px; }
+body.host .end-chart-inspection { font-size: 18px; line-height: 1.35; min-height: 1.35em; margin-top: 6px; padding: 4px 10px; }
+.end-chart:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .end-table tr.is-winner td { background: rgba(43, 196, 160, 0.10); }
 .end-table tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
 .view-end.no-writein .col-author { display: none; }
@@ -1553,11 +1577,22 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-winner-title { font-size: 44px; line-height: 1.1; margin: 0; color: var(--teal); }
 .end-winner-sub { font-size: 20px; margin: 0; display: inline; }
 /* Seed badge and the teacher's next-game buttons. */
-.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.end-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }
 .end-seed-badge { font-size: 16px; letter-spacing: 0.08em; padding: 6px 12px; border: 1px dashed var(--slate-600); border-radius: var(--radius); color: var(--text-muted); }
 .end-seed-badge:empty { display: none; }
 .btn-end { font-size: 20px; padding: 10px 22px; letter-spacing: 0.08em; }
 .end-action-hint { font-size: 15px; }
+/* Shared win (TASK-673): a tie for the top score gets a teal/amber banner,
+   and every co-winner row in the reveal table wears the same accent. */
+.end-winner.is-shared { border-color: var(--amber); background: linear-gradient(90deg, rgba(43, 196, 160, 0.14), rgba(240, 164, 48, 0.14), rgba(43, 196, 160, 0.14)); box-shadow: 0 0 32px rgba(240, 164, 48, 0.25); }
+.end-winner.is-shared .label { color: var(--amber); letter-spacing: 0.18em; }
+.end-winner.is-shared .end-winner-title { color: var(--amber); }
+.end-table tbody.is-shared tr.is-winner td:first-child { box-shadow: inset 4px 0 0 var(--amber); }
+.end-table tbody.is-shared tr.is-winner td { background: rgba(240, 164, 48, 0.10); }
+.view-end.beat-3 .end-winner.is-shared { animation: shared-glow 2.4s ease-in-out 1.4s 2 both; }
+@keyframes shared-glow { 0%, 100% { box-shadow: 0 0 32px rgba(240, 164, 48, 0.25); } 50% { box-shadow: 0 0 56px rgba(240, 164, 48, 0.55); } }
+.result-card.end-card.is-shared { border-color: var(--amber); box-shadow: 0 0 24px rgba(240, 164, 48, 0.35), inset 0 0 0 1px rgba(43, 196, 160, 0.5); }
+.result-card.end-card.is-shared .result-outcome { color: var(--amber); }
 .view-end.is-shutdown .end-winner { border-color: var(--danger); background: rgba(229, 72, 77, 0.10); }
 .view-end.is-shutdown .end-winner-title { color: var(--danger); }
 
@@ -1577,8 +1612,9 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .view-end.beat-3 .end-winner-title { animation: end-winner-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes end-winner-in { from { opacity: 0; transform: scale(0.92); letter-spacing: 0.2em; } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
+  .gdw-delta-pill { transition: none; transform: none; }
   .view-end .end-beat { transition: none; transform: none; }
-  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title { animation: none; }
+  .view-end.beat-2 .end-reveal tbody tr, .view-end.beat-3 .end-winner-title, .view-end.beat-3 .end-winner.is-shared { animation: none; }
 }
 
 /* Mobile End Screen. */
@@ -1608,3 +1644,21 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 }
 body.is-reconnecting .m-main { opacity: 0.6; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .m-reconnect { animation: none; } }
+
+/* Secret role accent colors on the phone card. */
+.role-card[data-role="artisan"] { --accent: #d9a441; }
+.role-card[data-role="lotus"] { --accent: #d986b5; }
+.role-card[data-role="assimilator"] { --accent: #4bd0dc; }
+.role-card[data-role="ghost"] { --accent: #70c08a; }
+.role-card[data-role="catalyst"] { --accent: #f07856; }
+.end-table .end-author-bonus { display: inline-block; margin: 0 8px; padding: 2px 7px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); font-size: 13px; white-space: nowrap; }
+
+/* Respect reduced-motion preferences for every transition and keyframe. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

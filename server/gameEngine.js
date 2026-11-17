@@ -808,7 +808,7 @@ class GameState extends EventEmitter {
     if (zero > 0) history = history.slice(0, zero + 1);
     const last = history.length - 1;
     const cycleMarkers = this.cycleMarkers
-      .map((m) => ({ cycle: m.cycle, index: Math.min(m.index, last) }))
+      .map((m) => ({ ...m, index: Math.min(m.index, last) }))
       .map((m) => ({ ...m, gdw: history[m.index] }))
       .filter((m, i, a) => i === 0 || a[i - 1].index < m.index);
     return { gdwHistory: history, cycleMarkers };
@@ -1246,6 +1246,12 @@ class GameState extends EventEmitter {
       runs: 500, seed: hashSeed(this.gameId, this.cycle), volatility: this.volatility
     });
     this.applySimResult(simResult);
+    const cycleMarker = this.cycleMarkers[this.cycleMarkers.length - 1];
+    if (cycleMarker) {
+      cycleMarker.policy = 'The Council Package';
+      cycleMarker.policyText = finale.enacted.map((e) => `${Math.round(e.weight * 100)}%: ${byId[e.id].text}`).join(' | ');
+      cycleMarker.crisis = 'Finale';
+    }
     this.voteHistory[this.cycle] = 'package';
     if (this.gdw <= 0) this.ending = 'shutdown';
     finale.previousGdw = previousGdw;
@@ -1632,6 +1638,12 @@ class GameState extends EventEmitter {
     const option = this.optionFor(winner);
     const stateBefore = this.simState;
     this.applySimResult(simResult);
+    const cycleMarker = this.cycleMarkers[this.cycleMarkers.length - 1];
+    if (cycleMarker) {
+      cycleMarker.policy = option.name;
+      cycleMarker.policyText = option.text || option.name;
+      cycleMarker.crisis = (this.publicCrisis() || {}).title || '';
+    }
     this.voteHistory[this.cycle] = winner;
     // Loom Shutdown: GDW hit 0, so the remaining cycles are skipped and the
     // game goes straight from this RESOLUTION to END (Shutdown Ending).

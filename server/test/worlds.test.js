@@ -65,7 +65,8 @@ test('World BB: the comfortable 1B -> 2B opening is punished hardest in cycles 3
   for (const w of ['AA', 'AB', 'BA']) assert.ok(worstDrop('BB') < worstDrop(w) - 5, `BB worst drop ${worstDrop('BB').toFixed(1)} vs ${w} ${worstDrop(w).toFixed(1)}`);
   // The comfort options (lotus/assimilator: the stipend, then the sweep) are that worst path: a drop of 10+.
   const bb = crises.crises.filter((c) => c.world === 'BB' && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
-  const comfort = bb.map((c) => ['A', 'B'].find((k) => (c.options[k].roles || []).includes('lotus'))).join('');
+  const complacent = (o) => (o.roles || []).some((r) => r === 'lotus' || r === 'assimilator');
+  const comfort = bb.map((c) => ['A', 'B'].find((k) => complacent(c.options[k]))).join('');
   assert.ok(worlds.BB.ends[comfort] - worlds.BB.afterCycle2 <= -10, `BB comfort path ${comfort} drops ${(worlds.BB.ends[comfort] - worlds.BB.afterCycle2).toFixed(1)}`);
 });
 
@@ -112,5 +113,37 @@ test('World BB: in every late crisis the complacent (lotus/assimilator) option s
     const comfort = medianDelta(state, c.options[comfortKey].effects, volatility);
     const resist = medianDelta(state, c.options[resistKey].effects, volatility);
     assert.ok(comfort < resist - 3, `${c.id}: comfort ${comfort.toFixed(1)} vs resist ${resist.toFixed(1)}`);
+  }
+});
+
+test('World AB: cycle 3-4 crises trade health/trust against autonomy/connection (TASK-546)', () => {
+  const { state, volatility } = cycle2State('AB');
+  const care = (e) => e.health + e.trust;
+  const freedom = (e) => e.autonomy + e.connection;
+  const ids = worldCrises('AB').map((c) => c.id);
+  assert.deepEqual(ids, ['ab-the-pods', 'ab-mood-dial']);
+  for (const c of worldCrises('AB')) {
+    const { A, B } = c.options;
+    // One option buys care (health + trust), the other buys freedom
+    // (autonomy + connection): neither option wins on both axes.
+    const [careKey, freeKey] = care(A.effects) > care(B.effects) ? ['A', 'B'] : ['B', 'A'];
+    const caring = c.options[careKey].effects;
+    const freeing = c.options[freeKey].effects;
+    assert.ok(care(caring) - care(freeing) >= 0.2, `${c.id}: care gap ${(care(caring) - care(freeing)).toFixed(1)}`);
+    assert.ok(freedom(freeing) - freedom(caring) >= 0.2, `${c.id}: freedom gap ${(freedom(freeing) - freedom(caring)).toFixed(1)}`);
+    // The Loom-comfort option is the lotus/assimilator one.
+    assert.ok(c.options[careKey].roles.some((r) => r === 'lotus' || r === 'assimilator'), `${c.id}: care option is the comfort option`);
+    // The simulated trait means move the same way.
+    const after = (e) => simulate(state, e, { runs: RUNS, seed: SEED + 2, volatility }).finalState;
+    const mean = (st, trait) => {
+      const t = st.traitNames.indexOf(trait);
+      const n = st.traitNames.length;
+      const pop = st.cohorts.reduce((s, x) => s + x.population, 0);
+      return st.cohorts.reduce((s, x, i) => s + st.traits[i * n + t] * x.population, 0) / pop;
+    };
+    const sCare = after(caring);
+    const sFree = after(freeing);
+    assert.ok(mean(sCare, 'health') + mean(sCare, 'trust') > mean(sFree, 'health') + mean(sFree, 'trust'), `${c.id}: simulated care`);
+    assert.ok(mean(sFree, 'autonomy') + mean(sFree, 'connection') > mean(sCare, 'autonomy') + mean(sCare, 'connection'), `${c.id}: simulated freedom`);
   }
 });

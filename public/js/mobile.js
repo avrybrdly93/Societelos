@@ -17,6 +17,7 @@
   }
 
   const saved = loadSession();
+  const requestedRoom = new URLSearchParams(window.location.search).get('room');
   // auth is a function so every (re)connect sends the latest saved token: a
   // phone that joined after page load keeps its seat across a network drop.
   // Socket.IO target: LOOM_CONFIG.socketUrl (the Render server when the
@@ -28,11 +29,11 @@
     path: socketUrl ? '/socket.io' : `${basePath}/socket.io`,
     auth: (cb) => {
       const current = loadSession();
-      cb({ clientType: 'phone', token: (current && current.token) || undefined });
+      cb({ clientType: 'phone', token: (current && current.token) || undefined, roomCode: (current && current.roomCode) || requestedRoom || undefined });
     }
   });
 
-  const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
+  const state = { node: saved ? saved.node : null, roomCode: (saved && saved.roomCode) || requestedRoom || null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null, spectator: false };
 
   // Brief drops (Wi-Fi blip, screen lock): show a top banner instead of
   // tearing down the screen. Socket.IO reconnects on its own; the server
@@ -125,6 +126,35 @@
   const joinForm = document.getElementById('join-form');
   const joinError = document.getElementById('join-error');
   const joinSubmit = document.getElementById('join-submit');
+  const spectateSubmit = document.getElementById('spectate-submit');
+  const PHASE_NAMES = { LOBBY: 'LOBBY', INTRO: 'TRANSMISSION', ROLE_ASSIGN: 'ROLE ASSIGNMENT', CHAMBER: 'COUNCIL CHAMBER', INCIDENT: 'CRISIS', INTEL: 'INTEL DROP', DEBATE: 'DEBATE', VOTE: 'VOTE', RESOLUTION: 'RESOLUTION', FINALE_WRITE: 'FINALE WRITING', FINALE_MOD: 'POLICY REVIEW', FINALE_DEBATE: 'FINALE DEBATE', FINALE_RANK: 'RANKING', FINALE_ENACT: 'COUNCIL PACKAGE', END: 'SESSION COMPLETE' };
+  function updateSpectator(payload = {}) {
+    const phase = payload.phase || state.phase || 'LOBBY';
+    document.getElementById('spectator-phase').textContent = `CURRENT PHASE: ${PHASE_NAMES[phase] || phase}`;
+    document.getElementById('spectator-cycle').textContent = payload.cycle ? `CYCLE ${payload.cycle} / 5` : 'Waiting for the projector.';
+  }
+  spectateSubmit.addEventListener('click', () => {
+    spectateSubmit.disabled = true;
+    socket.emit('spectate:join', { room: state.roomCode || undefined }, (res) => {
+      spectateSubmit.disabled = false;
+      if (res && res.ok) {
+        state.roomCode = res.roomCode;
+        state.spectator = true;
+        updateSpectator(res);
+        showView('m-view-spectator');
+      } else {
+        joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Could not open spectator mode.';
+        joinError.hidden = false;
+      }
+    });
+  });
+  socket.on('spectate:joined', (payload) => { state.spectator = true; updateSpectator(payload); showView('m-view-spectator'); });
+  socket.on('spectate:error', () => {
+    joinError.textContent = 'No council session is available to watch.';
+    joinError.hidden = false;
+  });
+  socket.on('phase', (payload) => updateSpectator(payload));
+  socket.on('game:end', () => updateSpectator({ phase: 'END', cycle: state.cycle }));
   joinForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const name = document.getElementById('join-name').value.trim();
@@ -133,12 +163,13 @@
     joinError.hidden = true;
     // Never leave the button dead if the server never answers.
     const retry = setTimeout(() => { joinSubmit.disabled = false; }, 8000);
-    socket.emit('lobby:join', { name }, (res) => {
+    socket.emit('lobby:join', { name, room: state.roomCode || undefined }, (res) => {
       clearTimeout(retry);
       joinSubmit.disabled = false;
       if (!res || !res.ok) {
         joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Connection refused. Try again.';
         joinError.hidden = false;
+        spectateSubmit.hidden = !(res && ['ROOM_FULL', 'GAME_IN_PROGRESS'].includes(res.reason));
         return;
       }
       state.node = res.node;
@@ -155,6 +186,12 @@
     const players = (payload && payload.players) || [];
     const me = players.find((p) => p.node === state.node);
     if (me) setNodeLabel(me.node);
+    else if (state.phase === 'LOBBY' && state.node) {
+      state.node = null;
+      clearSession();
+      setNodeLabel(null);
+      showView('m-view-join');
+    }
     const status = document.getElementById('wait-status');
     if (status && state.phase === 'LOBBY') {
       status.textContent = players.length >= 5
@@ -167,7 +204,16 @@
   function renderRole(role) {
     if (!role) return;
     state.role = role;
-    document.getElementById('role-icon').textContent = role.icon || '';
+    const roleIcon = document.getElementById('role-icon');
+    roleIcon.textContent = '';
+    const iconPaths = { artisan: 'M4 20h16M7 17l8-8m-4-4 5 5-2 2-5-5z', lotus: 'M12 20c-5-2-8-6-8-10 4 0 7 3 8 7 1-4 4-7 8-7 0 4-3 8-8 10zM12 17V5m0 0L9 8m3-3 3 3', assimilator: 'M12 3v4m0 10v4M3 12h4m10 0h4M6 6l3 3m6 6 3 3m0-12-3 3m-6 6-3 3M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0z', ghost: 'M12 21c-5-3-8-7-8-12a8 8 0 0 1 16 0c0 5-3 9-8 12zM12 8v8m-3-5 3-3 3 3', catalyst: 'M13 2 5 13h6l-1 9 9-12h-6z' };
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', iconPaths[role.key] || iconPaths.catalyst);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.7'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path); roleIcon.appendChild(svg);
+    document.getElementById('role-card').dataset.role = role.key || '';
     document.getElementById('role-title').textContent = role.name || 'Unknown role';
     document.getElementById('role-flavor').textContent = role.cardText || '';
     document.getElementById('role-goal').textContent = role.goal || '';
@@ -240,12 +286,34 @@
 
   function onPhase(payload) {
     if (!payload || !payload.phase) return;
+    const previousPhase = state.phase;
+    if (previousPhase === 'END' && payload.phase === 'LOBBY') {
+      state.score = 0;
+      state.endData = null;
+      state.lastVote = null;
+      state.voteLockedCycle = null;
+      state.overrideUsed = false;
+      state.finaleSubmitted = null;
+      state.finaleCycle = null;
+      state.sync = null;
+      document.getElementById('role-drawer').hidden = true;
+      document.getElementById('intel-drawer').hidden = true;
+      document.getElementById('shield-role').checked = false;
+      document.getElementById('shield-intel').checked = false;
+      resetResult(0);
+      document.getElementById('result-gdw').textContent = '--%';
+      document.getElementById('result-gdw-delta').textContent = '';
+      document.getElementById('result-total').textContent = '';
+      document.getElementById('end-score').textContent = '—';
+      document.getElementById('end-breakdown').textContent = '';
+    }
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
     state.sessionEndsAt = payload.sessionEndsAt || null;
     state.sessionTimerEnabled = !!payload.sessionTimerEnabled;
     document.body.dataset.phase = payload.phase;
+    if (state.spectator) { updateSpectator(payload); return showView('m-view-spectator'); }
     handleDebateReady(payload.phase);
     if (!state.node) return showView('m-view-join');
     const screen = PHASE_SCREENS[payload.phase];
@@ -484,13 +552,13 @@
     const headline = document.getElementById('end-headline');
     if (data.shutdown) {
       outcome.textContent = 'THE LOOM HAS SHUT DOWN';
-      headline.textContent = 'Everyone lost.';
+      headline.textContent = 'SYSTEM COLLAPSE — ALL AGENDAS FAILED';
     } else if (won) {
       outcome.textContent = winners.length > 1 ? 'SHARED VICTORY' : 'YOU WON';
       headline.textContent = winners.length > 1 ? `You share the win with ${winners.length - 1} other${winners.length > 2 ? 's' : ''}.` : 'Your agenda shaped the future.';
     } else {
       outcome.textContent = 'NOT THIS TIME';
-      headline.textContent = 'Another agenda shaped the future.';
+      headline.textContent = winners.length > 1 ? `${winners.length} players shared the win.` : 'Another agenda shaped the future.';
     }
     document.getElementById('end-role').textContent = me && me.role ? `You were ${me.role.name || me.role.key}.` : '';
     document.getElementById('end-score').textContent = me ? String(me.total) : '—';

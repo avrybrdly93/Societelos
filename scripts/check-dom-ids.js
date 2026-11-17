@@ -42,9 +42,11 @@ for (const { page, scripts } of PAIRS) {
 }
 // Script load order: each page must load its helpers before the controller
 // that uses them (host.js reads window.SocietelosMap and SocietelosCharts).
+// config.js (LOOM_CONFIG.socketUrl) and the vendored Socket.IO client must
+// precede the controllers so the split Vercel/Render deploy can connect.
 const ORDER = [
-  { page: 'index.html', scripts: ['/socket.io/socket.io.js', '/js/map.js', '/js/charts.js', '/js/host.js'] },
-  { page: 'mobile.html', scripts: ['/socket.io/socket.io.js', '/js/mobile.js'] }
+  { page: 'index.html', scripts: ['/config.js', '/vendor/socket.io.min.js', '/js/map.js', '/js/charts.js', '/js/host.js'] },
+  { page: 'mobile.html', scripts: ['/config.js', '/vendor/socket.io.min.js', '/js/mobile.js'] }
 ];
 for (const { page, scripts } of ORDER) {
   const html = fs.readFileSync(path.join(ROOT, page), 'utf8');

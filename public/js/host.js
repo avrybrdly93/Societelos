@@ -672,6 +672,24 @@
   }
   if (btnSkipIntro) btnSkipIntro.addEventListener('click', (e) => { e.stopPropagation(); skipIntro(); });
 
+  // Teacher shortcuts: Space starts only when the lobby's five-seat gate is
+  // open, S skips the active intro, and F toggles projector fullscreen.
+  document.addEventListener('keydown', (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target;
+    if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
+    if (event.code === 'Space' && state.phase === 'LOBBY' && !startBtn.disabled) {
+      event.preventDefault();
+      startBtn.click();
+    } else if (event.key.toLowerCase() === 's' && state.phase === 'INTRO') {
+      event.preventDefault();
+      skipIntro();
+    } else if (event.key.toLowerCase() === 'f' && canFullscreen) {
+      event.preventDefault();
+      fullscreenBtn.click();
+    }
+  });
+
   const introView = document.getElementById('view-intro');
   if (introView) {
     introView.addEventListener('click', () => {
@@ -726,6 +744,19 @@
     renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
     document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('#region-map .district-pop[data-pop]').forEach((label) => {
+      const target = Number(String(label.getAttribute('data-pop')).replace(/[^0-9]/g, '')) || 0;
+      if (reduceMotion) { label.textContent = target.toLocaleString('en-US'); return; }
+      const start = performance.now();
+      const tick = (now) => {
+        const fraction = Math.min(1, (now - start) / 1800);
+        label.textContent = Math.round(target * (1 - Math.pow(1 - fraction, 3))).toLocaleString('en-US');
+        if (fraction < 1) requestAnimationFrame(tick);
+      };
+      label.textContent = '0';
+      requestAnimationFrame(tick);
+    });
   }
 
   socket.on('phase', onPhase);
@@ -1175,6 +1206,16 @@
   }
   function playResolution(payload) {
     const r = payload.result;
+    const deltaPill = document.getElementById('gdw-delta-pill');
+    if (deltaPill && typeof r.gdwDelta === 'number') {
+      deltaPill.hidden = false;
+      deltaPill.textContent = `${r.gdwDelta >= 0 ? '+' : ''}${r.gdwDelta.toFixed(1)}%`;
+      deltaPill.classList.toggle('is-up', r.gdwDelta >= 0);
+      deltaPill.classList.toggle('is-down', r.gdwDelta < 0);
+      deltaPill.classList.remove('is-visible');
+      requestAnimationFrame(() => deltaPill.classList.add('is-visible'));
+      setTimeout(() => { deltaPill.classList.remove('is-visible'); }, 4200);
+    }
     // Fixed Crisis 2B: the new power holder speaks in its own style.
     const gov = document.getElementById('governance-line');
     gov.hidden = !(r.governance && r.governance.line);
@@ -1446,13 +1487,25 @@
         const icon = document.createElement('span');
         icon.className = 'end-role-icon';
         icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = r.role.icon || '';
+        const paths = { artisan: 'M4 20h16M7 17l8-8m-4-4 5 5-2 2-5-5z', lotus: 'M12 20c-5-2-8-6-8-10 4 0 7 3 8 7 1-4 4-7 8-7 0 4-3 8-8 10zM12 17V5m0 0L9 8m3-3 3 3', assimilator: 'M12 3v4m0 10v4M3 12h4m10 0h4M6 6l3 3m6 6 3 3m0-12-3 3m-6 6-3 3M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0z', ghost: 'M12 21c-5-3-8-7-8-12a8 8 0 0 1 16 0c0 5-3 9-8 12zM12 8v8m-3-5 3-3 3 3', catalyst: 'M13 2 5 13h6l-1 9 9-12h-6z' };
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('focusable', 'false');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', paths[r.role.key] || paths.catalyst);
+        path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.7'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(path); icon.appendChild(svg);
         role.append(icon, document.createTextNode(r.role.name || r.role.key));
       }
       const policy = endCell(null, 'col-author end-policy');
       const a = authorsByNode[r.node];
       if (a) {
         policy.append(document.createTextNode(`${proposalLabel(a.id)}: ${a.text}`));
+        if (a.place === 1) {
+          const bonus = document.createElement('span');
+          bonus.className = 'end-author-bonus mono';
+          bonus.textContent = '+1 AUTHOR BONUS';
+          policy.appendChild(bonus);
+        }
         const rank = document.createElement('span');
         rank.className = 'end-policy-rank';
         rank.textContent = `RANK #${a.place} \u00B7 ${a.points} BORDA PTS${a.weight ? ` \u00B7 ENACTED ${Math.round(a.weight * 100)}%` : ''}`;
@@ -1469,10 +1522,14 @@
     const sub = document.getElementById('end-winner-sub');
     const names = {};
     for (const r of data.roles || []) names[r.node] = r.name;
+    // Two or more players tied for the top score: celebrate the shared win.
+    const shared = !data.shutdown && Array.isArray(data.winner) && data.winner.length > 1;
+    document.getElementById('end-winner').classList.toggle('is-shared', shared);
+    document.getElementById('end-roles-body').classList.toggle('is-shared', shared);
     if (data.shutdown || !data.winner) {
       label.textContent = 'Total loss';
       title.textContent = 'THE LOOM HAS SHUT DOWN';
-      sub.textContent = 'Gross Domestic Well-Being reached 0%. Every agenda failed.';
+      sub.textContent = 'CRITICAL FAILURE: GROSS DOMESTIC WELL-BEING AT 0%. REVOLT IN PROGRESS. THE LOOM HAS SHUT DOWN.';
     } else {
       const who = data.winner.map((n) => `${names[n] || n} (${n})`);
       label.textContent = data.winner.length > 1 ? 'Shared victory' : 'Architect of telos';
@@ -1505,7 +1562,36 @@
     const data = state.endData;
     if (!data || !window.SocietelosCharts || !window.SocietelosCharts.drawFullHistoryChart) return;
     requestAnimationFrame(() => {
-      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, document.getElementById('end-history-chart'), { cycleMarkers: data.cycleMarkers });
+      const canvas = document.getElementById('end-history-chart');
+      window.SocietelosCharts.drawFullHistoryChart(data.gdwHistory, canvas, { cycleMarkers: data.cycleMarkers });
+      const inspection = document.getElementById('end-chart-inspection');
+      if (!inspection) return;
+      const markers = (data.cycleMarkers || []).filter((m) => typeof m.index === 'number');
+      if (!markers.length) return;
+      const canvasWidth = canvas.offsetWidth || canvas.width;
+      const months = Math.max(60, (Array.isArray(data.gdwHistory) ? data.gdwHistory.length : 1) - 1);
+      const plotWidth = canvasWidth - window.SocietelosCharts.PAD.left - window.SocietelosCharts.PAD.right - 150;
+      let selected = -1;
+      const showMarker = (index) => {
+        selected = index;
+        const marker = markers[index];
+        inspection.textContent = `Cycle ${marker.cycle}: ${marker.policy || 'Policy details unavailable'} — ${marker.policyText || marker.policy || ''} (GDW ${Number(marker.gdw).toFixed(1)}%)`;
+      };
+      const inspect = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / (rect.width || 1) * canvasWidth;
+        const month = Math.max(0, Math.min(months, Math.round((x - window.SocietelosCharts.PAD.left) / plotWidth * months)));
+        let nearest = 0;
+        markers.forEach((m, i) => { if (Math.abs(m.index - month) < Math.abs(markers[nearest].index - month)) nearest = i; });
+        showMarker(nearest);
+      };
+      canvas.onpointermove = inspect;
+      canvas.onpointerdown = inspect;
+      canvas.onkeydown = (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        showMarker((selected + (event.key === 'ArrowRight' ? 1 : markers.length - 1)) % markers.length);
+      };
     });
   }
   window.addEventListener('resize', () => { if (state.phase === 'END') drawEndChart(); });
@@ -1534,6 +1620,8 @@
     playEndBeats(view);
     view.classList.toggle('is-shutdown', !!data.shutdown);
     view.classList.toggle('no-writein', data.finaleMode !== 'writein');
+    // No write-ins to reveal (A/B fallback or an early shutdown): just roles.
+    document.getElementById('end-reveal-label').textContent = data.finaleMode === 'writein' ? 'Secret roles & write-in authors' : 'Secret roles';
     if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);
     renderEndRecap(data);
     drawEndChart();

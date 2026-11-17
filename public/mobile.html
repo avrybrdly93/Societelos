@@ -45,8 +45,18 @@
         <label for="join-name" class="m-label mono">Trustee name</label>
         <input id="join-name" class="m-input" name="name" type="text" maxlength="24" required placeholder="First name" enterkeyhint="go">
         <button id="join-submit" class="btn btn-primary m-btn" type="submit">CONNECT TO LOOM</button>
+        <button id="spectate-submit" class="btn m-btn" type="button" hidden>WATCH AS SPECTATOR</button>
         <p id="join-error" class="m-error danger" role="alert" hidden></p>
       </form>
+    </section>
+    <section id="m-view-spectator" class="m-view" aria-label="Spectator mode">
+      <p class="m-kicker mono">READ-ONLY COUNCIL LINK</p>
+      <h1 class="m-title">SPECTATOR MODE — COUNCIL FULL</h1>
+      <div class="m-center">
+        <p id="spectator-phase" class="m-status mono">CONNECTING…</p>
+        <p id="spectator-cycle" class="muted">Waiting for the projector.</p>
+        <p class="muted">You can follow the session here. This phone has no vote or secret role.</p>
+      </div>
     </section>
     <section id="m-view-wait" class="m-view" aria-label="Waiting">
       <div class="m-center">
