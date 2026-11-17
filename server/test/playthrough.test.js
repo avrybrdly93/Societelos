@@ -253,3 +253,35 @@ test('headless 5-cycle playthrough: a "revise" write-in in Cycle 5 is resubmitte
     assert.equal(out.game.gdwHistory.length, 1 + 5 * 12);
   });
 });
+
+// TASK-579 ------------------------------------------------------------------
+
+test('headless 5-cycle playthrough: an 8-second Gemini timeout in Cycle 5 falls back to the authored A/B finale', { timeout: 40000 }, async () => {
+  // The real loom.moderate, pointed at a Gemini that accepts the request and
+  // never answers. Only the abort from the 8 s budget ends the call.
+  const realModerate = loom.moderate;
+  const requests = [];
+  const hangingFetch = (url, init) => new Promise((resolve, reject) => {
+    requests.push(url);
+    init.signal.addEventListener('abort', () => reject(Object.assign(new Error('This operation was aborted'), { name: 'AbortError' })));
+  });
+  const config = { apiKey: 'test-key-not-real', enabled: true, model: 'gemini-2.5-flash', timeoutMs: 8000 };
+  await withLoom({
+    moderate: (subs, crisis, opts = {}) => realModerate(subs, crisis, { ...opts, config, fetchImpl: hangingFetch })
+  }, async () => {
+    // FINALE_MOD keeps its real 10 s length so the 8 s Loom timeout, not the phase timer, decides.
+    const out = await playGame({ gameId: 'headless-timeout', world: 'BA', phaseSeconds: { FINALE_MOD: 10 }, guardMs: 35000 });
+    assert.equal(requests.length, 1, 'one batch moderation request was sent');
+    assert.ok(out.game.finale.moderationMs >= 8000, `moderation waited out the budget (${out.game.finale.moderationMs} ms)`);
+    assert.ok(out.game.finale.moderationMs < 10000, 'and gave up before the FINALE_MOD timer');
+    assert.equal(out.game.finaleFallback, true);
+    assert.deepEqual(out.phases.filter((p) => p.startsWith('5:')), FALLBACK_FLOW);
+
+    // The authored ba-vote-to-seize A/B is played and resolved normally.
+    const vote = out.payloads.find((p) => p.cycle === 5 && p.phase === 'VOTE');
+    assert.equal(vote.crisis.id, 'ba-vote-to-seize');
+    assert.ok(out.game.crisis.options.A && out.game.crisis.options.B, 'the authored A/B options are in play');
+    assert.ok(['A', 'B'].includes(out.resolutions[4].result.winner));
+    assert.equal(out.game.gdwHistory.length, 1 + 5 * 12);
+  });
+});
