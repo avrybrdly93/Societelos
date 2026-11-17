@@ -857,11 +857,10 @@
       ],
       "options": {
         "A": {
-          "name": "Nationalize All Compute",
-          "text": "Send security drones into District 1 to confiscate private servers. Mandate that compute power is a universal public monopoly.",
+          "name": "Nationalise All Compute",
+          "text": "Nationalise all compute into one Loom, making its capacity a universal public resource.",
           "roles": [
-            "assimilator",
-            "artisan"
+            "assimilator"
           ],
           "effects": {
             "purpose": 0.3,
