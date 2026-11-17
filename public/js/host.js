@@ -1620,6 +1620,8 @@
     playEndBeats(view);
     view.classList.toggle('is-shutdown', !!data.shutdown);
     view.classList.toggle('no-writein', data.finaleMode !== 'writein');
+    // No write-ins to reveal (A/B fallback or an early shutdown): just roles.
+    document.getElementById('end-reveal-label').textContent = data.finaleMode === 'writein' ? 'Secret roles & write-in authors' : 'Secret roles';
     if (typeof data.finalGdw === 'number') setGdw(data.finalGdw);
     renderEndRecap(data);
     drawEndChart();

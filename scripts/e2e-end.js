@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Host End Screen layout check (TASK-680): real game:end payloads from the
+// Host End Screen layout check (TASK-680, TASK-681): real game:end payloads from the
 // engine, rendered on the 1920x1080 projector page through its own debug
 // hook (window.debugTriggerEvent), with all three reveal beats shown.
 //
@@ -10,6 +10,8 @@
 //   writein140 - the same with five maximum-length (140-character) write-ins
 //   fallback  - the Loom was unavailable, so Cycle 5 used the authored A/B
 //               fallback: the write-in author column is hidden, no gap left
+//   shutdownC2 / shutdownC3 - GDW hit 0% in Cycle 2 (no world yet) or 3:
+//               shutdown styling, a short history chart, no author column
 //
 // Each scenario must: raise no page error, keep the End Screen inside the
 // projector (no horizontal overflow, nothing past the bottom edge), and show
@@ -44,6 +46,30 @@ async function buildScenarios() {
   // No moderation stub: the Loom is offline, so Cycle 5 falls back to A/B.
   const fb = await playGame({ gameId: 'e2e-end-fallback', world: 'BA' });
   scenarios.push({ name: 'fallback', data: fb.gameEnd, expect: { authors: false, shutdown: false } });
+  // Early shutdowns: realized GDW hit 0 during Cycle 2 (before any world
+  // formed) or Cycle 3, so the game ended with no finale at all.
+  const engine = require(path.join(root, 'server', 'gameEngine'));
+  const roles = require(path.join(root, 'data', 'roles.json'));
+  const log = console.log;
+  console.log = () => {};
+  for (const [cycle, worldKey] of [[2, null], [3, 'BA']]) {
+    const game = new engine.GameState({ roomCode: `SHUT${cycle}` });
+    game.gameId = `e2e-end-shutdown-c${cycle}`;
+    engine.NODE_IDS.forEach((n, i) => game.addPlayer(`s${i}`, `Student ${i + 1}`));
+    game.assignRoles(roles);
+    engine.NODE_IDS.forEach((n, i) => { game.scores[n] = (i * 2) % 3; });
+    const months = cycle * 12;
+    game.gdwHistory = Array.from({ length: months + 1 }, (_, m) => Math.max(0, +(25 - (m * 26) / (months - 3)).toFixed(1)));
+    game.cycleMarkers = Array.from({ length: cycle }, (_, i) => ({ cycle: i + 1, index: (i + 1) * 12, policy: `Policy ${i + 1}`, policyText: `Cycle ${i + 1} policy` }));
+    game.cycle = cycle;
+    game.worldKey = worldKey;
+    game.gdw = 0;
+    game.ending = 'shutdown';
+    game.startEndPhase();
+    game.clearPhaseTimer();
+    scenarios.push({ name: `shutdownC${cycle}`, data: game.endData, expect: { authors: false, shutdown: true } });
+  }
+  console.log = log;
   return scenarios;
 }
 
@@ -89,7 +115,8 @@ async function checkScenario(page, s) {
       viewBottom: Math.round(vr.bottom),
       overflow: overflow.slice(0, 5),
       inked,
-      title: document.getElementById('end-winner-title').textContent
+      title: document.getElementById('end-winner-title').textContent,
+      revealLabel: document.getElementById('end-reveal-label').textContent
     };
   });
   if (!r.active) problems.push(`${s.name}: End Screen view not active`);
@@ -101,6 +128,7 @@ async function checkScenario(page, s) {
   } else if (r.authorHeader || r.authorCells) {
     problems.push(`${s.name}: write-in author column should be hidden`);
   }
+  if (/author/i.test(r.revealLabel) !== s.expect.authors) problems.push(`${s.name}: reveal heading "${r.revealLabel}"`);
   if (r.docWidth > 1920) problems.push(`${s.name}: page ${r.docWidth}px wide`);
   if (r.overflow.length) problems.push(`${s.name}: off-screen: ${r.overflow.join('; ')}`);
   if (r.inked <= 0) problems.push(`${s.name}: GDW history chart did not draw`);
