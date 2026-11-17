@@ -363,3 +363,34 @@ test('loom.getPlaceholderPolicy(node): the standard protocol text, no roles, zer
   assert.equal(loom.getPlaceholderPolicy('Sam').node, null, 'never echoes a name');
   assert.notEqual(loom.getPlaceholderPolicy('NODE-01').effects, loom.getPlaceholderPolicy('NODE-02').effects, 'fresh objects');
 });
+
+test('loom.moderateOne falls back to a deterministic local heuristic when Gemini times out on a resubmit', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const hanging = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; reject(e); });
+  });
+  const warn = console.warn;
+  console.warn = () => {};
+  const resubmit = (text) => {
+    const p = loom.moderateOne({ node: 'NODE-05', text }, FINALE_CRISIS, { config: ONLINE, fetchImpl: hanging, playerNames: ['Sam Lee'] });
+    return Promise.resolve().then(() => t.mock.timers.tick(8000)).then(() => p);
+  };
+  try {
+    const ok = await resubmit('every district elects a repair council that controls its own grid');
+    assert.equal(ok.status, 'ok');
+    assert.equal(ok.heuristic, true);
+    assert.equal(ok.cleaned, 'Every district elects a repair council that controls its own grid.');
+    assert.deepEqual(ok.roles, ['artisan']);
+    assert.ok(ok.effects.purpose > 0 && Object.values(ok.effects).every((v) => v >= -1 && v <= 1));
+    // Deterministic: the same revision always scores the same.
+    assert.deepEqual(await resubmit('every district elects a repair council that controls its own grid'), ok);
+    // Unsafe, naming a player, or not a policy: rejected (the engine then shows the placeholder).
+    for (const bad of ['Sam Lee should run everything', 'kill the owners', 'lol ok']) {
+      const r = await resubmit(bad);
+      assert.equal(r.status, 'reject', bad);
+      assert.equal(r.cleaned, '');
+    }
+  } finally {
+    console.warn = warn;
+  }
+});

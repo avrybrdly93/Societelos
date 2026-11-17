@@ -497,6 +497,61 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Deterministic heuristic for a single resubmission when Gemini fails after
+// the batch succeeded (timeout, HTTP error, bad output). Same input, same
+// output: no randomness, no network.
+// ---------------------------------------------------------------------------
+
+const HEURISTIC_BANNED = /\b(damn|hell|crap|sh[i1]t\w*|f+u+c+k\w*|bitch\w*|bastard|ass(hole)?|piss\w*|sex\w*|porn\w*|kill\w*|murder\w*|suicide|die|dead|gun\w*|bomb\w*|nazi\w*|stupid|idiot\w*|dumb|retard\w*|loser|ugly|fat|hate)\b/i;
+const HEURISTIC_ROLE_WORDS = {
+  artisan: /\b(craft\w*|guild\w*|build\w*|repair\w*|hand\w*|skill\w*|workshop\w*|art|arts|artist\w*|make|making|maker\w*|teach\w*|learn\w*|apprentic\w*|garden\w*|cook\w*)\b/i,
+  lotus: /\b(comfort\w*|luxur\w*|dividend\w*|stipend\w*|pleasure\w*|fun|relax\w*|happ\w*|leisure|holiday\w*|vacation\w*|entertain\w*|free|rest)\b/i,
+  assimilator: /\b(loom|ai|neural|merge\w*|link\w*|algorithm\w*|automat\w*|machine\w*|optimi[sz]\w*|upload\w*|implant\w*|data|efficien\w*)\b/i,
+  ghost: /\b(shut\w*|unplug\w*|offline|switch(ed)? off|turn(ed)? off|nature|earth|farm\w*|privacy|private|dismantl\w*|disconnect\w*|tech-free|no tech|surveillance)\b/i
+};
+// Each tag moves the traits its agenda cares about (small, like a focused policy).
+const HEURISTIC_ROLE_EFFECTS = {
+  artisan: { purpose: 0.4, autonomy: 0.2, health: -0.1 },
+  lotus: { health: 0.3, connection: 0.1, purpose: -0.2 },
+  assimilator: { trust: 0.3, health: 0.2, autonomy: -0.4 },
+  ghost: { autonomy: 0.4, trust: -0.3, health: -0.2 }
+};
+const HEURISTIC_TRAIT_WORDS = {
+  fairness: /\b(equal\w*|fair\w*|share\w*|everyone|every citizen|all citizens|redistribut\w*|justice)\b/i,
+  connection: /\b(communit\w*|together|family|families|neighbo\w*|meet\w*|friend\w*|assembl\w*|council\w*)\b/i,
+  health: /\b(health\w*|clinic\w*|medic\w*|doctor\w*|hospital\w*|food|water)\b/i,
+  purpose: /\b(purpose|meaning\w*|job\w*|work\w*|goal\w*|challeng\w*)\b/i
+};
+
+/**
+ * Local moderation of one revised submission: clean it (emoji, spacing,
+ * capital, full stop, 140 chars), reject it if it is unsafe, names a player,
+ * or is not a policy, else tag up to 2 roles by keyword and derive a small
+ * effect vector. Marked heuristic: true.
+ */
+function moderateHeuristic(submission = {}, crisis = {}, opts = {}) {
+  const node = safeNode(submission.node);
+  const reject = (feedback) => ({ node, status: 'reject', cleaned: '', feedback, roles: [], effects: zeroEffects(), heuristic: true });
+  let text = stripEmoji(String(submission.text || '')).replace(/\s+/g, ' ').trim();
+  const names = (opts.playerNames || []).map((n) => String(n || '').trim()).filter((n) => n.length >= 2);
+  if (HEURISTIC_BANNED.test(text)) return reject('The revision still contains language the Loom cannot accept.');
+  if (names.some((n) => new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text))) return reject('Policies cannot name council members.');
+  if (/https?:\/\/|www\./i.test(text) || text.split(' ').filter((w) => /[a-z]{2,}/i.test(w)).length < 3) return reject('The revision is not a policy the Loom can enact.');
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += '.';
+  const roles = Object.keys(HEURISTIC_ROLE_WORDS)
+    .map((role) => ({ role, hits: (text.match(new RegExp(HEURISTIC_ROLE_WORDS[role].source, 'gi')) || []).length }))
+    .filter((r) => r.hits > 0)
+    .sort((a, b) => b.hits - a.hits || Object.keys(HEURISTIC_ROLE_WORDS).indexOf(a.role) - Object.keys(HEURISTIC_ROLE_WORDS).indexOf(b.role))
+    .slice(0, 2)
+    .map((r) => r.role);
+  const effects = zeroEffects();
+  for (const role of roles) for (const [t, v] of Object.entries(HEURISTIC_ROLE_EFFECTS[role])) effects[t] += v;
+  for (const [t, re] of Object.entries(HEURISTIC_TRAIT_WORDS)) if (re.test(text)) effects[t] += 0.2;
+  return { node, status: 'ok', cleaned: clip(text, 140), feedback: '', roles, effects: cleanEffects(Object.fromEntries(Object.entries(effects).map(([t, v]) => [t, Math.round(v * 100) / 100]))), heuristic: true };
+}
+
 /**
  * Moderate one revised finale submission (the single resubmit after
  * "revise"). Any failure here means the bland placeholder: it resolves with
@@ -510,7 +565,10 @@ async function moderateOne(submission = {}, crisis = {}, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!node || !cfg.enabled) return reject;
   const [result] = await moderate([{ node, text: submission.text }], crisis, { ...opts, revision: true });
-  return result && !result.fallback ? result : reject;
+  if (result && !result.fallback) return result;
+  // Gemini answered the batch but failed on this resubmit (timeout, HTTP
+  // error, bad output): judge it locally rather than discarding it.
+  return moderateHeuristic({ node, text: submission.text }, crisis, opts);
 }
 
 // ---------------------------------------------------------------------------
@@ -557,4 +615,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
