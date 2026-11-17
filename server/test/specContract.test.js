@@ -159,3 +159,45 @@ test('every spec socket event flows over a full game with the spec payload keys'
     console.log = log;
   }
 });
+
+// TASK-646 ------------------------------------------------------------------
+
+/** Levenshtein distance, for spotting near-miss event names. */
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+  return d[a.length][b.length];
+}
+
+test('all 14 spec event names appear character-for-character in the server, with no near-miss spellings anywhere', () => {
+  const read = (f) => fs.readFileSync(path.join(__dirname, '..', '..', f), 'utf8');
+  const socketSrc = read('server/socket.js');
+  const engineSrc = read('server/gameEngine.js');
+  const clientSrc = ['public/js/host.js', 'public/js/mobile.js'].map(read).join('\n');
+  const rows = specTable();
+  assert.equal(rows.length, 14);
+  for (const { event, direction } of rows) {
+    if (direction.endsWith('→ server')) {
+      assert.ok(socketSrc.includes(`onValid(socket, '${event}'`), `server listens for '${event}' (validated)`);
+    } else {
+      // Emitted by socket.js, directly or relaying the engine event of the same name.
+      assert.ok(new RegExp(`(\\.emit\\(|emitToNode\\([^,]+,[^,]+, )'${event}'`).test(socketSrc), `server emits '${event}'`);
+    }
+  }
+  // Every event-looking string in server and clients: either a spec name, an
+  // intentional extra event, or clearly different (not a typo of a spec name).
+  const INTENTIONAL = new Set(['lobby:joined', 'lobby:ready']);
+  const names = new Set(rows.map((r) => r.event));
+  const used = new Set([...`${socketSrc}\n${engineSrc}\n${clientSrc}`.matchAll(/'([a-z]+:[a-zA-Z]+)'/g)].map((m) => m[1]));
+  for (const name of used) {
+    if (names.has(name) || INTENTIONAL.has(name)) continue;
+    for (const spec of names) {
+      assert.ok(distance(name, spec) > 2, `'${name}' looks like a misspelling of spec event '${spec}'`);
+    }
+  }
+});
