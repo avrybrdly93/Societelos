@@ -17,16 +17,17 @@
   }
 
   const saved = loadSession();
+  const requestedRoom = new URLSearchParams(window.location.search).get('room');
   // auth is a function so every (re)connect sends the latest saved token: a
   // phone that joined after page load keeps its seat across a network drop.
   const socket = window.io({
     auth: (cb) => {
       const current = loadSession();
-      cb({ clientType: 'phone', token: (current && current.token) || undefined });
+      cb({ clientType: 'phone', token: (current && current.token) || undefined, roomCode: (current && current.roomCode) || requestedRoom || undefined });
     }
   });
 
-  const state = { node: saved ? saved.node : null, roomCode: null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null };
+  const state = { node: saved ? saved.node : null, roomCode: (saved && saved.roomCode) || requestedRoom || null, phase: 'LOBBY', cycle: 0, endsAt: null, role: null, spectator: false };
 
   // Brief drops (Wi-Fi blip, screen lock): show a top banner instead of
   // tearing down the screen. Socket.IO reconnects on its own; the server
@@ -119,6 +120,35 @@
   const joinForm = document.getElementById('join-form');
   const joinError = document.getElementById('join-error');
   const joinSubmit = document.getElementById('join-submit');
+  const spectateSubmit = document.getElementById('spectate-submit');
+  const PHASE_NAMES = { LOBBY: 'LOBBY', INTRO: 'TRANSMISSION', ROLE_ASSIGN: 'ROLE ASSIGNMENT', CHAMBER: 'COUNCIL CHAMBER', INCIDENT: 'CRISIS', INTEL: 'INTEL DROP', DEBATE: 'DEBATE', VOTE: 'VOTE', RESOLUTION: 'RESOLUTION', FINALE_WRITE: 'FINALE WRITING', FINALE_MOD: 'POLICY REVIEW', FINALE_DEBATE: 'FINALE DEBATE', FINALE_RANK: 'RANKING', FINALE_ENACT: 'COUNCIL PACKAGE', END: 'SESSION COMPLETE' };
+  function updateSpectator(payload = {}) {
+    const phase = payload.phase || state.phase || 'LOBBY';
+    document.getElementById('spectator-phase').textContent = `CURRENT PHASE: ${PHASE_NAMES[phase] || phase}`;
+    document.getElementById('spectator-cycle').textContent = payload.cycle ? `CYCLE ${payload.cycle} / 5` : 'Waiting for the projector.';
+  }
+  spectateSubmit.addEventListener('click', () => {
+    spectateSubmit.disabled = true;
+    socket.emit('spectate:join', { room: state.roomCode || undefined }, (res) => {
+      spectateSubmit.disabled = false;
+      if (res && res.ok) {
+        state.roomCode = res.roomCode;
+        state.spectator = true;
+        updateSpectator(res);
+        showView('m-view-spectator');
+      } else {
+        joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Could not open spectator mode.';
+        joinError.hidden = false;
+      }
+    });
+  });
+  socket.on('spectate:joined', (payload) => { state.spectator = true; updateSpectator(payload); showView('m-view-spectator'); });
+  socket.on('spectate:error', () => {
+    joinError.textContent = 'No council session is available to watch.';
+    joinError.hidden = false;
+  });
+  socket.on('phase', (payload) => updateSpectator(payload));
+  socket.on('game:end', () => updateSpectator({ phase: 'END', cycle: state.cycle }));
   joinForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const name = document.getElementById('join-name').value.trim();
@@ -127,12 +157,13 @@
     joinError.hidden = true;
     // Never leave the button dead if the server never answers.
     const retry = setTimeout(() => { joinSubmit.disabled = false; }, 8000);
-    socket.emit('lobby:join', { name }, (res) => {
+    socket.emit('lobby:join', { name, room: state.roomCode || undefined }, (res) => {
       clearTimeout(retry);
       joinSubmit.disabled = false;
       if (!res || !res.ok) {
         joinError.textContent = JOIN_ERRORS[res && res.reason] || 'Connection refused. Try again.';
         joinError.hidden = false;
+        spectateSubmit.hidden = !(res && ['ROOM_FULL', 'GAME_IN_PROGRESS'].includes(res.reason));
         return;
       }
       state.node = res.node;
@@ -240,6 +271,7 @@
     state.sessionEndsAt = payload.sessionEndsAt || null;
     state.sessionTimerEnabled = !!payload.sessionTimerEnabled;
     document.body.dataset.phase = payload.phase;
+    if (state.spectator) { updateSpectator(payload); return showView('m-view-spectator'); }
     handleDebateReady(payload.phase);
     if (!state.node) return showView('m-view-join');
     const screen = PHASE_SCREENS[payload.phase];
