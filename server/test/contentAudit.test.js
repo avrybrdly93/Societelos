@@ -143,3 +143,32 @@ test('role cards: player-facing win conditions and phone-length card text', () =
     assert.ok(r.winCondition.length <= 110, `${r.id} winCondition is ${r.winCondition.length} chars`);
   }
 });
+
+// TASK-717 / TASK-718: mechanical proofreading - spacing, punctuation,
+// repeated words, quote style and a classroom word list - over every
+// player- or projector-facing string in a data file.
+const BANNED = /\b(damn|hell|crap|sucks?|stupid|idiot|kill yourself|sexy|drunk|shit|fuck|bitch|bastard)\b/i;
+
+function proofread(label, text) {
+  const problems = [];
+  if (/ {2}/.test(text)) problems.push('double space');
+  if (/\s[,.!?;:]/.test(text)) problems.push('space before punctuation');
+  if (/[,!?;][A-Za-z]/.test(text) || /[a-z]\.[A-Z]/.test(text)) problems.push('missing space after punctuation');
+  if (/[‘’“”]/.test(text)) problems.push('curly quotes (data uses straight quotes)');
+  if (/\b(\w{2,}) \1\b/i.test(text)) problems.push('repeated word');
+  if (/^\s|\s$/.test(text)) problems.push('leading/trailing whitespace');
+  if (BANNED.test(text)) problems.push(`not classroom-appropriate: "${text.match(BANNED)[0]}"`);
+  return problems.map((p) => `${label}: ${p}: ${text}`);
+}
+
+function strings(value, label, out = []) {
+  if (typeof value === 'string') out.push([label, value]);
+  else if (Array.isArray(value)) value.forEach((v, i) => strings(v, `${label}[${i}]`, out));
+  else if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) strings(v, `${label}.${k}`, out);
+  return out;
+}
+
+test('citizens.json proofreads clean', () => {
+  const problems = strings(citizens, 'citizens').flatMap(([l, t]) => proofread(l, t));
+  assert.deepEqual(problems, []);
+});
