@@ -788,7 +788,7 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-704:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `AB` (Cycles 3, 4, Finale) and verify each role appears equally across `AB`.
 - [x] **TASK-705:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BA` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BA`.
 - [x] **TASK-706:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BB` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BB`.
-- [ ] **TASK-707:** Verify total global tag counts across all 28 options in `data/crises.json` are even across `artisan`, `lotus`, `assimilator`, and `ghost`.
+- [x] **TASK-707:** Verify total global tag counts across all 28 options in `data/crises.json` are even across `artisan`, `lotus`, `assimilator`, and `ghost`.
 - [x] **TASK-708:** Audit all 28 policy options against the core writing rule: **"Both options must hurt someone."** Verify every single option has at least one negative trait effect in `effects`.
 - [x] **TASK-709:** Audit all 70 secret Intel Drops ($14 \text{ crises} \times 5 \text{ roles}$) in `data/crises.json` for brevity (under 180 chars so they can be read in 20 seconds on a phone) and punchy in-world document framing (`Loom archive:`, `Pilot audit:`, `Leaked memo:`, `Forecast:`).
 - [x] **TASK-710:** Ensure Catalyst intel drops in every crisis highlight which policy or dynamic increases volatility, shocks, or large GDW swings.
