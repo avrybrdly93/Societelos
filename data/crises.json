@@ -1176,7 +1176,8 @@
           "name": "Highland Autonomous Bio-Zone",
           "text": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
           "roles": [
-            "ghost"
+            "ghost",
+            "artisan"
           ],
           "effects": {
             "purpose": 0.6,
@@ -1192,7 +1193,8 @@
           "name": "Loom Pacification Sweep",
           "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "lotus"
           ],
           "effects": {
             "purpose": -0.5,
