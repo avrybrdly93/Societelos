@@ -314,7 +314,8 @@
           "name": "The Calling",
           "text": "The Loom assigns each citizen a personal Calling: a daily role matched to their profile, from mentoring to mural painting.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "lotus"
           ],
           "effects": {
             "purpose": 0.5,
@@ -348,7 +349,8 @@
           "name": "The Guilds",
           "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside the guild hall.",
           "roles": [
-            "artisan"
+            "artisan",
+            "ghost"
           ],
           "effects": {
             "purpose": 0.6,

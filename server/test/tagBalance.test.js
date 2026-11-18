@@ -35,3 +35,12 @@ test('fixed Cycles 1-2: every path gives each role 1-2 early scoring options', (
     }
   }
 });
+
+// TASK-703..706: Cycles 3-5 of each world (2 binaries + finale fallback = 6
+// options). Each of the 4 tag-scoring roles is tagged exactly 3 times.
+function assertWorldBalanced(world) {
+  const { counts } = balanceReport(data).scopes[world];
+  assert.deepEqual(counts, { artisan: 3, lotus: 3, assimilator: 3, ghost: 3 }, `world ${world}`);
+}
+
+test('world AA (The Commonwealth): each role tagged 3 times across its 6 options', () => assertWorldBalanced('AA'));
