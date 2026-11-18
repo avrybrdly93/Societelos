@@ -832,39 +832,39 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-746:** Verify Gemini safety settings in `server/loom.js` block harassment, hate speech, sexually explicit content, and dangerous content at the API layer in addition to the moderation system prompt.
 - [x] **TASK-747:** Add a fast local profanity/slur pre-filter in `server/loom.js` so blatantly inappropriate classroom submissions are immediately flagged as `status: "revise"` or `"reject"` even if Gemini is slow or offline.
 - [x] **TASK-748:** Ensure raw unmoderated student text is NEVER returned in `cleaned` under any error or timeout scenario in `server/loom.js`.
-- [ ] **TASK-749:** Verify `loom.moderate` few-shot calibration examples in `server/loom.js` stay automatically synced with the final tuned effect vectors in `data/crises.json`.
+- [x] **TASK-749:** Verify `loom.moderate` few-shot calibration examples in `server/loom.js` stay automatically synced with the final tuned effect vectors in `data/crises.json`.
 - [ ] **TASK-750:** Test `simulate()` performance on low-power laptop CPU settings (confirming 501 runs stay well under `50 ms`).
-- [ ] **TASK-751:** Verify that the Stretch Goal interface boundary in `server/sim/index.js` (`simulate(state, effects, options) -> { forecast, realized, finalState, summary }`) is cleanly documented so the 5,000-citizen small-world agent model can be swapped in after Thursday without changing `server/gameEngine.js`.
-- [ ] **TASK-752:** Run full unit test suite across `server/sim/prng.js`, `server/sim/state.js`, `server/sim/step.js`, `server/sim/index.js`, and `server/loom.js`.
+- [x] **TASK-751:** Verify that the Stretch Goal interface boundary in `server/sim/index.js` (`simulate(state, effects, options) -> { forecast, realized, finalState, summary }`) is cleanly documented so the 5,000-citizen small-world agent model can be swapped in after Thursday without changing `server/gameEngine.js`.
+- [x] **TASK-752:** Run full unit test suite across `server/sim/prng.js`, `server/sim/state.js`, `server/sim/step.js`, `server/sim/index.js`, and `server/loom.js`.
 - [ ] **TASK-753:** Trigger Thursday Final Automated Branch Merger (`feature/backend`, `feature/frontend`, `feature/content`, `feature/sim` -> `main`).
 - [ ] **TASK-754:** Run full post-merge syntax and dependency check on `main`.
 - [ ] **TASK-755:** Execute Full End-to-End Integration Test #1: World `AA` (The Commonwealth) with live Gemini API.
 - [ ] **TASK-756:** Execute Full End-to-End Integration Test #2: World `AB` (The Benevolent Machine) with live Gemini API.
 - [ ] **TASK-757:** Execute Full End-to-End Integration Test #3: World `BA` (The Uneasy Republic) with live Gemini API.
 - [ ] **TASK-758:** Execute Full End-to-End Integration Test #4: World `BB` (The Gilded Cage) with live Gemini API.
-- [ ] **TASK-759:** Execute Full End-to-End Offline Test #5: Unplug internet / disable `GEMINI_API_KEY` and play a complete 5-cycle game from Lobby to End Screen verifying all fallbacks (template citizen narration + authored A/B finale fallback).
-- [ ] **TASK-760:** Execute Full End-to-End Shutdown Test #6: Force negative trait effects until realized GDW hits `0%` in Cycle 3 and verify immediate transition to the Loom Shutdown ending screen.
-- [ ] **TASK-761:** Execute Full End-to-End Reconnect Test #7: Disconnect 2 phones mid-cycle, refresh Host browser during Debate, reconnect all clients, and verify seamless completion of the cycle.
-- [ ] **TASK-762:** Execute Full End-to-End Moderation Test #8: Submit 4 valid policies and 1 `"revise"` policy in Cycle 5, verify private feedback on the author's phone, resubmit a clean policy, rank via Borda count, and enact at `50/25/25`.
-- [ ] **TASK-763:** Execute Full End-to-End Rejection Test #9: Submit an unsafe policy twice in Cycle 5 and verify it is replaced by the safe placeholder policy and never shown raw on the projector.
-- [ ] **TASK-764:** Execute Full End-to-End Tie-Breaker Test #10: Spend an Override to force a 3–3 binary tie in Cycle 2 and verify The Loom breaks the tie using the higher forecast median GDW.
-- [ ] **TASK-765:** Execute Full End-to-End Borda Tie-Breaker Test #11: Force an equal Borda score in Cycle 5 and verify tie-breaking by 1st-place ranks -> 2nd-place ranks -> forecast median.
-- [ ] **TASK-766:** Execute Full End-to-End Replay Seed Test #12: Replay Test #1's `seed` with identical votes and verify bit-for-bit identical realized GDW history and citizen shocks.
-- [ ] **TASK-767:** Verify total runtime with `60s` debates lands at ~13.5 minutes.
-- [ ] **TASK-768:** Verify total runtime with `90s` debates lands at ~16.0 minutes.
+- [x] **TASK-759:** Execute Full End-to-End Offline Test #5: Unplug internet / disable `GEMINI_API_KEY` and play a complete 5-cycle game from Lobby to End Screen verifying all fallbacks (template citizen narration + authored A/B finale fallback).
+- [x] **TASK-760:** Execute Full End-to-End Shutdown Test #6: Force negative trait effects until realized GDW hits `0%` in Cycle 3 and verify immediate transition to the Loom Shutdown ending screen.
+- [x] **TASK-761:** Execute Full End-to-End Reconnect Test #7: Disconnect 2 phones mid-cycle, refresh Host browser during Debate, reconnect all clients, and verify seamless completion of the cycle.
+- [x] **TASK-762:** Execute Full End-to-End Moderation Test #8: Submit 4 valid policies and 1 `"revise"` policy in Cycle 5, verify private feedback on the author's phone, resubmit a clean policy, rank via Borda count, and enact at `50/25/25`.
+- [x] **TASK-763:** Execute Full End-to-End Rejection Test #9: Submit an unsafe policy twice in Cycle 5 and verify it is replaced by the safe placeholder policy and never shown raw on the projector.
+- [x] **TASK-764:** Execute Full End-to-End Tie-Breaker Test #10: Spend an Override to force a 3–3 binary tie in Cycle 2 and verify The Loom breaks the tie using the higher forecast median GDW.
+- [x] **TASK-765:** Execute Full End-to-End Borda Tie-Breaker Test #11: Force an equal Borda score in Cycle 5 and verify tie-breaking by 1st-place ranks -> 2nd-place ranks -> forecast median.
+- [x] **TASK-766:** Execute Full End-to-End Replay Seed Test #12: Replay Test #1's `seed` with identical votes and verify bit-for-bit identical realized GDW history and citizen shocks.
+- [x] **TASK-767:** Verify total runtime with `60s` debates lands at ~13.5 minutes.
+- [x] **TASK-768:** Verify total runtime with `90s` debates lands at ~16.0 minutes.
 - [ ] **TASK-769:** Verify QR code on Host Lobby scans cleanly from 3 meters away on a classroom projector.
 - [ ] **TASK-770:** Verify all 5 Role Cards display clearly on both iOS and Android phones.
 - [ ] **TASK-771:** Verify Privacy Shield ("TAP TO HIDE") hides secret Role and Intel screens on phones in a crowded classroom.
-- [ ] **TASK-772:** Verify Host Projector screen never leaks secret roles, intel, Override users, or write-in authors before the End Screen.
-- [ ] **TASK-773:** Verify End Screen accurately reveals all 5 player roles, write-in policy authors, cycle scores, shared grade, and winner(s).
-- [ ] **TASK-774:** Verify `host:playAgain` starts Game #2 cleanly with zero leftover state from Game #1.
-- [ ] **TASK-775:** Audit repository file tree to confirm only authorized files were created or modified across all 4 streams.
-- [ ] **TASK-776:** Confirm zero merge conflicts remain in `main`.
-- [ ] **TASK-777:** Confirm zero `TODO` or `FIXME` stubs remain in production code.
-- [ ] **TASK-778:** Confirm zero `Math.random()` calls exist in simulation or role assignment logic.
+- [x] **TASK-772:** Verify Host Projector screen never leaks secret roles, intel, Override users, or write-in authors before the End Screen.
+- [x] **TASK-773:** Verify End Screen accurately reveals all 5 player roles, write-in policy authors, cycle scores, shared grade, and winner(s).
+- [x] **TASK-774:** Verify `host:playAgain` starts Game #2 cleanly with zero leftover state from Game #1.
+- [x] **TASK-775:** Audit repository file tree to confirm only authorized files were created or modified across all 4 streams.
+- [x] **TASK-776:** Confirm zero merge conflicts remain in `main`.
+- [x] **TASK-777:** Confirm zero `TODO` or `FIXME` stubs remain in production code.
+- [x] **TASK-778:** Confirm zero `Math.random()` calls exist in simulation or role assignment logic.
 - [ ] **TASK-779:** Confirm all 800 tasks in the Monday–Thursday plan are checked off and verified.
-- [ ] **TASK-780:** Run final linter and JSON schema check across `server/`, `public/`, and `data/`.
-- [ ] **TASK-781:** Verify `.env.example` is up to date for classroom deployment.
+- [x] **TASK-780:** Run final linter and JSON schema check across `server/`, `public/`, and `data/`.
+- [x] **TASK-781:** Verify `.env.example` is up to date for classroom deployment.
 - [ ] **TASK-782:** Test local hotspot / travel router IP binding on the demo laptop.
 - [ ] **TASK-783:** Pre-load and verify Gemini API key quota in Google AI Studio for Thursday demo.
 - [ ] **TASK-784:** Verify browser zoom and 1080p fullscreen display on projector hardware.
@@ -874,11 +874,11 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-788:** Verify dress rehearsal Borda count and 50/25/25 enactment display clearly.
 - [ ] **TASK-789:** Verify dress rehearsal End Screen 5-year recap and role reveal land with dramatic timing.
 - [ ] **TASK-790:** Tag final release commit `v1.0.0-mvp-thursday` on `main`.
-- [ ] **TASK-791:** Generate release build checksums.
-- [ ] **TASK-792:** Archive calibration report and role tag balance matrix.
-- [ ] **TASK-793:** Prepare teacher facilitation quick-reference card (room setup, debate hooks, grading discussion prompts).
-- [ ] **TASK-794:** Document post-MVP hooks for Bonus 1 (`data/crowd.json` via Adaption Invent) and Bonus 2 (`The Accord` 5-0 unanimity minigame).
-- [ ] **TASK-795:** Lock production configuration defaults (`DEBATE_SECONDS=60`, `SHOW_FORECAST_BEFORE_VOTE=false`).
+- [x] **TASK-791:** Generate release build checksums.
+- [x] **TASK-792:** Archive calibration report and role tag balance matrix.
+- [x] **TASK-793:** Prepare teacher facilitation quick-reference card (room setup, debate hooks, grading discussion prompts).
+- [x] **TASK-794:** Document post-MVP hooks for Bonus 1 (`data/crowd.json` via Adaption Invent) and Bonus 2 (`The Accord` 5-0 unanimity minigame).
+- [x] **TASK-795:** Lock production configuration defaults (`DEBATE_SECONDS=60`, `SHOW_FORECAST_BEFORE_VOTE=false`).
 - [ ] **TASK-796:** Start production Node server on classroom host machine.
 - [ ] **TASK-797:** Connect 5 controller phones to Lobby room code.
 - [ ] **TASK-798:** Verify all 5 nodes show `READY` on projector.
