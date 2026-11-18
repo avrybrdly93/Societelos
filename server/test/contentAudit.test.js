@@ -314,3 +314,17 @@ test('all 10 binary crises have mode binary and only finales are write-ins', () 
   for (const c of binary) assert.equal(c.mode, 'binary', c.id);
   assert.deepEqual(data.crises.filter((c) => c.mode === 'writein').map((c) => c.id).sort(), [...finaleIds].sort());
 });
+
+// TASK-731: the 30 citizen fallback lines fit a feed card (<= 140 chars).
+test('all 30 citizen fallback lines are <= 140 characters', () => {
+  let n = 0;
+  for (const c of citizens) {
+    for (const band of ['good', 'mixed', 'bad']) {
+      for (const line of c.lines[band]) {
+        assert.ok(line.length <= 140, `${c.id}.${band} is ${line.length} chars`);
+        n++;
+      }
+    }
+  }
+  assert.equal(n, 30);
+});
