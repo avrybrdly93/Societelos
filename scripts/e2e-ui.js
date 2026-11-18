@@ -53,20 +53,24 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
     phones.push(p);
   }
   await host.waitForTimeout(800);
-  await host.click('#btn-start');
   const seen = new Set();
   const hostPhases = [];
+  // Record phases from the engine's own events: polling could miss a 1.2 s
+  // phase while a vote click is being retried on a slow machine.
+  game.on('phase', (p) => {
+    const ph = `${p.cycle}:${p.phase}`;
+    if (!seen.has(ph)) { seen.add(ph); hostPhases.push(ph); }
+  });
+  await host.click('#btn-start');
   const deadline = Date.now() + 120000;
   while (Date.now() < deadline) {
-    const ph = `${game.cycle}:${game.phase}`;
-    if (!seen.has(ph)) { seen.add(ph); hostPhases.push(ph); }
     if (game.phase === 'VOTE') {
       for (let i = 0; i < 5; i++) {
         const p = phones[i];
-        const visible = await p.isVisible('#vote-a').catch(() => false);
+        const visible = await p.isVisible('#vote-a', { timeout: 500 }).catch(() => false);
         if (visible && !game.votes[Object.keys(game.players)[i]]) {
           const choice = game.cycle === 2 ? 'B' : i < 3 ? 'A' : 'B';
-          await p.click(choice === 'A' ? '#vote-a' : '#vote-b').catch(() => {});
+          await p.click(choice === 'A' ? '#vote-a' : '#vote-b', { timeout: 1500 }).catch(() => {});
         }
       }
     }
