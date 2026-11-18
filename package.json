@@ -12,6 +12,7 @@
     "check:all": "npm run -s check && npm run -s check:json && npm run -s check:data && npm run -s check:dom && npm run -s check:html && npm run -s check:css && npm run -s check:contrast && npm run -s check:xss && npm run -s check:refs && npm run -s check:offline && npm run -s check:sim && npm test --silent && npm run -s bench:sim && npm run -s check:mem && npm run -s smoke",
     "check:json": "node -e \"const fs=require('fs');let bad=0;for(const f of fs.readdirSync('data').filter(f=>f.endsWith('.json'))){try{JSON.parse(fs.readFileSync('data/'+f,'utf8'));console.log('ok   data/'+f)}catch(e){bad++;console.error('FAIL data/'+f+': '+e.message)}}process.exit(bad?1:0)\"",
     "check:data": "node scripts/validate-data.js",
+    "check:tags": "node scripts/tag-balance.js",
     "check:dom": "node scripts/check-dom-ids.js",
     "check:html": "node scripts/check-html.js",
     "check:css": "node scripts/check-css.js",
