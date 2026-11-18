@@ -74,22 +74,74 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl =
   }
 }
 
+// ---------------------------------------------------------------------------
+// Offline circuit breaker (Offline Demo Mandate). On a classroom router with
+// no internet, a request can hang for the full 8 s timeout. After one
+// network-level failure (timeout, DNS, refused/reset connection) the breaker
+// opens and every Loom call falls back at once (< 1 ms) for the cooldown
+// (LOOM_OFFLINE_COOLDOWN_MS, default 60 s); then one call probes again. An
+// HTTP error means Gemini was reachable, so it never opens the breaker; a
+// success closes it.
+// ---------------------------------------------------------------------------
+
+const OFFLINE_COOLDOWN_MS = 60000;
+const NETWORK_ERROR_CODES = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED', 'ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH', 'ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET']);
+
+function createCircuit() {
+  return { openUntil: 0, trips: 0 };
+}
+const DEFAULT_CIRCUIT = createCircuit();
+
+/** True for failures that mean "no route to Gemini", not "Gemini said no". */
+function isNetworkError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError' || err.name === 'TimeoutError') return true;
+  const code = err.code || (err.cause && err.cause.code);
+  if (code && NETWORK_ERROR_CODES.has(code)) return true;
+  return err.name === 'TypeError' && /fetch failed|network/i.test(err.message || '');
+}
+
+function offlineCooldownMs(opts) {
+  const fromOpts = Number(opts.offlineCooldownMs);
+  if (Number.isFinite(fromOpts) && fromOpts >= 0) return fromOpts;
+  const fromEnv = Number((opts.env || process.env).LOOM_OFFLINE_COOLDOWN_MS);
+  return Number.isFinite(fromEnv) && fromEnv >= 0 ? fromEnv : OFFLINE_COOLDOWN_MS;
+}
+
+/** Close the shared breaker (tests, or a teacher reconnecting the router). */
+function resetCircuit(circuit = DEFAULT_CIRCUIT) {
+  circuit.openUntil = 0;
+}
+
 /**
  * One structured-JSON call to Gemini. Throws on any failure (no key, HTTP
- * error, timeout, unparseable output); callers catch and fall back.
+ * error, timeout, unparseable output, breaker open); callers catch and fall back.
  * @param {string} userPrompt
- * @param {object} [opts] { schema, temperature = 0.2, maxOutputTokens = 1024, config, fetchImpl }
+ * @param {object} [opts] { schema, temperature = 0.2, maxOutputTokens = 1024, config, fetchImpl, circuit, offlineCooldownMs }
+ *   The shared breaker guards real network calls; a call with an injected
+ *   fetchImpl uses only the `circuit` it is given (none by default).
  */
 async function callGemini(userPrompt, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) throw new Error('Loom offline: GEMINI_API_KEY not set');
+  const circuit = opts.circuit || (opts.fetchImpl ? null : DEFAULT_CIRCUIT);
+  if (circuit && Date.now() < circuit.openUntil) {
+    const err = new Error('Loom offline: network unreachable, using fallbacks');
+    err.code = 'LOOM_CIRCUIT_OPEN';
+    throw err;
+  }
   const started = Date.now();
   const meta = { attempts: 0, usage: null, status: null };
   try {
     const result = await callGeminiOnce(userPrompt, opts, cfg, meta);
+    if (circuit) circuit.openUntil = 0;
     logCall(opts, cfg, meta, Date.now() - started, null, userPrompt);
     return result;
   } catch (err) {
+    if (circuit && isNetworkError(err)) {
+      circuit.openUntil = Date.now() + offlineCooldownMs(opts);
+      circuit.trips++;
+    }
     logCall(opts, cfg, meta, Date.now() - started, err, userPrompt);
     throw err;
   }
@@ -705,4 +757,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
