@@ -142,6 +142,9 @@ function checkCrises(data, citizenIds) {
       if (!citizenIds.has(m.citizenId)) err(`${where}.feed[${j}]`, `unknown citizen "${m.citizenId}"`);
     });
     if (c.intel) for (const k of Object.keys(c.intel)) if (!ROLE_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
+    // Every crisis, core or spare, carries one intel drop per role.
+    const noIntel = ROLE_KEYS.filter((r) => !isStr((c.intel || {})[r]));
+    if (noIntel.length) err(where, `intel needs all 5 roles; missing ${noIntel.join(', ')}`);
   });
   for (const w of ['fixed', ...WORLDS]) {
     const cycles = w === 'fixed' ? [1, 2] : [3, 4];
