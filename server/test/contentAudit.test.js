@@ -228,3 +228,20 @@ test('every loomIntro is calm, precise, first person and projector-length', () =
   }
   assert.ok(precise >= 12, `only ${precise}/14 Loom intros quote a figure`);
 });
+
+// TASK-722: Fixed Crisis 2 lines match mvp_spec.md word for word: the 2A
+// and 2B Loom resolution lines and 2B's per-world projector lines.
+test('Fixed Crisis 2 projector and Loom resolution lines match the MVP spec exactly', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const spec = fs.readFileSync(path.join(__dirname, '../../mvp_spec.md'), 'utf8');
+  const resolution = [...spec.matchAll(/\*\*Loom resolution line:\*\* "([^"]+)"/g)].map((m) => m[1]);
+  const projector = spec.match(/\| \*\*Projector line\*\* \| "([^"]+)" \| "([^"]+)" \|/);
+  assert.ok(resolution.length >= 2 && projector, 'spec lines found');
+  const c2 = data.crises.find((c) => c.id === 'fixed-2-offswitch');
+  assert.equal(c2.options.A.loomLine, resolution[0], '2A Loom resolution line');
+  assert.equal(c2.options.B.loomLine, resolution[1], '2B Loom resolution line');
+  assert.equal(c2.options.B.worldNotes.A.loomLine, projector[1], '2B projector line after 1A');
+  assert.equal(c2.options.B.worldNotes.B.loomLine, projector[2], '2B projector line after 1B');
+  assert.match(c2.options.A.text, /\b101\b/, '2A: the spec Assembly is 101 citizens');
+});

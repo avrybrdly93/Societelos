@@ -183,7 +183,7 @@
       "options": {
         "A": {
           "name": "The Assembly",
-          "text": "100 citizens picked by lottery vote on major Loom actions; 5 elected leaders hold kill-switch keys. Slower, but human.",
+          "text": "101 citizens picked by lottery vote on major Loom actions; 5 elected leaders hold kill-switch keys. Slower, but human.",
           "roles": [
             "artisan",
             "ghost"
