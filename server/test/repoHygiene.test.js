@@ -34,3 +34,23 @@ test('no .env file or node_modules is tracked by git', (t) => {
     .filter((f) => { try { return keyLike.test(fs.readFileSync(path.join(ROOT, f), 'utf8')); } catch { return false; } });
   assert.deepEqual(leaks, [], 'no Google API key committed');
 });
+
+// TASK-777: no TODO / FIXME stubs left in production code.
+const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+const PRODUCTION = () => [
+  ...walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js'))),
+  ...walk(path.join(ROOT, 'public', 'js')).filter((f) => f.endsWith('.js')),
+  ...['index.html', 'mobile.html', 'css/styles.css'].map((f) => path.join(ROOT, 'public', f)),
+  ...walk(path.join(ROOT, 'scripts')).filter((f) => f.endsWith('.js')),
+  ...walk(path.join(ROOT, 'data')).filter((f) => f.endsWith('.json'))
+];
+
+test('TASK-777: no TODO, FIXME, XXX or HACK markers in production code', () => {
+  const hits = [];
+  for (const f of PRODUCTION()) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+      if (/\b(TODO|FIXME|XXX|HACK)\b/.test(line)) hits.push(`${path.relative(ROOT, f)}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(hits, []);
+});
