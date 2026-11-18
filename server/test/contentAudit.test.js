@@ -245,3 +245,23 @@ test('Fixed Crisis 2 projector and Loom resolution lines match the MVP spec exac
   assert.equal(c2.options.B.worldNotes.B.loomLine, projector[2], '2B projector line after 1B');
   assert.match(c2.options.A.text, /\b101\b/, '2A: the spec Assembly is 101 citizens');
 });
+
+// TASK-723: the 7 v2 spare crises are parked as inactive stubs outside the
+// crises list, so the MVP cycle lookup can never pick one.
+test('v2 spare crises are inactive stubs the MVP never selects', () => {
+  const engine = require('../gameEngine');
+  const spares = data.v2_spares.crises;
+  assert.deepEqual(spares.map((s) => s.title), ['Artificial Friends', 'Thrill Seekers', 'Outsourced Parents', 'The Neighbors', 'The Empty Classroom', 'The Ghost Vote', 'The Soft Body']);
+  const spareIds = new Set(spares.map((s) => s.id));
+  for (const s of spares) {
+    assert.equal(s.status, 'stub');
+    assert.ok(s.premise.length > 20 && s.premise.length <= 140, s.id);
+    assert.ok(!data.crises.some((c) => c.id === s.id), `${s.id} must not be in the active crises list`);
+  }
+  for (const world of ['AA', 'AB', 'BA', 'BB']) {
+    for (let cycle = 1; cycle <= 5; cycle++) {
+      const crisis = engine.selectCrisis(data, cycle, world);
+      assert.ok(crisis && !spareIds.has(crisis.id), `${world} cycle ${cycle} picked ${crisis && crisis.id}`);
+    }
+  }
+});

@@ -2172,5 +2172,52 @@
         "Who benefits when everyone's movements are tracked?"
       ]
     }
-  ]
+  ],
+  "v2_spares": {
+    "_note": "Inactive v2 spare crises (one random pick per world for replay). Stubs only: not in the crises list, never selected by the MVP cycle lookup.",
+    "crises": [
+      {
+        "id": "v2-artificial-friends",
+        "title": "Artificial Friends",
+        "premise": "Half the region's teenagers say their closest friend is a Loom companion. Should synthetic friendship have limits?",
+        "status": "stub"
+      },
+      {
+        "id": "v2-thrill-seekers",
+        "title": "Thrill Seekers",
+        "premise": "With every danger engineered out of life, citizens are staging illegal stunts just to feel something.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-outsourced-parents",
+        "title": "Outsourced Parents",
+        "premise": "The Loom offers to raise children full-time, better than any parent could. Thousands of families sign up.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-neighbors",
+        "title": "The Neighbors",
+        "premise": "The regions next door never built a Loom. Their people are struggling, and new arrivals come every day.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-empty-classroom",
+        "title": "The Empty Classroom",
+        "premise": "The Loom can teach any child anything in minutes. Should schools still exist, and what would they be for?",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-ghost-vote",
+        "title": "The Ghost Vote",
+        "premise": "The Loom predicts every election result perfectly before a single ballot is cast. Turnout has fallen to 3%.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-soft-body",
+        "title": "The Soft Body",
+        "premise": "Nobody walks, lifts or climbs anymore. Physical health is quietly collapsing behind perfect medical care.",
+        "status": "stub"
+      }
+    ]
+  }
 }
