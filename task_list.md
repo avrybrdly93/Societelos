@@ -766,37 +766,37 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-684:** Add a "WAKE LOCK" request (`navigator.wakeLock.request('screen')` with safe try/catch fallback) in `public/js/mobile.js` so student phones don't dim and lock during the 90-second in-person debates!
 - [x] **TASK-685:** Re-request Wake Lock on `visibilitychange` in `public/js/mobile.js` if a student switches tabs and comes back.
 - [x] **TASK-686:** Verify `host:playAgain` resets the Host UI and all connected Mobile UIs back to the ready state for a fresh game.
-- [ ] **TASK-687:** Test the entire Intro Crawl -> Role Assign -> Chamber -> Cycle 1 transition timing (30s + 20s + 10s = 60s setup).
+- [x] **TASK-687:** Test the entire Intro Crawl -> Role Assign -> Chamber -> Cycle 1 transition timing (30s + 20s + 10s = 60s setup).
 - [x] **TASK-688:** Verify the 5-year End Screen chart renders cleanly with 12, 24, 36, 48, or 60 months of data.
 - [x] **TASK-689:** Add hover/tap inspection on the End Screen GDW chart showing what policy was enacted in each cycle.
-- [ ] **TASK-690:** Check all HTML files (`public/index.html`, `public/mobile.html`) for valid W3C structure and closing tags.
-- [ ] **TASK-691:** Check `public/css/styles.css` for unused rules or duplicate selectors.
+- [x] **TASK-690:** Check all HTML files (`public/index.html`, `public/mobile.html`) for valid W3C structure and closing tags.
+- [x] **TASK-691:** Check `public/css/styles.css` for unused rules or duplicate selectors.
 - [x] **TASK-692:** Check `public/js/host.js` for clean event listener teardown/reset on `playAgain`.
 - [x] **TASK-693:** Check `public/js/mobile.js` for clean state reset on `playAgain`.
 - [x] **TASK-694:** Check `public/js/map.js` resets all 5 SVG districts to initial baseline colors on `playAgain`.
 - [x] **TASK-695:** Check `public/js/charts.js` clears both resolution and history canvases on `playAgain`.
 - [ ] **TASK-696:** Test UI in Chrome, Safari (iOS), and Firefox.
-- [ ] **TASK-697:** Verify zero network requests are made to external fonts, icons, or analytics domains (100% offline-capable frontend).
+- [x] **TASK-697:** Verify zero network requests are made to external fonts, icons, or analytics domains (100% offline-capable frontend).
 - [ ] **TASK-698:** Confirm all Thursday frontend tasks complete.
-- [ ] **TASK-699:** Run final frontend smoke test across all views.
+- [x] **TASK-699:** Run final frontend smoke test across all views.
 - [ ] **TASK-700:** Prepare `feature/frontend` Thursday branch state for final merge.
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
-- [ ] **TASK-701:** Execute the mandatory Role Tag Balance Pass across all 28 authored policy options (2 fixed crises $\times$ 2 options + 8 world binary crises $\times$ 2 options + 4 world finale fallbacks $\times$ 2 options = 28 options) in `data/crises.json`.
-- [ ] **TASK-702:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` across the 4 Fixed options (Cycles 1–2) and verify every path gives each role fair early scoring opportunities.
-- [ ] **TASK-703:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `AA` (Cycles 3, 4, Finale) and verify each of the 4 non-Catalyst roles appears equally (3 times across the 6 options in `AA`).
-- [ ] **TASK-704:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `AB` (Cycles 3, 4, Finale) and verify each role appears equally across `AB`.
-- [ ] **TASK-705:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BA` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BA`.
-- [ ] **TASK-706:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BB` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BB`.
+- [x] **TASK-701:** Execute the mandatory Role Tag Balance Pass across all 28 authored policy options (2 fixed crises $\times$ 2 options + 8 world binary crises $\times$ 2 options + 4 world finale fallbacks $\times$ 2 options = 28 options) in `data/crises.json`.
+- [x] **TASK-702:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` across the 4 Fixed options (Cycles 1–2) and verify every path gives each role fair early scoring opportunities.
+- [x] **TASK-703:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `AA` (Cycles 3, 4, Finale) and verify each of the 4 non-Catalyst roles appears equally (3 times across the 6 options in `AA`).
+- [x] **TASK-704:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `AB` (Cycles 3, 4, Finale) and verify each role appears equally across `AB`.
+- [x] **TASK-705:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BA` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BA`.
+- [x] **TASK-706:** Count exact occurrences of `artisan`, `lotus`, `assimilator`, and `ghost` inside World `BB` (Cycles 3, 4, Finale) and adjust secondary tags if needed so each role has balanced representation in `BB`.
 - [ ] **TASK-707:** Verify total global tag counts across all 28 options in `data/crises.json` are even across `artisan`, `lotus`, `assimilator`, and `ghost`.
-- [ ] **TASK-708:** Audit all 28 policy options against the core writing rule: **"Both options must hurt someone."** Verify every single option has at least one negative trait effect in `effects`.
-- [ ] **TASK-709:** Audit all 70 secret Intel Drops ($14 \text{ crises} \times 5 \text{ roles}$) in `data/crises.json` for brevity (under 180 chars so they can be read in 20 seconds on a phone) and punchy in-world document framing (`Loom archive:`, `Pilot audit:`, `Leaked memo:`, `Forecast:`).
-- [ ] **TASK-710:** Ensure Catalyst intel drops in every crisis highlight which policy or dynamic increases volatility, shocks, or large GDW swings.
-- [ ] **TASK-711:** Polish the 4 World Reveal descriptions and projector lines in `data/crises.json` (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, `The Gilded Cage`).
-- [ ] **TASK-712:** Polish the Intro Crawl script lines in `data/crises.json` (or metadata block) so the 30-second opening sets the high-stakes classroom tone immediately.
-- [ ] **TASK-713:** Polish the 4 Shutdown / Grade epilogue summaries (`Thriving 60+`, `Stable 35-59`, `Fragile 1-34`, `Shutdown 0%`) in `data/crises.json`.
-- [ ] **TASK-714:** Audit all 30 citizen fallback messages ($10 \text{ citizens} \times 3 \text{ bands}$) in `data/citizens.json` to ensure distinct voices (e.g., Tomás is angry and funny, Kai sounds like an always-online VR streamer, Hollis sounds like an aggrieved ex-CEO, Ruth sounds like an old union organizer).
-- [ ] **TASK-715:** Add 10 closing citizen epilogue messages (5 good/stable, 5 fragile/shutdown) in `data/citizens.json` for the End Screen's 5-year recap.
+- [x] **TASK-708:** Audit all 28 policy options against the core writing rule: **"Both options must hurt someone."** Verify every single option has at least one negative trait effect in `effects`.
+- [x] **TASK-709:** Audit all 70 secret Intel Drops ($14 \text{ crises} \times 5 \text{ roles}$) in `data/crises.json` for brevity (under 180 chars so they can be read in 20 seconds on a phone) and punchy in-world document framing (`Loom archive:`, `Pilot audit:`, `Leaked memo:`, `Forecast:`).
+- [x] **TASK-710:** Ensure Catalyst intel drops in every crisis highlight which policy or dynamic increases volatility, shocks, or large GDW swings.
+- [x] **TASK-711:** Polish the 4 World Reveal descriptions and projector lines in `data/crises.json` (`The Commonwealth`, `The Benevolent Machine`, `The Uneasy Republic`, `The Gilded Cage`).
+- [x] **TASK-712:** Polish the Intro Crawl script lines in `data/crises.json` (or metadata block) so the 30-second opening sets the high-stakes classroom tone immediately.
+- [x] **TASK-713:** Polish the 4 Shutdown / Grade epilogue summaries (`Thriving 60+`, `Stable 35-59`, `Fragile 1-34`, `Shutdown 0%`) in `data/crises.json`.
+- [x] **TASK-714:** Audit all 30 citizen fallback messages ($10 \text{ citizens} \times 3 \text{ bands}$) in `data/citizens.json` to ensure distinct voices (e.g., Tomás is angry and funny, Kai sounds like an always-online VR streamer, Hollis sounds like an aggrieved ex-CEO, Ruth sounds like an old union organizer).
+- [x] **TASK-715:** Add 10 closing citizen epilogue messages (5 good/stable, 5 fragile/shutdown) in `data/citizens.json` for the End Screen's 5-year recap.
 - [ ] **TASK-716:** Proofread all text in `data/roles.json` for clarity on mobile screens.
 - [ ] **TASK-717:** Proofread all text in `data/citizens.json` for typos, punctuation, and school appropriateness.
 - [ ] **TASK-718:** Proofread all text in `data/crises.json` for typos, punctuation, and school appropriateness.
