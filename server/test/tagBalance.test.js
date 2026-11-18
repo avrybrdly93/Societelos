@@ -47,3 +47,19 @@ test('world AA (The Commonwealth): each role tagged 3 times across its 6 options
 test('world AB (The Benevolent Machine): each role tagged 3 times across its 6 options', () => assertWorldBalanced('AB'));
 test('world BA (The Uneasy Republic): each role tagged 3 times across its 6 options', () => assertWorldBalanced('BA'));
 test('world BB (The Gilded Cage): each role tagged 3 times across its 6 options', () => assertWorldBalanced('BB'));
+
+// TASK-708: core writing rule "Both options must hurt someone". Every
+// authored option (each Crisis 2B world variant too) lowers at least one trait.
+test('every one of the 28 options has at least one negative trait effect', () => {
+  for (const scope of ['fixed', 'AA', 'AB', 'BA', 'BB']) {
+    for (const o of scopeOptions(data, scope)) {
+      const option = data.crises.find((c) => c.id === o.id).options[o.key];
+      const vectors = option.effects ? { '': option.effects } : option.effectsByWorld;
+      assert.ok(vectors && Object.keys(vectors).length, `${o.id} ${o.key}: no effects`);
+      for (const [variant, effects] of Object.entries(vectors)) {
+        const hurts = Object.values(effects).filter((v) => v < 0);
+        assert.ok(hurts.length >= 1, `${o.id} ${o.key}${variant ? `/${variant}` : ''} hurts nobody`);
+      }
+    }
+  }
+});
