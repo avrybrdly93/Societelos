@@ -183,3 +183,16 @@ test('crises.json proofreads clean with consistent American spelling', () => {
     assert.doesNotMatch(text, british, `${label}: British spelling`);
   }
 });
+
+// TASK-719: no emoji in any content file. Role icons are plain Unicode
+// symbols (geometric/astronomical), which render in the system fonts
+// offline; emoji fonts and colour glyphs vary by phone.
+test('zero emoji in crises.json, roles.json and citizens.json', () => {
+  const fs = require('fs');
+  const path = require('path');
+  for (const f of ['crises.json', 'roles.json', 'citizens.json']) {
+    const text = fs.readFileSync(path.join(__dirname, '../../data', f), 'utf8');
+    const emoji = text.match(/\p{Extended_Pictographic}|\p{Emoji_Presentation}|️|‍/gu);
+    assert.equal(emoji, null, `${f} contains emoji: ${emoji && emoji.join(' ')}`);
+  }
+});
