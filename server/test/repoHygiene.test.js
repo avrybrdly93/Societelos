@@ -54,3 +54,20 @@ test('TASK-777: no TODO, FIXME, XXX or HACK markers in production code', () => {
   }
   assert.deepEqual(hits, []);
 });
+
+// TASK-778: no Math.random() in the simulation or anywhere in the live game
+// server (role assignment, crisis selection, seat order, tie-breaks all use
+// seeded hashes of the game id, so a game replays from its seed). Only the
+// legacy pre-hackathon prototype (server/index.js, npm run start:legacy) is exempt.
+test('TASK-778: no Math.random() in server/sim or the live game server', () => {
+  const files = walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js')));
+  assert.ok(files.some((f) => f.endsWith('gameEngine.js')) && files.some((f) => /[\\/]sim[\\/]/.test(f)));
+  const hits = [];
+  for (const f of files) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+      const code = line.replace(/\/\/.*$/, '').replace(/^\s*\*.*$/, '');
+      if (/Math\.random\s*\(/.test(code)) hits.push(`${path.relative(ROOT, f)}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(hits, []);
+});
