@@ -1081,7 +1081,7 @@ class GameState extends EventEmitter {
       .then(() => resolveLoom().moderate(submissions, this.crisis || {}, { playerNames }))
       .catch((err) => {
         console.error(`[game ${this.roomCode}] moderation failed: ${err.message}`);
-        return submissions.map((sub) => ({ node: sub.node, status: 'ok', cleaned: sub.text, feedback: '', roles: [], effects: {}, fallback: true }));
+        return submissions.map((sub) => ({ node: sub.node, status: 'ok', cleaned: '', feedback: '', roles: [], effects: {}, fallback: true }));
       })
       .then((results) => {
         finale.moderationMs = Date.now() - started;
@@ -1142,14 +1142,16 @@ class GameState extends EventEmitter {
       const m = finale.moderation[node] || {};
       // "reject", a second "revise", or a resubmit that never came / timed
       // out: a safe, bland placeholder so nothing unmoderated is shown.
-      if (m.status !== 'ok') {
+      // Only Loom-cleaned text is ever shown: no cleaned text means placeholder,
+      // never the raw submission (TASK-748).
+      if (m.status !== 'ok' || !m.cleaned || m.fallback) {
         const ph = loom.getPlaceholderPolicy(node);
         return { id: `POLICY-${i + 1}`, node, text: ph.cleaned, roles: ph.roles, effects: ph.effects, placeholder: true };
       }
       return {
         id: `POLICY-${i + 1}`,
         node,
-        text: String(m.cleaned || finale.submissions[node] || DEFAULT_FINALE_POLICY).slice(0, FINALE_MAX_CHARS),
+        text: String(m.cleaned).slice(0, FINALE_MAX_CHARS),
         roles: Array.isArray(m.roles) ? m.roles : [],
         effects: m.effects || {}
       };

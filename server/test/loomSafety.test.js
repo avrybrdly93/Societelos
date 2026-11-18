@@ -118,3 +118,47 @@ test('any unmoderated (fallback) write-in sends Cycle 5 to the authored A/B fina
   assert.equal(out.gameEnd.finaleMode, 'fallback');
   assert.ok(!out.phases.includes('5:FINALE_DEBATE'), 'no write-ins were shown on the projector');
 });
+
+// TASK-748: raw, unmoderated student text never comes back in `cleaned`,
+// whatever fails: no key, network down, timeout, HTTP error, bad JSON, a
+// node Gemini skipped, an "ok" with no cleaned text, or a safety block.
+test('raw student text is never returned in cleaned under any error or timeout', async (t) => {
+  silenceWarn(t);
+  const MARK = 'RAWMARKER';
+  const subs = [{ node: 'NODE-01', text: `${MARK} one plan for the district guilds` }, { node: 'NODE-02', text: `${MARK} two plan for shared pods` }];
+  const hang = (url, init) => new Promise((resolve, reject) => init.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))));
+  const scenarios = {
+    'no key': { config: { ...cfg, enabled: false } },
+    'network down': { fetchImpl: async () => { throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } }); } },
+    timeout: { config: { ...cfg, timeoutMs: 30 }, fetchImpl: hang },
+    'HTTP 500': { fetchImpl: async () => ({ ok: false, status: 500, headers: { get: () => null } }) },
+    'bad JSON': { fetchImpl: async () => reply({ candidates: [{ content: { parts: [{ text: 'not json' }] } }] }) },
+    'safety block': { fetchImpl: async () => reply({ promptFeedback: { blockReason: 'SAFETY' } }) }
+  };
+  for (const [label, o] of Object.entries(scenarios)) {
+    for (const revision of [false, true]) {
+      const out = await loom.moderate(subs, CRISIS, { ...quiet, config: cfg, ...o, revision });
+      for (const r of out) {
+        const unmoderated = r.fallback || r.safetyBlocked || r.status !== 'ok';
+        if (unmoderated) assert.equal(r.cleaned, '', `${label}${revision ? ' (revision)' : ''}: ${r.node} leaked "${r.cleaned}"`);
+      }
+    }
+    const [one] = [await loom.moderateOne(subs[0], CRISIS, { ...quiet, config: cfg, ...o })];
+    if (one.fallback || one.status !== 'ok') assert.equal(one.cleaned, '', `${label}: moderateOne leaked`);
+  }
+  // Gemini answers but skips NODE-02 and returns "ok" with no cleaned text for NODE-01:
+  // both are judged locally (heuristic), never echoed back unjudged.
+  const partial = async () => answer([{ node: 'NODE-01', status: 'ok', cleaned: '', feedback: '', roles: [], effects: {} }]);
+  const out = await loom.moderate(subs, CRISIS, { ...quiet, config: cfg, fetchImpl: partial });
+  for (const r of out) assert.equal(r.heuristic, true, `${r.node} judged locally`);
+});
+
+test('the engine never puts a raw submission on the projector when cleaned text is missing', async () => {
+  const { playGame, withLoom } = require('./playGame');
+  // An "ok" with no cleaned text (a broken moderation result) becomes the placeholder.
+  const noText = (subs) => subs.map((s, i) => ({ node: s.node, status: 'ok', cleaned: i === 0 ? '' : `Policy ${i}.`, feedback: '', roles: ['artisan'], effects: { purpose: 0.1, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 } }));
+  const out = await withLoom({ moderate: async (subs) => noText(subs) }, () => playGame({ gameId: 'no-cleaned-text', world: 'AB', writeIn: (i) => `RAWMARKER submission ${i}` }));
+  const shown = out.ballots.flatMap((b) => b.policies.map((p) => p.text));
+  assert.ok(shown.length > 0);
+  for (const text of shown) assert.doesNotMatch(text, /RAWMARKER/, 'raw submission reached a ballot');
+});

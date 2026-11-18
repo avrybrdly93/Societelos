@@ -611,11 +611,13 @@ function calibrationExamples(crisis = {}) {
  * with no role tags and a zero effect vector. Flagged `fallback: true` so the
  * engine can switch to the authored A/B finale instead.
  */
+// Gemini unavailable: the write-in is unmoderated, so it carries no text at
+// all (TASK-748); the engine sees fallback: true and plays the A/B finale.
 function moderateFallback(submissions) {
   return submissions.map((s) => ({
     node: s.node,
     status: 'ok',
-    cleaned: truncate(s.text, 140),
+    cleaned: '',
     feedback: '',
     roles: [],
     effects: zeroEffects(),
@@ -705,8 +707,11 @@ async function moderateRemote(list, crisis, opts) {
     if (!Array.isArray(result)) throw new Error('moderation: not an array');
     return list.map((s) => {
       const r = result.find((x) => x && x.node === s.node);
-      if (!r) return moderateFallback([s])[0];
+      // Gemini skipped this write-in, or passed it with no cleaned text:
+      // judge it locally rather than echo the raw submission (TASK-748).
+      if (!r) return moderateHeuristic(s, crisis, opts);
       const clean = sanitizeModerationResult(r);
+      if (clean.status === 'ok' && !clean.cleaned) return moderateHeuristic(s, crisis, opts);
       // A revision gets one chance: anything but "ok" is final.
       const status = opts.revision && clean.status !== 'ok' ? 'reject' : clean.status;
       return { ...clean, node: s.node, status };

@@ -48,14 +48,14 @@ test('loom.moderate returns valid fallback JSON when the API key is missing', as
   parsed.forEach((r, i) => {
     assert.equal(r.node, submissions[i].node);
     assert.ok(['ok', 'revise', 'reject'].includes(r.status));
-    assert.ok(typeof r.cleaned === 'string' && r.cleaned.length > 0 && r.cleaned.length <= 140);
+    // TASK-748: an unmoderated write-in never carries its raw text.
+    assert.equal(r.fallback, true);
+    assert.equal(r.cleaned, '');
     assert.equal(typeof r.feedback, 'string');
     assert.ok(Array.isArray(r.roles));
     assert.deepEqual(Object.keys(r.effects).sort(), [...TRAITS].sort());
     for (const t of TRAITS) assert.ok(r.effects[t] >= -1 && r.effects[t] <= 1);
-    assert.equal(r.fallback, true);
   });
-  assert.equal(parsed[0].cleaned, 'Every district elects a repair council.');
 });
 
 test('loom never mutates the game state or scores it is given', async () => {
