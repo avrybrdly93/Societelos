@@ -38,3 +38,20 @@ effect vectors, which are calibrated to move GDW by about 5-10 points per cycle.
 
 Option 1 plus a teacher note is the lowest-risk choice for a demo tomorrow; options 2-3 need a fresh
 calibration pass and ideally a playtest.
+
+## simulate() speed on slower CPUs (TASK-750, not checked off)
+
+`npm run bench:sim` on the cloud runner (Xeon 2.1 GHz): 501 runs in **39.6 ms** (target < 50 ms, pass).
+Emulating slower CPUs by pinning the bench to one core shared with busy processes:
+
+| Emulated speed | simulate (500 + 1 runs) |
+| :--- | :--- |
+| 1x (this runner) | 39.6 ms |
+| ~2x slower | 76.3 ms |
+| ~3x slower | 114.1 ms |
+
+A low-power classroom laptop will likely miss the 50 ms target. Impact is small: `simulate()` runs once per
+resolution, so the server pauses ~0.1 s at most, which players will not see. 80% of the time is the Gaussian noise draws
+(log/sqrt/cos/sin per trait per month); making them cheaper would change the random stream and break
+bit-for-bit seed replay, so I left it alone the night before the demo. If needed, `constants.forecastRuns` (500) can
+be lowered (e.g. 300) at the cost of a noisier forecast fan; the realized run is unaffected.
