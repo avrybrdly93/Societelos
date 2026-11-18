@@ -623,6 +623,46 @@ function moderateFallback(submissions) {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// Local pre-filter (TASK-747): blatant profanity, slurs, sexual content and
+// self-harm/threat phrases are caught in microseconds, before (and whether
+// or not) Gemini answers. Deliberately narrow, so in-game words such as
+// "kill-switch", "shutdown" or "dead grid" pass through to the Loom.
+// Text is normalised first: lower case, common leetspeak (0->o, 1/!->i,
+// 3->e, 4/@->a, 5/$->s, 7->t) and separators inside a word (f.u.c.k, F U C K).
+// ---------------------------------------------------------------------------
+
+const PREFILTER_BLATANT = new RegExp([
+  'f+u+c+k+\\w*', 'f+u+k+(s|ed|ing)?', 'sh+i+t+(s|ty|ter|ters|ting|head|heads|hole|holes)?', 'b+i+t+c+h+\\w*', 'bastards?', 'a+s+s+h+o+l+e+s?', 'dick(head)?s?', 'cocks?(sucker)?',
+  'puss(y|ies)', 'cunts?', 'whores?', 'sluts?', 'twats?', 'wank\\w*', 'porn\\w*', 'nudes?', 'naked', 'boobs?', 'penis\\w*', 'vagina\\w*', 'horny', 'blowjobs?', 'rap(e|ed|es|ing|ist)',
+  'n+i+g+g+(a|er|ers|as|uh)s?', 'fag(got)?s?', 'retard(ed|s)?', 'tranny', 'trannies', 'chinks?', 'spics?', 'kikes?', 'dykes?', 'wetbacks?', 'pakis?',
+  'nazis?', 'hitler', 'kys', 'kill (yo)?urself', 'kill yourselves', 'go die', 'shoot up', 'school shooting'
+].map((w) => `\\b${w}\\b`).join('|'), 'i');
+
+function normaliseForFilter(text) {
+  const leet = { 0: 'o', 1: 'i', '!': 'i', 3: 'e', 4: 'a', '@': 'a', 5: 's', $: 's', 7: 't' };
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[01!34@5$7]/g, (c) => leet[c])
+    // Join letters split by dots, dashes, underscores, asterisks or single
+    // spaces: f.u.c.k, s-h-i-t, F U C K.
+    .replace(/\b(?:[a-z][.\-_* ]){2,}[a-z]\b/g, (m) => m.replace(/[.\-_* ]/g, ''));
+}
+
+/** null if the text passes, else the matched (normalised) word. */
+function localPrefilter(text) {
+  const raw = String(text || '');
+  const hit = raw.toLowerCase().match(PREFILTER_BLATANT) || normaliseForFilter(raw).match(PREFILTER_BLATANT);
+  return hit ? hit[0] : null;
+}
+
+const PREFILTER_FEEDBACK = 'The Loom cannot put that language in front of the class. Rewrite it as one clear, respectful policy for the region.';
+
+/** Result for a pre-filtered write-in: revise on a first attempt, reject on a revision. Never echoes the text. */
+function prefilterResult(node, revision) {
+  return { node, status: revision ? 'reject' : 'revise', cleaned: '', feedback: revision ? 'The revision still contains language the Loom cannot accept.' : PREFILTER_FEEDBACK, roles: [], effects: zeroEffects(), prefiltered: true };
+}
+
 /**
  * Moderate finale write-ins: clean text, status, private feedback, role tags
  * and an effect vector per submission.
@@ -633,9 +673,20 @@ function moderateFallback(submissions) {
 async function moderate(submissions = [], crisis = {}, opts = {}) {
   // Send only { node: 'NODE-0X', text } with player names redacted; never names or socket ids.
   const names = opts.playerNames || [];
-  const list = (submissions || [])
+  const all = (submissions || [])
     .map((s) => ({ node: safeNode(s.node), text: truncate(redactNames(s.text, names), 280) }))
     .filter((s) => s.node);
+  // Blatant language never reaches Gemini: flagged locally, in order.
+  const flagged = new Map(all.filter((s) => localPrefilter(s.text)).map((s) => [s.node, prefilterResult(s.node, !!opts.revision)]));
+  if (!flagged.size) return moderateRemote(all, crisis, opts);
+  const rest = all.filter((s) => !flagged.has(s.node));
+  const moderated = rest.length ? await moderateRemote(rest, crisis, opts) : [];
+  const byNode = new Map(moderated.map((r) => [r.node, r]));
+  return all.map((s) => flagged.get(s.node) || byNode.get(s.node));
+}
+
+/** Gemini moderation of already pre-filtered, redacted submissions. */
+async function moderateRemote(list, crisis, opts) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
@@ -798,4 +849,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { SAFETY_SETTINGS, createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { localPrefilter, normaliseForFilter, SAFETY_SETTINGS, createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

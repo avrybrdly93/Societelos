@@ -1100,13 +1100,15 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * Act on the batch moderation. If Gemini was unavailable (every result is a
-   * fallback: no key, error or the 8 s timeout), cycle 5 switches to the
-   * world's authored A/B finale and plays a normal DEBATE -> VOTE.
+   * Act on the batch moderation. If Gemini was unavailable for any write-in
+   * (a fallback result: no key, error or the 8 s timeout), cycle 5 switches
+   * to the world's authored A/B finale and plays a normal DEBATE -> VOTE, so
+   * an unmoderated write-in is never shown. Write-ins the local pre-filter
+   * flagged are moderated results, not fallbacks.
    */
   onFinaleModeration(results) {
     if (this.phase !== PHASES.FINALE_MOD || this.finale.closed) return;
-    const failed = !results.length || results.every((r) => r && r.fallback);
+    const failed = !results.length || results.some((r) => !r || r.fallback);
     if (failed) {
       this.switchFinaleToBinary('moderation unavailable');
       return;

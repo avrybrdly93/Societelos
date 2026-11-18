@@ -67,3 +67,54 @@ test('a blocked narration falls back to the authored Loom line', async (t) => {
   assert.equal(n.fallback, true);
   assert.match(n.loomLine, /^Authored good\./);
 });
+
+// TASK-747: the local pre-filter.
+test('the pre-filter catches blatant profanity, slurs and disguises (leetspeak, f.u.c.k, F U C K)', () => {
+  for (const text of ['this policy is sh1t', 'f.u.c.k the owners', 'F U C K the board', 'you are a b!tch', 'go kill yourself', 'Ban p0rn in the pods', 'you fuckers']) {
+    assert.ok(loom.localPrefilter(text), `missed: ${text}`);
+  }
+});
+
+test('the pre-filter never flags game vocabulary or any authored text in the data files', () => {
+  for (const text of ['Give 5 elected leaders kill-switch keys.', 'The grid is dead; train keepers.', 'Shut down the Loom for good.', 'Sex education for every teen.', 'Expropriate the shitake farms.', 'Fukushima-style reactor checks.', 'Scunthorpe gets a library.']) {
+    assert.equal(loom.localPrefilter(text), null, text);
+  }
+  const strings = [];
+  const walk = (v) => { if (typeof v === 'string') strings.push(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+  ['crises', 'citizens', 'roles'].forEach((f) => walk(require(`../../data/${f}.json`)));
+  for (const text of strings) assert.equal(loom.localPrefilter(text), null, `false positive on authored text: ${text}`);
+});
+
+test('pre-filtered write-ins come back "revise" instantly, even offline, and never reach Gemini', async (t) => {
+  silenceWarn(t);
+  const subs = [{ node: 'NODE-01', text: 'Fund repair guilds in every district.' }, { node: 'NODE-02', text: 'this policy is sh1t' }];
+  // Offline (no key): the flagged one is a real "revise", the clean one a fallback.
+  const offline = await loom.moderate(subs, CRISIS, { config: { ...cfg, enabled: false } });
+  assert.equal(offline[1].status, 'revise');
+  assert.equal(offline[1].cleaned, '');
+  assert.ok(offline[1].feedback.length > 20 && offline[1].prefiltered && !offline[1].fallback);
+  assert.equal(offline[0].fallback, true);
+  // Online: only the clean write-in is sent to Gemini.
+  let sent = null;
+  const fetchImpl = async (url, init) => {
+    sent = JSON.parse(JSON.parse(init.body).contents[0].parts[0].text.split('\n\n').pop());
+    return answer(sent.map((s) => ({ node: s.node, status: 'ok', cleaned: s.text, feedback: '', roles: [], effects: { purpose: 0, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: 0 } })));
+  };
+  const online = await loom.moderate(subs, CRISIS, { ...quiet, config: cfg, fetchImpl });
+  assert.deepEqual(sent.map((s) => s.node), ['NODE-01']);
+  assert.deepEqual(online.map((r) => r.status), ['ok', 'revise']);
+  // A revision with blatant language is final.
+  const [rev] = await loom.moderate([subs[1]], CRISIS, { ...quiet, config: cfg, fetchImpl, revision: true });
+  assert.equal(rev.status, 'reject');
+});
+
+test('any unmoderated (fallback) write-in sends Cycle 5 to the authored A/B finale', async () => {
+  const { playGame, withLoom } = require('./playGame');
+  // One write-in judged by the Loom, the rest unavailable: never show the unmoderated ones.
+  const mixed = (subs) => subs.map((s, i) => (i === 0
+    ? { node: s.node, status: 'revise', cleaned: '', feedback: 'Rephrase.', roles: [], effects: {}, prefiltered: true }
+    : { node: s.node, status: 'ok', cleaned: s.text, feedback: '', roles: [], effects: {}, fallback: true }));
+  const out = await withLoom({ moderate: async (subs) => mixed(subs) }, () => playGame({ gameId: 'mixed-fallback', world: 'AA' }));
+  assert.equal(out.gameEnd.finaleMode, 'fallback');
+  assert.ok(!out.phases.includes('5:FINALE_DEBATE'), 'no write-ins were shown on the projector');
+});
