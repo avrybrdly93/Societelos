@@ -77,6 +77,8 @@ The Loom operates on a delicate balance between cooperative survival and competi
    * **Phones (5):** join the same Wi-Fi and open the printed `/mobile` address, or scan the QR code on the lobby screen. Each phone enters a name and is seated as `NODE-01`…`NODE-05`; only node ids are shown on the projector.
 6. **Play:** when all five are ready, press Start on the projector. For the next class, the server can reset the room without restarting Node (`host:playAgain`; the projector button is part of the End Screen work).
 
+**Post-MVP hooks** (where `data/crowd.json` and The Accord plug in): [docs/post-mvp-hooks.md](docs/post-mvp-hooks.md).
+
 **Teacher quick-reference card** (room setup, shortcuts, debate hooks and grading discussion prompts): [docs/teacher-quick-reference.md](docs/teacher-quick-reference.md).
 
 ### 📶 Classroom network tips
