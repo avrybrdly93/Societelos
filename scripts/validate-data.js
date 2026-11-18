@@ -145,6 +145,8 @@ function checkCrises(data, citizenIds) {
     // Every crisis, core or spare, carries one intel drop per role.
     const noIntel = ROLE_KEYS.filter((r) => !isStr((c.intel || {})[r]));
     if (noIntel.length) err(where, `intel needs all 5 roles; missing ${noIntel.join(', ')}`);
+    // Intel is read on a phone in the 20 s INTEL phase: 180 characters at most.
+    for (const r of ROLE_KEYS) if (isStr((c.intel || {})[r]) && c.intel[r].length > 180) err(where, `intel.${r} over 180 chars (${c.intel[r].length})`);
   });
   for (const w of ['fixed', ...WORLDS]) {
     const cycles = w === 'fixed' ? [1, 2] : [3, 4];

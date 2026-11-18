@@ -52,3 +52,6 @@ Per option:
   BB     C5 bb-march-datacenter    B   assimilator, lotus
 
 All 4 worlds balanced.
+
+== TASK-730 intel drop lengths
+110 intel drops across all 22 crises (70 in the 14 core crises): longest 175 chars, none over 180.

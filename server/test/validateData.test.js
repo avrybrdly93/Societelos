@@ -42,6 +42,8 @@ const CASES = [
   ['a core crisis missing an intel role', (f) => { delete core(f, 'aa-purpose-drift').intel.ghost; }, /intel missing for ghost/],
   // TASK-725: all 5 role keys in intel for every crisis, spares included.
   ['a spare crisis missing an intel role', (f) => { delete core(f, 'aa-robot-art').intel.catalyst; }, /intel needs all 5 roles; missing catalyst/],
+  // TASK-730: intel drops are <= 180 characters in every crisis.
+  ['an intel drop over 180 chars', (f) => { core(f, 'ba-media-monopoly').intel.lotus = `Loom welfare note: ${'y'.repeat(170)}`; }, /intel\.lotus over 180 chars/],
   ['a trait outside [-1, 1]', (f) => { core(f, 'ab-the-pods').options.A.effects.trust = 1.4; }, /trait "trust" must be a number in \[-1, 1\]/],
   ['an effect vector missing a trait', (f) => { delete core(f, 'ba-status-wars').options.B.effects.autonomy; }, /trait "autonomy" must be a number/],
   ['an unknown role tag', (f) => { core(f, 'bb-the-unplugged').options.A.roles = ['catalyst']; }, /unknown role tag "catalyst"/],
