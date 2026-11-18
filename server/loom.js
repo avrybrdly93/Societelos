@@ -167,10 +167,27 @@ function logCall(opts, cfg, meta, ms, err, prompt) {
   if (env.LOOM_DEBUG_PROMPTS === 'true' && !(privacy && studentText)) (opts.logger || console.log)(`[loom] ${label} prompt: ${prompt}`);
 }
 
+// API-layer safety filters on every call (TASK-746), on top of the
+// moderation instructions in the system prompt. A blocked prompt or answer
+// surfaces as an error with code LOOM_SAFETY_BLOCK (see moderate()).
+const SAFETY_SETTINGS = Object.freeze([
+  'HARM_CATEGORY_HARASSMENT',
+  'HARM_CATEGORY_HATE_SPEECH',
+  'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+  'HARM_CATEGORY_DANGEROUS_CONTENT'
+].map((category) => Object.freeze({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })));
+
+function safetyBlockError(reason) {
+  const err = new Error(`Gemini safety block: ${reason}`);
+  err.code = 'LOOM_SAFETY_BLOCK';
+  return err;
+}
+
 async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   const body = {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    safetySettings: SAFETY_SETTINGS,
     generationConfig: {
       temperature: typeof opts.temperature === 'number' ? opts.temperature : 0.2,
       maxOutputTokens: opts.maxOutputTokens || 1024,
@@ -206,6 +223,9 @@ async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const data = await res.json();
   if (data && data.usageMetadata) meta.usage = data.usageMetadata;
+  if (data && data.promptFeedback && data.promptFeedback.blockReason) throw safetyBlockError(`prompt ${data.promptFeedback.blockReason}`);
+  const finish = data && data.candidates && data.candidates[0] && data.candidates[0].finishReason;
+  if (finish === 'SAFETY' || finish === 'PROHIBITED_CONTENT' || finish === 'BLOCKLIST') throw safetyBlockError(`answer ${finish}`);
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
     data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('');
   if (!text) throw new Error('Gemini returned no content');
@@ -641,9 +661,23 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
       return { ...clean, node: s.node, status };
     });
   } catch (err) {
+    if (err && err.code === 'LOOM_SAFETY_BLOCK') return moderateAfterSafetyBlock(list, crisis, opts);
     console.warn(`[loom] moderate fell back: ${err.message}`);
     return moderateFallback(list);
   }
+}
+
+/**
+ * Gemini's safety filter blocked a moderation batch: at least one write-in
+ * is unsafe. Re-moderate each submission on its own so only the blocked one
+ * is rejected (never shown) and the rest of the class keeps its write-ins.
+ */
+async function moderateAfterSafetyBlock(list, crisis, opts) {
+  const blocked = (s) => ({ node: s.node, status: 'reject', cleaned: '', feedback: 'The Loom cannot accept this proposal.', roles: [], effects: zeroEffects(), safetyBlocked: true });
+  if (list.length === 1) return [blocked(list[0])];
+  console.warn(`[loom] moderate: safety block on a batch of ${list.length}, re-moderating one by one`);
+  const singles = await Promise.all(list.map((s) => moderate([s], crisis, opts).then((r) => r[0]).catch(() => blocked(s))));
+  return singles.map((r, i) => r || blocked(list[i]));
 }
 
 // ---------------------------------------------------------------------------
@@ -764,4 +798,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { SAFETY_SETTINGS, createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
