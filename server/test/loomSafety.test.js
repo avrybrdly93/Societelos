@@ -162,3 +162,24 @@ test('the engine never puts a raw submission on the projector when cleaned text 
   assert.ok(shown.length > 0);
   for (const text of shown) assert.doesNotMatch(text, /RAWMARKER/, 'raw submission reached a ballot');
 });
+
+// TASK-749: the few-shot calibration examples are read from data/crises.json
+// at runtime, so they always carry the final tuned vectors: for each world's
+// finale, exactly as the engine hands it to loom.moderate.
+test('moderation few-shot examples match the tuned effect vectors and tags in data/crises.json', () => {
+  const engine = require('../gameEngine');
+  const data = require('../../data/crises.json');
+  const fixed1 = data.crises.find((c) => c.world === 'fixed' && c.cycle === 1);
+  for (const world of ['AA', 'AB', 'BA', 'BB']) {
+    const crisis = engine.selectCrisis(data, 5, world);
+    const raw = data.crises.find((c) => c.id === data.worlds[world].finale);
+    const examples = loom.calibrationExamples(crisis);
+    assert.equal(examples.length, 4, world);
+    const expected = [raw.options.A, raw.options.B, fixed1.options.A, fixed1.options.B];
+    examples.forEach((e, i) => {
+      assert.deepEqual(e.effects, loom.cleanEffects(expected[i].effects), `${world} example ${i + 1} effects`);
+      assert.deepEqual(e.roles, loom.cleanRoles(expected[i].roles), `${world} example ${i + 1} roles`);
+      assert.equal(e.policy, expected[i].text, `${world} example ${i + 1} text`);
+    });
+  }
+});
