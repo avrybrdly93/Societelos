@@ -305,3 +305,12 @@ test('all 4 finales are mode writein with valid fallback options A and B', () =>
     assert.ok(picked.options.A && picked.options.B, `${world}: selectCrisis keeps the fallback options`);
   }
 });
+
+// TASK-728: the 10 crises voted A/B (2 fixed + 2 per world in Cycles 3-4)
+// are all mode binary, and only the 4 finales are write-ins.
+test('all 10 binary crises have mode binary and only finales are write-ins', () => {
+  const binary = CORE.filter((c) => !finaleIds.has(c.id));
+  assert.equal(binary.length, 10);
+  for (const c of binary) assert.equal(c.mode, 'binary', c.id);
+  assert.deepEqual(data.crises.filter((c) => c.mode === 'writein').map((c) => c.id).sort(), [...finaleIds].sort());
+});
