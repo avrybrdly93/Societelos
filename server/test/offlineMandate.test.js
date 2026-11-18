@@ -159,3 +159,23 @@ test('offline narrate across all 5 cycles leads with the citizens and districts 
     }
   });
 });
+
+// TASK-745: offline citizen selection puts the districts in summary.topMoves
+// and summary.shocks first, so the feed reacts to what actually happened.
+test('offline citizen selection prioritizes topMoves and shocked districts', () => {
+  const citizens = require('../../data/citizens.json');
+  const pick = (summary) => loom.narrateFallback({ citizens, winningOption: {}, simSummary: summary }).messages.map((m) => m.citizenId);
+  const district = (id) => citizens.find((c) => c.id === id).district;
+  // A storm in D5 Highlands with no trait moves: Highlands citizens speak first.
+  const storm = pick({ realizedDelta: -4, topMoves: [], shocks: [{ month: 3, district: 'D5', trait: 'health', amount: 0.05, name: 'Coastal Storm' }] });
+  const d5 = citizens.filter((c) => c.district === 'D5').map((c) => c.id);
+  assert.deepEqual(storm.slice(0, d5.length).sort(), d5.sort(), `D5 first: ${storm}`);
+  // A big D4 workers move outranks a small D1 shock; the shock still beats untouched districts.
+  const both = pick({ realizedDelta: 5, topMoves: [{ district: 'D4', cohort: 'workers', trait: 'fairness', change: 0.08 }], shocks: [{ month: 7, district: 'D1', trait: 'trust', amount: 0.02 }] });
+  assert.equal(district(both[0]), 'D4');
+  const firstD1 = both.findIndex((id) => district(id) === 'D1');
+  const firstQuiet = both.findIndex((id) => !['D1', 'D4'].includes(district(id)) && citizens.find((c) => c.id === id).cohort !== 'workers');
+  assert.ok(firstD1 !== -1 && (firstQuiet === -1 || firstD1 < firstQuiet), `D1 (shocked) before untouched citizens: ${both}`);
+  // With neither, data order is kept (deterministic).
+  assert.deepEqual(pick({ realizedDelta: 0, topMoves: [], shocks: [] }), citizens.slice(0, 6).map((c) => c.id));
+});

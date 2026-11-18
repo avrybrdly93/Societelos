@@ -342,17 +342,24 @@ function packageLines(enacted = []) {
 
 /**
  * Order citizens by how much their (district, cohort) moved this cycle, using
- * the summary's topMoves (district/cohort matches first, then district-only).
+ * the summary's topMoves (district/cohort matches first, then district-only)
+ * and its shocks (every citizen in a shocked district, by shock size).
  * Returns [{ id, district, cohort, shift }] with the most affected first.
  */
 function rankCitizensByShift(citizens = [], summary = {}) {
   const moves = Array.isArray(summary.topMoves) ? summary.topMoves : [];
+  // A shock (storm, outage...) cut one trait for every cohort in its district,
+  // so its citizens are among the first to talk about it (TASK-745).
+  const shocks = Array.isArray(summary.shocks) ? summary.shocks : [];
   const scored = citizens.map((c, order) => {
     let shift = 0;
     for (const m of moves) {
       const change = Math.abs(Number(m.change) || 0);
       if (m.district === c.district && m.cohort === c.cohort) shift += change * 2;
       else if (m.district === c.district || m.cohort === c.cohort) shift += change * 0.5;
+    }
+    for (const sh of shocks) {
+      if (sh && sh.district === c.district) shift += (Math.abs(Number(sh.amount)) || 0.04) * 1.5;
     }
     return { id: c.id, district: c.district, cohort: c.cohort, shift, order };
   });
