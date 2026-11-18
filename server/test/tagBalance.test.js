@@ -45,3 +45,4 @@ function assertWorldBalanced(world) {
 
 test('world AA (The Commonwealth): each role tagged 3 times across its 6 options', () => assertWorldBalanced('AA'));
 test('world AB (The Benevolent Machine): each role tagged 3 times across its 6 options', () => assertWorldBalanced('AB'));
+test('world BA (The Uneasy Republic): each role tagged 3 times across its 6 options', () => assertWorldBalanced('BA'));

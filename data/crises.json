@@ -862,7 +862,8 @@
           "name": "Nationalise All Compute",
           "text": "Nationalise all compute into one Loom, making its capacity a universal public resource.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "artisan"
           ],
           "effects": {
             "purpose": 0.3,
@@ -937,7 +938,8 @@
           "name": "Lottery for Everything Scarce",
           "text": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
           "roles": [
-            "lotus"
+            "lotus",
+            "assimilator"
           ],
           "effects": {
             "purpose": -0.2,
@@ -953,7 +955,8 @@
           "name": "Community Contribution Allocation",
           "text": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
           "roles": [
-            "artisan"
+            "artisan",
+            "ghost"
           ],
           "effects": {
             "purpose": 0.8,
