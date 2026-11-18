@@ -12,11 +12,12 @@ const { GameState, NODE_IDS } = engine;
  * 3-5 vote `lateVote(cycle, i)`. Phones write `writeIn(i)` in FINALE_WRITE,
  * rank their ballot in order, and `onEvent` sees every engine event.
  */
-function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000 }) {
+function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000, apiKey = null }) {
   const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS, key: process.env.GEMINI_API_KEY };
   process.env.FAST_TIMERS = 'true';
   process.env.FAST_TIMER_SECONDS = '0.01';
-  delete process.env.GEMINI_API_KEY;
+  // apiKey: play with the Loom "online" (tests stub the network themselves).
+  if (apiKey) process.env.GEMINI_API_KEY = apiKey; else delete process.env.GEMINI_API_KEY;
   const game = new GameState({ roomCode: 'PLAY', phaseSeconds });
   const restoreEnv = () => {
     for (const [k, v] of [['FAST_TIMERS', saved.fast], ['FAST_TIMER_SECONDS', saved.secs], ['GEMINI_API_KEY', saved.key]]) {
