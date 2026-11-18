@@ -33,3 +33,14 @@ test('all 70 Intel Drops are <= 180 characters with in-world document framing', 
   }
   assert.equal(n, 70);
 });
+
+// TASK-710: every Catalyst drop is a forecast that tells the Catalyst where
+// the GDW swing (or the calm) is. Directions and sizes were checked against
+// npm run calibrate:crises (median delta and p5-95 spread per option).
+test('every Catalyst Intel Drop is a forecast that names the swing', () => {
+  for (const c of CORE) {
+    const drop = c.intel.catalyst;
+    assert.match(drop.split(':')[0], /forecast/i, `${c.id}: Catalyst drop is not a forecast`);
+    assert.match(drop, /swing|spread|whipsaw|crash|points|barely|flat/i, `${c.id}: Catalyst drop does not say what moves the line`);
+  }
+});

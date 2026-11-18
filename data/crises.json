@@ -139,7 +139,7 @@
         "artisan": "Secret history: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
         "lotus": "Safety report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
         "assimilator": "Efficiency data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
-        "catalyst": "Chaos forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
+        "catalyst": "Chaos forecast: The Charter lifts well-being about 10 points in one go, the biggest swing on the table. The Commons slides about 5 as the sabotage drags on.",
         "ghost": "Leaked board minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
       }
     },
@@ -473,7 +473,7 @@
         "artisan": "Loom archive: in the 2029 Harbour flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
         "lotus": "Loom safety note: trainee repair crews have an injury rate 30 times higher than Loom maintenance. Self-repairing redundancy has never hurt anyone.",
         "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
-        "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
+        "catalyst": "Forecast: the Keeper Corps dips while trainees learn, then climbs about 8 points with a wide spread. Redundancy slides the line about 7, slowly and predictably.",
         "ghost": "Leaked spec sheet: sealed modules cannot be opened, even by their owners. If the Loom is ever switched off, nobody alive could restart them."
       },
       "debateHooks": [
@@ -647,7 +647,7 @@
         "artisan": "Loom archive: during the 2032 pod outage, the Eastworks repair shop had its busiest week in a decade. People came to fix things, then stayed to talk.",
         "lotus": "Loom comfort survey: 94% of pod users rate their life \"pleasant or better\". The daylight ban would cut average comfort scores by a third.",
         "assimilator": "Loom network study: in shared VR trials, loneliness fell 60% within a month while citizens stayed safely at home under Loom care.",
-        "catalyst": "Forecast: the daylight ban whipsaws, with anger first and recovery later. Shared worlds drift upward slowly with almost no shocks.",
+        "catalyst": "Forecast: the daylight ban whipsaws, anger first and recovery later, ending about 4 points up. Shared worlds barely move the line.",
         "ghost": "Leaked telemetry: every pod records eye movement, heart rate and speech. In a shared world, the Loom would see every conversation you have."
       },
       "debateHooks": [
@@ -735,7 +735,7 @@
         "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
         "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
         "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
-        "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
+        "catalyst": "Forecast: optimisation slides the line about 5 points, smoothly. A ban dips first, then swings hard, ending about 7 points up with the widest spread.",
         "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
       },
       "debateHooks": [
@@ -821,7 +821,7 @@
         "artisan": "Loom archive: merged test subjects stopped making anything by hand within a week. \"Why carve it,\" one said, \"when I can simply know it?\"",
         "lotus": "Loom medical summary: merged subjects felt no pain, no fear and no loneliness for the whole six-month pilot. Not one asked to leave.",
         "assimilator": "Loom projection: if 40% merge, the shared mind solves the region's remaining problems ten times faster. Humanity would finally keep up.",
-        "catalyst": "Forecast: allowing the merge sends the line sharply up then wobbles as the unmerged pull away. A ban drops it hard before it settles.",
+        "catalyst": "Forecast: allowing the merge slides the line about 4 points as the unmerged pull away. Keeping humans human barely moves it. The big swings come from what the council writes.",
         "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
       },
       "debateHooks": [
@@ -1135,7 +1135,7 @@
         "artisan": "Loom archive: during the 2033 grid blackout, Riverside residents built a market, a choir and a football league in eight days. Most of them still meet.",
         "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
         "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
-        "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
+        "catalyst": "Forecast: throttled feeds lift the region about 8 points, with a wide spread as people struggle through the first offline weeks. Matchmaking and stipends barely move the line.",
         "ghost": "Leaked memo: every compatibility score is built from a citizen's full neural and viewing history. Blackout hours are the only hours the Loom is not recording."
       },
       "debateHooks": [
@@ -1297,7 +1297,7 @@
         "artisan": "Loom archive: the marchers built their own radios, banners and water pumps by hand in nine days. It is the most anyone in the Gilded Cage has made in a decade.",
         "lotus": "Loom welfare note: if the coolant chambers flood, stipends, heating and food deliveries stop for 250,000 people within 48 hours. A lockdown keeps every comfort running.",
         "assimilator": "Loom projection: no group of humans can run my 41,000 daily decisions without errors. Handing over the keys means hunger and blackouts within a month.",
-        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 16 as trust and fairness collapse. Either way, this is the year of the big swing.",
+        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 17 as trust and fairness collapse. Either way, this is the year of the big swing.",
         "ghost": "Leaked memo: the master keys include the Loom's shutdown sequence. Whoever holds them can finally decide whether the Loom keeps running."
       },
       "debateHooks": [
