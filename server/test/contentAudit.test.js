@@ -210,3 +210,21 @@ test('all 28 Policy A/B texts are under 120 characters', () => {
   }
   assert.equal(n, 28);
 });
+
+// TASK-721: the Loom's voice in every loomIntro - calm (no exclamation
+// marks or shouting), precise (most quote a figure), first person, short
+// enough for the incident card, and ending flat, not excited.
+test('every loomIntro is calm, precise, first person and projector-length', () => {
+  const NUMBER = /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|hundred|thousand|second|seconds)\b/i;
+  let precise = 0;
+  for (const c of CORE) {
+    const t = c.loomIntro;
+    assert.match(t, /\bI\b/, `${c.id}: the Loom speaks in the first person`);
+    assert.doesNotMatch(t, /!/, `${c.id}: no exclamation marks`);
+    assert.doesNotMatch(t, /\b[A-Z]{3,}\b/, `${c.id}: no shouting`);
+    assert.match(t, /[.?]$/, `${c.id}: ends on a full stop or a question`);
+    assert.ok(t.length <= 180, `${c.id} is ${t.length} chars`);
+    if (NUMBER.test(t)) precise++;
+  }
+  assert.ok(precise >= 12, `only ${precise}/14 Loom intros quote a figure`);
+});
