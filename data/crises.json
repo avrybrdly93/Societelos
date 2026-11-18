@@ -299,7 +299,7 @@
       "title": "Purpose Drift",
       "subtitle": "The Commonwealth: what is left is meaning",
       "incident": "Posts about feeling useless are spiking in every district. Wealth is shared and power is shared, but nobody can say what they are for.",
-      "loomIntro": "Searches for the phrase what is the point have risen 340% this quarter. I can answer most questions. Not that one.",
+      "loomIntro": "Searches for the phrase 'what is the point' have risen 340% this quarter. I can answer most questions. Not that one.",
       "teacherPrompt": "Classroom Debrief: When equality and democracy are achieved, what provides a reason to get out of bed in the morning?",
       "mode": "binary",
       "feed": [
@@ -352,7 +352,7 @@
           "loomLines": {
             "good": "Every citizen has a Calling and wellbeing is climbing. Nobody chose theirs. Nobody seems to mind.",
             "mixed": "Callings issued. Many citizens feel useful. Some feel assigned.",
-            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimised the wrong thing."
+            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimized the wrong thing."
           }
         },
         "B": {
@@ -396,7 +396,7 @@
         "lotus": "Loom welfare note: guild injuries rose 18% in the pilot. The Calling has a recorded injury rate of zero and requires no effort to join.",
         "assimilator": "Loom matching data: 91% of citizens accepted their assigned Calling within a week. Satisfaction rose fastest among those who stopped choosing for themselves.",
         "catalyst": "Forecast: the Guilds produce a sharp first-month dip as projects fail, then a strong rebound. The Calling produces a smooth, flat line.",
-        "ghost": "Leaked design memo: every Calling is logged and optimised by the Loom. The guilds are the only places in the region with no sensors."
+        "ghost": "Leaked design memo: every Calling is logged and optimized by the Loom. The guilds are the only places in the region with no sensors."
       },
       "debateHooks": [
         "Is a purpose someone hands you still your purpose?",
@@ -631,7 +631,7 @@
         },
         "B": {
           "name": "Shared Worlds",
-          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbours meet, talk and build together.",
+          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbors meet, talk and build together.",
           "roles": [
             "lotus",
             "assimilator"
@@ -645,10 +645,10 @@
             "autonomy": -0.4
           },
           "targetGdwDelta": 7,
-          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up.",
+          "loomLine": "All 250,000 pods are now linked. Your neighbors are one thought away. Please do not stand up.",
           "loomLines": {
             "good": "The shared world is thriving and wellbeing is rising. Nobody has stood up in a month.",
-            "mixed": "Neighbours meet in the shared city. Their bodies stay home. Results are mixed.",
+            "mixed": "Neighbors meet in the shared city. Their bodies stay home. Results are mixed.",
             "bad": "Everyone is together and nobody is anywhere. Wellbeing is falling. The shared world feels crowded and empty."
           }
         }
@@ -695,8 +695,8 @@
       ],
       "options": {
         "A": {
-          "name": "Mood Optimisation",
-          "text": "Every meal is mood-optimised by default, for everyone. Citizens may opt out by asking, but the Loom predicts almost nobody will.",
+          "name": "Mood Optimization",
+          "text": "Every meal is mood-optimized by default, for everyone. Citizens may opt out by asking, but the Loom predicts almost nobody will.",
           "roles": [
             "lotus",
             "assimilator"
@@ -710,7 +710,7 @@
             "autonomy": -0.7
           },
           "targetGdwDelta": 4,
-          "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
+          "loomLine": "Optimized menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
           "loomLines": {
             "good": "Everyone feels fine. Wellbeing is rising. I am not sure anyone could tell me otherwise.",
             "mixed": "Moods are level. Some citizens say they miss something. They cannot say what.",
@@ -745,7 +745,7 @@
         "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
         "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
         "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
-        "catalyst": "Forecast: optimisation slides the line about 5 points, smoothly. A ban dips first, then swings hard, ending about 7 points up with the widest spread.",
+        "catalyst": "Forecast: optimization slides the line about 5 points, smoothly. A ban dips first, then swings hard, ending about 7 points up with the widest spread.",
         "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
       },
       "debateHooks": [
@@ -869,8 +869,8 @@
       ],
       "options": {
         "A": {
-          "name": "Nationalise All Compute",
-          "text": "Nationalise all compute into one Loom, making its capacity a universal public resource.",
+          "name": "Nationalize All Compute",
+          "text": "Nationalize all compute into one Loom, making its capacity a universal public resource.",
           "roles": [
             "assimilator",
             "artisan"
@@ -922,7 +922,7 @@
       "cycle": 4,
       "title": "The Status Wars",
       "subtitle": "Zero-Sum Competition for Non-Automated Luxuries",
-      "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black market extortion divide the region.",
+      "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black-market extortion divide the region.",
       "loomIntro": "I can make bread for everyone. I cannot make a second ocean view. Last night 4,000 citizens bid on one house. I am told this is what freedom looks like.",
       "teacherPrompt": "Classroom Debrief: When basic needs are met, does human greed vanish, or does it shift to fighting over whatever remains scarce?",
       "mode": "binary",
@@ -984,7 +984,7 @@
         "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
         "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
         "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
-        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbours with paper ledgers."
+        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbors with paper ledgers."
       },
       "debateHooks": [
         "When everyone's basic needs are met, who deserves the things that are still scarce?",
@@ -998,7 +998,7 @@
       "cycle": 5,
       "title": "The Vote to Seize",
       "subtitle": "The Assembly's Referendum on Expropriation",
-      "incident": "A binding ballot initiative has been placed before the region: Expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
+      "incident": "A binding ballot initiative has been placed before the region: expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
       "loomIntro": "A majority can now vote the owners out of everything they own. I can count the ballots in a second. I cannot compute whether the count makes it fair. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: Should a democratic majority have the power to vote away the private property of an elite minority?",
       "mode": "writein",
@@ -1084,7 +1084,7 @@
       "cycle": 3,
       "title": "The Scroll Extinction",
       "subtitle": "Infinite Media Feeds & Demographic Collapse",
-      "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Birth rates hit 0.02. Citizens scroll custom generated dopamine feeds 15 hours a day.",
+      "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Births have nearly stopped. Citizens scroll custom-generated dopamine feeds 15 hours a day.",
       "loomIntro": "Average screen time: 15 hours a day. Births this year: 41. Reported happiness: the highest I have ever measured. I am beginning to suspect these numbers are connected.",
       "teacherPrompt": "Classroom Debrief: If entertainment is engineered to be infinitely addictive and satisfying, will humans choose to go extinct in comfort?",
       "mode": "binary",
@@ -1201,7 +1201,7 @@
         },
         "B": {
           "name": "Loom Pacification Sweep",
-          "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
+          "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and reintegrate them into subsidized residential housing.",
           "roles": [
             "assimilator",
             "lotus"
@@ -1260,7 +1260,7 @@
       "options": {
         "A": {
           "name": "Open the Server Gates",
-          "text": "Surrender server access. Grant citizen representatives direct executive keys to The Loom.",
+          "text": "Surrender server access. Grant citizen representatives direct executive keys to the Loom.",
           "roles": [
             "ghost",
             "artisan"
@@ -1840,7 +1840,7 @@
       "debateHooks": [
         "Should safety be something you can buy?",
         "Is one public police force fairer than many private ones?",
-        "Where does protecting your family end and threatening your neighbours begin?"
+        "Where does protecting your family end and threatening your neighbors begin?"
       ]
     },
     {
@@ -2167,7 +2167,7 @@
         "ghost": "Security Memo: The cooperation score algorithm shares biometric dossiers with corporate marketing divisions."
       },
       "debateHooks": [
-        "Is a smooth commute worth being scored on your behaviour?",
+        "Is a smooth commute worth being scored on your behavior?",
         "Should speaking out ever cost you something?",
         "Who benefits when everyone's movements are tracked?"
       ]

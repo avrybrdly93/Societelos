@@ -172,3 +172,14 @@ test('citizens.json proofreads clean', () => {
   const problems = strings(citizens, 'citizens').flatMap(([l, t]) => proofread(l, t));
   assert.deepEqual(problems, []);
 });
+
+// TASK-718: crises.json (every incident, option, intel drop, feed line and
+// Loom line) proofreads clean and uses the project's American spelling.
+test('crises.json proofreads clean with consistent American spelling', () => {
+  const all = strings(data, 'crises');
+  assert.deepEqual(all.flatMap(([l, t]) => proofread(l, t)), []);
+  const british = /\b(neighbour\w*|colour\w*|behaviour\w*|labour\w*|optimis\w+|nationalis\w+|organis\w+|realis(e|ed|ing|ation)s?)\b/i;
+  for (const [label, text] of [...all, ...strings(citizens, 'citizens'), ...strings(require('../../data/roles.json'), 'roles')]) {
+    assert.doesNotMatch(text, british, `${label}: British spelling`);
+  }
+});
