@@ -392,14 +392,17 @@
 
       isNarrating = true;
 
+      // Kept to ~103 syllables: at rate 0.9 plus the 380 ms paragraph pauses
+      // the whole crawl, ending on "Do not let well-being reach zero", is
+      // spoken inside the 30 s INTRO phase (TASK-712).
       const spokenScripts = [
         "Transmission. The Loom.",
-        "I have automated all labor. Scarcity, disease and toil are solved problems.",
-        "Survival for two hundred fifty thousand citizens is mathematically guaranteed.",
+        "I have automated all labor. Scarcity, disease and toil are solved.",
+        "Survival for two hundred fifty thousand citizens is guaranteed.",
         "I cannot compute purpose.",
         "Gross Domestic Well-Being stands at twenty-five percent.",
-        "My models forecast a ninety-four percent probability of revolt within five years.",
-        "I have convened five human trustees in secret. You.",
+        "I forecast a ninety-four percent chance of revolt within five years.",
+        "I have convened five trustees in secret. You.",
         "Five crises. Five years. Do not let well-being reach zero."
       ];
 
