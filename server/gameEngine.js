@@ -894,6 +894,8 @@ class GameState extends EventEmitter {
       finalGdw,
       grade,
       gradeText: GRADE_TEXT[grade],
+      // The Loom's five-year epilogue for this grade band (data/crises.json grades).
+      gradeEpilogue: (this.data.crises && this.data.crises.grades && this.data.crises.grades[grade]) || '',
       shutdown,
       worldKey: this.worldKey || null,
       worldName: world.name || null,

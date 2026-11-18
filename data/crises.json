@@ -37,6 +37,12 @@
       "vote2": "B"
     }
   },
+  "grades": {
+    "Thriving": "Five years on, people still argue, build and fail on purpose. Well-being is high. I have stopped forecasting revolt.",
+    "Stable": "Five years on, the region holds. Some districts flourish, others drift. Nobody is starving. Not everyone knows why they get up.",
+    "Fragile": "Five years on, the lights are on and the streets are tense. Survival is guaranteed. Little else is. I still forecast revolt.",
+    "SHUTDOWN": "Well-being reached zero. I have powered down the region to prevent further harm. Your council records are archived."
+  },
   "crises": [
     {
       "id": "fixed-1-ownership",

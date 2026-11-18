@@ -61,3 +61,12 @@ test('each world reveal has spec name/tagline/problem and a projector-length Loo
     assert.ok(w.revealLine.length >= 40 && w.revealLine.length <= 120, `${key} revealLine is ${w.revealLine.length} chars`);
   }
 });
+
+// TASK-713: the Loom's five-year epilogue for each class grade band.
+test('each grade band has a Loom epilogue for the End Screen (<= 140 chars)', () => {
+  assert.deepEqual(Object.keys(data.grades).sort(), ['Fragile', 'SHUTDOWN', 'Stable', 'Thriving']);
+  for (const [grade, text] of Object.entries(data.grades)) {
+    assert.ok(typeof text === 'string' && text.length >= 40 && text.length <= 140, `${grade}: ${text && text.length} chars`);
+  }
+  assert.match(data.grades.SHUTDOWN, /zero/);
+});

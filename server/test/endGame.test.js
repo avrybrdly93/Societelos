@@ -226,6 +226,7 @@ test('game:end grade at the boundary values 0, 1, 34, 35, 59, 60, 100', () => {
     const end = finishedGame({ 'NODE-01': 1 }, gdw, gdw === 0 ? 'shutdown' : null);
     assert.equal(end.grade, grade, `game:end grade at GDW ${gdw}`);
     assert.equal(end.gradeText, engine.GRADE_TEXT[grade]);
+    assert.equal(end.gradeEpilogue, engine.loadGameData().crises.grades[grade], `epilogue at GDW ${gdw}`);
   }
   // One-decimal GDW between the integer bands.
   assert.equal(engine.gradeFor(0.1), 'Fragile');

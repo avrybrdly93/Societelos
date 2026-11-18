@@ -1471,6 +1471,9 @@
     const grade = document.getElementById('end-grade');
     grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
     grade.parentElement.dataset.grade = data.grade || '';
+    const epilogue = document.getElementById('end-epilogue');
+    epilogue.textContent = data.gradeEpilogue || '';
+    epilogue.hidden = !data.gradeEpilogue;
     document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL GDW ${data.finalGdw.toFixed(1)}%` : '';
     const closing = data.closingMessage || {};
     document.getElementById('end-closing-text').textContent = closing.text ? `\u201C${closing.text}\u201D` : '';
