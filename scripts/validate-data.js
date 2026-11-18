@@ -111,6 +111,11 @@ function checkOption(where, o, crisis) {
       else if (line.length > 200) err(where, `loomLines.${b} over 200 chars`);
     }
   }
+  // Offline Loom resolution lines are spoken on the projector: 200 chars max.
+  if (o.loomLine !== undefined && (!isStr(o.loomLine) || o.loomLine.length > 200)) err(where, 'loomLine must be 1-200 chars');
+  for (const [k, note] of Object.entries(o.worldNotes || {})) {
+    if (note && note.loomLine !== undefined && (!isStr(note.loomLine) || note.loomLine.length > 200)) err(where, `worldNotes.${k}.loomLine must be 1-200 chars`);
+  }
   if (o.volatility !== undefined && (typeof o.volatility !== 'number' || o.volatility <= 0)) err(where, 'volatility must be a positive number');
   if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld && o.draft !== true) err(where, 'finale fallback needs effects');
   return undefined;

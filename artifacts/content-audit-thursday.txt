@@ -58,3 +58,6 @@ All 4 worlds balanced.
 
 == TASK-731 citizen fallback lengths
 30 citizen fallback lines (10 citizens x good/mixed/bad): longest 111 chars, none over 140. Epilogues: longest 110.
+
+== TASK-732 Loom resolution fallback lengths
+124 authored Loom lines (loomLine, loomLines good/mixed/bad, 2B worldNotes) across 22 crises: longest 125 chars, none over 200. Runtime offline lines append sim facts and are capped at 200 by withSimFacts (server/loom.js, covered by loom.test.js).

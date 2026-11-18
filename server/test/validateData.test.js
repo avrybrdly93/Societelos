@@ -44,6 +44,10 @@ const CASES = [
   ['a spare crisis missing an intel role', (f) => { delete core(f, 'aa-robot-art').intel.catalyst; }, /intel needs all 5 roles; missing catalyst/],
   // TASK-730: intel drops are <= 180 characters in every crisis.
   ['an intel drop over 180 chars', (f) => { core(f, 'ba-media-monopoly').intel.lotus = `Loom welfare note: ${'y'.repeat(170)}`; }, /intel\.lotus over 180 chars/],
+  // TASK-732: every authored Loom resolution fallback line is <= 200 chars.
+  ['a Loom resolution line over 200 chars', (f) => { core(f, 'fixed-1-ownership').options.B.loomLine = 'z'.repeat(201); }, /loomLine must be 1-200 chars/],
+  ['a band Loom line over 200 chars', (f) => { core(f, 'ab-mood-dial').options.A.loomLines.bad = 'z'.repeat(201); }, /loomLines\.bad over 200 chars/],
+  ['a 2B world projector line over 200 chars', (f) => { core(f, 'fixed-2-offswitch').options.B.worldNotes.B.loomLine = 'z'.repeat(201); }, /worldNotes\.B\.loomLine must be 1-200 chars/],
   ['a trait outside [-1, 1]', (f) => { core(f, 'ab-the-pods').options.A.effects.trust = 1.4; }, /trait "trust" must be a number in \[-1, 1\]/],
   ['an effect vector missing a trait', (f) => { delete core(f, 'ba-status-wars').options.B.effects.autonomy; }, /trait "autonomy" must be a number/],
   ['an unknown role tag', (f) => { core(f, 'bb-the-unplugged').options.A.roles = ['catalyst']; }, /unknown role tag "catalyst"/],
