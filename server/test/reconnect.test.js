@@ -276,9 +276,9 @@ test('host:config over Socket.IO: ack and room broadcast in the lobby, refused m
   const room = await once(host, 'host:room');
   assert.deepEqual(room.config, engine.getRoom(room.roomCode).getConfig());
   const broadcast = once(host, 'host:config');
-  const res = await host.emitWithAck('host:config', { debateSeconds: 60 });
+  const res = await host.emitWithAck('host:config', { debateSeconds: 105 });
   assert.equal(res.ok, true);
-  assert.equal(res.config.debateSeconds, 60);
+  assert.equal(res.config.debateSeconds, 105);
   assert.deepEqual(await broadcast, res.config);
   assert.equal((await host.emitWithAck('host:config', { debateSeconds: 'x' })).reason, 'BAD_PAYLOAD');
 });

@@ -15,10 +15,11 @@ const { playGame, okModeration, withLoom } = require('./playGame');
 
 const FINALE_FLOW = ['5:INCIDENT', '5:FINALE_WRITE', '5:FINALE_MOD', '5:FINALE_DEBATE', '5:FINALE_RANK', '5:FINALE_ENACT', '5:END'];
 const FALLBACK_FLOW = ['5:INCIDENT', '5:FINALE_WRITE', '5:FINALE_MOD', '5:DEBATE', '5:VOTE', '5:RESOLUTION', '5:END'];
+// Cycles 3-5 on the crisis tree when cycle 3 goes to A (the default late vote).
 const WORLD_CRISES = {
-  AA: ['aa-purpose-drift', 'aa-lost-knowledge', 'aa-fake-struggle'],
-  AB: ['ab-the-pods', 'ab-mood-dial', 'ab-merge-offer'],
-  BA: ['ba-shadow-elite', 'ba-status-wars', 'ba-vote-to-seize'],
+  AA: ['aa-purpose-drift', 'aa-robot-art', 'aa-fake-struggle'],
+  AB: ['ab-the-pods', 'ab-curated-bonds', 'ab-merge-offer'],
+  BA: ['ba-shadow-elite', 'ba-media-monopoly', 'ba-vote-to-seize'],
   BB: ['bb-scroll-extinction', 'bb-the-unplugged', 'bb-march-datacenter']
 };
 

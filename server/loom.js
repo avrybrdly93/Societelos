@@ -51,7 +51,7 @@ const SYSTEM_PROMPT = [
   'Match the calibration examples. Tag at most 2 roles from: artisan, lotus, assimilator, ghost.',
   '',
   'When narrating, use only the facts in the simulation summary. Write citizen messages in each citizen\'s own voice, as short texts or posts.',
-  'Council members are only ever identified as NODE-01 to NODE-05.'
+  'Council members are only ever identified as Councilperson 1 to Councilperson 5, never by name.'
 ].join('\n');
 
 // ---------------------------------------------------------------------------

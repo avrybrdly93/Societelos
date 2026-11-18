@@ -28,6 +28,27 @@ function medianDelta(state, effects, { seed = SEED, volatility = 1 } = {}) {
   return { median: r.forecast.median[r.forecast.median.length - 1] - start, realized: r.realized.finalGdw - start, result: r };
 }
 
+/**
+ * Cycles 1-2 of the crisis tree: the root crisis and the cycle 2 crisis that
+ * follows the cycle 1 vote `v1` ([cycle1, cycle2]). Data without a tree
+ * (no `root` fields) falls back to the two fixed crises in cycle order.
+ */
+function fixedPath(crises, v1 = 'A', root = 'ownership') {
+  const list = crises.crises;
+  const fixed = list.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const c1 = list.find((c) => c.root === root && c.cycle === 1) || fixed[0];
+  const c2 = list.find((c) => c.root === root && c.cycle === 2 && c.path === v1) || fixed.find((c) => c.cycle === 2);
+  return [c1, c2];
+}
+
+/** Cycles 3-4 of a world on the tree after the cycle 3 vote `v3` ([cycle3, cycle4]). */
+function worldPath(crises, world, v3 = 'A') {
+  const list = crises.crises;
+  const c3 = list.find((c) => c.world === world && c.cycle === 3);
+  const c4 = list.find((c) => c.world === world && c.cycle === 4 && (c.path === undefined || c.path === v3));
+  return [c3, c4];
+}
+
 /** One row per fixed option (2B once per Cycle 1 world). */
 function calibrateFixed(simConfig, crises) {
   const start = createInitialState(simConfig);
@@ -36,7 +57,8 @@ function calibrateFixed(simConfig, crises) {
   for (const crisis of fixed) {
     for (const key of ['A', 'B']) {
       const o = crisis.options[key];
-      const variants = o.effectsByWorld ? Object.entries(o.effectsByWorld).map(([w, e]) => [`${crisis.cycle}${key} (after 1${w})`, e]) : [[`${crisis.cycle}${key}`, o.effects]];
+      const tag = crisis.root ? ` ${crisis.id}` : '';
+      const variants = o.effectsByWorld ? Object.entries(o.effectsByWorld).map(([w, e]) => [`${crisis.cycle}${key}${tag} (after 1${w})`, e]) : [[`${crisis.cycle}${key}${tag}`, o.effects]];
       for (const [label, effects] of variants) {
         const { median, realized } = medianDelta(start, effects);
         rows.push({ option: label, name: o.name, target: typeof o.targetGdwDelta === 'number' ? o.targetGdwDelta : null, median, realized });
@@ -50,7 +72,7 @@ function calibrateFixed(simConfig, crises) {
 function pathGdw(simConfig, crises, votes, seed = SEED) {
   let state = createInitialState(simConfig);
   let volatility = 1;
-  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const fixed = fixedPath(crises, votes[0]);
   const trace = [computeGDW(state)];
   votes.forEach((vote, i) => {
     const o = fixed[i].options[vote];
@@ -67,8 +89,8 @@ function pathGdw(simConfig, crises, votes, seed = SEED) {
 function worldStartState(simConfig, crises, world, seed = SEED) {
   let state = createInitialState(simConfig);
   let volatility = 1;
-  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
   const votes = world.split('');
+  const fixed = fixedPath(crises, votes[0]);
   votes.forEach((vote, i) => {
     const o = fixed[i].options[vote];
     const effects = o.effectsByWorld ? o.effectsByWorld[votes[0]] : o.effects;
@@ -133,7 +155,7 @@ const SWEEP_BANDS = [
  */
 function sweepGames(simConfig, crises, { games = 1000, seed = SEED } = {}) {
   const pick = mulberry32(hashSeed(`sweep:${seed}`));
-  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const roots = Array.from(new Set(crises.crises.filter((c) => c.root).map((c) => c.root)));
   const start = createInitialState(simConfig);
   const counts = Object.fromEntries(SWEEP_BANDS.map((b) => [b.key, 0]));
   const finals = [];
@@ -148,21 +170,29 @@ function sweepGames(simConfig, crises, { games = 1000, seed = SEED } = {}) {
       gdw = run.gdw[run.gdw.length - 1];
       if (typeof option.volatility === 'number') volatility = option.volatility;
     };
-    for (let i = 0; i < fixed.length && gdw > 0; i++) {
+    // Each game draws a root of the crisis tree, then follows its votes.
+    const root = roots.length ? roots[Math.floor(pick() * roots.length)] : undefined;
+    for (let i = 0; i < 2 && gdw > 0; i++) {
       const vote = pick() < 0.5 ? 'A' : 'B';
       votes.push(vote);
-      const o = fixed[i].options[vote];
+      const o = fixedPath(crises, votes[0], root)[i].options[vote];
       play(o, o.effectsByWorld ? o.effectsByWorld[votes[0]] : o.effects, i + 1);
     }
     const world = votes.join('');
     const worldInfo = crises.worlds && crises.worlds[world];
-    const later = [3, 4].map((cy) => crises.crises.find((c) => c.world === world && c.cycle === cy));
-    if (worldInfo) later.push(crises.crises.find((c) => c.id === worldInfo.finale));
-    later.forEach((crisis, i) => {
-      if (!crisis || gdw <= 0) return;
-      const o = crisis.options[pick() < 0.5 ? 'A' : 'B'];
-      play(o, o.effects, i + 3);
-    });
+    for (let cy = 3; cy <= 4 && gdw > 0; cy++) {
+      const v3 = votes[2] || 'A';
+      const crisis = worldPath(crises, world, v3)[cy - 3];
+      if (!crisis) continue;
+      const vote = pick() < 0.5 ? 'A' : 'B';
+      votes.push(vote);
+      play(crisis.options[vote], crisis.options[vote].effects, cy);
+    }
+    const finale = worldInfo && crises.crises.find((c) => c.id === worldInfo.finale);
+    if (finale && gdw > 0) {
+      const o = finale.options[pick() < 0.5 ? 'A' : 'B'];
+      play(o, o.effects, 5);
+    }
     const final = Math.max(0, gdw);
     finals.push(final);
     const band = SWEEP_BANDS.find((b) => b.test(final));
@@ -217,4 +247,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { main, medianDelta, calibrateFixed, calibrateCrises, worldStartState, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };
+module.exports = { main, medianDelta, fixedPath, worldPath, calibrateFixed, calibrateCrises, worldStartState, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };

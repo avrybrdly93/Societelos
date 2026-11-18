@@ -168,24 +168,68 @@
     const c2d = canvas.getContext && canvas.getContext('2d');
     let particles = [];
     let raf = null;
-    let rgb = '255, 232, 170';
+    let rgb = '176, 212, 249';
+    // Fine motes drifting on the air, plus glassy bubbles rising slowly
+    // through the scene (the start screen's moving bubbles).
+    const MOTES = 90;
+    const BUBBLES = 55;
     function seed() {
-      particles = Array.from({ length: 60 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+      const w = canvas.width;
+      const h = canvas.height;
+      particles = Array.from({ length: MOTES }, () => ({
+        kind: 'mote',
+        x: Math.random() * w,
+        y: Math.random() * h,
         r: Math.random() * 2.4 + 0.7,
         vx: (Math.random() - 0.35) * 0.32,
         vy: (Math.random() - 0.65) * 0.26,
         a: Math.random() * 0.55 + 0.15,
         p: Math.random() * Math.PI * 2
+      })).concat(Array.from({ length: BUBBLES }, () => {
+        const r = Math.random() < 0.7 ? 4 + Math.random() * 12 : 14 + Math.random() * 24;
+        return {
+          kind: 'bubble',
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r,
+          vx: (Math.random() - 0.5) * 0.12,
+          vy: -(0.18 + Math.random() * 0.5) * (16 / (r + 8)) - 0.12, // small ones rise faster
+          a: 0.18 + Math.random() * 0.32,
+          p: Math.random() * Math.PI * 2,
+          wobble: 0.3 + Math.random() * 0.7
+        };
       }));
     }
+    function drawBubble(m) {
+      const alpha = m.a * (0.75 + 0.25 * Math.sin(m.p));
+      const g = c2d.createRadialGradient(m.x - m.r * 0.35, m.y - m.r * 0.35, m.r * 0.1, m.x, m.y, m.r);
+      g.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.55})`);
+      g.addColorStop(0.55, `rgba(${rgb}, ${alpha * 0.12})`);
+      g.addColorStop(1, `rgba(${rgb}, ${alpha * 0.32})`);
+      c2d.beginPath();
+      c2d.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      c2d.fillStyle = g;
+      c2d.fill();
+      c2d.lineWidth = 1;
+      c2d.strokeStyle = `rgba(${rgb}, ${alpha})`;
+      c2d.stroke();
+    }
     function frame() {
-      c2d.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      c2d.clearRect(0, 0, w, h);
       for (const m of particles) {
-        m.x = (m.x + m.vx + canvas.width) % canvas.width;
-        m.y = (m.y + m.vy + canvas.height) % canvas.height;
         m.p += 0.02;
+        if (m.kind === 'bubble') {
+          m.x += m.vx + Math.sin(m.p) * 0.25 * m.wobble;
+          m.y += m.vy;
+          if (m.y < -m.r * 2) { m.y = h + m.r * 2; m.x = Math.random() * w; }
+          if (m.x < -m.r * 2) m.x = w + m.r; else if (m.x > w + m.r * 2) m.x = -m.r;
+          drawBubble(m);
+          continue;
+        }
+        m.x = (m.x + m.vx + w) % w;
+        m.y = (m.y + m.vy + h) % h;
         c2d.beginPath();
         c2d.arc(m.x, m.y, m.r, 0, Math.PI * 2);
         c2d.fillStyle = `rgba(${rgb}, ${m.a * (0.65 + 0.35 * Math.sin(m.p))})`;
@@ -196,7 +240,7 @@
     return {
       start(colour) {
         if (!c2d || reducedMotion) return;
-        rgb = colour || '255, 232, 170';
+        rgb = colour || '176, 212, 249';
         if (!particles.length) seed();
         if (raf === null) raf = requestAnimationFrame(frame);
       },
@@ -229,7 +273,8 @@
   }
 
   function setArt(src, look) {
-    root.style.setProperty('--cine-grade', look.grade || 'none');
+    // The art is graded cool (blue-white) on top of any per-world grade.
+    root.style.setProperty('--cine-grade', look.grade || 'brightness(1)');
     root.style.setProperty('--cine-wash', look.wash || 'transparent');
     rig.style.setProperty('--cine-origin', look.origin || '36% 38%');
     rig.style.setProperty('--cine-zoom', String(look.zoom || 1.115));
@@ -313,10 +358,10 @@
   // Colour grade for the fallback art, by world. The utopia is the same city
   // in every world; what the class has done to it is the grade.
   const WORLD_LOOKS = {
-    FIXED: { grade: 'brightness(0.8) saturate(0.95)', wash: 'linear-gradient(180deg, rgba(40, 30, 12, 0.15), rgba(8, 10, 9, 0.55))', motes: '255, 232, 170', darkness: 0.15 },
-    AA: { grade: 'sepia(0.35) saturate(0.85) brightness(0.7)', wash: 'linear-gradient(180deg, rgba(150, 110, 50, 0.25), rgba(30, 20, 10, 0.55))', motes: '255, 222, 160', darkness: 0.3 },
+    FIXED: { grade: 'brightness(0.8) saturate(0.95)', wash: 'linear-gradient(180deg, rgba(17, 22, 32, 0.15), rgba(7, 8, 10, 0.55))', motes: '176, 212, 249', darkness: 0.15 },
+    AA: { grade: 'sepia(0.35) saturate(0.85) brightness(0.7)', wash: 'linear-gradient(180deg, rgba(55, 100, 145, 0.25), rgba(13, 17, 25, 0.55))', motes: '167, 207, 248', darkness: 0.3 },
     AB: { grade: 'saturate(0.35) hue-rotate(130deg) brightness(0.62) contrast(1.05)', wash: 'linear-gradient(180deg, rgba(30, 110, 120, 0.3), rgba(6, 18, 22, 0.6))', motes: '190, 240, 245', darkness: 0.55 },
-    BA: { grade: 'sepia(0.55) hue-rotate(-28deg) saturate(1.5) brightness(0.5) contrast(1.15)', wash: 'linear-gradient(180deg, rgba(140, 30, 30, 0.3), rgba(20, 6, 6, 0.6))', motes: '255, 170, 140', darkness: 0.75 },
+    BA: { grade: 'sepia(0.55) hue-rotate(-28deg) saturate(1.5) brightness(0.5) contrast(1.15)', wash: 'linear-gradient(180deg, rgba(140, 30, 30, 0.3), rgba(20, 6, 6, 0.6))', motes: '185, 151, 244', darkness: 0.75 },
     BB: { grade: 'grayscale(0.85) brightness(0.45) contrast(1.25)', wash: 'linear-gradient(180deg, rgba(20, 24, 40, 0.35), rgba(4, 5, 8, 0.7))', motes: '200, 205, 215', darkness: 0.9 }
   };
 

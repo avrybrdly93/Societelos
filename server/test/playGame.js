@@ -24,6 +24,7 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
     }
   };
   game.gameId = gameId;
+  game.fixedRoot = 'ownership'; // the Who Owns the Loom? root of the crisis tree
   const out = { game, phases: [], payloads: [], resolutions: [], reveals: [], intel: [], ballots: [], feedback: [], roles: {}, end: null, gameEnd: null, scores: [], scoreUpdates: [], council: [], loomLines: [], restoreEnv };
   const log = console.log;
   console.log = () => {};

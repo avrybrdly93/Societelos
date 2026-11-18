@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/cinematic.css">
+  <link rel="stylesheet" href="css/theme-future.css">
 </head>
 <body class="host">
   <!-- Host projector screen, designed for a 1920x1080 classroom projector. -->
@@ -49,6 +50,9 @@
     <button id="btn-fullscreen" class="btn-fullscreen mono" type="button" aria-pressed="false" title="Toggle fullscreen (F11)" aria-label="Toggle fullscreen">[ &#x26F6; ]</button>
   </header>
 
+  <!-- Round countdown (debate + vote): shrinks from right to left. -->
+  <div id="round-bar" class="round-bar" hidden aria-hidden="true"><div id="round-bar-fill" class="round-bar-fill"></div></div>
+
   <!-- Scene backgrounds (council.js): two layers crossfade between scenes. -->
   <div id="scene-bg" class="scene-bg" aria-hidden="true">
     <div class="scene-layer"></div>
@@ -73,8 +77,8 @@
             <legend class="label">Session settings</legend>
             <div class="config-row" role="radiogroup" aria-label="Debate length">
               <span class="config-name mono">Debate</span>
-              <label class="config-seg"><input type="radio" name="debate-length" id="debate-60" value="60"><span>60s Fast [13.5m]</span></label>
-              <label class="config-seg"><input type="radio" name="debate-length" id="debate-90" value="90" checked><span>90s Standard [16m]</span></label>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-60" value="105"><span>2 min rounds</span></label>
+              <label class="config-seg"><input type="radio" name="debate-length" id="debate-90" value="165" checked><span>3 min rounds</span></label>
             </div>
             <label class="config-row config-check" for="forecast-toggle">
               <input type="checkbox" id="forecast-toggle" class="dev-checkbox">
@@ -90,15 +94,15 @@
         <div class="lobby-nodes">
           <div class="goal-card" aria-label="How to win">
             <p class="goal-title">The goal</p>
-            <p id="lobby-goal" class="goal-text">Steer society through five crises, one a year from 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points: every round, up to 100 for how well the winning policy fits your character and the council's shared goal.</p>
+            <p id="lobby-goal" class="goal-text">Five crises, 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, score the most: vote for what your character believes, and earn a bonus when it passes.</p>
           </div>
           <p class="label">Council seats <span id="lobby-count" class="mono">0/5</span></p>
           <ol id="node-cards" class="node-cards">
-            <li class="node-card" data-node="NODE-01"><span class="node-id mono">NODE-01</span><span class="node-status">Offline</span></li>
-            <li class="node-card" data-node="NODE-02"><span class="node-id mono">NODE-02</span><span class="node-status">Offline</span></li>
-            <li class="node-card" data-node="NODE-03"><span class="node-id mono">NODE-03</span><span class="node-status">Offline</span></li>
-            <li class="node-card" data-node="NODE-04"><span class="node-id mono">NODE-04</span><span class="node-status">Offline</span></li>
-            <li class="node-card" data-node="NODE-05"><span class="node-id mono">NODE-05</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-01"><span class="node-id mono">Councilperson 1</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-02"><span class="node-id mono">Councilperson 2</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-03"><span class="node-id mono">Councilperson 3</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-04"><span class="node-id mono">Councilperson 4</span><span class="node-status">Offline</span></li>
+            <li class="node-card" data-node="NODE-05"><span class="node-id mono">Councilperson 5</span><span class="node-status">Offline</span></li>
           </ol>
           <div class="dev-controls">
             <label class="dev-toggle-label" for="dev-bot-toggle">
@@ -111,7 +115,7 @@
             </label>
           </div>
           <button id="btn-start" class="btn btn-primary btn-start" type="button" disabled>START COUNCIL SESSION</button>
-          <p id="start-hint" class="caption muted">Waiting for 5 nodes to connect…</p>
+          <p id="start-hint" class="caption muted">Waiting for 5 councilpersons to join…</p>
         </div>
       </div>
     </section>
@@ -129,16 +133,15 @@
           <path class="chamber-pedestal" d="M 690 640 L 1230 640 L 1060 700 L 1100 820 L 820 820 L 860 700 Z" />
         </svg>
       </div>
-      <p class="loom-awakens"><span class="awakens-tag">The Loom awakens</span><span class="awakens-quote">&ldquo;Five trustees are convened beneath the golden canopy.&rdquo;</span></p>
+      <p class="loom-awakens"><span class="awakens-tag">The Loom awakens</span><span class="awakens-quote">&ldquo;Five councilpersons are convened beneath the Loom.&rdquo;</span></p>
       <div class="voice-card">
         <div id="intro-crawl" class="crawl">
           <p class="label accent voice-title">Voice of the Loom</p>
           <p>The year is 2121. I have automated all labor. Scarcity, disease and toil are solved problems.</p>
           <p>Survival for 250,000 citizens is mathematically guaranteed. I cannot compute purpose.</p>
           <p>Societal Satisfaction stands at <span class="danger mono">25%</span>. My models forecast a <span class="danger mono">94%</span> probability of revolt within five years.</p>
-          <p>As society enters a new phase, I&rsquo;ve chosen five citizens at random to have them decide the ultimate fate of humanity.</p>
-          <p>I have convened five human trustees in secret. You.</p>
-          <p class="accent intro-goal">Your goal: five crises, 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points for your character.</p>
+          <p>I have chosen five citizens at random to decide the fate of humanity. You.</p>
+          <p class="accent intro-goal">Five crises. Keep Satisfaction above zero together. Score alone by voting your character's beliefs.</p>
         </div>
         <div class="voice-meta">
           <span>Resonance: <b>Five voices, one choice</b></span>
@@ -152,31 +155,31 @@
         <li class="seat-card">
           <span class="seat-pos">Seat I &bull; Far left</span>
           <svg class="seat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>
-          <span class="seat-node">Node-01</span>
+          <span class="seat-node">Councilperson 1</span>
           <span class="seat-quote">&ldquo;Trustee convened.&rdquo;</span>
         </li>
         <li class="seat-card">
           <span class="seat-pos">Seat II &bull; Inner left</span>
           <svg class="seat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20h16M6 20V9m4 11V9m4 11V9m4 11V9M3 9l9-5 9 5"/></svg>
-          <span class="seat-node">Node-02</span>
+          <span class="seat-node">Councilperson 2</span>
           <span class="seat-quote">&ldquo;Trustee convened.&rdquo;</span>
         </li>
         <li class="seat-card">
           <span class="seat-pos">Seat III &bull; Centre</span>
           <svg class="seat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-          <span class="seat-node">Node-03</span>
+          <span class="seat-node">Councilperson 3</span>
           <span class="seat-quote">&ldquo;Trustee convened.&rdquo;</span>
         </li>
         <li class="seat-card">
           <span class="seat-pos">Seat IV &bull; Inner right</span>
           <svg class="seat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-          <span class="seat-node">Node-04</span>
+          <span class="seat-node">Councilperson 4</span>
           <span class="seat-quote">&ldquo;Trustee convened.&rdquo;</span>
         </li>
         <li class="seat-card">
           <span class="seat-pos">Seat V &bull; Far right</span>
           <svg class="seat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21V11m0 0C12 6 8 4 4 4c0 4 3 7 8 7zm0 0c0-5 4-7 8-7 0 4-3 7-8 7z"/></svg>
-          <span class="seat-node">Node-05</span>
+          <span class="seat-node">Councilperson 5</span>
           <span class="seat-quote">&ldquo;Trustee convened.&rdquo;</span>
         </li>
       </ol>
@@ -193,11 +196,11 @@
       <p class="muted roles-sub">Five citizens, chosen at random. Each speaks for a different idea of the good life. Check your phone for your character's full profile.</p>
       <ol id="character-cards" class="character-cards" aria-label="The five council members"></ol>
       <ol class="lock-cards" hidden>
-          <li class="lock-card" data-node="NODE-01"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-01</span><span class="lock-status mono">DEALING</span></li>
-          <li class="lock-card" data-node="NODE-02"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-02</span><span class="lock-status mono">DEALING</span></li>
-          <li class="lock-card" data-node="NODE-03"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-03</span><span class="lock-status mono">DEALING</span></li>
-          <li class="lock-card" data-node="NODE-04"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-04</span><span class="lock-status mono">DEALING</span></li>
-          <li class="lock-card" data-node="NODE-05"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">NODE-05</span><span class="lock-status mono">DEALING</span></li>
+          <li class="lock-card" data-node="NODE-01"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">Councilperson 1</span><span class="lock-status mono">DEALING</span></li>
+          <li class="lock-card" data-node="NODE-02"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">Councilperson 2</span><span class="lock-status mono">DEALING</span></li>
+          <li class="lock-card" data-node="NODE-03"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">Councilperson 3</span><span class="lock-status mono">DEALING</span></li>
+          <li class="lock-card" data-node="NODE-04"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">Councilperson 4</span><span class="lock-status mono">DEALING</span></li>
+          <li class="lock-card" data-node="NODE-05"><span class="lock-icon" aria-hidden="true"></span><span class="node-id mono">Councilperson 5</span><span class="lock-status mono">DEALING</span></li>
       </ol>
     </section>
     <section id="view-chamber" class="view" aria-label="Council chamber">
@@ -217,9 +220,9 @@
             <div class="gdw-scale mono" aria-hidden="true"><span>0%</span><span>100%</span></div>
           </div>
           <div class="citizens-stat">
-            <p class="label">The 500 citizens</p>
+            <p class="label">Sample of 500 citizens</p>
             <p id="approval-stat" class="approval-stat"><span id="approval-num" class="mono">&mdash;</span> <span class="muted">approve the last policy</span></p>
-            <p id="citizens-online" class="mono caption muted">250,000 CITIZENS &middot; 500 SIMULATED</p>
+            <p id="citizens-online" class="mono caption muted">250,000 CITIZENS &middot; SAMPLE OF 500</p>
           </div>
           <div class="scoreboard-wrap">
             <p class="label">Council scores <span id="scoreboard-round" class="mono muted"></span></p>
@@ -303,10 +306,10 @@
               <span class="override-armed-icon" aria-hidden="true">!</span>
               <div>
                 <p class="override-armed-title mono">OVERRIDE PROTOCOL ARMED</p>
-                <p class="override-armed-text">Any node may spend its one Override: that vote counts double. The Loom will not say who.</p>
+                <p class="override-armed-text">Any councilperson may spend their one Override: that vote counts double. The Loom will not say who.</p>
               </div>
             </div>
-            <p class="label">Blind vote — nodes locked in <span id="vote-count" class="mono accent">0/5</span></p>
+            <p class="label">Blind vote: councilpersons locked in <span id="vote-count" class="mono accent">0/5</span></p>
             <ol class="vote-pips">
               <li class="vote-pip" data-node="NODE-01"><span class="mono">01</span></li>
               <li class="vote-pip" data-node="NODE-02"><span class="mono">02</span></li>
@@ -403,7 +406,7 @@
         <p class="label accent">The leaderboard</p>
         <table id="end-table" class="end-table">
           <thead>
-            <tr><th>Node</th><th>Player</th><th>Character</th><th class="col-author">Write-in policy &middot; Borda rank</th><th class="col-points">Points</th></tr>
+            <tr><th>Seat</th><th>Player</th><th>Character</th><th class="col-author">Write-in policy &middot; Borda rank</th><th class="col-points">Points</th></tr>
           </thead>
           <tbody id="end-roles-body"></tbody>
         </table>
@@ -445,157 +448,7 @@
     <div class="cine-letterbox bottom"></div>
 
     <div id="cine-logo" class="cine-logo" role="img" aria-label="The Loom">
-        <svg
-          viewBox="0 0 920 315"
-                    fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <defs>
-            <!-- Warm Metallic Gold Gradient matching 'TheLoom_Text.jpg' & 'The Loom_ A Perfect World.png' -->
-            <linearGradient id="cine-gold-grad" x1="0%" y1="0%" x2="100%" y2="90%">
-              <stop offset="0%" stop-color="#FFF7DF" />
-              <stop offset="28%" stop-color="#F6DFB0" />
-              <stop offset="62%" stop-color="#E4C180" />
-              <stop offset="100%" stop-color="#FDF0CE" />
-            </linearGradient>
-
-            <!-- Luminous Core Glow for the Intertwined O's -->
-            <filter id="cine-gold-glow" x="-25%" y="-25%" width="150%" height="150%">
-              <feGaussianBlur stdDeviation="3.2" result="blur1" />
-              <feGaussianBlur stdDeviation="9" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur2" />
-                <feMergeNode in="blur1" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <!-- Intense Starburst Flare Filter -->
-            <radialGradient id="cine-flare-radial" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
-              <stop offset="22%" stop-color="#FFF3C4" stop-opacity="0.92" />
-              <stop offset="55%" stop-color="#E8B858" stop-opacity="0.38" />
-              <stop offset="100%" stop-color="#E8B858" stop-opacity="0" />
-            </radialGradient>
-          </defs>
-
-          <!-- ============================================================
-               DELICATE GOLDEN LOOM LIGHT THREADS (Radiating in background)
-          ============================================================= -->
-          <g opacity="0.58">
-            <!-- Sweeping upper-right to lower-left golden thread through the intertwined O's -->
-            <path
-              class="cine-thread"
-              d="M 195 276 C 242 260, 290 128, 356 128 C 412 128, 422 238, 365 245 C 310 250, 326 112, 412 96"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="1.65"
-              fill="none"
-            />
-            <!-- Secondary gossamer arc echoing the celestial planetary rings -->
-            <path
-              class="cine-thread"
-              d="M 225 256 C 282 222, 318 140, 372 138 C 405 137, 405 224, 358 232"
-              stroke="#FFF6DC"
-              stroke-width="0.95"
-              stroke-opacity="0.7"
-              fill="none"
-            />
-          </g>
-
-          <!-- ============================================================
-               "T H E" — Centered Above in Wide-Tracked Geometric Sans
-          ============================================================= -->
-          <g filter="url(#cine-gold-glow)" stroke="url(#cine-gold-grad)" stroke-width="3.6" stroke-linecap="square" stroke-linejoin="miter">
-            <!-- T -->
-            <path class="cine-letter" d="M 332 24 H 366 M 349 24 V 68" />
-            <!-- H -->
-            <path class="cine-letter" d="M 426 24 V 68 M 458 24 V 68 M 426 46 H 458" />
-            <!-- E -->
-            <path class="cine-letter" d="M 548 24 H 520 V 68 H 548 M 520 46 H 544" />
-          </g>
-
-          <!-- ============================================================
-               "L   O O   M" — Exact Cutout Geometry from Reference Images
-          ============================================================= -->
-          <g filter="url(#cine-gold-glow)">
-            <!-- LETTER 'L' (Far Left, thin architectural stroke) -->
-            <path
-              class="cine-letter"
-              d="M 62 110 V 242 H 136"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="6.5"
-              stroke-linecap="butt"
-              stroke-linejoin="miter"
-            />
-
-            <!-- FIRST 'O' (Left Ring of the Intertwined Infinity Loom) -->
-            <!-- Has the subtle lower-right gap/weave where the inner thread crosses -->
-            <path
-              class="cine-letter"
-              d="M 342 152 A 69 69 0 1 0 326 226"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="6.8"
-              stroke-linecap="round"
-            />
-
-            <!-- INTERTWINED INNER FIGURE-EIGHT GOLDEN WEAVE -->
-            <path
-              class="cine-thread"
-              d="M 272 242 C 322 242, 344 122, 384 122 C 418 122, 420 226, 382 228 C 344 230, 336 122, 294 122"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="2.6"
-              fill="none"
-              opacity="0.92"
-            />
-
-            <!-- SECOND 'O' (Right Ring overlapping the First 'O') -->
-            <circle
-              class="cine-letter"
-              cx="464"
-              cy="176"
-              r="67"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="6.8"
-            />
-
-            <!-- LETTER 'M' (Sharp Geometric Peaks on Right) -->
-            <path
-              class="cine-letter"
-              d="M 604 242 L 620 112 L 672 232 L 724 112 L 740 242"
-              stroke="url(#cine-gold-grad)"
-              stroke-width="6.5"
-              stroke-linecap="butt"
-              stroke-linejoin="miter"
-            />
-          </g>
-
-          <!-- ============================================================
-               WARM GOLDEN LENS-FLARE SPARKLE ON LOWER-LEFT OF FIRST 'O'
-          ============================================================= -->
-          <g class="cine-flare">
-            <!-- Soft radial golden halo -->
-            <circle cx="272" cy="238" r="36" fill="url(#cine-flare-radial)" />
-            <!-- Long horizontal & vertical needle rays -->
-            <path
-              d="M 218 238 L 326 238 M 272 198 L 272 278"
-              stroke="#FFFDF7"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              opacity="0.9"
-            />
-            <!-- Diagonal sparkle rays -->
-            <path
-              d="M 248 216 L 296 260 M 248 260 L 296 216"
-              stroke="#FFF6D6"
-              stroke-width="1.1"
-              stroke-linecap="round"
-              opacity="0.75"
-            />
-            <!-- Bright star core -->
-            <circle cx="272" cy="238" r="4.2" fill="#FFFFFF" />
-          </g>
-        </svg>
+        <div class="cine-wordmark" aria-hidden="true"><span class="cine-wordmark-the">THE</span><span class="cine-wordmark-loom">LOOM</span></div>
       <div class="cine-tagline">
         <div>A PERFECT WORLD.</div>
         <div>A QUESTION WITHOUT AN ANSWER.</div>
@@ -607,7 +460,7 @@
         <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <circle cx="12" cy="16" r="7" stroke="currentColor" stroke-width="1.8"/>
           <circle cx="20" cy="16" r="7" stroke="currentColor" stroke-width="1.8"/>
-          <circle cx="9.5" cy="21.5" r="2" fill="#FFF8E7"/>
+          <circle cx="9.5" cy="21.5" r="2" fill="#ECF3FA"/>
         </svg>
         <span>Initiate New Council</span>
         <svg class="cine-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -630,25 +483,25 @@
       <svg class="cine-gate-emblem" viewBox="0 0 240 120" fill="none" aria-hidden="true">
         <defs>
           <linearGradient id="cine-pre-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#FFF4D4"/><stop offset="50%" stop-color="#E5C17B"/><stop offset="100%" stop-color="#B8873D"/>
+            <stop offset="0%" stop-color="#DDEAF6"/><stop offset="50%" stop-color="#80B0E0"/><stop offset="100%" stop-color="#437AB2"/>
           </linearGradient>
         </defs>
         <circle cx="82" cy="60" r="38" stroke="url(#cine-pre-gold)" stroke-width="2.5" opacity="0.9"/>
         <circle cx="158" cy="60" r="38" stroke="url(#cine-pre-gold)" stroke-width="2.5" opacity="0.9"/>
-        <path d="M 65 88 C 95 95, 112 28, 142 32 C 166 36, 166 84, 142 88 C 112 92, 98 25, 68 35" stroke="#FFF6DF" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.85"/>
-        <circle cx="72" cy="94" r="3.5" fill="#FFFDF5"/>
+        <path d="M 65 88 C 95 95, 112 28, 142 32 C 166 36, 166 84, 142 88 C 112 92, 98 25, 68 35" stroke="#E5EFF9" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.85"/>
+        <circle cx="72" cy="94" r="3.5" fill="#F7FAFD"/>
       </svg>
       <p class="cine-gate-kicker">A Classroom Council Simulation</p>
       <p class="cine-gate-title">The Loom</p>
       <span class="cine-gate-pill"><span class="cine-gate-dot"></span>Click to begin (with sound)</span>
-      <p class="cine-gate-hint">Best on the projector &middot; fullscreen with F11</p>
+      <p class="cine-gate-hint">Best on a big screen &middot; fullscreen with F11</p>
     </div>
   </div>
 
   <script src="config.js"></script>
+  <script src="js/labels.js"></script>
   <script src="vendor/socket.io.min.js"></script>
   <script src="js/charts.js"></script>
-  <script src="js/mathbold.js"></script>
   <script src="js/council.js"></script>
   <script src="js/cinematic.js"></script>
   <script src="js/host.js"></script>

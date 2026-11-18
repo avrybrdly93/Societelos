@@ -54,4 +54,62 @@ function scoreRound(character, effects, { satisfactionDelta = 0, approvalShare =
   };
 }
 
-module.exports = { MAX_ROUND_POINTS, scoreRound, personalFit, groupFit };
+/**
+ * Vote scoring for a binary round (A vs B). Every council member earns up to
+ * 100 points:
+ *
+ *   agenda vote  50  you voted for the option closer to your character's
+ *                    ideals (10 for voting the other way, 0 for no vote),
+ *                    whether or not it passed
+ *   it passed    30  the enacted policy is the one closer to your ideals
+ *   the council  20  the shared goal (groupFit: satisfaction swing + approval)
+ *
+ * "Closer to your ideals" is personalFit (cosine of the option's effects
+ * against the character's idea vector). Options within AGENDA_TIE of each
+ * other both count as on-agenda. A shutdown round is worth 0 for everyone.
+ */
+const VOTE_POINTS = 50;
+const OFF_AGENDA_VOTE_POINTS = 10;
+const PASSED_POINTS = 30;
+const COUNCIL_POINTS = 20;
+const AGENDA_TIE = 0.02;
+
+/** 'A' | 'B' | 'either': the option that best fits a character's ideals. */
+function agendaOption(character, effectsA, effectsB) {
+  const a = personalFit(character, effectsA);
+  const b = personalFit(character, effectsB);
+  if (Math.abs(a - b) <= AGENDA_TIE) return 'either';
+  return a > b ? 'A' : 'B';
+}
+
+/**
+ * @param character  role with `ideas`
+ * @param options    { A: effects, B: effects }
+ * @param context    { vote: 'A'|'B'|null, winner: 'A'|'B', satisfactionDelta, approvalShare, shutdown }
+ * @returns {{ points, vote, passed, council, agenda, votedWithAgenda, personal, group }}
+ */
+function scoreVote(character, options, { vote = null, winner = 'A', satisfactionDelta = 0, approvalShare = 0, shutdown = false } = {}) {
+  const agenda = agendaOption(character, options && options.A, options && options.B);
+  const onAgenda = (key) => key === 'A' || key === 'B' ? (agenda === 'either' || agenda === key) : false;
+  const votedWithAgenda = onAgenda(vote);
+  const group = groupFit(satisfactionDelta, approvalShare);
+  const parts = {
+    vote: !vote ? 0 : votedWithAgenda ? VOTE_POINTS : OFF_AGENDA_VOTE_POINTS,
+    passed: onAgenda(winner) ? PASSED_POINTS : 0,
+    council: Math.round(COUNCIL_POINTS * group)
+  };
+  const points = shutdown ? 0 : Math.min(MAX_ROUND_POINTS, parts.vote + parts.passed + parts.council);
+  return {
+    points,
+    ...(shutdown ? { vote: 0, passed: 0, council: 0 } : parts),
+    agenda,
+    votedWithAgenda,
+    personal: Math.round(personalFit(character, options && options[winner]) * 100) / 100,
+    group: Math.round(group * 100) / 100
+  };
+}
+
+module.exports = {
+  MAX_ROUND_POINTS, VOTE_POINTS, OFF_AGENDA_VOTE_POINTS, PASSED_POINTS, COUNCIL_POINTS,
+  scoreRound, scoreVote, agendaOption, personalFit, groupFit
+};

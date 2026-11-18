@@ -49,6 +49,14 @@ Array of the 10 recurring citizens:
 }
 ```
 - `mode` is `binary` (cycles 1-4) or `writein` (cycle 5 finale; options A/B are the offline fallback).
+- **The crisis tree.** Binary crises on the tree carry `path`, the council's earlier decisions that lead to them:
+  - cycle 1: `{ "world": "fixed", "root": "ownership", "path": "" }` (each game draws one root from its game id)
+  - cycle 2: `{ "world": "fixed", "root": "ownership", "path": "A" }` and `"path": "B"`, following the cycle 1 decision
+  - cycle 3: `{ "world": "AA", "path": "" }` (the world is decision 1 + decision 2)
+  - cycle 4: `{ "world": "AA", "path": "A" }` and `"path": "B"`, following the cycle 3 decision
+  - cycle 5: the world's write-in `finale`
+  Each branch stays on the theme of the policy that opened it. Crises without `path` are Blitz Mode extras.
+- Copy is short (the projector reads it aloud): incident at most 30 words, option text at most 20 (`npm run check:data`).
 - An option may carry `effectsByWorld` (`{ "A": effects, "B": effects }`, keyed by the cycle 1 result) instead of `effects`, plus `rolesByWorld` the same way. Fixed Crisis 2B uses this.
 - An option may set `volatility` (a multiplier on simulation noise and shock odds for the rest of the game; 2A uses 1.5).
 - Optional per option: `targetGdwDelta` (tuning target), `loomLine`, `reactions` (citizen lines), and `loomLines` (`{ "good", "mixed", "bad" }`, max 200 chars each): the offline Loom line for each outcome band, preferred over `loomLine` when Gemini is unavailable.

@@ -67,6 +67,11 @@ const ROOM_CODE_LENGTH = 4;
 // leave the server and are never written to logs.
 const NODE_IDS = Object.freeze(['NODE-01', 'NODE-02', 'NODE-03', 'NODE-04', 'NODE-05']);
 const MAX_PLAYERS = NODE_IDS.length;
+/** What people see for a seat: 'NODE-03' -> 'Councilperson 3'. */
+function councilLabel(node) {
+  const n = parseInt(String(node || '').slice(-2), 10);
+  return Number.isFinite(n) ? `Councilperson ${n}` : 'Councilperson';
+}
 
 // Phase state machine. These strings are part of the socket contract.
 const PHASES = Object.freeze({
@@ -91,13 +96,13 @@ const TOTAL_CYCLES = 5;
 // The game is set in 2121: cycle 1 is 2121, cycle 5 is 2125.
 const START_YEAR = 2121;
 // The goal of the game, stated the same way everywhere (intro, phones, projector).
-const GAME_GOAL = 'Steer society through five crises, one a year from 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points: every round, up to 100 for how well the winning policy fits your character and the council\'s shared goal.';
+const GAME_GOAL = 'Five crises, 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, score the most: vote for what your character believes, and earn a bonus when it passes.';
 // What the Loom says at the start (the projector shows and speaks the same lines).
 const INTRO_TRANSMISSION = Object.freeze([
   'The year is 2121. I have automated all labor. Scarcity, disease and toil are solved problems.',
   'Survival for 250,000 citizens is mathematically guaranteed. I cannot compute purpose.',
   'Societal Satisfaction stands at 25%. My models forecast a 94% probability of revolt within five years.',
-  "As society enters a new phase, I've chosen five citizens at random to have them decide the ultimate fate of humanity. You.",
+  "I have chosen five citizens at random to decide the fate of humanity. You.",
   GAME_GOAL
 ]);
 const STARTING_GDW = 25;
@@ -112,6 +117,11 @@ const DEFAULT_FINALE_POLICY = 'Keep the current policies in place and review the
 // Upper bound on narration time (loom.js aborts Gemini after 8 s) added to the
 // RESOLUTION safety timer.
 const LOOM_BUDGET_MS = 10000;
+// INCIDENT pacing: the projector's crisis title card, then the Loom reads the
+// crisis aloud (~2.3 words a second at its slow speaking rate).
+const CRISIS_CARD_MS = 6200;
+const NARRATION_MS_PER_WORD = 430;
+const NARRATION_PAUSE_MS = 1500; // a beat after the Loom stops talking
 
 /** Clamp GDW to [0, 100] and round to one decimal place (e.g. 25.0%). */
 function roundGdw(value) {
@@ -154,11 +164,11 @@ const PHASE_STARTERS = {
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
-  INTRO: 45, // long enough for the full spoken transmission (~40 s)
+  INTRO: 75, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
   ROLE_ASSIGN: 20,
   CHAMBER: 10,
-  INCIDENT: 15,
-  DEBATE: 90,
+  INCIDENT: 15, // minimum; stretched to fit the Loom reading the crisis (incidentDurationMs)
+  DEBATE: 165, // debate + vote = a 3-minute round
   VOTE: 15,
   RESOLUTION: 20,
   WORLD_REVEAL: 10,
@@ -169,8 +179,9 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   FINALE_ENACT: 20
 });
 
-// Teacher-selectable debate lengths (host:config): 60 s or 90 s.
-const DEBATE_CHOICES = Object.freeze([60, 90]);
+// Teacher-selectable debate lengths (host:config): with the 15 s vote, a
+// 2-minute (105 s) or 3-minute (165 s, default) round.
+const DEBATE_CHOICES = Object.freeze([105, 165]);
 
 // Debug: FAST_TIMERS=true shrinks every phase to this many seconds.
 const FAST_TIMER_SECONDS = 3;
@@ -344,11 +355,50 @@ function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
  * Pick the crisis for a cycle: cycles 1-2 are fixed, 3+ come from the
  * world (vote1 + vote2), and the finale is the world's write-in finale.
  */
-function selectCrisis(crises, cycle, worldKey, roles = [], isFinale = (cycle === TOTAL_CYCLES)) {
+/**
+ * The crisis tree (data/crises.json). Every binary crisis on the tree carries
+ * `path`, the council's earlier decisions that lead to it:
+ *   cycle 1 ..... a root crisis ({ root, path: '' }); the root is drawn per game
+ *   cycle 2 ..... { root, path: 'A' | 'B' }      follows the cycle 1 decision
+ *   cycle 3 ..... { world, path: '' }             the world is decision 1 + decision 2
+ *   cycle 4 ..... { world, path: 'A' | 'B' }      follows the cycle 3 decision
+ *   cycle 5 ..... the world's write-in finale
+ * Each branch stays on the theme of the policy that opened it, so two games
+ * only meet the same policies when the councils make the same choices.
+ */
+function treeRoots(crises) {
+  const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : [];
+  return Array.from(new Set(list.filter((c) => c.root && c.cycle === 1 && c.mode === 'binary').map((c) => c.root)));
+}
+
+function selectTreeCrisis(list, cycle, worldKey, tree) {
+  const votes = tree.votes || {};
+  const used = new Set(tree.used || []);
+  const binary = list.filter((c) => c.mode === 'binary' && typeof c.path === 'string');
+  let raw = null;
+  if (cycle === 1) raw = binary.find((c) => c.root === tree.root && c.cycle === 1);
+  else if (cycle === 2) raw = binary.find((c) => c.root === tree.root && c.cycle === 2 && c.path === (votes[1] || 'A'));
+  else if (cycle === 3) raw = binary.find((c) => c.world === worldKey && c.cycle === 3 && c.path === '');
+  else if (cycle === 4) raw = binary.find((c) => c.world === worldKey && c.cycle === 4 && c.path === (votes[3] || 'A'));
+  if (raw && !used.has(raw.id)) return raw;
+  // Off the tree (Blitz Mode runs extra cycles): an unplayed crisis from this
+  // world, then any unplayed one, so a long session never repeats itself.
+  const fresh = (c) => c.mode === 'binary' && !used.has(c.id);
+  return list.find((c) => fresh(c) && c.world === worldKey && c.cycle >= 3)
+    || list.find((c) => fresh(c) && c.world !== 'fixed')
+    || raw
+    || null;
+}
+
+function selectCrisis(crises, cycle, worldKey, roles = [], isFinale = (cycle === TOTAL_CYCLES), tree = null) {
   const world = cycle <= 2 ? 'fixed' : worldKey;
   const mode = isFinale ? 'writein' : 'binary';
   let raw = null;
   const list = Array.isArray(crises) ? crises : crises && Array.isArray(crises.crises) ? crises.crises : null;
+  if (!isFinale && list && tree && tree.root) {
+    raw = selectTreeCrisis(list, cycle, worldKey, tree);
+    if (raw) return normalizeCrisis(raw, { world: raw.world || world, cycle, mode, roles });
+  }
   if (isFinale) {
     const finaleId = crises && crises.worlds && crises.worlds[worldKey] && crises.worlds[worldKey].finale;
     raw = (list && list.find((c) => c.id === finaleId))
@@ -581,6 +631,9 @@ class GameState extends EventEmitter {
     this.citizens = []; // the 500 simulated citizens (server/citizens.js)
     this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
+    this.treeRoot = null; // which root of the crisis tree this game opens with
+    this.fixedRoot = null; // optional: always open with this root (tests, demos)
+    this.crisisPath = []; // [{ cycle, id }]: the crises this game has played, in order
 
     // Current cycle.
     this.crisis = null;
@@ -808,7 +861,7 @@ class GameState extends EventEmitter {
     const champ = this.endData.champion;
     this.addLoomLine('end', this.endData.shutdown
       ? 'Societal Satisfaction has reached zero. I am shutting down. Nobody wins.'
-      : `The record is complete. Societal Satisfaction ends at ${this.endData.finalGdw}%.${champ ? ` The highest score belongs to ${champ.node}, ${champ.character ? champ.character.name : ''}, with ${champ.total} points.` : ''}`);
+      : `The record is complete. Societal Satisfaction ends at ${this.endData.finalGdw}%.${champ ? ` The highest score belongs to ${councilLabel(champ.node)}, ${champ.character ? champ.character.name : ''}, with ${champ.total} points.` : ''}`);
     this.emit('game:end', this.endData);
   }
 
@@ -981,14 +1034,44 @@ class GameState extends EventEmitter {
       this.sessionEndsAt = Date.now() + (this.sessionDurationSec * 1000);
     }
     const isFinale = this.isFinaleCycle();
-    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale);
+    this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale, {
+      root: this.treeRoot, votes: this.voteHistory, used: this.crisisPath.map((p) => p.id)
+    });
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
+    else this.crisisPath.push({ cycle: this.cycle, id: this.crisis.id });
     if (isFinale) this.initFinale();
-    this.enterPhase(PHASES.INCIDENT);
+    this.enterPhase(PHASES.INCIDENT, {}, this.incidentDurationMs());
     if (this.crisis) {
-      this.addLoomLine('crisis', `${this.crisis.title}. ${this.crisis.incident}`);
+      const title = String(this.crisis.title || '').trim();
+      this.addLoomLine('crisis', `${title}${/[.!?]$/.test(title) ? '' : '.'} ${this.crisis.incident}`);
       if (this.crisis.loomIntro) this.addLoomLine('voice', this.crisis.loomIntro);
     }
+  }
+
+  /**
+   * INCIDENT lasts until the Loom has finished reading the crisis aloud: the
+   * projector reports 'host:narrated' and the phase moves on 1.5 s later.
+   * The timer is only a safety net (a projector that never reports), sized
+   * for the title card plus the words at a slow speaking pace. Short test
+   * timers (FAST_TIMERS) are left alone.
+   */
+  incidentDurationMs() {
+    const base = this.durations.INCIDENT;
+    if (!(base >= 10000) || !this.crisis) return base;
+    const words = `${this.crisis.title} ${this.crisis.incident} ${this.crisis.loomIntro || ''}`.split(/\s+/).filter(Boolean).length;
+    return Math.max(base, Math.min(90000, CRISIS_CARD_MS + words * NARRATION_MS_PER_WORD + 6000));
+  }
+
+  /**
+   * The projector finished reading INCIDENT (or INTRO) aloud: move on after a
+   * short pause. Ignored for any other phase or an out-of-date cycle.
+   */
+  narrationDone(phase, cycle) {
+    if (phase !== this.phase || ![PHASES.INCIDENT, PHASES.INTRO].includes(phase)) return { ok: false, reason: 'WRONG_PHASE' };
+    if (phase === PHASES.INCIDENT && Number(cycle) !== this.cycle) return { ok: false, reason: 'WRONG_CYCLE' };
+    if (this.endsAt && this.endsAt <= Date.now() + NARRATION_PAUSE_MS) return { ok: true, endsAt: this.endsAt };
+    const endsAt = this.startPhaseTimer(NARRATION_PAUSE_MS, () => { if (this.phase === phase) this.advancePhase(); });
+    return { ok: true, endsAt };
   }
 
   /**
@@ -1385,6 +1468,9 @@ class GameState extends EventEmitter {
     this.debateReady = new Set();
     const extra = { options: this.publicOptions(), poll: this.citizenPoll() };
     if (this.showForecastBeforeVote && this.crisis) extra.forecasts = this.publicForecasts();
+    // The round (debate + vote) as one countdown, for the projector's bar.
+    this.roundTotalMs = this.durations.DEBATE + this.durations.VOTE;
+    extra.round = { totalMs: this.roundTotalMs, endsAt: Date.now() + this.roundTotalMs };
     this.enterPhase(PHASES.DEBATE, extra);
   }
 
@@ -1415,7 +1501,8 @@ class GameState extends EventEmitter {
   startBlindVotePhase() {
     this.votes = {};
     this.votingOpen = true;
-    this.enterPhase(PHASES.VOTE);
+    const totalMs = this.roundTotalMs || this.durations.DEBATE + this.durations.VOTE;
+    this.enterPhase(PHASES.VOTE, { round: { totalMs, endsAt: Date.now() + this.durations.VOTE } });
     // Private per-phone Override status (never broadcast: it would reveal who spent one).
     for (const node of Object.keys(this.players)) {
       this.emit('override:status', { node, overrideAvailable: this.overrideAvailable(node) });
@@ -1545,21 +1632,30 @@ class GameState extends EventEmitter {
 
   /**
    * Round scoring (server/scoring.js): every council member earns 0-100
-   * points from the enacted policy, weighted by their character between
-   * their own ideals (personal fit) and the council's shared goal (change in
-   * Societal Satisfaction and citizen approval). Records the ledger entry and
-   * returns { node: { points, personal, group, groupWeight } }.
+   * points. In an A/B round: 50 for voting with their character's agenda
+   * (whether or not it passes), 30 more when the enacted policy is the one
+   * their character prefers, 20 from the council's shared goal. Records the
+   * ledger entry and returns { node: award }.
    */
   awardRoundPoints(winner, effects, previousGdw, realizedGdw, approval) {
     const awards = {};
     const shutdown = !(realizedGdw > 0);
+    // A binary round scores each member's own vote against their character's
+    // agenda (scoring.scoreVote); the finale package has no A/B, so it keeps
+    // the enacted-policy formula (scoring.scoreRound).
+    const binary = winner === 'A' || winner === 'B';
+    const options = binary ? { A: this.effectsFor('A'), B: this.effectsFor('B') } : null;
     for (const node of Object.keys(this.players)) {
       const character = this.roleAssignment && this.roleAssignment[node];
-      const award = scoring.scoreRound(character, effects, {
+      const context = {
         satisfactionDelta: realizedGdw - previousGdw,
         approvalShare: approval ? approval.share : 0,
         shutdown
-      });
+      };
+      const vote = this.votes && this.votes[node] ? this.votes[node].choice : null;
+      const award = binary
+        ? scoring.scoreVote(character, options, { ...context, vote, winner })
+        : scoring.scoreRound(character, effects, context);
       awards[node] = award;
       this.scores[node] = (this.scores[node] || 0) + award.points;
     }
@@ -1576,7 +1672,10 @@ class GameState extends EventEmitter {
   scoreUpdatesFor(awards) {
     return Object.keys(this.players).map((node) => {
       const a = awards[node] || { points: 0, personal: 0, group: 0 };
-      return { node, cycle: this.cycle, gained: a.points, personal: a.personal, group: a.group, total: this.scores[node] || 0 };
+      const update = { node, cycle: this.cycle, gained: a.points, personal: a.personal, group: a.group, total: this.scores[node] || 0 };
+      // Vote rounds: the breakdown the phone shows (agenda vote / passed / council).
+      if (typeof a.vote === 'number') Object.assign(update, { vote: a.vote, passed: a.passed, council: a.council, votedWithAgenda: !!a.votedWithAgenda });
+      return update;
     });
   }
 
@@ -1854,6 +1953,11 @@ class GameState extends EventEmitter {
       this.cycleMarkers = [];
       this.volatility = 1.0;
       this.voteHistory = {};
+      this.crisisPath = [];
+      const roots = treeRoots(this.data.crises);
+      // fixedRoot (tests, demos) pins the opening crisis; otherwise the game id draws it.
+      this.treeRoot = roots.includes(this.fixedRoot) ? this.fixedRoot
+        : roots.length ? roots[Math.floor(createPrng(hashSeed(this.gameId, 'root'))() * roots.length)] : null;
       this.worldKey = null;
       this.ending = null;
       this.endData = null;
@@ -1895,6 +1999,8 @@ class GameState extends EventEmitter {
     this.isTransitioning = false;
     this.transition = null;
     this.voteHistory = {};
+    this.treeRoot = null;
+    this.crisisPath = [];
     this.scoreLedger = [];
     this.roleAssignment = null;
     this.finaleFallback = false;
@@ -2418,6 +2524,8 @@ module.exports = {
   isValidSeed,
   hashSeed,
   createPrng,
+  councilLabel,
+  treeRoots,
   seededShuffle,
   roleKey,
   resolveSimulate,

@@ -15,7 +15,7 @@
     },
     "groupWeight": 0.6,
     "goal": "Bold progress that gives every citizen a purpose, using the Loom's power for good.",
-    "winCondition": "Each round you earn up to 100 points: 60% from how the enacted policy serves the whole society, 40% from how well it matches your ideals.",
+    "winCondition": "Each round: 50 points for voting with your ideals (even if you lose the vote), 30 more if the policy closest to your ideals passes, and up to 20 for the council's shared goal.",
     "cardText": "You believe the Loom is the greatest tool humanity ever built. The problem is not the machine: it is that nobody has given people something worth doing with it. Push the council toward progress, invention and hope."
   },
   {
@@ -34,7 +34,7 @@
     },
     "groupWeight": 0.4,
     "goal": "Protect family, community and the human ways of living the Loom is quietly erasing.",
-    "winCondition": "Each round you earn up to 100 points: 40% from how the enacted policy serves the whole society, 60% from how well it matches your ideals.",
+    "winCondition": "Each round: 50 points for voting with your ideals (even if you lose the vote), 30 more if the policy closest to your ideals passes, and up to 20 for the council's shared goal.",
     "cardText": "You remember neighbourhoods where people knew each other's names. The Loom made life easier and emptier. Steer the council toward community, continuity and caution about handing the machine any more of your lives."
   },
   {
@@ -53,7 +53,7 @@
     },
     "groupWeight": 0.75,
     "goal": "Keep people healthy and the system running. Avoid gambles that could break the region.",
-    "winCondition": "Each round you earn up to 100 points: 75% from how the enacted policy serves the whole society, 25% from how well it matches your ideals.",
+    "winCondition": "Each round: 50 points for voting with your ideals (even if you lose the vote), 30 more if the policy closest to your ideals passes, and up to 20 for the council's shared goal.",
     "cardText": "Ideals are lovely until the lights go out. You care about what works: health, order and a society that does not lurch from crisis to crisis. Back the option that keeps 250,000 people safe, even when it is dull."
   },
   {
@@ -72,7 +72,7 @@
     },
     "groupWeight": 0.25,
     "goal": "Break the old structures of power: more freedom and fairness, even if it costs comfort.",
-    "winCondition": "Each round you earn up to 100 points: 25% from how the enacted policy serves the whole society, 75% from how well it matches your ideals.",
+    "winCondition": "Each round: 50 points for voting with your ideals (even if you lose the vote), 30 more if the policy closest to your ideals passes, and up to 20 for the council's shared goal.",
     "cardText": "A perfect world run by a machine and a handful of owners is still a cage. You want people free to choose, and power shared fairly, even if the road is rough. Push the council to take risks for a fairer future."
   },
   {
@@ -91,7 +91,7 @@
     },
     "groupWeight": 0.5,
     "goal": "Put human connection, care and fairness ahead of efficiency in every decision.",
-    "winCondition": "Each round you earn up to 100 points: 50% from how the enacted policy serves the whole society, 50% from how well it matches your ideals.",
+    "winCondition": "Each round: 50 points for voting with your ideals (even if you lose the vote), 30 more if the policy closest to your ideals passes, and up to 20 for the council's shared goal.",
     "cardText": "Every number on the Loom's dashboard is a person. You want policies that bring people together, look after the vulnerable and treat everyone fairly. Remind the council who all of this is for."
   }
 ]

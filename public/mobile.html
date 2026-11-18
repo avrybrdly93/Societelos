@@ -8,6 +8,7 @@
   <title>Societelos — Council Node</title>
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/theme-future.css">
 </head>
 <body class="mobile">
   <!-- Phone controller for one council node (NODE-01..NODE-05). -->
@@ -42,7 +43,7 @@
     <section id="m-view-join" class="m-view is-active" aria-label="Join">
       <p class="m-kicker mono">THE LOOM · SECURE CHANNEL</p>
       <h1 class="m-title">Council Access</h1>
-      <p class="muted">The year is 2121. Enter a name. Only the Loom will see it; the projector shows your seat number.</p>
+      <p class="muted">The year is 2121. Enter a name. Only the Loom will see it; the screen shows your seat number.</p>
       <div class="m-goal">
         <p class="m-label mono">The goal</p>
         <p id="m-goal-text" class="m-goal-text">Steer society through five crises, one a year from 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, earn the most points: every round, up to 100 for how well the winning policy fits your character and the council's shared goal.</p>
@@ -57,9 +58,9 @@
     <section id="m-view-wait" class="m-view" aria-label="Waiting">
       <div class="m-center">
         <p class="m-kicker mono">CONNECTION ESTABLISHED</p>
-        <div id="wait-node" class="node-badge mono">NODE-0?</div>
+        <div id="wait-node" class="node-badge mono">Councilperson</div>
         <p id="wait-status" class="m-status">Waiting for the council to assemble…</p>
-        <p class="muted">Keep this screen open. The projector will start the session.</p>
+        <p class="muted">Keep this page open. The main screen will start the session.</p>
       </div>
     </section>
     <section id="m-view-role" class="m-view" aria-label="Your character">
@@ -85,13 +86,13 @@
     <section id="m-view-loom" class="m-view" aria-label="The Loom speaks">
       <p class="m-kicker mono">THE LOOM SPEAKS</p>
       <ol id="m-loom-feed" class="m-loom-feed m-loom-feed-main" aria-live="polite"></ol>
-      <p class="muted m-loom-hint">Watch the projector. The council debates next.</p>
+      <p class="muted m-loom-hint">Watch the screen. The council debates next.</p>
     </section>
     <section id="m-view-debate" class="m-view" aria-label="Debate">
       <div class="m-center">
         <p id="m-finale-fallback" class="m-finale-fallback mono" role="status" hidden>THE LOOM COULD NOT INTERPRET THE WRITE-INS. VOTE A OR B ON THE AUTHORED PROTOCOLS.</p>
         <p class="m-kicker mono">DEBATE IN PERSON</p>
-        <h2 class="m-title">Look at the projector</h2>
+        <h2 class="m-title">Look at the screen</h2>
         <div id="debate-clock" class="m-clock mono">--:--</div>
         <p class="muted">Argue. Persuade. Mislead if you must. The vote is blind.</p>
         <div class="debate-ready-container">
@@ -125,7 +126,7 @@
         <div class="vote-lock-icon mono" aria-hidden="true">&#10003;</div>
         <p class="vote-lock-title mono">VOTE RECORDED</p>
         <p id="vote-lock-choice" class="muted"></p>
-        <p class="muted">Waiting for other nodes…</p>
+        <p class="muted">Waiting for the other councilpersons…</p>
       </div>
     </section>
     <section id="m-view-world" class="m-view" aria-label="World reveal">
@@ -194,7 +195,7 @@
         <div class="vote-lock-icon mono" aria-hidden="true">&#10003;</div>
         <p class="vote-lock-title mono">BALLOT ENCRYPTED — AWAITING ENACTMENT</p>
         <ol id="rank-locked-order" class="rank-locked-order mono" aria-label="Your ranking"></ol>
-        <p class="muted">Waiting for the other nodes. The top three are enacted 50 / 25 / 25.</p>
+        <p class="muted">Waiting for the other councilpersons. The top three are enacted 50 / 25 / 25.</p>
       </div>
     </section>
     <section id="m-view-result" class="m-view" aria-label="Resolution">
@@ -218,10 +219,10 @@
       </div>
     </section>
     <section id="m-view-end" class="m-view" aria-label="Session complete">
-      <p class="m-kicker mono">SESSION COMPLETE · <span id="end-node">NODE</span></p>
+      <p class="m-kicker mono">SESSION COMPLETE · <span id="end-node">COUNCILPERSON</span></p>
       <div id="end-card" class="result-card end-card">
         <p id="end-outcome" class="result-outcome mono">THE LOOM IS TALLYING…</p>
-        <h2 id="end-headline" class="end-headline">Look at the projector.</h2>
+        <h2 id="end-headline" class="end-headline">Look at the screen.</h2>
         <p id="end-role" class="end-role muted"></p>
       </div>
       <div class="end-score">
@@ -243,8 +244,8 @@
   </main>
 
   <script src="config.js"></script>
+  <script src="js/labels.js"></script>
   <script src="vendor/socket.io.min.js"></script>
-  <script src="js/mathbold.js"></script>
   <script src="js/mobile.js"></script>
 </body>
 </html>

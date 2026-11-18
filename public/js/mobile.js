@@ -110,14 +110,14 @@
   }
 
   function setNodeLabel(node) {
-    document.getElementById('m-node-label').textContent = node || 'NOT CONNECTED';
-    document.getElementById('wait-node').textContent = node || 'NODE-0?';
+    document.getElementById('m-node-label').textContent = node ? window.councilLabel(node).toUpperCase() : 'NOT CONNECTED';
+    document.getElementById('wait-node').textContent = node ? window.councilLabel(node) : 'Councilperson';
   }
 
   // Join form -> lobby:join { name }
   const JOIN_ERRORS = {
     ROOM_FULL: 'The council is full. All five nodes are taken.',
-    NO_ROOM: 'No council session found. Is the projector open?',
+    NO_ROOM: 'No council session found. Is the main screen open?',
     GAME_IN_PROGRESS: 'A session is already running.',
     BAD_PAYLOAD: 'Enter a name (up to 24 characters).'
   };
@@ -157,7 +157,7 @@
     const status = document.getElementById('wait-status');
     if (status && state.phase === 'LOBBY') {
       status.textContent = players.length >= 5
-        ? 'All five nodes connected. Waiting for the projector…'
+        ? 'All five councilpersons connected. Waiting for the main screen…'
         : `${players.length}/5 nodes connected. Waiting for the council to assemble…`;
     }
   });
@@ -195,9 +195,9 @@
       li.append(name, bar, val);
       ideas.appendChild(li);
     });
-    const gw = typeof role.groupWeight === 'number' ? Math.round(role.groupWeight * 100) : 50;
-    document.getElementById('role-balance-fill').style.width = `${gw}%`;
-    document.getElementById('role-balance-label').textContent = `${gw}% COUNCIL GOAL \u00b7 ${100 - gw}% YOUR IDEAS`;
+    // Each round: 50 for voting your agenda, 30 if it passes, 20 for the council.
+    document.getElementById('role-balance-fill').style.width = '80%';
+    document.getElementById('role-balance-label').textContent = 'VOTE YOUR AGENDA +50 \u00b7 IT PASSES +30 \u00b7 COUNCIL +20';
     document.getElementById('drawer-role-name').textContent = role.name || '';
     document.getElementById('drawer-goal').textContent = role.goal || '';
     document.getElementById('drawer-win').textContent = role.winCondition || '';
@@ -226,17 +226,17 @@
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
-    INTRO: 'Incoming transmission. Watch the projector.',
-    CHAMBER: 'The region is coming online. Watch the projector.',
-    INCIDENT: 'A crisis is unfolding. Watch the projector.',
-    RESOLUTION: 'The Loom is simulating your decision. Watch the projector.',
-    WORLD_REVEAL: 'Your world is taking shape. Watch the projector.',
-    FINALE_WRITE: 'Finale in progress. Watch the projector.',
+    INTRO: 'Incoming transmission. Watch the screen.',
+    CHAMBER: 'The region is coming online. Watch the screen.',
+    INCIDENT: 'A crisis is unfolding. Watch the screen.',
+    RESOLUTION: 'The Loom is simulating your decision. Watch the screen.',
+    WORLD_REVEAL: 'Your world is taking shape. Watch the screen.',
+    FINALE_WRITE: 'Finale in progress. Watch the screen.',
     FINALE_MOD: 'The Loom is reviewing policies…',
-    FINALE_DEBATE: 'Debate the policies on the projector.',
+    FINALE_DEBATE: 'Debate the policies on the screen.',
     FINALE_RANK: 'Ranking in progress…',
-    FINALE_ENACT: 'The Loom is enacting your policies. Watch the projector.',
-    END: 'Session complete. Look at the projector.'
+    FINALE_ENACT: 'The Loom is enacting your policies. Watch the screen.',
+    END: 'Session complete. Look at the screen.'
   };
 
   let debateReadyTimer = null;
@@ -270,6 +270,7 @@
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
+    state.round = payload.round && ['DEBATE', 'VOTE'].includes(payload.phase) ? payload.round : null;
     state.sessionEndsAt = payload.sessionEndsAt || null;
     state.sessionTimerEnabled = !!payload.sessionTimerEnabled;
     document.body.dataset.phase = payload.phase;
@@ -379,7 +380,12 @@
     const secs = Math.ceil(remaining / 1000);
     // Text is written only when it changes (a same-value write still forces
     // a layout every frame on the phone).
-    const clockText = state.endsAt ? `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}` : '--:--';
+    // In a round (debate + vote) the clock shows the whole round's time, and
+    // only for its last 30 seconds; the bar above counts down meanwhile.
+    const roundLeft = state.round ? Math.max(0, state.round.endsAt - Date.now()) : null;
+    const clockSecs = roundLeft === null ? secs : Math.ceil(roundLeft / 1000);
+    debateClock.classList.toggle('is-hidden', roundLeft !== null && roundLeft > 30000);
+    const clockText = state.endsAt ? `${String(Math.floor(clockSecs / 60)).padStart(2, '0')}:${String(clockSecs % 60).padStart(2, '0')}` : '--:--';
     if (debateClock.textContent !== clockText) debateClock.textContent = clockText;
     state.remainingMs = remaining;
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
@@ -544,9 +550,17 @@
     el.hidden = false;
     el.textContent = `+${payload.gained} POINTS THIS YEAR`;
     const pct = (x) => `${Math.round((Number(x) || 0) * 100)}%`;
-    document.getElementById('result-score-why').textContent = typeof payload.personal === 'number'
-      ? `Fit with your ideas ${pct(payload.personal)} \u00b7 council goal ${pct(payload.group)}`
-      : '';
+    const why = document.getElementById('result-score-why');
+    if (typeof payload.vote === 'number') {
+      // Vote rounds: what the vote earned, whether it passed, the council's share.
+      const voteLine = payload.vote === 0 ? 'No vote cast +0'
+        : payload.votedWithAgenda ? `Voted your agenda +${payload.vote}` : `Voted against your agenda +${payload.vote}`;
+      why.textContent = [voteLine, payload.passed ? `It passed +${payload.passed}` : 'Your side lost +0', `Council goal +${payload.council}`].join(' \u00b7 ');
+    } else {
+      why.textContent = typeof payload.personal === 'number'
+        ? `Fit with your ideas ${pct(payload.personal)} \u00b7 council goal ${pct(payload.group)}`
+        : '';
+    }
     document.getElementById('result-total').textContent = `Your total: ${payload.total} of 500`;
   });
 
@@ -567,7 +581,7 @@
     card.classList.toggle('is-won', won);
     card.classList.toggle('is-lost', !!data.shutdown);
     card.classList.toggle('is-shared', won && winners.length > 1);
-    document.getElementById('end-node').textContent = state.node || 'NODE';
+    document.getElementById('end-node').textContent = state.node ? window.councilLabel(state.node).toUpperCase() : 'COUNCILPERSON';
     const outcome = document.getElementById('end-outcome');
     const headline = document.getElementById('end-headline');
     if (data.shutdown) {

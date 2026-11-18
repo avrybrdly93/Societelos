@@ -10,15 +10,16 @@ const assert = require('node:assert/strict');
 const { simulate, createInitialState, computeGDW } = require('../sim');
 const simConfig = require('../../data/sim.json');
 const crises = require('../../data/crises.json');
+const { fixedPath, worldPath } = require('../sim/calibrate');
 
 const RUNS = 500;
 const SEED = 20261119;
 const last = (a) => a[a.length - 1];
-const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
 
 /** Simulated state at the end of cycle 2 along `world`'s path, and its volatility. */
 function cycle2State(world) {
   const [v1, v2] = world.split('');
+  const fixed = fixedPath(crises, v1);
   let state = createInitialState(simConfig);
   let volatility = 1;
   [v1, v2].forEach((v, i) => {
@@ -35,6 +36,7 @@ const medianDelta = (start, effects, volatility) => last(simulate(start, effects
 /** { afterCycle2, ends: { AA: gdw, AB, BA, BB } } for cycles 3-4 choices. */
 function worldPaths(world) {
   const [v1, v2] = world.split('');
+  const fixed = fixedPath(crises, v1);
   let state = createInitialState(simConfig);
   let volatility = 1;
   [v1, v2].forEach((v, i) => {
@@ -43,10 +45,10 @@ function worldPaths(world) {
     state = simulate(state, effects, { runs: RUNS, seed: SEED + i, volatility }).finalState;
     if (typeof o.volatility === 'number') volatility = o.volatility;
   });
-  const c3 = crises.crises.find((c) => c.world === world && c.cycle === 3);
-  const c4 = crises.crises.find((c) => c.world === world && c.cycle === 4);
   const ends = {};
   for (const a of ['A', 'B']) {
+    // On the tree, cycle 4 follows the cycle 3 decision.
+    const [c3, c4] = worldPath(crises, world, a);
     const r3 = simulate(state, c3.options[a].effects, { runs: RUNS, seed: SEED + 2, volatility });
     for (const b of ['A', 'B']) {
       const r4 = simulate(r3.finalState, c4.options[b].effects, { runs: RUNS, seed: SEED + 3, volatility });
@@ -64,8 +66,10 @@ test('World BB: the comfortable 1B -> 2B opening is punished hardest in cycles 3
   // ...and its worst cycles 3-4 path falls further than any other world's.
   for (const w of ['AA', 'AB', 'BA']) assert.ok(worstDrop('BB') < worstDrop(w) - 5, `BB worst drop ${worstDrop('BB').toFixed(1)} vs ${w} ${worstDrop(w).toFixed(1)}`);
   // The comfort options (lotus/assimilator: the stipend, then the sweep) are that worst path: a drop of 10+.
-  const bb = crises.crises.filter((c) => c.world === 'BB' && (c.cycle === 3 || c.cycle === 4)).sort((a, b) => a.cycle - b.cycle);
-  const comfort = bb.map((c) => ['A', 'B'].find((k) => (c.options[k].roles || []).includes('lotus'))).join('');
+  const bb3 = worldPath(crises, 'BB')[0];
+  const k3 = ['A', 'B'].find((k) => (bb3.options[k].roles || []).includes('lotus'));
+  const bb4 = worldPath(crises, 'BB', k3)[1];
+  const comfort = k3 + ['A', 'B'].find((k) => (bb4.options[k].roles || []).includes('lotus'));
   assert.ok(worlds.BB.ends[comfort] - worlds.BB.afterCycle2 <= -10, `BB comfort path ${comfort} drops ${(worlds.BB.ends[comfort] - worlds.BB.afterCycle2).toFixed(1)}`);
 });
 

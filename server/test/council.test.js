@@ -8,7 +8,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
 const engine = require('../gameEngine');
 const citizens = require('../citizens');
@@ -140,13 +139,4 @@ test('the game says "Societal Satisfaction", never GDW, and no "//" anywhere on 
       assert.ok(!m[2].includes('//'), `${f}: string "${m[2].slice(0, 60)}" shows "//"`);
     }
   }
-});
-
-test('mathbold converts titles to Unicode Mathematical Bold and back', () => {
-  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'js', 'mathbold.js'), 'utf8');
-  const sandbox = { window: {}, document: { readyState: 'loading', addEventListener() {} } };
-  vm.runInNewContext(src, sandbox);
-  const { toMathBold, fromMathBold } = sandbox.window.LoomMathBold;
-  assert.equal(toMathBold('The Loom 2121'), '\u{1D413}\u{1D421}\u{1D41E} \u{1D40B}\u{1D428}\u{1D428}\u{1D426} \u{1D7D0}\u{1D7CF}\u{1D7D0}\u{1D7CF}');
-  assert.equal(fromMathBold(toMathBold('Who Owns the Loom? 99%')), 'Who Owns the Loom? 99%');
 });

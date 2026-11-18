@@ -23,6 +23,7 @@ function playFourCycles({ gameId = 'integration01', voteFor, phaseSeconds = {} }
     if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
   game.gameId = gameId;
+  game.fixedRoot = 'ownership'; // the Who Owns the Loom? root of the crisis tree
   const out = { game, phases: [], resolutions: [], reveals: [], scores: [], roles: {} };
   const log = console.log;
   console.log = () => {};
@@ -80,10 +81,12 @@ test('integration: gameEngine + server/loom.js (offline narration on every resol
 
 test('integration: data/crises.json worlds AA and AB drive cycles 3-4', () => {
   const data = engine.loadGameData();
-  const expected = { AA: ['aa-purpose-drift', 'aa-lost-knowledge'], AB: ['ab-the-pods', 'ab-mood-dial'] };
+  // On the crisis tree, cycle 4 follows the cycle 3 decision (here A).
+  const expected = { AA: ['aa-purpose-drift', 'aa-robot-art'], AB: ['ab-the-pods', 'ab-curated-bonds'] };
   for (const [world, ids] of Object.entries(expected)) {
     [3, 4].forEach((cycle, i) => {
-      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles);
+      const votes = { 1: world[0], 2: world[1], 3: 'A' };
+      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles, false, { root: 'ownership', votes, used: [] });
       assert.equal(crisis.id, ids[i]);
       assert.equal(crisis.mode, 'binary');
       assert.ok(crisis.incident && crisis.loomIntro, `${crisis.id} has incident and Loom intro`);
@@ -111,13 +114,13 @@ function checkWorldRun(out, world, crisisIds) {
 
 test('integration: headless 4-cycle playthrough on the AA (Commonwealth) branch', async () => {
   const out = await playFourCycles({ gameId: 'playthroughAA', voteFor: () => ['A'] });
-  checkWorldRun(out, 'AA', ['aa-purpose-drift', 'aa-lost-knowledge']);
+  checkWorldRun(out, 'AA', ['aa-purpose-drift', 'aa-robot-art']);
   assert.equal(out.game.volatility, 1.5, 'The Assembly (2A) made the rest of the game volatile');
 });
 
 test('integration: headless 4-cycle playthrough on the AB (Benevolent Machine) branch', async () => {
   const out = await playFourCycles({ gameId: 'playthroughAB', voteFor: (cycle) => [cycle === 2 ? 'B' : 'A'] });
-  checkWorldRun(out, 'AB', ['ab-the-pods', 'ab-mood-dial']);
+  checkWorldRun(out, 'AB', ['ab-the-pods', 'ab-curated-bonds']);
   assert.equal(out.game.volatility, 1, 'Delegated Control keeps normal volatility');
   // Crisis 2B after 1A: the Loom governs, with the assimilator tag.
   assert.deepEqual(out.resolutions[1].result.governance, { holder: 'loom', line: 'The Loom will govern on your behalf.' });
@@ -227,12 +230,13 @@ test('full 5-cycle state machine on FAST_TIMERS: offline finale falls back to A/
 test('BA and BB world keys load their Cycle 3, 4 and 5 crises from data/crises.json', () => {
   const data = engine.loadGameData();
   const expected = {
-    BA: ['ba-shadow-elite', 'ba-status-wars', 'ba-vote-to-seize'],
+    BA: ['ba-shadow-elite', 'ba-media-monopoly', 'ba-vote-to-seize'],
     BB: ['bb-scroll-extinction', 'bb-the-unplugged', 'bb-march-datacenter']
   };
   for (const [world, ids] of Object.entries(expected)) {
     [3, 4, 5].forEach((cycle, i) => {
-      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles);
+      const votes = { 1: world[0], 2: world[1], 3: 'A' };
+      const crisis = engine.selectCrisis(data.crises, cycle, world, data.roles, cycle === 5, { root: 'ownership', votes, used: [] });
       assert.equal(crisis.id, ids[i], `${world} cycle ${cycle}`);
       assert.equal(crisis.world, world);
       assert.equal(crisis.mode, cycle === 5 ? 'writein' : 'binary');

@@ -21,27 +21,27 @@ function lobbyGame() {
 
 // TASK-613 ------------------------------------------------------------------
 
-test('host:config switches the debate timer between 90 s and 60 s in the lobby', () => {
+test('host:config switches the debate timer between 165 s and 105 s (3- and 2-minute rounds) in the lobby', () => {
   const game = lobbyGame();
-  assert.equal(game.getConfig().debateSeconds, 90, 'default: the 16-minute game');
-  assert.deepEqual(game.configure({ debateSeconds: 60 }), { ok: true, config: game.getConfig() });
-  assert.equal(game.durations.DEBATE, 60000);
-  assert.equal(game.getConfig().debateSeconds, 60);
-  assert.equal(game.configure({ debateSeconds: 90 }).ok, true);
-  assert.equal(game.durations.DEBATE, 90000);
+  assert.equal(game.getConfig().debateSeconds, 165, 'default: a 3-minute round with the vote');
+  assert.deepEqual(game.configure({ debateSeconds: 105 }), { ok: true, config: game.getConfig() });
+  assert.equal(game.durations.DEBATE, 105000);
+  assert.equal(game.getConfig().debateSeconds, 105);
+  assert.equal(game.configure({ debateSeconds: 165 }).ok, true);
+  assert.equal(game.durations.DEBATE, 165000);
 });
 
 test('host:config rejects other debate lengths and any change once the game has started', () => {
   const game = lobbyGame();
   assert.deepEqual(game.configure({ debateSeconds: 45 }), { ok: false, reason: 'BAD_DEBATE_SECONDS' });
-  assert.deepEqual(game.configure({ debateSeconds: '60' }), { ok: false, reason: 'BAD_DEBATE_SECONDS' });
-  assert.equal(game.durations.DEBATE, 90000, 'unchanged');
+  assert.deepEqual(game.configure({ debateSeconds: '105' }), { ok: false, reason: 'BAD_DEBATE_SECONDS' });
+  assert.equal(game.durations.DEBATE, 165000, 'unchanged');
   const log = console.log;
   console.log = () => {};
   try {
     NODE_IDS.forEach((n, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(n, true); });
     game.startIntroPhase();
-    assert.deepEqual(game.configure({ debateSeconds: 60 }), { ok: false, reason: 'GAME_IN_PROGRESS' });
+    assert.deepEqual(game.configure({ debateSeconds: 105 }), { ok: false, reason: 'GAME_IN_PROGRESS' });
   } finally {
     game.clearPhaseTimer();
     console.log = log;
@@ -50,7 +50,7 @@ test('host:config rejects other debate lengths and any change once the game has 
 
 test('the configured debate length is what the DEBATE phase timer uses', () => {
   const game = lobbyGame();
-  game.configure({ debateSeconds: 60 });
+  game.configure({ debateSeconds: 105 });
   const log = console.log;
   console.log = () => {};
   try {
@@ -62,7 +62,7 @@ test('the configured debate length is what the DEBATE phase timer uses', () => {
     game.crisis = engine.selectCrisis(game.data.crises, 1, null, game.data.roles);
     const before = Date.now();
     game.startDebatePhase();
-    assert.ok(Math.abs(game.endsAt - before - 60000) < 1000, 'DEBATE ends 60 s from now');
+    assert.ok(Math.abs(game.endsAt - before - 105000) < 1000, 'DEBATE ends 105 s from now');
   } finally {
     game.clearPhaseTimer();
     console.log = log;
@@ -76,8 +76,8 @@ test('host:config toggles showForecastBeforeVote, and DEBATE carries forecasts o
   game.showForecastBeforeVote = false;
   assert.equal(game.getConfig().showForecastBeforeVote, false);
   assert.deepEqual(game.configure({ showForecastBeforeVote: 'yes' }), { ok: false, reason: 'BAD_SHOW_FORECAST' });
-  const res = game.configure({ showForecastBeforeVote: true, debateSeconds: 60 });
-  assert.deepEqual(res, { ok: true, config: { debateSeconds: 60, showForecastBeforeVote: true } });
+  const res = game.configure({ showForecastBeforeVote: true, debateSeconds: 105 });
+  assert.deepEqual(res, { ok: true, config: { debateSeconds: 105, showForecastBeforeVote: true } });
 
   const log = console.log;
   console.log = () => {};

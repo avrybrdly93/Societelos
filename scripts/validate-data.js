@@ -152,30 +152,46 @@ function checkCrises(data, citizenIds) {
   return undefined;
 }
 
-// Completeness of the 14 core crises a standard game can reach: the 2 fixed
-// crises, each world's cycle 3 and 4 crises and its write-in finale. Each
-// needs an incident, a Loom intro, options A and B with effects and role
-// tags, a role-slanted intel drop for all 5 roles, citizen feed lines and
-// debate hooks. Blitz-only extras (cycles 5-6) are not held to this.
+// The crisis tree (see selectCrisis in server/gameEngine.js). Every root has
+// a cycle 1 crisis (path '') and a cycle 2 crisis after each decision (path
+// 'A' and 'B'); every world has a cycle 3 crisis (path '') and a cycle 4
+// crisis after each cycle 3 decision, plus its write-in finale. Each tree
+// crisis needs an incident, a Loom intro, options A and B with effects and
+// role tags, citizen feed lines and debate hooks. Blitz-only extras are not
+// held to this. Copy stays short: the projector reads it aloud.
+const MAX_INCIDENT_WORDS = 30;
+const MAX_OPTION_WORDS = 20;
 function checkCoreCrises(data) {
   const worlds = data.worlds || {};
-  const core = data.crises.filter((c) => c.world === 'fixed'
-    || (c.mode === 'binary' && (c.cycle === 3 || c.cycle === 4))
-    || (worlds[c.world] && worlds[c.world].finale === c.id));
-  if (core.length !== 14) err('crises.json', `expected 14 core crises (2 fixed + 8 world binary + 4 finales), found ${core.length}`);
-  for (const c of core) {
-    const where = `crises.json[${c.id}] (core)`;
+  const list = data.crises;
+  const need = (where, found) => { if (!found) err('crises.json', `crisis tree: no crisis for ${where}`); return found; };
+  const core = [];
+  const roots = Array.from(new Set(list.filter((c) => c.root).map((c) => c.root)));
+  if (!roots.length) err('crises.json', 'crisis tree: no roots');
+  for (const root of roots) {
+    core.push(need(`root ${root} cycle 1`, list.find((c) => c.root === root && c.cycle === 1 && c.path === '')));
+    for (const p of ['A', 'B']) core.push(need(`root ${root} cycle 2 after ${p}`, list.find((c) => c.root === root && c.cycle === 2 && c.path === p)));
+  }
+  for (const w of WORLDS) {
+    core.push(need(`world ${w} cycle 3`, list.find((c) => c.world === w && c.cycle === 3 && c.path === '')));
+    for (const p of ['A', 'B']) core.push(need(`world ${w} cycle 4 after ${p}`, list.find((c) => c.world === w && c.cycle === 4 && c.path === p)));
+    core.push(list.find((c) => worlds[w] && worlds[w].finale === c.id));
+  }
+  for (const c of core.filter(Boolean)) {
+    const where = `crises.json[${c.id}] (tree)`;
     if (!isStr(c.loomIntro)) err(where, 'empty loomIntro');
+    if (isStr(c.incident) && c.incident.split(/\s+/).length > MAX_INCIDENT_WORDS) err(where, `incident over ${MAX_INCIDENT_WORDS} words`);
     for (const k of ['A', 'B']) {
       const o = (c.options || {})[k] || {};
       if (!isStr(o.name) || !isStr(o.text)) err(where, `option ${k} needs name and text`);
+      if (isStr(o.text) && o.text.split(/\s+/).length > MAX_OPTION_WORDS) err(where, `option ${k} text over ${MAX_OPTION_WORDS} words`);
       if (!o.effects && !o.effectsByWorld) err(where, `option ${k} has no effects`);
       if (!(o.roles || o.rolesByWorld)) err(where, `option ${k} has no role tags`);
     }
     if (!Array.isArray(c.feed) || c.feed.length < 2) err(where, 'needs at least 2 citizen feed lines');
-    if (c.world !== 'fixed' && (!Array.isArray(c.debateHooks) || c.debateHooks.length < 2)) err(where, 'needs at least 2 debate hooks');
+    if (!Array.isArray(c.debateHooks) || c.debateHooks.length < 2) err(where, 'needs at least 2 debate hooks');
   }
-  return core.length;
+  return core.filter(Boolean).length;
 }
 
 // No emoji and school-appropriate language in any string of any data file.
@@ -222,4 +238,4 @@ if (errors.length) {
   errors.forEach((e) => console.error(`  - ${e}`));
   process.exit(1);
 }
-console.log(`data/*.json valid (${coreCount} core crises complete)`);
+console.log(`data/*.json valid (${coreCount} crises on the tree complete)`);

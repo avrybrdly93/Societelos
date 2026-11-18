@@ -8,7 +8,7 @@
 // the five seats) or 'spectator' (read-only). Every inbound event is checked
 // by onValid(): rate limit, payload schema, and a crash-proof handler.
 //
-//   host -> server    host:start { seed? }, host:skipIntro, host:config, host:playAgain,
+//   host -> server    host:start { seed? }, host:skipIntro, host:narrated, host:config, host:playAgain,
 //                     host:toggleBots, host:configureSession, host:triggerFinale
 //   phone -> server   lobby:join, lobby:ready, session:resume, spectate:join,
 //                     vote:cast, debate:ready, finale:submit, finale:rank
@@ -120,8 +120,8 @@ const FINALE_SCHEMAS = Object.freeze({
 // Polite refusals for a phone that cannot take a seat (e.g. a 6th student).
 // The seated five are never touched; the phone may still watch the projector.
 const JOIN_REFUSALS = Object.freeze({
-  GAME_IN_PROGRESS: 'GAME IN PROGRESS. This council already has its five trustees. Watch the projector; you can join the next game.',
-  ROOM_FULL: 'COUNCIL FULL. All five nodes are taken. Watch the projector; you can join the next game.'
+  GAME_IN_PROGRESS: 'GAME IN PROGRESS. This council already has its five councilpersons. Watch the screen; you can join the next game.',
+  ROOM_FULL: 'COUNCIL FULL. All five seats are taken. Watch the screen; you can join the next game.'
 });
 
 function joinRefusal(reason) {
@@ -383,7 +383,7 @@ function initSockets(io, gameEngine) {
       reply({ ok: true });
     });
 
-    // host:config { debateSeconds?: 60 | 90, showForecastBeforeVote?: boolean }
+    // host:config { debateSeconds?: 105 | 165, showForecastBeforeVote?: boolean }
     // -> teacher settings, lobby only. The ack carries the full config;
     // everyone in the room gets host:config.
     onValid(socket, 'host:config', { debateSeconds: 'number?', showForecastBeforeVote: 'boolean?' }, (payload, reply) => {
@@ -419,6 +419,13 @@ function initSockets(io, gameEngine) {
       if (game.phase !== 'INTRO') return reply({ ok: false, reason: 'NOT_IN_INTRO' });
       game.advancePhase();
       return reply({ ok: true, phase: game.phase });
+    });
+
+    // host:narrated { phase, cycle } -> the Loom finished reading INTRO or a
+    // crisis (INCIDENT) aloud on the projector: move on after a short beat.
+    onValid(socket, 'host:narrated', { phase: 'string', cycle: 'number?' }, (payload, reply) => {
+      const res = game.narrationDone(payload.phase, payload.cycle);
+      return reply(res);
     });
 
     // host:start { seed? } -> begin the phase flow once all 5 nodes have

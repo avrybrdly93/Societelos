@@ -119,11 +119,11 @@
     return img;
   }
 
-  const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
-  const seatOf = (node) => ROMAN[(parseInt(String(node).slice(-2), 10) || 1) - 1] || '';
 
   const shortName = (n) => String(n || '').replace(/^The\s+/i, '');
 
+  // Seats: tall portrait cards (the whole face), grouped in the bottom-left
+  // corner so the council in the chamber art stays in view.
   function renderSeats() {
     const list = $('council-seats');
     if (!list) return;
@@ -137,13 +137,12 @@
       li.appendChild(portrait(c.portrait, 'seat-portrait'));
       const body = el('div', 'seat-body');
       body.append(
-        el('span', 'seat-pos', `Seat ${seatOf(m.node)} · ${m.node}`),
         el('span', 'seat-name', shortName(c.name) || m.node),
-        el('span', 'seat-motto', c.motto ? `“${c.motto}”` : '')
+        el('span', 'seat-pos', window.councilLabel(m.node))
       );
       const score = el('div', 'seat-score');
       score.append(el('span', 'seat-total mono', scoreByNode[m.node] || 0), el('span', 'seat-round mono', roundByNode[m.node] ? `+${roundByNode[m.node]}` : ''));
-      li.append(body, score);
+      li.append(score, body);
       list.appendChild(li);
     });
   }
@@ -161,7 +160,7 @@
       const body = el('div', 'char-body');
       const gw = Number.isFinite(c.groupWeight) ? Math.round(c.groupWeight * 100) : null;
       body.append(
-        el('span', 'char-node mono', `Seat ${seatOf(m.node)} · ${m.node}`),
+        el('span', 'char-node mono', window.councilLabel(m.node)),
         el('span', 'char-name', c.name || ''),
         el('span', 'char-motto', c.motto ? `“${c.motto}”` : '')
       );
@@ -194,7 +193,7 @@
           el('span', 'score-rank mono', i + 1),
           portrait(r.character && r.character.portrait, 'score-portrait'),
           el('span', 'score-name', shortName(r.character && r.character.name) || r.node),
-          el('span', 'score-node mono', r.node),
+          el('span', 'score-node mono', window.councilLabel(r.node)),
           el('span', 'score-round mono', r.round ? `+${r.round}` : ''),
           el('span', 'score-total mono', r.total)
         );
@@ -222,11 +221,26 @@
     const list = $('loom-feed');
     if (!list || !line || !line.text) return;
     const li = el('li', `loom-feed-item is-${line.kind || 'voice'}`);
-    li.append(el('span', 'loom-feed-meta mono', `${KIND_LABEL[line.kind] || 'The Loom'} · ${line.year || ''}`), el('p', 'loom-feed-text', line.text));
+    const text = el('p', 'loom-feed-text');
+    li.append(el('span', 'loom-feed-meta mono', `${KIND_LABEL[line.kind] || 'The Loom'} · ${line.year || ''}`), text);
     list.prepend(li);
+    revealWords(text, line.text, quiet);
     while (list.children.length > FEED_MAX) list.lastElementChild.remove();
     while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastElementChild.remove();
     if (!quiet) pulseThreads();
+  }
+  // One word at a time, like the Loom speaking (instant for history replays).
+  const FEED_WORD_MS = 120;
+  function revealWords(target, str, instant) {
+    const words = String(str).split(/\s+/).filter(Boolean);
+    target.textContent = '';
+    const spans = words.map((w, i) => {
+      const span = el('span', instant || reducedMotion ? 'feed-word is-in' : 'feed-word', w);
+      target.append(span, i < words.length - 1 ? ' ' : '');
+      return span;
+    });
+    if (instant || reducedMotion) return;
+    spans.forEach((span, i) => setTimeout(() => span.classList.add('is-in'), i * FEED_WORD_MS));
   }
   let threadTimer = null;
   function pulseThreads() {
@@ -319,7 +333,7 @@
   const confetti = (() => {
     const canvas = $('confetti');
     const ctx = canvas && canvas.getContext && canvas.getContext('2d');
-    const COLOURS = ['#e6c687', '#f5d998', '#fcefc8', '#b8791a', '#d98c6a', '#b5cc78'];
+    const COLOURS = ['#9fd3ff', '#c7b6ff', '#ffffff', '#6aa8ff', '#e4dcff', '#7fe3f0'];
     let bits = [];
     let raf = null;
     function spawn(n) {
@@ -419,6 +433,57 @@
     socket.on('game:end', (d) => { shutdown = !!(d && d.shutdown); if (d && d.worldKey) worldKey = d.worldKey; setScene('view-end'); });
     return undefined;
   }
+
+  // ---------------------------------------------------------------------------
+  // Lobby bubbles: glassy bubbles rising behind the join screen.
+  // ---------------------------------------------------------------------------
+  const lobbyBubbles = (() => {
+    const view = $('view-lobby');
+    if (!view || reducedMotion) return { sync() {} };
+    const canvas = document.createElement('canvas');
+    canvas.className = 'lobby-bubbles';
+    canvas.width = 1920;
+    canvas.height = 984;
+    canvas.setAttribute('aria-hidden', 'true');
+    view.prepend(canvas);
+    const ctx = canvas.getContext && canvas.getContext('2d');
+    const bubbles = Array.from({ length: 70 }, () => {
+      const r = Math.random() < 0.7 ? 4 + Math.random() * 12 : 14 + Math.random() * 26;
+      return { x: Math.random() * 1920, y: Math.random() * 984, r, vy: -(0.25 + Math.random() * 0.6) * (16 / (r + 8)) - 0.12, p: Math.random() * 6.3, a: 0.16 + Math.random() * 0.3 };
+    });
+    let raf = null;
+    function frame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const b of bubbles) {
+        b.p += 0.02;
+        b.x += Math.sin(b.p) * 0.3;
+        b.y += b.vy;
+        if (b.y < -b.r * 2) { b.y = canvas.height + b.r * 2; b.x = Math.random() * canvas.width; }
+        const g = ctx.createRadialGradient(b.x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.1, b.x, b.y, b.r);
+        g.addColorStop(0, `rgba(255, 255, 255, ${b.a * 0.5})`);
+        g.addColorStop(0.6, `rgba(170, 205, 255, ${b.a * 0.1})`);
+        g.addColorStop(1, `rgba(190, 175, 255, ${b.a * 0.35})`);
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(200, 220, 255, ${b.a})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    return {
+      sync() {
+        const on = view.classList.contains('is-active');
+        if (on && raf === null && ctx) raf = requestAnimationFrame(frame);
+        if (!on && raf !== null) { cancelAnimationFrame(raf); raf = null; }
+      }
+    };
+  })();
+  const lobbyView = $('view-lobby');
+  if (lobbyView) new MutationObserver(() => lobbyBubbles.sync()).observe(lobbyView, { attributes: true, attributeFilter: ['class'] });
+  lobbyBubbles.sync();
 
   setScene('view-lobby');
   wire();

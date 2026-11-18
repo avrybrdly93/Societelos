@@ -1,0 +1,295 @@
+/* ===========================================================================
+   FUTURE THEME — loaded last on the projector and the phones.
+   Clean and futuristic: charcoal glass, light blue, lavender and white, all
+   in Montserrat (no serif, no italics). Also the projector's chamber layout:
+   the council in the art stays in view, the five councilpersons sit as tall
+   portrait cards in the bottom-left corner, and a thin bar counts down each
+   round across the top.
+=========================================================================== */
+
+:root {
+  /* Surfaces: charcoal with a cold tint. */
+  --slate-950: #0a0d14;
+  --slate-900: #10141d;
+  --slate-800: #171c27;
+  --slate-700: #262d3b;
+  --slate-600: #3b4457;
+  --slate-400: #a3aec4;
+  --slate-200: #dde4f2;
+  --slate-50: #f6f8fd;
+
+  /* Accents: light blue, lavender, white. */
+  --sky: #9fd0ff;
+  --sky-bright: #d4eaff;
+  --lavender: #c1b2ff;
+  --lavender-deep: #7d6cf0;
+  --ice: #f4f8ff;
+
+  --loom-cyan: var(--sky);
+  --loom-cyan-dim: #4f78a8;
+  --loom-glow: rgba(159, 208, 255, 0.35);
+  --teal: #8fdcff;
+  --amber: var(--lavender);
+  --alert-crimson: #ff5c77;
+  --alert-crimson-dim: #8a2b44;
+
+  --gold: var(--sky);
+  --gold-bright: var(--sky-bright);
+  --cream: var(--ice);
+  --gold-line: rgba(170, 205, 255, 0.26);
+  --gold-line-strong: rgba(190, 215, 255, 0.58);
+  --ember-1: #6f7dff;
+  --ember-2: #8f6cf0;
+  --glass: rgba(14, 18, 28, 0.66);
+  --glass-strong: rgba(12, 16, 25, 0.82);
+
+  --bg: var(--slate-900);
+  --bg-raised: var(--slate-800);
+  --bg-sunken: var(--slate-950);
+  --border: var(--gold-line);
+  --text: var(--slate-50);
+  --text-muted: var(--slate-400);
+  --accent: var(--sky);
+
+  --font-house: 'Montserrat', system-ui, sans-serif;
+  --font-sans: var(--font-house);
+  --font-mono: var(--font-house);
+}
+
+/* ---- Type: Montserrat everywhere, never italic -------------------------- */
+html body, html body *, html body *::before, html body *::after,
+html body input, html body textarea, html body select, html body button {
+  font-family: var(--font-house) !important;
+  font-style: normal !important;
+}
+html body { font-variant-numeric: tabular-nums; }
+html body :is(i, em, cite, blockquote, q, address) { font-style: normal !important; }
+
+/* Titles: bold, lightly tracked. */
+html body :is(h1, h2, h3, .policy-name, .incident-title, .world-name, .seat-name, .char-name, .champion-character,
+.enact-title, .finale-title, .end-winner-title, .vote-name, .m-char-name, .score-name, .m-title, .topbar-brand, .cine-gate-title, .cine-crisis-title) {
+  font-family: var(--font-house) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  color: var(--ice);
+}
+/* Labels stay light, uppercase and tracked: the interface voice. */
+/* Sentences: regular case, regular weight, plain tracking. */
+html body :is(.incident-text, .incident-text *, .loom-line, .loom-line *, .debate-hook-text, .debate-hook-text *,
+.incident-subtitle, .policy-text, .policy-text *, .world-tagline, .awakens-quote, .seat-quote, .goal-text, .roles-sub,
+.char-motto, .seat-motto, .loom-feed-text, .loom-feed-text *, .ticker-text, .champion-motto, .proposal-text, .enact-text,
+.rank-text, .feed-package-verdict, .crawl p, .crawl p *, .m-loom-text, .end-closing, .end-closing *) {
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0.005em !important;
+}
+
+/* ---- Page and chrome ----------------------------------------------------- */
+body.host { background: var(--slate-950) !important; }
+body.host .topbar {
+  background: linear-gradient(180deg, rgba(10, 13, 20, 0.92), rgba(12, 16, 25, 0.78)) !important;
+  border-bottom: 1px solid var(--gold-line) !important;
+}
+body.host .topbar-brand { color: var(--ice) !important; }
+body.host .topbar .label { color: var(--sky) !important; }
+body.host .gdw-badge { background: rgba(120, 160, 255, 0.12) !important; border-color: var(--gold-line-strong) !important; color: var(--sky-bright) !important; }
+
+/* Scenes: the painted art, cooled toward blue-white, with a clean dark shade. */
+.scene-shade {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(20, 30, 52, 0.18) 0%, rgba(10, 13, 22, 0.62) 72%, rgba(6, 8, 14, 0.86) 100%),
+    linear-gradient(180deg, rgba(8, 10, 18, 0.45) 0%, transparent 22%, transparent 70%, rgba(6, 8, 14, 0.7) 100%) !important;
+  mix-blend-mode: normal;
+}
+.scene-shade::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(110, 150, 255, 0.16), rgba(160, 130, 255, 0.12));
+  mix-blend-mode: color;
+}
+body[data-scene="view-chamber"] .scene-shade {
+  background:
+    linear-gradient(180deg, rgba(8, 10, 18, 0.72) 0%, rgba(8, 10, 18, 0.35) 30%, rgba(8, 10, 18, 0.05) 55%, rgba(8, 10, 18, 0.25) 85%, rgba(6, 8, 14, 0.7) 100%) !important;
+}
+.scene-veil { background: radial-gradient(ellipse at center, rgba(40, 52, 90, 0.5), #070910 70%) !important; }
+
+/* Glass panels: charcoal, a cold hairline, a soft blue glow. */
+.chamber-col, .lobby-config, .node-card, .lock-card, .feed-item, .result-card, .world-card, .proposal-card, .rank-card,
+.goal-card, .policy-card, .debate-hook, .character-card, .champion-card, .score-row, .lobby-join, .lobby-grid > div {
+  border-color: var(--gold-line) !important;
+}
+.chamber-col { background: var(--glass) !important; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 0 50px rgba(150, 190, 255, 0.05) !important; }
+.btn-primary, .btn-start {
+  background: linear-gradient(135deg, #7c8cff 0%, #9b7bff 55%, #b39cff 100%) !important;
+  color: #fff !important;
+  border: 1px solid rgba(220, 225, 255, 0.6) !important;
+  box-shadow: 0 10px 40px rgba(120, 120, 255, 0.35) !important;
+}
+.btn-primary:disabled, .btn-start:disabled { background: rgba(60, 70, 100, 0.6) !important; box-shadow: none !important; color: var(--slate-400) !important; }
+
+/* ---- Word-by-word Loom text --------------------------------------------- */
+.crawl-word { opacity: 0.08; transition: opacity 0.18s ease, color 0.25s ease, text-shadow 0.25s ease; }
+.crawl-word.is-spoken { opacity: 1; }
+.crawl-word.is-current { color: #ffffff !important; text-shadow: 0 0 14px rgba(170, 210, 255, 0.85), 0 0 28px rgba(150, 130, 255, 0.45) !important; }
+.feed-word { opacity: 0; transition: opacity 0.2s ease; }
+.feed-word.is-in { opacity: 1; }
+.loom-line.is-quoted::before { content: '\201C'; }
+.loom-line.is-quoted::after { content: '\201D'; }
+/* Quote marks wait for the Loom's first word. */
+.loom-line.is-quoted:not(:has(.crawl-word.is-spoken)):has(.crawl-word)::before,
+.loom-line.is-quoted:not(:has(.crawl-word.is-spoken)):has(.crawl-word)::after { opacity: 0; }
+.debate-clock.is-hidden { visibility: hidden; }
+
+/* The Loom's voice: 1.5x larger, white-blue, Montserrat. */
+body.host .loom-line { font-size: 45px !important; line-height: 1.3 !important; color: var(--sky-bright) !important; text-shadow: 0 0 22px rgba(140, 190, 255, 0.28) !important; }
+body.host .resolution-loom { font-size: 36px !important; }
+body.host .loom-feed-text { font-size: 24px !important; line-height: 1.3 !important; color: var(--ice) !important; }
+#view-intro .crawl p { font-size: 38px !important; line-height: 1.28 !important; margin: 0 0 14px !important; }
+#view-intro .crawl p.voice-title { font-size: 26px !important; }
+
+/* ---- Lobby bubbles ------------------------------------------------------- */
+.lobby-bubbles { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+/* ---- Round countdown bar ------------------------------------------------- */
+.round-bar {
+  position: absolute; left: 0; right: 0; top: 96px; height: 8px; z-index: 50;
+  background: rgba(20, 26, 40, 0.65);
+  border-bottom: 1px solid var(--gold-line);
+}
+.round-bar[hidden] { display: none; }
+.round-bar-fill {
+  height: 100%; width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #7c8cff, #9fd0ff 60%, #e9f3ff);
+  box-shadow: 0 0 18px rgba(150, 200, 255, 0.7);
+  will-change: transform;
+}
+.round-bar.is-low .round-bar-fill { background: linear-gradient(90deg, #ff5c77, #ff9bb0); box-shadow: 0 0 18px rgba(255, 92, 119, 0.7); }
+/* The stopwatch only appears for the last 30 seconds of a round. */
+body.clock-hidden .debate-side .debate-clock,
+body.clock-hidden #phase-timer,
+body.clock-hidden #phase-name { visibility: hidden; }
+body.clock-hidden .debate-panel { grid-template-columns: minmax(0, 1fr) !important; }
+body.clock-hidden .debate-side .debate-clock { display: none; }
+
+/* ---- Chamber layout: the council in the art stays visible --------------- */
+#view-chamber.is-active { display: block !important; position: relative; height: 100%; }
+#view-chamber .chamber-grid {
+  display: grid; grid-template-columns: 280px minmax(0, 1fr) 330px; gap: 22px;
+  align-items: start; height: auto;
+}
+#view-chamber .chamber-col { align-self: start; min-height: 0; height: auto !important; }
+#view-chamber .chamber-left { max-height: 560px; }
+#view-chamber .chamber-left .scoreboard-wrap { display: none; } /* scores live on the portrait cards */
+#view-chamber .chamber-center { max-height: 720px; overflow: hidden; }
+#view-chamber .resolution-panel .chart-wrap { min-height: 0 !important; height: 250px; flex: none; }
+#view-chamber .resolution-panel { gap: 8px; }
+#view-chamber .chamber-feed { max-height: 620px; }
+#view-chamber .loom-feed { max-height: 520px; }
+.loom-threads { display: none !important; }
+body.host .incident-text { font-size: 32px !important; line-height: 1.4 !important; color: var(--slate-50) !important; }
+body.host .incident-title { font-size: 54px !important; }
+body.host .policy-text { font-size: 27px !important; line-height: 1.35 !important; }
+body.host .policy-name { font-size: 34px !important; }
+body.host .debate-hook-text { font-size: 30px !important; }
+
+/* Councilpersons: tall portrait cards, bottom-left corner. */
+#view-chamber .council-seats {
+  position: absolute; left: 0; bottom: 0; z-index: 2;
+  display: flex !important; gap: 12px; margin: 0; padding: 0;
+}
+#view-chamber .council-seat {
+  position: relative; display: block !important;
+  width: 124px; height: 196px; padding: 0 !important; overflow: hidden;
+  border: 1px solid var(--gold-line-strong) !important; border-radius: 16px !important;
+  background: #0d1220 !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+#view-chamber .council-seat .seat-portrait {
+  position: absolute; inset: 0; width: 100% !important; height: 100% !important;
+  object-fit: cover; object-position: center 26%;
+  mask-image: none !important; -webkit-mask-image: none !important;
+}
+#view-chamber .council-seat::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 10, 18, 0) 50%, rgba(8, 10, 18, 0.92) 100%);
+}
+#view-chamber .seat-body {
+  position: absolute; left: 10px; right: 10px; bottom: 8px; z-index: 1;
+  display: flex; flex-direction: column; gap: 1px;
+}
+body.host #view-chamber .seat-name { font-size: 13px !important; letter-spacing: 0.02em !important; color: var(--ice) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#view-chamber .seat-pos { font-size: 10px !important; letter-spacing: 0.04em !important; color: var(--sky) !important; white-space: nowrap; }
+#view-chamber .seat-score {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-end;
+  padding: 2px 8px; border-radius: 10px; background: rgba(8, 12, 22, 0.72); border: 1px solid var(--gold-line);
+}
+#view-chamber .seat-total { font-size: 20px !important; color: var(--sky-bright) !important; letter-spacing: 0.02em !important; }
+#view-chamber .seat-round { font-size: 12px !important; color: var(--lavender) !important; min-height: 0 !important; }
+#view-chamber .council-seat.is-listening { transform: translateY(-4px); box-shadow: 0 0 28px rgba(150, 200, 255, 0.45); }
+
+/* Citizens' quotes: along the bottom, right of the portraits. */
+#view-chamber .citizen-ticker {
+  position: absolute; left: 688px; right: 0; bottom: 0; z-index: 2;
+  background: rgba(10, 14, 24, 0.82) !important; border-color: var(--gold-line) !important;
+}
+
+/* ---- Meet the Council: no italic, cool hairlines ------------------------- */
+.char-balance, .char-balance-label { display: none !important; }
+
+/* ---- Cinematic layer ----------------------------------------------------- */
+.cine { --cine-gold: #a9d2ff; --cine-gold-light: #f2f8ff; color: #eef4ff !important; }
+.cine .cine-bg { filter: var(--cine-grade, brightness(1)) saturate(0.8) contrast(1.04); }
+.cine .cine-bloom {
+  background:
+    radial-gradient(circle at 22% 30%, rgba(160, 200, 255, 0.22) 0%, rgba(150, 140, 255, 0.07) 35%, transparent 65%),
+    linear-gradient(180deg, rgba(10, 18, 36, 0.2) 0%, transparent 35%, transparent 75%, rgba(6, 8, 16, 0.55) 100%) !important;
+}
+.cine .cine-rig::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(160deg, rgba(120, 170, 255, 0.42) 0%, rgba(160, 140, 255, 0.36) 55%, rgba(110, 150, 255, 0.4) 100%);
+  mix-blend-mode: color;
+}
+.cine-gate { background: radial-gradient(circle at center, rgba(14, 20, 36, 0.86) 0%, rgba(6, 8, 15, 0.96) 100%) !important; }
+.cine-gate-title { font-size: 108px !important; font-weight: 300 !important; letter-spacing: 0.3em !important; }
+.cine-gate-pill { background: rgba(70, 80, 160, 0.25) !important; border-color: rgba(190, 210, 255, 0.5) !important; color: #eef4ff !important; }
+.cine-gate-dot { background: var(--sky) !important; }
+.cine-cta { background: linear-gradient(135deg, rgba(14, 20, 36, 0.84), rgba(24, 28, 52, 0.78)) !important; border-color: rgba(190, 210, 255, 0.62) !important; color: #f4f8ff !important; }
+.cine-cta svg { color: var(--sky) !important; }
+.cine-crisis-title { font-size: 108px !important; letter-spacing: 0.02em !important; }
+.cine-kicker, .cine-crisis-sub { color: #cfe3ff !important; }
+
+/* The title: THE LOOM set in Montserrat, half as large again as the old mark. */
+.cine-logo { width: 1560px !important; }
+.cine-logo.phase-settled { width: 1080px !important; left: 33% !important; top: 22% !important; }
+.cine-wordmark { display: flex; flex-direction: column; align-items: center; line-height: 1; user-select: none; }
+.cine-wordmark-the {
+  font-size: 54px; font-weight: 300; letter-spacing: 0.9em; margin-right: -0.9em;
+  color: #eaf3ff; text-shadow: 0 0 24px rgba(160, 205, 255, 0.7);
+}
+.cine-wordmark-loom {
+  margin-top: 6px; font-size: 228px; font-weight: 200; letter-spacing: 0.22em; margin-right: -0.22em;
+  background: linear-gradient(100deg, #ffffff 0%, #cfe6ff 35%, #a9c8ff 62%, #d9cfff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 22px rgba(150, 200, 255, 0.55)) drop-shadow(0 0 60px rgba(160, 140, 255, 0.3));
+}
+.cine-logo.phase-settled .cine-wordmark-loom { font-size: 158px; }
+.cine-logo.phase-settled .cine-wordmark-the { font-size: 38px; }
+.cine-wordmark > * { opacity: 0; transform: translateY(14px); filter: blur(10px); transition: opacity 1.4s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1), filter 1.6s ease, font-size 2.2s cubic-bezier(0.65, 0, 0.25, 1); }
+.cine-wordmark .cine-wordmark-loom { transition-delay: 0.25s; }
+.cine-logo.phase-appear .cine-wordmark > *, .cine-logo.phase-settled .cine-wordmark > * { opacity: 1; transform: none; filter: none; }
+.cine-logo.phase-appear .cine-wordmark-loom, .cine-logo.phase-settled .cine-wordmark-loom { filter: drop-shadow(0 0 22px rgba(150, 200, 255, 0.55)) drop-shadow(0 0 60px rgba(160, 140, 255, 0.3)); }
+.cine-tagline { color: #0e1626 !important; text-shadow: 0 0 14px rgba(220, 235, 255, 0.85) !important; font-size: 22px !important; margin-top: 22px !important; }
+
+/* ---- Phones ------------------------------------------------------------- */
+body.mobile { background: radial-gradient(ellipse at 50% 0%, #18223a 0%, #0a0d14 70%) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .crawl-word, .feed-word { transition: none; }
+  .cine-wordmark > * { transition: none !important; }
+}
+
+/* Lobby: bubbles behind the join panels. */
+#view-lobby.is-active { position: relative; }
+#view-lobby .lobby-bubbles { width: 100%; height: 100%; }
+#view-lobby .lobby-grid { position: relative; z-index: 1; }

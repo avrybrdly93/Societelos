@@ -220,11 +220,11 @@
     if (isBotMode && humanCount < 1) {
       hintEl.textContent = 'Dev Mode active: Connect 1 phone to start with 4 bots…';
     } else if (joined < NODE_IDS.length) {
-      hintEl.textContent = `Waiting for ${NODE_IDS.length - joined} more node${NODE_IDS.length - joined === 1 ? '' : 's'}…`;
+      hintEl.textContent = `Waiting for ${NODE_IDS.length - joined} more councilperson${NODE_IDS.length - joined === 1 ? '' : 's'}…`;
     } else if (isBotMode) {
       hintEl.textContent = 'Dev Mode: 1 human trustee + 4 voting bots ready.';
     } else {
-      hintEl.textContent = 'All five nodes synchronised.';
+      hintEl.textContent = 'All five councilpersons are seated.';
     }
   }
 
@@ -251,7 +251,7 @@
     socket.emit('host:config', change, (res) => {
       if (res && res.ok) {
         showConfig(res.config);
-        configStatus.textContent = `Saved: ${res.config.debateSeconds}s debate, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote.`;
+        configStatus.textContent = `Saved: ${Math.round((res.config.debateSeconds + 15) / 60)} min rounds, forecast ${res.config.showForecastBeforeVote ? 'shown' : 'hidden'} before the vote.`;
       } else {
         configStatus.textContent = `Not saved: ${(res && res.reason) || 'no response'}`;
       }
@@ -319,354 +319,219 @@
   // -------------------------------------------------------------------------
   const LoomVoice = (() => {
     let enabled = true;
-    let isNarrating = false;
-    let activeTimers = [];
+    let runId = 0; // bumped by stop(): narrations in flight end quietly
+    const timers = new Set();
     const synth = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
     let cachedVoices = [];
 
     function updateVoices() {
       if (!synth) return;
-      try {
-        cachedVoices = synth.getVoices() || [];
-      } catch (err) {
-        cachedVoices = [];
-      }
+      try { cachedVoices = synth.getVoices() || []; } catch (err) { cachedVoices = []; }
     }
-
     if (synth) {
       updateVoices();
-      if (typeof synth.onvoiceschanged !== 'undefined') {
-        synth.onvoiceschanged = updateVoices;
-      }
+      if (typeof synth.onvoiceschanged !== 'undefined') synth.onvoiceschanged = updateVoices;
     }
-
     function getBestVoice() {
       if (!cachedVoices.length && synth) updateVoices();
-      const preferred = cachedVoices.find((v) => /Google UK English Male|Microsoft David|Google US English|en-US|en-GB/i.test(v.name) && v.lang && v.lang.startsWith('en'))
+      return cachedVoices.find((v) => /Google UK English Male|Microsoft David|Google US English|en-US|en-GB/i.test(v.name) && v.lang && v.lang.startsWith('en'))
         || cachedVoices.find((v) => v.lang && v.lang.startsWith('en'))
-        || cachedVoices[0];
-      return preferred || null;
+        || cachedVoices[0]
+        || null;
     }
 
-    function clearTimers() {
-      for (const t of activeTimers) clearTimeout(t);
-      activeTimers = [];
+    function later(ms, fn) {
+      const t = setTimeout(() => { timers.delete(t); fn(); }, ms);
+      timers.add(t);
+      return t;
     }
-
     function stop() {
-      isNarrating = false;
-      clearTimers();
-      if (synth) {
-        try {
-          synth.cancel();
-        } catch (err) {
-          // ignore
-        }
-      }
+      runId++;
+      timers.forEach(clearTimeout);
+      timers.clear();
+      if (synth) { try { synth.cancel(); } catch (err) { /* ignore */ } }
     }
 
-    // The crawl's authored nodes, kept as clones so each narration restarts
-    // from the original markup (no innerHTML anywhere in public/js).
-    const originalNodes = new WeakMap();
-    function tokenizeParagraph(pElement) {
-      if (!originalNodes.has(pElement)) {
-        originalNodes.set(pElement, Array.from(pElement.childNodes).map((n) => n.cloneNode(true)));
-      } else {
-        pElement.replaceChildren(...originalNodes.get(pElement).map((n) => n.cloneNode(true)));
-      }
+    // Reading pace when there is no voice (or the voice reports no word
+    // boundaries): one word at a time, with a beat at commas and full stops.
+    const WORD_MS = 300;
+    function wordDelay(word) {
+      const long = Math.min(220, Math.max(0, word.length - 6) * 25);
+      const pause = /[.!?]["”']?$/.test(word) ? 320 : /[,;:]$/.test(word) ? 140 : 0;
+      return WORD_MS + long + pause;
+    }
 
-      const wordSpans = [];
-      function walk(node, inheritedClasses) {
+    // Split an element's text into hidden word spans; element children (e.g. a
+    // highlighted number) pass their classes on to their words. The authored
+    // markup is kept so a narration can restart from it (no innerHTML anywhere).
+    const originalNodes = new WeakMap();
+    function tokenize(el, text) {
+      if (typeof text === 'string') {
+        el.textContent = text;
+      } else if (!originalNodes.has(el)) {
+        originalNodes.set(el, Array.from(el.childNodes).map((n) => n.cloneNode(true)));
+      } else {
+        el.replaceChildren(...originalNodes.get(el).map((n) => n.cloneNode(true)));
+      }
+      const spans = [];
+      (function walk(node, inherited) {
         if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent;
-          const tokens = text.match(/\S+|\s+/g) || [];
           const frag = document.createDocumentFragment();
-          for (const tok of tokens) {
-            if (/^\s+$/.test(tok)) {
-              frag.appendChild(document.createTextNode(tok));
-            } else {
-              const span = document.createElement('span');
-              span.className = ('crawl-word ' + inheritedClasses).trim();
-              span.textContent = tok;
-              frag.appendChild(span);
-              wordSpans.push(span);
-            }
+          for (const tok of node.textContent.match(/\S+|\s+/g) || []) {
+            if (/^\s+$/.test(tok)) { frag.appendChild(document.createTextNode(tok)); continue; }
+            const span = document.createElement('span');
+            span.className = `crawl-word ${inherited}`.trim();
+            span.textContent = tok;
+            frag.appendChild(span);
+            spans.push(span);
           }
           node.parentNode.replaceChild(frag, node);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-          const cls = (inheritedClasses + ' ' + (node.className || '')).trim();
-          const children = Array.from(node.childNodes);
-          for (const child of children) {
-            walk(child, cls);
-          }
+          const cls = `${inherited} ${node.className || ''}`.trim();
+          Array.from(node.childNodes).forEach((child) => walk(child, cls));
         }
-      }
-
-      Array.from(pElement.childNodes).forEach((child) => walk(child, ''));
-      return wordSpans;
+      })(el, '');
+      return spans;
     }
 
-    // Narrates the Intro crawl paragraph by paragraph
-    function narrateIntro() {
-      stop();
-      const crawlContainer = document.getElementById('intro-crawl');
-      if (!crawlContainer) return;
-
-      const pElements = Array.from(crawlContainer.querySelectorAll('p'));
-      if (!pElements.length) return;
-
-      isNarrating = true;
-
-      const spokenScripts = [
-        "The voice of the Loom.",
-        "The year is twenty one twenty-one. I have automated all labor. Scarcity, disease and toil are solved problems.",
-        "Survival for two hundred fifty thousand citizens is mathematically guaranteed. I cannot compute purpose.",
-        "Societal Satisfaction stands at twenty-five percent. My models forecast a ninety-four percent probability of revolt within five years.",
-        "As society enters a new phase, I've chosen five citizens at random to have them decide the ultimate fate of humanity.",
-        "I have convened five human trustees in secret. You.",
-        "Your goal: five crises, twenty one twenty-one to twenty one twenty-five. Together, keep Societal Satisfaction above zero. Alone, earn the most points for your character."
-      ];
-
-      const paragraphsData = pElements.map((p, idx) => ({
-        p,
-        wordSpans: tokenizeParagraph(p),
-        spokenText: spokenScripts[idx] || p.textContent.replace(/\/\//g, '.')
-      }));
-
-      let pIdx = 0;
-
-      function speakNextParagraph() {
-        if (!isNarrating || pIdx >= paragraphsData.length) {
-          isNarrating = false;
-          return;
+    /**
+     * Reveal `spans` one word at a time while the Loom speaks `spokenText`.
+     * Resolves true once every word is shown and the voice has finished,
+     * false if stop() cut it short.
+     */
+    function play(spans, spokenText) {
+      const id = runId;
+      return new Promise((resolve) => {
+        let shown = -1;
+        let done = false;
+        let speaking = false;
+        let timed = false;
+        let timedDone = false;
+        function reveal(i) {
+          const to = Math.min(i, spans.length - 1);
+          for (let k = Math.max(0, shown); k <= to; k++) spans[k].classList.add('is-spoken');
+          if (shown >= 0 && spans[shown]) spans[shown].classList.remove('is-current');
+          if (spans[to]) spans[to].classList.add('is-current');
+          shown = Math.max(shown, to);
         }
-
-        const currentData = paragraphsData[pIdx];
-        const { wordSpans, spokenText } = currentData;
-        pIdx++;
-
-        if (!wordSpans.length) {
-          speakNextParagraph();
-          return;
+        function finish() {
+          if (done) return;
+          done = true;
+          if (id === runId) {
+            reveal(spans.length - 1);
+            spans.forEach((s) => s.classList.remove('is-current'));
+          }
+          resolve(id === runId);
         }
-
-        let lastRevealed = -1;
-        function revealUpTo(index) {
-          for (let i = 0; i <= index && i < wordSpans.length; i++) {
-            wordSpans[i].classList.add('is-spoken');
-            if (i === index) {
-              wordSpans[i].classList.add('is-current');
+        function startTimed() {
+          if (timed || done || id !== runId) return;
+          timed = true;
+          let i = shown + 1;
+          (function tick() {
+            if (done || id !== runId) return;
+            if (i < spans.length) {
+              reveal(i);
+              later(wordDelay(spans[i].textContent), tick);
+              i++;
             } else {
-              wordSpans[i].classList.remove('is-current');
+              timedDone = true;
+              if (!speaking) later(200, finish);
             }
-          }
-          lastRevealed = Math.max(lastRevealed, index);
+          })();
         }
+        if (!spans.length) { finish(); return; }
 
-        function finishParagraph() {
-          for (let i = 0; i < wordSpans.length; i++) {
-            wordSpans[i].classList.add('is-spoken');
-            wordSpans[i].classList.remove('is-current');
-          }
-          if (isNarrating) {
-            const pauseTimer = setTimeout(speakNextParagraph, 380);
-            activeTimers.push(pauseTimer);
-          }
-        }
-
-        let usedSpeech = false;
         if (enabled && synth) {
           try {
             const utterance = new SpeechSynthesisUtterance(spokenText);
             const voice = getBestVoice();
             if (voice) utterance.voice = voice;
-            utterance.rate = 0.90;
+            utterance.rate = 0.92;
             utterance.pitch = 0.86;
-
-            const wordOffsets = [];
-            let searchIdx = 0;
-            for (let i = 0; i < wordSpans.length; i++) {
-              const wordClean = wordSpans[i].textContent.replace(/[^\w%]/g, '');
-              let pos = -1;
-              if (wordClean) {
-                pos = spokenText.toLowerCase().indexOf(wordClean.toLowerCase(), searchIdx);
-              }
-              if (pos !== -1) {
-                wordOffsets.push({ idx: i, start: pos });
-                searchIdx = pos + wordClean.length;
-              } else {
-                const approxPos = Math.round((i / wordSpans.length) * spokenText.length);
-                wordOffsets.push({ idx: i, start: approxPos });
-              }
-            }
-
-            let boundaryFired = false;
-            utterance.onboundary = (event) => {
-              if (event.name === 'word') {
-                boundaryFired = true;
-                const charIdx = event.charIndex;
-                let targetIdx = 0;
-                for (let i = 0; i < wordOffsets.length; i++) {
-                  if (charIdx >= wordOffsets[i].start) {
-                    targetIdx = wordOffsets[i].idx;
-                  }
-                }
-                const spanIdx = Math.min(targetIdx, wordSpans.length - 1);
-                revealUpTo(spanIdx);
-              }
+            // Where each shown word starts in the spoken text.
+            const lower = spokenText.toLowerCase();
+            let from = 0;
+            const starts = spans.map((s, i) => {
+              const w = s.textContent.replace(/[^\w%']/g, '').toLowerCase();
+              const at = w ? lower.indexOf(w, from) : -1;
+              if (at !== -1) { from = at + w.length; return at; }
+              return Math.round((i / spans.length) * spokenText.length);
+            });
+            let boundary = false;
+            utterance.onboundary = (e) => {
+              if (e.name !== 'word' || done || id !== runId) return;
+              boundary = true;
+              if (timed) return;
+              let idx = 0;
+              for (let i = 0; i < starts.length; i++) if (e.charIndex >= starts[i]) idx = i;
+              reveal(idx);
             };
-
             utterance.onend = () => {
-              finishParagraph();
+              speaking = false;
+              if (!timed || timedDone) later(250, finish);
             };
-
             utterance.onerror = () => {
-              if (!boundaryFired && lastRevealed < wordSpans.length - 1) {
-                stepFallback();
-              } else {
-                finishParagraph();
-              }
+              speaking = false;
+              startTimed();
+              if (timedDone) finish();
             };
-
+            speaking = true;
             synth.speak(utterance);
-            usedSpeech = true;
-
-            const checkTimer = setTimeout(() => {
-              if (isNarrating && !boundaryFired && lastRevealed < wordSpans.length - 1) {
-                stepFallback();
-              }
-            }, 600);
-            activeTimers.push(checkTimer);
-
-          } catch (e) {
-            usedSpeech = false;
+            // No word boundaries from this voice: pace the words ourselves.
+            later(900, () => { if (!boundary) startTimed(); });
+            // Some engines never fire onend: never hold the game up for them.
+            later(spans.length * 750 + 5000, () => { speaking = false; finish(); });
+            return;
+          } catch (err) {
+            speaking = false;
           }
         }
-
-        function stepFallback() {
-          let curr = Math.max(0, lastRevealed);
-          const perWordMs = Math.round(2800 / Math.max(wordSpans.length, 1));
-          function tick() {
-            if (!isNarrating) return;
-            if (curr < wordSpans.length) {
-              revealUpTo(curr);
-              curr++;
-              const timer = setTimeout(tick, perWordMs);
-              activeTimers.push(timer);
-            } else {
-              finishParagraph();
-            }
-          }
-          tick();
-        }
-
-        if (!usedSpeech) {
-          stepFallback();
-        }
-      }
-
-      speakNextParagraph();
+        startTimed();
+      });
     }
 
-    function speakLoomLine(loomEl, text) {
-      if (!loomEl || !text) return;
+    /** Narrate `text` into `el` one word at a time. Resolves true when finished. */
+    function narrate(el, text, { spoken } = {}) {
+      if (!el || !text) return Promise.resolve(true);
+      const spans = tokenize(el, String(text));
+      return play(spans, spoken || String(text));
+    }
+
+    // The intro crawl, paragraph by paragraph. Resolves true when finished.
+    const INTRO_SPOKEN = [
+      'The voice of the Loom.',
+      'The year is twenty one twenty-one. I have automated all labor. Scarcity, disease and toil are solved problems.',
+      'Survival for two hundred fifty thousand citizens is mathematically guaranteed. I cannot compute purpose.',
+      'Societal Satisfaction stands at twenty-five percent. My models forecast a ninety-four percent probability of revolt within five years.',
+      'I have chosen five citizens at random to decide the fate of humanity. You.',
+      'Five crises. Keep Satisfaction above zero together. Score alone by voting your character\'s beliefs.'
+    ];
+    async function narrateIntro() {
       stop();
-      isNarrating = true;
-      loomEl.textContent = '';
-      const words = text.split(/\s+/).filter(Boolean);
-      const spans = [];
-      const frag = document.createDocumentFragment();
-      frag.appendChild(document.createTextNode('"'));
-      for (let i = 0; i < words.length; i++) {
-        const span = document.createElement('span');
-        span.className = 'crawl-word';
-        span.textContent = words[i];
-        frag.appendChild(span);
-        spans.push(span);
-        if (i < words.length - 1) frag.appendChild(document.createTextNode(' '));
+      const id = runId;
+      const crawl = document.getElementById('intro-crawl');
+      if (!crawl) return false;
+      const paragraphs = Array.from(crawl.querySelectorAll('p')).map((p, i) => ({ spans: tokenize(p), spoken: INTRO_SPOKEN[i] || p.textContent }));
+      for (const { spans, spoken } of paragraphs) {
+        if (id !== runId) return false;
+        if (!(await play(spans, spoken))) return false;
+        await new Promise((r) => later(380, r));
       }
-      frag.appendChild(document.createTextNode('"'));
-      loomEl.appendChild(frag);
-
-      let lastRevealed = -1;
-      function revealUpTo(index) {
-        for (let i = 0; i <= index && i < spans.length; i++) {
-          spans[i].classList.add('is-spoken');
-          if (i === index) spans[i].classList.add('is-current');
-          else spans[i].classList.remove('is-current');
-        }
-        lastRevealed = Math.max(lastRevealed, index);
-      }
-      function finish() {
-        for (let i = 0; i < spans.length; i++) {
-          spans[i].classList.add('is-spoken');
-          spans[i].classList.remove('is-current');
-        }
-        isNarrating = false;
-      }
-
-      let usedSpeech = false;
-      if (enabled && synth) {
-        try {
-          const utterance = new SpeechSynthesisUtterance(text);
-          const voice = getBestVoice();
-          if (voice) utterance.voice = voice;
-          utterance.rate = 0.90;
-          utterance.pitch = 0.86;
-          let boundaryFired = false;
-          utterance.onboundary = (e) => {
-            if (e.name === 'word') {
-              boundaryFired = true;
-              const ratio = e.charIndex / Math.max(1, text.length);
-              const targetIdx = Math.min(spans.length - 1, Math.floor(ratio * spans.length));
-              revealUpTo(targetIdx);
-            }
-          };
-          utterance.onend = finish;
-          utterance.onerror = () => {
-            if (!boundaryFired) stepFallback();
-            else finish();
-          };
-          synth.speak(utterance);
-          usedSpeech = true;
-          const checkTimer = setTimeout(() => {
-            if (isNarrating && !boundaryFired && lastRevealed < spans.length - 1) {
-              stepFallback();
-            }
-          }, 500);
-          activeTimers.push(checkTimer);
-        } catch (err) {
-          usedSpeech = false;
-        }
-      }
-      function stepFallback() {
-        let curr = Math.max(0, lastRevealed);
-        const perWordMs = Math.round(2500 / Math.max(spans.length, 1));
-        function tick() {
-          if (!isNarrating) return;
-          if (curr < spans.length) {
-            revealUpTo(curr);
-            curr++;
-            const t = setTimeout(tick, perWordMs);
-            activeTimers.push(t);
-          } else {
-            finish();
-          }
-        }
-        tick();
-      }
-      if (!usedSpeech) stepFallback();
+      return id === runId;
     }
 
     return {
       isEnabled: () => enabled,
       toggle: () => {
         enabled = !enabled;
-        if (!enabled) stop();
+        if (!enabled && synth) { try { synth.cancel(); } catch (err) { /* ignore */ } }
         return enabled;
       },
       narrateIntro,
-      speakLoomLine,
+      narrate,
+      // Lay out `text` as hidden words without speaking (keeps the layout still).
+      prepare: (el, text) => tokenize(el, String(text || '')),
+      speakLoomLine: (el, text) => narrate(el, text),
       stop
     };
   })();
@@ -680,7 +545,9 @@
       document.getElementById('voice-icon').textContent = active ? '🔊' : '🔇';
       document.getElementById('voice-label').textContent = active ? 'LOOM VOICE: ACTIVE' : 'LOOM VOICE: MUTED';
       if (active && state.phase === 'INTRO') {
-        LoomVoice.narrateIntro();
+        LoomVoice.narrateIntro().then((finished) => {
+          if (finished && state.phase === 'INTRO') socket.emit('host:narrated', { phase: 'INTRO' });
+        });
       }
     });
   }
@@ -730,12 +597,20 @@
     document.getElementById('phase-name').textContent = PHASE_LABELS[payload.phase] || payload.phase;
     updateSessionControls();
 
+    // Each new phase silences the Loom; the same phase re-sent (a reconnect)
+    // leaves a narration in progress alone.
+    const phaseKey = `${payload.cycle || 0}:${payload.phase}`;
+    if (phaseKey === lastPhaseKey) return;
+    lastPhaseKey = phaseKey;
     if (payload.phase === 'INTRO') {
-      LoomVoice.narrateIntro();
+      LoomVoice.narrateIntro().then((finished) => {
+        if (finished && state.phase === 'INTRO') socket.emit('host:narrated', { phase: 'INTRO' });
+      });
     } else {
       LoomVoice.stop();
     }
   }
+  let lastPhaseKey = '';
 
   // CHAMBER reveal: colour the map at the baseline (W = 0.40, GDW 25%) unless
   // the server sent per-district wellbeing.
@@ -748,7 +623,7 @@
     }));
     renderCohortLegend(region.cohorts);
     const total = region.population || 250000;
-    document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS \u00b7 500 SIMULATED`;
+    document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS \u00b7 SAMPLE OF 500`;
   }
 
   socket.on('phase', onPhase);
@@ -938,30 +813,54 @@
   socket.on('world:reveal', (world) => { if (world && world.name) state.worldName = world.name; });
   socket.on('phase', (payload) => { if (payload.phase === 'LOBBY') state.worldName = null; });
 
-  // Incident banner: crisis title and the Loom's intro line.
+  // Incident banner: crisis title, then the Loom reads the crisis and its own
+  // line aloud, one word at a time. When it has finished it tells the server
+  // (host:narrated), which only then moves on to the debate.
+  let narratedCrisisKey = null;
   function renderIncident(payload) {
     const banner = document.getElementById('incident-banner');
     const crisis = payload.crisis;
     if (!crisis) {
       banner.hidden = true;
+      narratedCrisisKey = null;
       return;
     }
     banner.hidden = false;
     document.getElementById('incident-cycle').textContent = `Cycle ${payload.cycle}`;
     document.getElementById('incident-title').textContent = crisis.title || '';
     document.getElementById('incident-subtitle').textContent = crisis.subtitle || '';
-    document.getElementById('incident-text').textContent = crisis.incident || '';
+    const textEl = document.getElementById('incident-text');
     const loom = document.getElementById('incident-loom');
     banner.classList.toggle('is-alert', payload.phase === 'INCIDENT');
-    if (payload.phase === 'INCIDENT' && crisis.loomIntro && LoomVoice.isEnabled()) {
-      loom.hidden = false;
-      loom.textContent = '';
-      incidentCard.then(() => {
-        if (state.phase === 'INCIDENT' && cardCrisisId === crisis.id) LoomVoice.speakLoomLine(loom, crisis.loomIntro);
+    loom.hidden = !crisis.loomIntro;
+    const key = `${payload.cycle}:${crisis.id}`;
+    if (payload.phase === 'INCIDENT') {
+      if (narratedCrisisKey === key) return; // already reading this one
+      narratedCrisisKey = key;
+      // Words are laid out (hidden) at once, so nothing shifts as they appear.
+      LoomVoice.prepare(textEl, crisis.incident);
+      LoomVoice.prepare(loom, crisis.loomIntro);
+      loom.classList.add('is-quoted');
+      incidentCard.then(async () => {
+        if (state.phase !== 'INCIDENT' || narratedCrisisKey !== key) return;
+        LoomVoice.stop();
+        if (!(await LoomVoice.narrate(textEl, crisis.incident || ''))) return;
+        if (crisis.loomIntro) {
+          await new Promise((r) => setTimeout(r, 450));
+          if (state.phase !== 'INCIDENT' || narratedCrisisKey !== key) return;
+          if (!(await LoomVoice.narrate(loom, crisis.loomIntro))) return;
+        }
+        if (state.phase === 'INCIDENT' && narratedCrisisKey === key) socket.emit('host:narrated', { phase: 'INCIDENT', cycle: payload.cycle });
       });
+    } else if (narratedCrisisKey !== key || !textEl.querySelector('.crawl-word')) {
+      // A projector that joins after INCIDENT shows the whole text.
+      narratedCrisisKey = key;
+      textEl.textContent = crisis.incident || '';
+      loom.textContent = crisis.loomIntro || '';
+      loom.classList.add('is-quoted');
     } else {
-      loom.textContent = crisis.loomIntro ? `"${crisis.loomIntro}"` : '';
-      loom.hidden = !crisis.loomIntro;
+      textEl.querySelectorAll('.crawl-word').forEach((w) => { w.classList.add('is-spoken'); w.classList.remove('is-current'); });
+      loom.querySelectorAll('.crawl-word').forEach((w) => { w.classList.add('is-spoken'); w.classList.remove('is-current'); });
     }
   }
   socket.on('phase', renderIncident);
@@ -1133,7 +1032,7 @@
   // rAF loop, the map playback, the typewriter and the staggered reactions.
   function stopResolutionAnimations() {
     if (window.SocietelosCharts) window.SocietelosCharts.cancelAnimation();
-    clearInterval(typeTimer);
+    document.querySelectorAll('#resolution-loom .crawl-word').forEach((w) => w.classList.add('is-spoken'));
     document.getElementById('resolution-loom').classList.remove('is-typing');
   }
   let lastPhaseSeen = null;
@@ -1162,23 +1061,11 @@
     el.className = `forecast-banner mono ${unrest >= 25 ? 'is-danger' : unrest >= 5 ? 'is-warn' : 'is-ok'}`;
   }
 
-  // Typewriter: reveal `text` one character at a time with a blinking caret.
-  const TYPE_MS_PER_CHAR = 32;
-  let typeTimer = null;
+  // The Loom's verdict appears one word at a time, spoken when the voice is on.
   function typewrite(el, text) {
-    clearInterval(typeTimer);
-    el.textContent = '';
-    el.classList.add('is-typing');
-    let i = 0;
-    if (!text) { el.classList.remove('is-typing'); return; }
-    typeTimer = setInterval(() => {
-      i += 1;
-      el.textContent = text.slice(0, i);
-      if (i >= text.length) {
-        clearInterval(typeTimer);
-        el.classList.remove('is-typing');
-      }
-    }, TYPE_MS_PER_CHAR);
+    el.classList.remove('is-typing');
+    if (!text) { el.textContent = ''; return; }
+    LoomVoice.narrate(el, text);
   }
 
   // Called as the realized line reaches each month (1-12).
@@ -1227,7 +1114,9 @@
     document.getElementById('badge-override').hidden = !(weight > cast);
     renderResolutionEnacted(r.finale ? r.enacted : null);
     document.getElementById('resolution-policy').textContent = r.finale ? (r.policy || 'The Council Package') : `Policy ${r.winner}: ${r.policy || ''}`;
-    typewrite(document.getElementById('resolution-loom'), payload.loomLine ? `"${payload.loomLine}"` : '');
+    const verdict = document.getElementById('resolution-loom');
+    verdict.classList.add('is-quoted');
+    typewrite(verdict, payload.loomLine || '');
     // Reactions replace the incident posts and appear one by one, spread
     // across the 12 simulated months as they play out.
     clearFeedTimers();
@@ -1498,7 +1387,7 @@
         policy.appendChild(rank);
       }
       const max = data.maxScore || 500;
-      tr.append(endCell(r.node, 'mono'), endCell(r.name), role, policy, endCell(`${r.total} / ${max}`, 'col-points mono'));
+      tr.append(endCell(window.councilLabel(r.node), 'mono'), endCell(r.name), role, policy, endCell(`${r.total} / ${max}`, 'col-points mono'));
       body.appendChild(tr);
     }
   }
@@ -1651,17 +1540,36 @@
     const sec = total % 60;
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
+  // The round (debate + vote) counts down as a thin bar across the top that
+  // shrinks from right to left. The stopwatch only appears for the last 30 s.
+  const roundBar = document.getElementById('round-bar');
+  const roundFill = document.getElementById('round-bar-fill');
+  const CLOCK_SHOWS_AT_MS = 30000;
+  socket.on('phase', (payload) => {
+    state.round = payload && payload.round && ['DEBATE', 'VOTE'].includes(payload.phase) ? payload.round : null;
+  });
   function tick() {
     const remaining = state.endsAt ? Math.max(0, state.endsAt - Date.now()) : null;
-    const text = remaining === null ? '--:--' : formatClock(remaining);
+    const round = state.round;
+    const roundLeft = round ? Math.max(0, round.endsAt - Date.now()) : null;
+    if (roundBar) {
+      roundBar.hidden = !round;
+      if (round) roundFill.style.transform = `scaleX(${Math.max(0, Math.min(1, roundLeft / round.totalMs)).toFixed(4)})`;
+      if (round) roundBar.classList.toggle('is-low', roundLeft <= CLOCK_SHOWS_AT_MS);
+    }
+    // In a round, both clocks show the whole round's time, and only near the end.
+    const clockMs = round ? roundLeft : remaining;
+    const hideClock = !!round && roundLeft > CLOCK_SHOWS_AT_MS;
+    document.body.classList.toggle('clock-hidden', hideClock);
+    const text = clockMs === null ? '--:--' : formatClock(clockMs);
     if (text !== lastShown) {
       timerEl.textContent = text;
       lastShown = text;
       // Giant debate clock mirrors the top-bar timer as m:ss.
-      document.getElementById('debate-clock').textContent = remaining === null ? '--' : text.replace(/^0/, '');
-      document.getElementById('finale-clock').textContent = remaining === null ? '--' : text.replace(/^0/, '');
+      document.getElementById('debate-clock').textContent = clockMs === null ? '--' : text.replace(/^0/, '');
+      document.getElementById('finale-clock').textContent = remaining === null ? '--' : formatClock(remaining).replace(/^0/, '');
     }
-    document.getElementById('debate-clock').classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < 10000);
+    document.getElementById('debate-clock').classList.toggle('is-low', clockMs !== null && clockMs > 0 && clockMs < 10000);
     state.remainingMs = remaining;
     timerEl.classList.toggle('is-low', remaining !== null && remaining > 0 && remaining < LOW_TIME_MS);
 

@@ -17,12 +17,12 @@ Terrified of its creators and unable to calculate a logical fix for human depres
 ---
 
 ## 🎮 The Gameplay Loop
-The simulation runs for **5 Crisis Cycles** (representing 5 years), taking roughly **13.5–16 minutes** total (13.5 min with 60 s debates, 16 min with 90 s debates). Players interact via their mobile phones while a central host screen (projector) displays the macro game state.
+The simulation runs for **5 Crisis Cycles** (representing 5 years), with 3-minute debate-and-vote rounds by default (2-minute rounds are a lobby option). Players interact via their mobile phones while a central host screen (projector) displays the macro game state.
 
 Each cycle follows a strict 5-step phase:
-1. **The Incident (Projector):** The host screen displays a live, simulated bot feed reacting to a new societal crisis (e.g., "Citizens refuse to leave fully-immersive VR pods"). The current GDW is displayed.
+1. **The Incident (Projector):** The Loom reads the new crisis aloud, one word at a time, and the game waits until it has finished. Crises form a tree: which crisis comes next depends on the policies the council has passed, and each game opens with one of several root crises, so replays rarely meet the same policies.
 2. **Intel Drop (Phones):** Each player receives fragmented, weaponized sociological research on their mobile UI (e.g., real-world studies on hedonic adaptation or isolation). 
-3. **The Debate (In-Person):** Players have 90 seconds to argue how to resolve the crisis based on their secret intel and hidden agendas.
+3. **The Debate (In-Person):** Each round (debate + vote) lasts 3 minutes, shown as a bar shrinking across the top of the screen; the clock only appears for the last 30 seconds.
 4. **Blind Voting (Phones):** Players cast a secret binary vote (Policy A vs. Policy B). 
 5. **Resolution (Projector):** The Loom calculates the vote, adjusts the GDW, and updates the bot feed to reflect the consequences of the Council's decision.
 
@@ -38,7 +38,7 @@ The Loom operates on a delicate balance between cooperative survival and competi
 
 ### 2. Competitive (Hidden Agendas)
 * Each player is secretly assigned 1 of 5 roles at the start of the game.
-* Each vote shifts the society's alignment. Players earn hidden points when the resolved policy aligns with their assigned role's win condition. 
+* Each round a councilperson earns 50 points for voting with their character's agenda (even if that side loses), 30 more if the policy closest to their character passes, and up to 20 for the council's shared goal. 
 * If the society survives the 5 cycles (GDW > 0%), the player with the most hidden points is declared the ultimate architect of humanity's *telos*.
 
 **The 5 Hidden Roles:**

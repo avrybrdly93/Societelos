@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { pathGdw } = require('../calibrate');
+const { pathGdw, fixedPath } = require('../calibrate');
 const { simulate, createInitialState } = require('../index');
 const simConfig = require('../../../data/sim.json');
 const crises = require('../../../data/crises.json');
@@ -20,7 +20,7 @@ test('turbulent 1A -> 2A path (Commonwealth) drops toward ~15% without premature
   assert.ok(afterC1 < start, `1A lowers GDW (${afterC1.toFixed(1)})`);
   assert.ok(afterC2 >= 12 && afterC2 <= 19, `AA after cycle 2: ${afterC2.toFixed(1)} (target ~15)`);
   // Collapse stays rare on this path: the 500-run forecast for 2A after 1A.
-  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const fixed = fixedPath(crises, 'A');
   const c1 = simulate(createInitialState(simConfig), fixed[0].options.A.effects, { runs: 500, seed: 1 });
   const c2 = simulate(c1.finalState, fixed[1].options.A.effects, { runs: 500, seed: 2 });
   assert.ok(c2.forecast.pCollapse < 0.02, `P(collapse) ${c2.forecast.pCollapse}`);
@@ -37,7 +37,11 @@ test('server/sim/calibrate.js runs standalone without starting Express', () => {
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.runs, 500);
-  assert.equal(out.options.length, 5, '1A, 1B, 2A, 2B after 1A, 2B after 1B');
+  // Every option of every cycle 1-2 crisis on the tree (2B after 1A and after 1B for the off-switch).
+  const expected = crises.crises.filter((c) => c.world === 'fixed')
+    .reduce((n, c) => n + ['A', 'B'].reduce((m, k) => m + (c.options[k].effectsByWorld ? Object.keys(c.options[k].effectsByWorld).length : 1), 0), 0);
+  assert.equal(out.options.length, expected);
+  assert.equal(new Set(out.options.map((o) => o.option)).size, expected, 'every row labelled uniquely');
   assert.deepEqual(out.paths.map((p) => p.path), ['AA', 'AB', 'BA', 'BB']);
 });
 
@@ -53,13 +57,14 @@ test('trajectory sweep: deterministic, every game lands in exactly one final-GDW
   assert.ok(a.finals.every((g) => g >= 0 && g <= 100));
 });
 
-test('every crisis (the 14 core and the Blitz extras) loads into calibrate.js with valid forecasts', () => {
+test('every crisis (the whole tree and the Blitz extras) loads into calibrate.js with valid forecasts', () => {
   const { calibrateCrises } = require('../calibrate');
   const rows = calibrateCrises(simConfig, crises);
   const ids = new Set(rows.map((r) => r.id));
   assert.equal(ids.size, crises.crises.length);
-  const core = crises.crises.filter((c) => c.world === 'fixed' || (c.mode === 'binary' && c.cycle <= 4) || Object.values(crises.worlds).some((w) => w.finale === c.id));
-  assert.equal(core.length, 14);
+  // The tree: 2 roots x 3 crises (cycles 1-2), 4 worlds x 3 crises (cycles 3-4), 4 finales.
+  const core = crises.crises.filter((c) => typeof c.path === 'string' || Object.values(crises.worlds).some((w) => w.finale === c.id));
+  assert.equal(core.length, 22);
   for (const c of core) assert.ok(rows.filter((r) => r.id === c.id).length === 2, `${c.id}: both options forecast`);
   const bad = rows.filter((r) => !r.ok);
   assert.deepEqual(bad.map((r) => `${r.id} ${r.option}: ${r.problems.join('; ')}`), []);

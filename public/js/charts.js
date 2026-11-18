@@ -5,13 +5,13 @@
   'use strict';
 
   const COLORS = {
-    band: 'rgba(230, 198, 135, 0.18)',
-    bandLegend: 'rgba(230, 198, 135, 0.35)',
-    median: '#e6c687',
-    realized: '#fff3d6',
-    text: '#a89f88',
+    band: 'rgba(140, 182, 225, 0.18)',
+    bandLegend: 'rgba(140, 182, 225, 0.35)',
+    median: '#8cb6e1',
+    realized: '#deebf7',
+    text: '#8a98a6',
     grid: 'rgba(125, 138, 154, 0.18)',
-    axis: '#3b4a43',
+    axis: '#363c48',
     danger: '#e5484d'
   };
   const PAD = { left: 64, right: 24, top: 20, bottom: 56 };
@@ -192,7 +192,7 @@
     const y = g.y(v);
     const breathe = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
     ctx.save();
-    ctx.fillStyle = 'rgba(240, 164, 48, 0.22)';
+    ctx.fillStyle = 'rgba(58, 144, 230, 0.22)';
     ctx.beginPath();
     ctx.arc(x, y, 13 + 5 * breathe, 0, Math.PI * 2);
     ctx.fill();
@@ -203,7 +203,7 @@
     ctx.arc(x, y, 8, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff4dc';
+    ctx.fillStyle = '#e3eef8';
     ctx.beginPath();
     ctx.arc(x, y, 3.5, 0, Math.PI * 2);
     ctx.fill();
@@ -235,7 +235,7 @@
     // Left of the endpoint; above it unless that would leave the plot.
     const bx = Math.max(PAD.left + 4, x - 18 - boxW);
     const by = y - 22 - boxH < PAD.top ? y + 22 : y - 22 - boxH;
-    const color = verdict.beat ? '#b5cc78' : COLORS.danger;
+    const color = verdict.beat ? '#78a9cc' : COLORS.danger;
     ctx.fillStyle = 'rgba(8, 11, 16, 0.88)';
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -406,9 +406,9 @@
 
   // Class-grade bands for the five-year chart (final GDW thresholds).
   const GRADE_BANDS = [
-    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(181, 204, 120, 0.10)', text: '#b5cc78' },
-    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(230, 198, 135, 0.07)', text: '#e6c687' },
-    { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(240, 164, 48, 0.08)', text: '#f0a430' },
+    { from: 60, to: 100, label: '60+ THRIVING', fill: 'rgba(120, 169, 204, 0.10)', text: '#78a9cc' },
+    { from: 35, to: 60, label: '35\u201359 STABLE', fill: 'rgba(140, 182, 225, 0.07)', text: '#8cb6e1' },
+    { from: 1, to: 35, label: '1\u201334 FRAGILE', fill: 'rgba(58, 144, 230, 0.08)', text: '#3a90e6' },
     { from: 0, to: 1, label: '0 SHUTDOWN', fill: 'rgba(229, 72, 77, 0.35)', text: '#e5484d' }
   ];
   const MONTHS_PER_CYCLE = 12;
