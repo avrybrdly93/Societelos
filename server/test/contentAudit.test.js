@@ -131,3 +131,15 @@ test('the End Screen closing citizen speaks an epilogue that matches the ending'
     console.log = log;
   }
 });
+
+// TASK-716: role cards read cleanly on a 375x667 phone, in player language
+// (tags are hidden from players, so no "tagged ..." jargon).
+test('role cards: player-facing win conditions and phone-length card text', () => {
+  const roles = require('../../data/roles.json');
+  for (const r of roles) {
+    assert.doesNotMatch(r.winCondition, /tagged|\btag\b/i, `${r.id} winCondition uses internal tag jargon`);
+    assert.doesNotMatch(r.winCondition, /^\+1/, `${r.id} winCondition repeats the "+1 score when" heading`);
+    assert.ok(r.cardText.length <= 220, `${r.id} cardText is ${r.cardText.length} chars`);
+    assert.ok(r.winCondition.length <= 110, `${r.id} winCondition is ${r.winCondition.length} chars`);
+  }
+});

@@ -1003,7 +1003,7 @@
   const MOCK_ROLE = {
     key: 'artisan', name: 'The Artisan', icon: '\u2692',
     goal: 'Human effort and creative struggle over machine efficiency.',
-    winCondition: 'The winning policy is tagged artisan.',
+    winCondition: 'The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.',
     cardText: 'Poiesis / Creative Friction'
   };
   function debugEmit(event, payload) {
