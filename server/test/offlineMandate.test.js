@@ -122,3 +122,40 @@ test('a full game with the network down hits it once, then plays on instant fall
   assert.equal(out.end.phase, 'END');
   assert.equal(calls.n, 1, `the dead network was tried ${calls.n} times`);
 });
+
+// TASK-744: offline narration across all 5 cycles reflects the simulation:
+// the feed leads with citizens from the district/cohort that moved most, the
+// Loom line names that district, and lines match the cycle's outcome band.
+test('offline narrate across all 5 cycles leads with the citizens and districts that moved most', async (t) => {
+  const warn = console.warn;
+  console.warn = () => {};
+  const realNarrate = loom.narrate;
+  const seen = [];
+  loom.narrate = async (context, opts) => {
+    const result = await realNarrate(context, opts);
+    seen.push({ context, result });
+    return result;
+  };
+  t.after(() => { loom.narrate = realNarrate; console.warn = warn; });
+  const out = await playGame({ gameId: 'offline-narrate-744', world: 'BB' });
+  assert.equal(out.end.phase, 'END');
+  assert.equal(seen.length, 5, 'one offline narration per cycle');
+  const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+  seen.forEach(({ context, result }, i) => {
+    const summary = context.simSummary;
+    const top = summary.topMoves[0];
+    assert.equal(result.fallback, true, `cycle ${i + 1} narrated offline`);
+    const ranked = loom.rankCitizensByShift(context.citizens, summary);
+    assert.equal(result.messages[0].citizenId, ranked[0].id, `cycle ${i + 1}: feed leads with the most-affected citizen`);
+    const lead = context.citizens.find((c) => c.id === result.messages[0].citizenId);
+    // The lead citizen shares a district or cohort with one of the 3 biggest moves.
+    const touched = summary.topMoves.some((m) => m.district === lead.district || m.cohort === lead.cohort);
+    assert.ok(touched, `cycle ${i + 1}: ${lead.id} (${lead.district}/${lead.cohort}) vs moves ${summary.topMoves.map((m) => `${m.district}/${m.cohort}`).join(', ')}`);
+    if (result.loomLine.includes('moved most')) assert.ok(result.loomLine.includes(DISTRICT_NAMES[top.district]), `cycle ${i + 1}: Loom line names ${top.district}`);
+    const band = loom.outcomeBand(summary);
+    for (const m of result.messages) {
+      const c = context.citizens.find((x) => x.id === m.citizenId);
+      assert.ok(c.lines[band].includes(m.text), `cycle ${i + 1}: ${m.citizenId} speaks a ${band} line`);
+    }
+  });
+});
