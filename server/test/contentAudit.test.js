@@ -284,3 +284,24 @@ test('every effect vector has exactly the 6 traits as numbers in [-1, 1]', () =>
   }
   assert.equal(n, 45);
 });
+
+// TASK-727: the 4 world finales are write-ins whose A/B options are a
+// complete, playable fallback if the Loom cannot moderate write-ins.
+test('all 4 finales are mode writein with valid fallback options A and B', () => {
+  const engine = require('../gameEngine');
+  for (const [world, w] of Object.entries(data.worlds)) {
+    const c = data.crises.find((x) => x.id === w.finale);
+    assert.ok(c, `${world} finale ${w.finale} exists`);
+    assert.equal(c.mode, 'writein', `${world} finale mode`);
+    assert.equal(c.world, world);
+    for (const key of ['A', 'B']) {
+      const o = c.options[key];
+      assert.ok(o.name && o.text && o.effects && o.roles && o.roles.length, `${c.id} fallback ${key} incomplete`);
+    }
+    // The engine's Cycle 5 lookup lands on this finale, with both options.
+    const picked = engine.selectCrisis(data, 5, world);
+    assert.equal(picked.id, c.id);
+    assert.equal(picked.mode, 'writein');
+    assert.ok(picked.options.A && picked.options.B, `${world}: selectCrisis keeps the fallback options`);
+  }
+});
