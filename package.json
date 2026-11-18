@@ -39,7 +39,8 @@
     "e2e:offline": "node scripts/e2e-offline.js",
     "e2e:shutdown": "node scripts/e2e-shutdown.js",
     "e2e:reconnect": "node scripts/e2e-reconnect.js",
-    "e2e:all": "npm run -s check:frontend && npm run -s e2e:ui && npm run -s e2e:finale && npm run -s e2e:finale-flow && FALLBACK=1 npm run -s e2e:finale-flow && npm run -s e2e:refresh && npm run -s e2e:end && npm run -s e2e:play-again && npm run -s e2e:offline && npm run -s e2e:shutdown && npm run -s e2e:reconnect",
+    "e2e:moderation": "node scripts/e2e-moderation.js",
+    "e2e:all": "npm run -s check:frontend && npm run -s e2e:ui && npm run -s e2e:finale && npm run -s e2e:finale-flow && FALLBACK=1 npm run -s e2e:finale-flow && npm run -s e2e:refresh && npm run -s e2e:end && npm run -s e2e:play-again && npm run -s e2e:offline && npm run -s e2e:shutdown && npm run -s e2e:reconnect && npm run -s e2e:moderation",
     "loom:test": "node -e \"require('dotenv').config({ quiet: true }); require('./server/loom').testConnection().then((r) => { console.log(r); process.exit(r.ok ? 0 : 1); })\""
   },
   "dependencies": {
