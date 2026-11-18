@@ -1,0 +1,15 @@
+Fixed crisis calibration (TASK-737), 2026-11-18, branch claude/tasks-2026-11-18-0047
+npm run calibrate:
+Calibration: 500 forecast runs per option, seed 20261119, start GDW 25.0
+option            target  median  realized  name
+1A                  -5.0    -4.9    -3.5    The Commons
+1B                 +10.0   +10.2   +11.6    The Charter
+2A                  -5.0    -4.8    -3.3    The Assembly
+2B (after 1A)       +5.0    +5.2    +6.5    Delegated Control
+2B (after 1B)       +5.0    +4.8    +6.1    Delegated Control
+
+Two-cycle paths (median GDW: start -> after cycle 1 -> after cycle 2):
+  AA: 25.0 -> 20.1 -> 17.6
+  AB: 25.0 -> 20.1 -> 26.6
+  BA: 25.0 -> 35.2 -> 31.9
+  BB: 25.0 -> 35.2 -> 41.3
