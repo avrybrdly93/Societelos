@@ -1084,6 +1084,9 @@
     document.getElementById('world-key').textContent = `WORLD ${world.worldKey}`;
     document.getElementById('world-name').textContent = world.name || world.worldKey;
     document.getElementById('world-tagline').textContent = world.tagline || '';
+    const loomLine = document.getElementById('world-loom-line');
+    loomLine.textContent = world.revealLine || '';
+    loomLine.hidden = !world.revealLine;
     document.getElementById('world-problem').textContent = (world.problemLeft || 'unknown').toUpperCase();
   }
   socket.on('phase', (payload) => { if (payload.phase === 'WORLD_REVEAL') renderWorldReveal(payload.world); });

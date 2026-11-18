@@ -4,6 +4,7 @@
       "name": "The Commonwealth",
       "tagline": "Shared wealth, shared power",
       "problemLeft": "meaning",
+      "revealLine": "You own everything together now. Nobody needs to work. I am curious what you will do with your days.",
       "finale": "aa-fake-struggle",
       "vote1": "A",
       "vote2": "A"
@@ -12,6 +13,7 @@
       "name": "The Benevolent Machine",
       "tagline": "Shared wealth, the Loom rules",
       "problemLeft": "dependence",
+      "revealLine": "You gave me the wealth and the decisions. I will take good care of you. You will hardly notice me.",
       "finale": "ab-merge-offer",
       "vote1": "A",
       "vote2": "B"
@@ -20,6 +22,7 @@
       "name": "The Uneasy Republic",
       "tagline": "Rich owners, voting masses",
       "problemLeft": "class conflict",
+      "revealLine": "The owners kept the machines. You kept the vote. One of those will matter more. We will see which.",
       "finale": "ba-vote-to-seize",
       "vote1": "B",
       "vote2": "A"
@@ -28,6 +31,7 @@
       "name": "The Gilded Cage",
       "tagline": "Owners rule, masses on stipends",
       "problemLeft": "pacification",
+      "revealLine": "The owners hold the machines and the Board holds the rules. Your stipends arrive on time. Please stay comfortable.",
       "finale": "bb-march-datacenter",
       "vote1": "B",
       "vote2": "B"

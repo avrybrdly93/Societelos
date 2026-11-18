@@ -814,6 +814,9 @@ body.host .world-name {
   color: var(--theme-current); text-shadow: 0 0 48px var(--theme-current);
 }
 body.host .world-tagline { font-size: 44px; margin: 0 0 40px; }
+body.host .world-loom-line { font-family: var(--font-mono); font-size: 30px; line-height: 1.35; max-width: 1400px; margin: -16px auto 36px; color: var(--theme-current, var(--loom-cyan)); }
+body.host .world-loom-line::before { content: "LOOM // "; opacity: 0.6; }
+.world-loom-line[hidden] { display: none; }
 body.host .world-problem { font-size: 32px; color: var(--text-muted); }
 .world-problem .mono { color: var(--danger); font-weight: 700; }
 .view-world.is-active .world-name { animation: world-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }

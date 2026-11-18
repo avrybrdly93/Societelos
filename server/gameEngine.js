@@ -1749,11 +1749,11 @@ class GameState extends EventEmitter {
       });
   }
 
-  /** Public description of the current world: { worldKey, name, tagline, problemLeft }. */
+  /** Public description of the current world: { worldKey, name, tagline, problemLeft, revealLine }. */
   worldInfo() {
     const worlds = (this.data.crises && this.data.crises.worlds) || {};
     const w = worlds[this.worldKey] || {};
-    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '' };
+    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '', revealLine: w.revealLine || '' };
   }
 
   /**
