@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// TASK-697: prove the frontend is 100% offline-capable. A projector page and
+// TASK-697 / TASK-759: prove the frontend is 100% offline-capable. A projector page and
 // 5 phone pages play a complete game (Lobby -> END, no Gemini key, so the
 // Loom runs on its offline fallbacks) inside an air-gapped browser: every
 // request that is not to the local game server (or a data:/blob: URL) is
@@ -9,8 +9,9 @@
 // font is in use beyond the system stacks.
 //
 // Fails if any external request (fonts, icons, analytics, CDNs...) was
-// attempted, a local asset failed to load, a page raised an error, or the
-// game did not reach END.
+// attempted, a local asset failed to load, a page raised an error, the game
+// did not reach the End Screen, a cycle lacked its offline narration, or
+// Cycle 5 did not fall back to the authored A/B finale.
 //
 // Needs Playwright with Chromium (not a project dependency, like e2e:ui):
 //   npm run e2e:offline
@@ -66,6 +67,11 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
   await host.waitForSelector('#room-code', { state: 'attached' });
   await host.waitForTimeout(500);
   const game = engine.getLatestRoom();
+  // TASK-759: record every phase and resolution to verify the offline fallbacks.
+  const phases = [];
+  const resolutions = [];
+  game.on('phase', (p) => phases.push(`${p.cycle}:${p.phase}`));
+  game.on('resolution', (r) => resolutions.push(r));
   const phones = [];
   for (let i = 0; i < 5; i++) {
     const p = await airGappedPage(`phone${i + 1}`, { width: 390, height: 844 });
@@ -96,6 +102,17 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
 
   const problems = [];
   if (game.phase !== 'END') problems.push(`game stopped at ${game.cycle}:${game.phase}`);
+  // Offline fallbacks: authored/template narration every cycle, and Cycle 5
+  // on the authored A/B finale (no write-ins can be moderated without the Loom).
+  if (resolutions.length !== 5) problems.push(`expected 5 resolutions, got ${resolutions.length}`);
+  resolutions.forEach((r, i) => {
+    if (!r.loomLine || !(r.messages || []).length) problems.push(`cycle ${i + 1}: missing offline Loom line or citizen messages`);
+  });
+  const finaleMode = game.endData && game.endData.finaleMode;
+  if (finaleMode !== 'fallback') problems.push(`Cycle 5 finaleMode ${finaleMode}, expected the authored A/B fallback`);
+  if (!phases.includes('5:VOTE') || phases.includes('5:FINALE_DEBATE')) problems.push(`Cycle 5 did not play the A/B fallback: ${phases.filter((p) => p.startsWith('5:')).join(' ')}`);
+  const endShown = await host.evaluate(() => document.getElementById('view-end').classList.contains('is-active'));
+  if (!endShown) problems.push('the projector is not on the End Screen');
   if (external.length) problems.push(`external requests attempted:\n  ${[...new Set(external)].join('\n  ')}`);
   if (failedLocal.length) problems.push(`local requests failed:\n  ${failedLocal.join('\n  ')}`);
   if (fonts.length) problems.push(`web fonts loaded: ${fonts.join('; ')}`);
@@ -109,6 +126,6 @@ const engine = require(path.join(__dirname, '..', 'server', 'gameEngine'));
     process.stderr.write('E2E OFFLINE FAILED:\n' + problems.join('\n') + '\n');
     process.exit(1);
   }
-  process.stderr.write(`E2E OFFLINE OK: full game to END (cycle ${game.cycle}, GDW ${game.gdw}) with zero external requests\n`);
+  process.stderr.write(`E2E OFFLINE OK: full game to the End Screen (cycle ${game.cycle}, GDW ${game.gdw}, finale ${finaleMode}) with offline narration every cycle and zero external requests\n`);
   process.exit(0);
 })().catch((e) => { process.stderr.write('E2E OFFLINE FAILED ' + e.stack + '\n'); process.exit(1); });
