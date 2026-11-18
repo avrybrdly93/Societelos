@@ -265,3 +265,22 @@ test('v2 spare crises are inactive stubs the MVP never selects', () => {
     }
   }
 });
+
+// TASK-726: every effect vector (both 2B world variants and the spares too)
+// has exactly the 6 trait keys, each a number in [-1, 1].
+test('every effect vector has exactly the 6 traits as numbers in [-1, 1]', () => {
+  const TRAITS = ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust'];
+  let n = 0;
+  for (const c of data.crises) {
+    for (const key of ['A', 'B']) {
+      const o = c.options[key];
+      for (const [variant, e] of Object.entries(o.effectsByWorld || { '': o.effects })) {
+        const label = `${c.id} ${key}${variant ? `/${variant}` : ''}`;
+        assert.deepEqual(Object.keys(e).sort(), TRAITS, label);
+        for (const t of TRAITS) assert.ok(typeof e[t] === 'number' && e[t] >= -1 && e[t] <= 1, `${label}.${t} = ${e[t]}`);
+        n++;
+      }
+    }
+  }
+  assert.equal(n, 45);
+});
