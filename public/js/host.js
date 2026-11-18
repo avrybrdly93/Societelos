@@ -749,7 +749,7 @@
     document.getElementById('citizens-online').textContent = `${total.toLocaleString('en-US')} CITIZENS ONLINE`;
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.querySelectorAll('#region-map .district-pop[data-pop]').forEach((label) => {
-      const target = Number(String(label.getAttribute('data-pop')).replace(/[^0-9]/g, '')) || 0;
+      const target = Number(String(label.textContent).replace(/[^0-9]/g, '')) || 0;
       if (reduceMotion) { label.textContent = target.toLocaleString('en-US'); return; }
       const start = performance.now();
       const tick = (now) => {
