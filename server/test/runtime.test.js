@@ -1,16 +1,17 @@
 'use strict';
 
-// TASK-767: total game runtime with 60 s debates.
+// TASK-767 / TASK-768: total game runtime with 60 s and 90 s debates.
 //
 // A real game is played through the engine (shrunk timers, write-in finale
 // with moderation stubbed) to get the exact sequence of timed phases it
 // visits, Lobby to End. Each visited phase is then charged its shipped
-// length from DEFAULT_PHASE_SECONDS (DEBATE set to the lobby's 60 s choice), plus about a minute for the End Screen reveal (its three
+// length from DEFAULT_PHASE_SECONDS (DEBATE set to 60 or 90, as the lobby
+// switch does), plus about a minute for the End Screen reveal (its three
 // beats land at 0 / 15 / 25 s, then the class reads the recap). Every timer
 // is charged in full: early advances (all votes in, everyone ready) only make
 // a real game shorter.
 //
-// Spec target: ~13.5 min with 60 s debates.
+// Spec targets: ~13.5 min with 60 s debates, ~16.0 min with 90 s.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -48,6 +49,16 @@ test('the played game visits the full spec phase sequence (4 binary cycles, Worl
 test('TASK-767: total runtime with 60 s debates lands at ~13.5 minutes', async () => {
   const min = runtimeMinutes(await phaseSequence(), 60);
   assert.ok(Math.abs(min - 13.5) <= TOLERANCE_MIN, `60 s debates: ${min.toFixed(2)} min`);
+});
+
+test('TASK-768: total runtime with 90 s debates lands at ~16.0 minutes', async () => {
+  const min = runtimeMinutes(await phaseSequence(), 90);
+  assert.ok(Math.abs(min - 16.0) <= TOLERANCE_MIN, `90 s debates: ${min.toFixed(2)} min`);
+});
+
+test('switching 60 -> 90 s debates adds exactly 2 minutes (4 debates x 30 s)', async () => {
+  const phases = await phaseSequence();
+  assert.equal(Math.round((runtimeMinutes(phases, 90) - runtimeMinutes(phases, 60)) * 60), 120);
 });
 
 module.exports = { runtimeMinutes, phaseSequence };
