@@ -136,11 +136,11 @@
         }
       },
       "intel": {
-        "artisan": "Secret History: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
-        "lotus": "Safety Report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
-        "assimilator": "Efficiency Data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
-        "catalyst": "Chaos Forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
-        "ghost": "Leaked Board Minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
+        "artisan": "Secret history: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
+        "lotus": "Safety report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
+        "assimilator": "Efficiency data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
+        "catalyst": "Chaos forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
+        "ghost": "Leaked board minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
       }
     },
     {
@@ -270,11 +270,11 @@
         }
       },
       "intel": {
-        "artisan": "Survey Records: Neighborhoods that ran their own community repair teams reported the highest sense of purpose in the whole region.",
-        "lotus": "Safety Projection: Citizen voting queues would add about three weeks to every service change, from transit repairs to food deliveries.",
-        "assimilator": "System Audit: In a trial council, human voters overturned 1 in 4 Loom decisions, and most reversals lowered public wellbeing.",
-        "catalyst": "Political Forecast: Under a human Assembly, month-to-month public mood swings roughly double.",
-        "ghost": "Leaked Memo: The master off-switch has never actually been tested. Only the Loom knows whether it will work."
+        "artisan": "Survey records: Neighborhoods that ran their own community repair teams reported the highest sense of purpose in the whole region.",
+        "lotus": "Safety projection: Citizen voting queues would add about three weeks to every service change, from transit repairs to food deliveries.",
+        "assimilator": "System audit: In a trial council, human voters overturned 1 in 4 Loom decisions, and most reversals lowered public wellbeing.",
+        "catalyst": "Political forecast: Under a human Assembly, month-to-month public mood swings roughly double.",
+        "ghost": "Leaked memo: The master off-switch has never actually been tested. Only the Loom knows whether it will work."
       },
       "debateHooks": [
         "Is a slower, worse decision you chose better than a faster, better one you didn't?",
