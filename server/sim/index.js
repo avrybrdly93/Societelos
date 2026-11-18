@@ -3,6 +3,30 @@
 // Societelos simulation: canonical interface for the game engine.
 // Pure functions, no I/O. The caller loads data/sim.json and passes it in
 // (via a state from createInitialState, or opts.config).
+//
+// STRETCH GOAL BOUNDARY (TASK-751): replacing this 20-cohort Monte Carlo with
+// a 5,000-citizen agent-based model means swapping this module only. The
+// engine (server/gameEngine.js) talks to the simulation exclusively through
+// these exports, so an agent model must provide them with the same shapes:
+//
+//   createInitialState(config) -> state
+//       Opaque to the engine except: state.config (data/sim.json) and
+//       state.traits/traitNames/cohorts, which getCitizenMood/citizenMoods
+//       read. GDW must start at config.gdw.startingGdw (25).
+//   simulate(state, effects, { runs, seed, volatility }) -> SimResult
+//       { forecast, realized, finalState, summary } (typedefs below).
+//       Deterministic: same state, effects and seed give bit-identical
+//       output (seed replay). Must not mutate `state`. 501 runs < 50 ms.
+//       realized.districts has 13 { D1..D5: W } snapshots for the map;
+//       summary.topMoves / shocks feed the Loom's narration.
+//   getForecastMedian(state, effects, seed, { runs, volatility }) -> number
+//       Month-12 median GDW, used to break vote ties (forecast only).
+//   computeGDW(state) -> number in [0, 100]
+//   citizenMoods(before, after, citizens) and closingCitizen(start, end,
+//   citizens): each named citizen's cohort mood, for the feed and End Screen.
+//
+// An agent model can keep cohorts as aggregates of its agents (district x
+// age group), so these citizen hooks and data/citizens.json keep working.
 
 /**
  * @typedef {{ purpose: number, connection: number, health: number, trust: number, fairness: number, autonomy: number }} Effects

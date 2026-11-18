@@ -41,3 +41,25 @@ test('no Cycle 3-4 binary choice forces collapse from a median starting state', 
     }
   }
 });
+
+// TASK-751: the stretch-goal boundary documented at the top of
+// server/sim/index.js is exactly what the engine uses, so an agent-based
+// model can replace the module without touching server/gameEngine.js.
+test('server/sim exports the documented engine boundary, and the engine uses nothing else', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const sim = require('..');
+  const contract = ['createInitialState', 'simulate', 'getForecastMedian', 'computeGDW', 'citizenMoods', 'closingCitizen'];
+  for (const fn of contract) assert.equal(typeof sim[fn], 'function', `sim.${fn}`);
+  const doc = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
+  assert.match(doc, /STRETCH GOAL BOUNDARY/);
+  for (const fn of contract) assert.ok(doc.slice(0, doc.indexOf('@typedef')).includes(fn), `${fn} documented in the boundary`);
+  const engine = fs.readFileSync(path.join(__dirname, '..', '..', 'gameEngine.js'), 'utf8');
+  const used = new Set([...engine.matchAll(/\bsim\.([a-zA-Z]+)\s*\(/g)].map((m) => m[1]));
+  for (const fn of used) assert.ok(contract.includes(fn), `engine calls sim.${fn}, which is not in the documented boundary`);
+  // The result shape the engine reads.
+  const r = sim.simulate(sim.createInitialState(simConfig), { purpose: 0.2, connection: 0, health: 0, trust: 0, fairness: 0, autonomy: -0.1 }, { runs: 20, seed: 7 });
+  for (const k of ['forecast', 'realized', 'finalState', 'summary']) assert.ok(r[k], k);
+  assert.equal(r.realized.districts.length, 13);
+  assert.ok(Array.isArray(r.summary.topMoves) && Array.isArray(r.summary.shocks));
+});
