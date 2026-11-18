@@ -196,3 +196,17 @@ test('zero emoji in crises.json, roles.json and citizens.json', () => {
     assert.equal(emoji, null, `${f} contains emoji: ${emoji && emoji.join(' ')}`);
   }
 });
+
+// TASK-720: every Policy A/B text a game can show is under 120 characters,
+// so the class can scan both cards on the projector during the debate.
+test('all 28 Policy A/B texts are under 120 characters', () => {
+  let n = 0;
+  for (const c of CORE) {
+    for (const key of ['A', 'B']) {
+      const text = c.options[key].text;
+      assert.ok(text.length < 120, `${c.id} ${key} is ${text.length} chars: ${text}`);
+      n++;
+    }
+  }
+  assert.equal(n, 28);
+});

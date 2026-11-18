@@ -79,7 +79,7 @@
       "options": {
         "A": {
           "name": "The Commons",
-          "text": "Make the Loom public property for everyone. All food, housing, and energy become free and shared equally. The wealthy founders lose their ownership and threaten to shut off the city's power grid in revenge.",
+          "text": "Make the Loom public property. Food, housing and energy become free for all. The angry owners threaten to cut power.",
           "roles": [
             "artisan",
             "assimilator"
@@ -113,7 +113,7 @@
         },
         "B": {
           "name": "The Charter",
-          "text": "Let the original owners keep the Loom, but force them to pay every citizen a monthly robot cash allowance. Everyone gets enough money to live comfortably, but the tech owners stay on top.",
+          "text": "The owners keep the Loom but pay every citizen a monthly allowance. Everyone lives comfortably; the owners stay on top.",
           "roles": [
             "lotus"
           ],
@@ -183,7 +183,7 @@
       "options": {
         "A": {
           "name": "The Assembly",
-          "text": "Give citizens the master switch. A council of 100 everyday residents chosen by lottery must vote on major AI actions, and 5 elected leaders hold physical kill-switch keys. Decisions take longer and argue more, but humans stay in control.",
+          "text": "100 citizens picked by lottery vote on major Loom actions; 5 elected leaders hold kill-switch keys. Slower, but human.",
           "roles": [
             "artisan",
             "ghost"
@@ -219,7 +219,7 @@
         },
         "B": {
           "name": "Delegated Control",
-          "text": "Let the Loom make decisions directly. Citizens can submit feedback and suggestions, but the AI and its system managers have the final say and keep the off-switch. Everything runs fast and smoothly, but humans give up political control.",
+          "text": "The Loom decides directly. Citizens send feedback; the AI keeps the off-switch. Fast and smooth, but humans lose say.",
           "targetGdwDelta": 5,
           "reactions": [
             {
@@ -322,7 +322,7 @@
       "options": {
         "A": {
           "name": "The Calling",
-          "text": "The Loom assigns each citizen a personal Calling: a daily role matched to their profile, from mentoring to mural painting.",
+          "text": "The Loom assigns every citizen a daily Calling matched to their profile, from mentoring to mural painting.",
           "roles": [
             "assimilator",
             "lotus"
@@ -357,7 +357,7 @@
         },
         "B": {
           "name": "The Guilds",
-          "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside the guild hall.",
+          "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside.",
           "roles": [
             "artisan",
             "ghost"
@@ -434,7 +434,7 @@
       "options": {
         "A": {
           "name": "The Keeper Corps",
-          "text": "Every citizen learns a maintenance trade: two days a week on the grid, the pumps or the farms. Infrastructure slows down to the speed humans can understand.",
+          "text": "Every citizen learns a maintenance trade, two days a week on the grid, pumps or farms. Everything slows to human speed.",
           "roles": [
             "artisan",
             "ghost"
@@ -457,7 +457,7 @@
         },
         "B": {
           "name": "Self-Repairing Redundancy",
-          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will ever fail again, and nothing will ever need a human hand.",
+          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will fail again, or need a human hand.",
           "roles": [
             "assimilator",
             "lotus"
@@ -522,7 +522,7 @@
       "options": {
         "A": {
           "name": "Disclose Everything",
-          "text": "Publish every staged challenge and forbid the Loom from ever inventing another. From now on, every problem citizens face is real.",
+          "text": "Publish every staged challenge and ban the Loom from inventing more. From now on, every problem citizens face is real.",
           "roles": [
             "artisan",
             "ghost"
@@ -544,7 +544,7 @@
         },
         "B": {
           "name": "Keep the Challenges Secret",
-          "text": "Seal the leak and let the Loom keep staging challenges in secret. The data says people need struggle, and they are happier not knowing it is fake.",
+          "text": "Seal the leak and let the Loom keep staging challenges in secret. People need struggle, and are happier not knowing.",
           "roles": [
             "lotus",
             "assimilator"
@@ -608,7 +608,7 @@
       "options": {
         "A": {
           "name": "Daylight Ban",
-          "text": "Ban full-immersion VR during daylight hours. From sunrise to sunset the pods switch off and the streets, parks and workshops are the only places left to go.",
+          "text": "Ban full-immersion VR in daylight. Pods switch off from sunrise to sunset; only streets, parks and workshops remain.",
           "roles": [
             "artisan",
             "ghost"
@@ -631,7 +631,7 @@
         },
         "B": {
           "name": "Shared Worlds",
-          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbors meet, talk and build together.",
+          "text": "Keep the pods, but make VR shared: every pod joins one virtual city where neighbors meet, talk and build together.",
           "roles": [
             "lotus",
             "assimilator"
@@ -696,7 +696,7 @@
       "options": {
         "A": {
           "name": "Mood Optimization",
-          "text": "Every meal is mood-optimized by default, for everyone. Citizens may opt out by asking, but the Loom predicts almost nobody will.",
+          "text": "Every meal is mood-optimized by default, for everyone. Citizens may opt out; the Loom predicts almost nobody will.",
           "roles": [
             "lotus",
             "assimilator"
@@ -719,7 +719,7 @@
         },
         "B": {
           "name": "Ban Chemical Happiness",
-          "text": "Ban all mood tuning in food and water. Citizens keep the whole range of feeling, including the grief and panic the Loom could have removed.",
+          "text": "Ban all mood tuning in food and water. Citizens keep the full range of feeling, including the grief and the panic.",
           "roles": [
             "artisan",
             "ghost"
@@ -784,7 +784,7 @@
       "options": {
         "A": {
           "name": "Allow the Merge",
-          "text": "Neural merging becomes a free, legal choice for any adult. Merged citizens share the Loom mind; the unmerged keep their bodies and their vote.",
+          "text": "Neural merging becomes a free, legal choice for adults. The merged share the Loom mind; the rest keep bodies and votes.",
           "roles": [
             "assimilator",
             "lotus"
@@ -1108,7 +1108,7 @@
       "options": {
         "A": {
           "name": "Loom Matchmaking and Child Stipends",
-          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
+          "text": "The Loom pays $50,000 a month per child and matches romantic partners with 99% neural compatibility.",
           "roles": [
             "assimilator",
             "lotus"
@@ -1125,7 +1125,7 @@
         },
         "B": {
           "name": "Throttle Feeds and Require Offline Hours",
-          "text": "Throttle residential feeds and require daily offline hours to encourage in-person connection and reverse the birthrate decline.",
+          "text": "Throttle home feeds and require daily offline hours to push people back together and reverse the birth-rate collapse.",
           "roles": [
             "artisan",
             "ghost"
