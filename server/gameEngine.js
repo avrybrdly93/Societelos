@@ -772,15 +772,36 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * END: broadcast the closing citizen for the End Screen - the citizen whose
-   * cohort changed most over the whole game, with their own words.
+   * Which five-year epilogue pool the ending draws from (data/citizens.json
+   * epilogue): 'good' for a Stable or Thriving ending (GDW 35+), 'bad' for
+   * Fragile or a Shutdown.
+   */
+  epilogueBand() {
+    return this.ending === 'shutdown' || !(this.gdw >= 35) ? 'bad' : 'good';
+  }
+
+  /** Citizens with a five-year epilogue line for this ending. */
+  epilogueCitizens() {
+    const band = this.epilogueBand();
+    return (Array.isArray(this.data.citizens) ? this.data.citizens : [])
+      .filter((c) => c && c.id && c.epilogue && typeof c.epilogue[band] === 'string' && c.epilogue[band]);
+  }
+
+  /**
+   * END: broadcast the closing citizen for the End Screen - of the citizens
+   * with an epilogue for this ending, the one whose cohort changed most over
+   * the whole game, in their five-year epilogue words. Without epilogues it
+   * falls back to the most-changed citizen's band line.
    */
   startEndPhase() {
     const extra = {};
     try {
-      const pick = sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
-      if (pick && pick.text) {
-        extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text: pick.text, sentiment: pick.band }), change: pick.change, band: pick.band };
+      const pool = this.epilogueCitizens();
+      const epi = pool.length ? sim.closingCitizen(this.simStateStart, this.simState, pool) : null;
+      const pick = epi || sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
+      if (pick) {
+        const text = epi ? pool.find((c) => c.id === epi.citizenId).epilogue[this.epilogueBand()] : pick.text;
+        if (text) extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text, sentiment: pick.band }), change: pick.change, band: pick.band, epilogue: !!epi };
       }
     } catch (err) {
       console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
@@ -1935,12 +1956,17 @@ class GameState extends EventEmitter {
 
   /**
    * Deterministic closing citizen when the simulation pick is unavailable:
-   * one authored line from data/citizens.json chosen by the final GDW band
-   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Old Harbour
-   * voice if the citizen data itself is missing.
+   * a five-year epilogue for this ending from data/citizens.json, else one
+   * authored line chosen by the final GDW band (good 35+, mixed 1-34, bad on
+   * a shutdown), or a built-in Old Harbour voice if citizen data is missing.
    */
   fallbackClosingMessage() {
     const band = this.gdw <= 0 || this.ending === 'shutdown' ? 'bad' : this.gdw >= 35 ? 'good' : 'mixed';
+    const pool = this.epilogueCitizens();
+    if (pool.length) {
+      const c = pool[hashSeed(this.gameId, 'closing') % pool.length];
+      return { ...this.citizenMessage({ citizenId: c.id, text: c.epilogue[this.epilogueBand()], sentiment: band }), change: 0, band, fallback: true, epilogue: true };
+    }
     const citizens = (Array.isArray(this.data.citizens) ? this.data.citizens : [])
       .filter((c) => c && c.id && c.name && c.district && c.lines && Array.isArray(c.lines[band]) && c.lines[band].length);
     if (citizens.length) {

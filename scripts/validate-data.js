@@ -63,6 +63,12 @@ function checkCitizens(citizens) {
       if (!Array.isArray(lines) || !lines.length || !lines.every(isStr)) err(where, `lines.${b} needs at least one line`);
       else lines.forEach((l) => { if (l.length > 140) err(where, `lines.${b} line over 140 chars`); });
     }
+    // Optional five-year End Screen epilogue: { good | bad: text }.
+    if (c.epilogue !== undefined) {
+      const keys = c.epilogue && typeof c.epilogue === 'object' ? Object.keys(c.epilogue) : [];
+      if (!keys.length || !keys.every((k) => k === 'good' || k === 'bad')) err(where, 'epilogue must be { good | bad: text }');
+      for (const k of keys) if (!isStr(c.epilogue[k]) || c.epilogue[k].length > 140) err(where, `epilogue.${k} must be 1-140 chars`);
+    }
   });
   return undefined;
 }

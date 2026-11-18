@@ -91,3 +91,43 @@ test('30 citizen fallback lines: 10 voiced citizens x good/mixed/bad, all distin
   }
   assert.ok(seen.size >= 30);
 });
+
+// TASK-715: 10 five-year epilogues for the End Screen closing citizen:
+// 5 for a Stable/Thriving ending, 5 for a Fragile/Shutdown ending.
+test('10 closing citizen epilogues: 5 good/stable and 5 fragile/shutdown, <= 112 chars', () => {
+  const pools = { good: [], bad: [] };
+  for (const c of citizens) {
+    for (const [band, text] of Object.entries(c.epilogue || {})) {
+      assert.ok(band in pools, `${c.id}: unknown epilogue band ${band}`);
+      // <= 112, like the longest cycle line: two lines in the End Screen quote.
+      assert.ok(text.length <= 112, `${c.id}.epilogue.${band} is ${text.length} chars`);
+      pools[band].push(c.id);
+    }
+  }
+  assert.equal(pools.good.length, 5, `good: ${pools.good}`);
+  assert.equal(pools.bad.length, 5, `bad: ${pools.bad}`);
+  // A shutdown can end the game in Cycle 2, so bad epilogues never claim five years.
+  for (const id of pools.bad) assert.doesNotMatch(citizens.find((c) => c.id === id).epilogue.bad, /five years/i, id);
+});
+
+test('the End Screen closing citizen speaks an epilogue that matches the ending', () => {
+  const engine = require('../gameEngine');
+  const log = console.log;
+  console.log = () => {};
+  try {
+    for (const [gdw, ending, band] of [[48, null, 'good'], [20, null, 'bad'], [0, 'shutdown', 'bad']]) {
+      const game = new engine.GameState({ roomCode: 'EPIL' });
+      game.cycle = 5;
+      game.gdw = gdw;
+      game.ending = ending;
+      game.startEndPhase();
+      const closing = game.endData.closingMessage;
+      const c = citizens.find((x) => x.id === closing.citizenId);
+      assert.ok(c && c.epilogue && c.epilogue[band], `GDW ${gdw}: ${closing.citizenId} has no ${band} epilogue`);
+      assert.equal(closing.text, c.epilogue[band]);
+      game.clearPhaseTimer();
+    }
+  } finally {
+    console.log = log;
+  }
+});

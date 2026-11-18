@@ -16,6 +16,9 @@
       "bad": [
         "Nobody needs bandages anymore. Nobody needs me either, apparently."
       ]
+    },
+    "epilogue": {
+      "bad": "I used to patch people up. Now I sit with neighbours in the dark and hold hands. Maybe that is nursing too."
     }
   },
   {
@@ -35,6 +38,9 @@
       "bad": [
         "day 400 of nothing happening. at least the snacks are free"
       ]
+    },
+    "epilogue": {
+      "good": "ok so five years ago i was bored. now i run the guild repair shift. still bored sometimes. but less"
     }
   },
   {
@@ -54,6 +60,9 @@
       "bad": [
         "Mark my words: when amateurs run the machine, the machine stops running. And then where are we?"
       ]
+    },
+    "epilogue": {
+      "bad": "I warned them. Amateurs at the controls. I shall be in my house on the hill, which I notice I still own."
     }
   },
   {
@@ -73,6 +82,9 @@
       "bad": [
         "The Loom printed a perfect copy of my workbench. Free. Same grain and all. I put my tools away."
       ]
+    },
+    "epilogue": {
+      "good": "My workshop has a waiting list. People want chairs that wobble a little. Turns out imperfect was the point."
     }
   },
   {
@@ -92,6 +104,9 @@
       "bad": [
         "feed glitched for ten minutes. nobody in my building knew what to do with their hands. chat neither"
       ]
+    },
+    "epilogue": {
+      "bad": "stream went dark. building went quiet. turns out nobody remembers how to talk without a feed. me included"
     }
   },
   {
@@ -111,6 +126,9 @@
       "bad": [
         "In my day you could strike. Who do you strike against when the boss is a server farm?"
       ]
+    },
+    "epilogue": {
+      "good": "Five years of motions and shouting. We built something. Nobody handed it to us. That part I will remember."
     }
   },
   {
@@ -130,6 +148,9 @@
       "bad": [
         "Great. Another genius decision from people who have never parked anything bigger than a bike."
       ]
+    },
+    "epilogue": {
+      "bad": "They promised a better world. I got a parking space and a speech. Wake me when it actually gets better."
     }
   },
   {
@@ -149,6 +170,9 @@
       "bad": [
         "She asked me what I do all day. I didn't have an answer. Neither did the Loom."
       ]
+    },
+    "epilogue": {
+      "good": "She asked what we did these five years. We decided things, together, I said. Now she wants a council seat."
     }
   },
   {
@@ -168,6 +192,9 @@
       "bad": [
         "If that grid ever goes dark, there are maybe four people left who know where the breaker is. I'm one."
       ]
+    },
+    "epilogue": {
+      "good": "Twelve apprentices became two hundred. If the grid goes dark now, half of The Grid knows where the breaker is."
     }
   },
   {
@@ -187,6 +214,9 @@
       "bad": [
         "Every new sensor on the ridge is another reason to go further up the mountain."
       ]
+    },
+    "epilogue": {
+      "bad": "We went up the mountain and we are not coming down. Whatever is left of the Loom can keep the valley."
     }
   }
 ]

@@ -1179,7 +1179,10 @@ test('END broadcasts the closing citizen for the End Screen (name, district, wor
   const c = citizens.find((x) => x.id === end.closing.citizenId);
   assert.ok(c, 'a real citizen');
   assert.equal(end.closing.name, c.name);
-  assert.equal(end.closing.text, c.lines[end.closing.band][0]);
+  // TASK-715: the five-year epilogue for this ending (good 35+, else bad).
+  const epiBand = game.gdw >= 35 ? 'good' : 'bad';
+  assert.equal(end.closing.text, c.epilogue[epiBand]);
+  assert.equal(end.closing.epilogue, true);
   assert.equal(typeof end.closing.change, 'number');
   assert.equal(end.endsAt, null, 'END has no timer');
 });
