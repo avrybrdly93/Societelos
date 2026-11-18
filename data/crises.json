@@ -115,7 +115,8 @@
           "name": "The Charter",
           "text": "The owners keep the Loom but pay every citizen a monthly allowance. Everyone lives comfortably; the owners stay on top.",
           "roles": [
-            "lotus"
+            "lotus",
+            "ghost"
           ],
           "effects": {
             "purpose": 0.5,
