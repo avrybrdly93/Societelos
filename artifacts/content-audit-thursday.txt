@@ -6,3 +6,49 @@ Negative cases (server/test/validateData.test.js): missing intel role, trait out
 
 == TASK-726 effect vectors
 45 effect vectors across 22 crises: all have exactly the 6 traits as numbers in [-1, 1]; observed range [-0.9, 0.85]
+
+== TASK-729 npm run check:tags (role tag summary per world)
+Role tag balance over 28 authored options (Crisis 2B counted per world variant)
+
+scope             artisan      lotus        assimilator  ghost        balanced
+fixed (C1-2)      2            2            2            1            NO
+  path 1A -> 2B/A 2            1            2            1            NO
+  path 1B -> 2B/B 2            2            1            1            NO
+world AA (C3-5)   3            3            3            3            yes
+world AB (C3-5)   3            3            3            3            yes
+world BA (C3-5)   3            3            3            3            yes
+world BB (C3-5)   3            3            3            3            yes
+global            14           14           14           13           NO
+
+Per option:
+  fixed  C1 fixed-1-ownership      A   artisan, assimilator
+  fixed  C1 fixed-1-ownership      B   lotus
+  fixed  C2 fixed-2-offswitch      A   artisan, ghost
+  fixed  C2 fixed-2-offswitch      B/A assimilator
+  fixed  C2 fixed-2-offswitch      B/B lotus
+  AA     C3 aa-purpose-drift       A   assimilator, lotus
+  AA     C3 aa-purpose-drift       B   artisan, ghost
+  AA     C4 aa-lost-knowledge      A   artisan, ghost
+  AA     C4 aa-lost-knowledge      B   assimilator, lotus
+  AA     C5 aa-fake-struggle       A   artisan, ghost
+  AA     C5 aa-fake-struggle       B   lotus, assimilator
+  AB     C3 ab-the-pods            A   artisan, ghost
+  AB     C3 ab-the-pods            B   lotus, assimilator
+  AB     C4 ab-mood-dial           A   lotus, assimilator
+  AB     C4 ab-mood-dial           B   artisan, ghost
+  AB     C5 ab-merge-offer         A   assimilator, lotus
+  AB     C5 ab-merge-offer         B   ghost, artisan
+  BA     C3 ba-shadow-elite        A   assimilator, artisan
+  BA     C3 ba-shadow-elite        B   lotus, ghost
+  BA     C4 ba-status-wars         A   lotus, assimilator
+  BA     C4 ba-status-wars         B   artisan, ghost
+  BA     C5 ba-vote-to-seize       A   assimilator, artisan
+  BA     C5 ba-vote-to-seize       B   lotus, ghost
+  BB     C3 bb-scroll-extinction   A   assimilator, lotus
+  BB     C3 bb-scroll-extinction   B   artisan, ghost
+  BB     C4 bb-the-unplugged       A   ghost, artisan
+  BB     C4 bb-the-unplugged       B   assimilator, lotus
+  BB     C5 bb-march-datacenter    A   ghost, artisan
+  BB     C5 bb-march-datacenter    B   assimilator, lotus
+
+All 4 worlds balanced.
