@@ -797,41 +797,41 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-713:** Polish the 4 Shutdown / Grade epilogue summaries (`Thriving 60+`, `Stable 35-59`, `Fragile 1-34`, `Shutdown 0%`) in `data/crises.json`.
 - [x] **TASK-714:** Audit all 30 citizen fallback messages ($10 \text{ citizens} \times 3 \text{ bands}$) in `data/citizens.json` to ensure distinct voices (e.g., Tomás is angry and funny, Kai sounds like an always-online VR streamer, Hollis sounds like an aggrieved ex-CEO, Ruth sounds like an old union organizer).
 - [x] **TASK-715:** Add 10 closing citizen epilogue messages (5 good/stable, 5 fragile/shutdown) in `data/citizens.json` for the End Screen's 5-year recap.
-- [ ] **TASK-716:** Proofread all text in `data/roles.json` for clarity on mobile screens.
-- [ ] **TASK-717:** Proofread all text in `data/citizens.json` for typos, punctuation, and school appropriateness.
-- [ ] **TASK-718:** Proofread all text in `data/crises.json` for typos, punctuation, and school appropriateness.
-- [ ] **TASK-719:** Verify zero emoji characters exist across `data/crises.json`, `data/roles.json`, and `data/citizens.json`.
-- [ ] **TASK-720:** Verify all Policy A and Policy B texts are under 120 characters for instant projector scanning during debate.
-- [ ] **TASK-721:** Verify all `loomIntro` strings sound calm, precise, and slightly unsettling.
-- [ ] **TASK-722:** Verify Fixed Crisis 2B `projectorLine` and `loomResolutionLine` match the exact strings in the MVP spec.
-- [ ] **TASK-723:** Add v2 spare crisis stubs (`Artificial Friends`, `Thrill Seekers`, `Outsourced Parents`, `The Neighbours`, `The Empty Classroom`, `The Ghost Vote`, `The Soft Body`) under an inactive `"v2_spares"` key or comment block for post-Thursday expansion without affecting MVP cycle lookup.
-- [ ] **TASK-724:** Run automated schema validator across `data/crises.json`, `data/roles.json`, and `data/citizens.json`.
-- [ ] **TASK-725:** Verify every crisis has all 5 role keys in `intel` (`artisan`, `lotus`, `assimilator`, `catalyst`, `ghost`).
-- [ ] **TASK-726:** Verify every effect vector has all 6 trait keys (`purpose`, `connection`, `health`, `trust`, `fairness`, `autonomy`) with numeric values in $[-1.0, 1.0]$.
-- [ ] **TASK-727:** Verify all 4 finale crises have `"mode": "writein"` and valid fallback `options.A` and `options.B`.
-- [ ] **TASK-728:** Verify all 10 binary crises have `"mode": "binary"`.
-- [ ] **TASK-729:** Generate a content summary table in console confirming exact role tag counts per world.
-- [ ] **TASK-730:** Check character lengths of all 70 intel drops (all $\le 180$ chars).
-- [ ] **TASK-731:** Check character lengths of all 30 citizen fallback messages (all $\le 140$ chars).
-- [ ] **TASK-732:** Check character lengths of all Loom resolution fallback lines (all $\le 200$ chars).
+- [x] **TASK-716:** Proofread all text in `data/roles.json` for clarity on mobile screens.
+- [x] **TASK-717:** Proofread all text in `data/citizens.json` for typos, punctuation, and school appropriateness.
+- [x] **TASK-718:** Proofread all text in `data/crises.json` for typos, punctuation, and school appropriateness.
+- [x] **TASK-719:** Verify zero emoji characters exist across `data/crises.json`, `data/roles.json`, and `data/citizens.json`.
+- [x] **TASK-720:** Verify all Policy A and Policy B texts are under 120 characters for instant projector scanning during debate.
+- [x] **TASK-721:** Verify all `loomIntro` strings sound calm, precise, and slightly unsettling.
+- [x] **TASK-722:** Verify Fixed Crisis 2B `projectorLine` and `loomResolutionLine` match the exact strings in the MVP spec.
+- [x] **TASK-723:** Add v2 spare crisis stubs (`Artificial Friends`, `Thrill Seekers`, `Outsourced Parents`, `The Neighbours`, `The Empty Classroom`, `The Ghost Vote`, `The Soft Body`) under an inactive `"v2_spares"` key or comment block for post-Thursday expansion without affecting MVP cycle lookup.
+- [x] **TASK-724:** Run automated schema validator across `data/crises.json`, `data/roles.json`, and `data/citizens.json`.
+- [x] **TASK-725:** Verify every crisis has all 5 role keys in `intel` (`artisan`, `lotus`, `assimilator`, `catalyst`, `ghost`).
+- [x] **TASK-726:** Verify every effect vector has all 6 trait keys (`purpose`, `connection`, `health`, `trust`, `fairness`, `autonomy`) with numeric values in $[-1.0, 1.0]$.
+- [x] **TASK-727:** Verify all 4 finale crises have `"mode": "writein"` and valid fallback `options.A` and `options.B`.
+- [x] **TASK-728:** Verify all 10 binary crises have `"mode": "binary"`.
+- [x] **TASK-729:** Generate a content summary table in console confirming exact role tag counts per world.
+- [x] **TASK-730:** Check character lengths of all 70 intel drops (all $\le 180$ chars).
+- [x] **TASK-731:** Check character lengths of all 30 citizen fallback messages (all $\le 140$ chars).
+- [x] **TASK-732:** Check character lengths of all Loom resolution fallback lines (all $\le 200$ chars).
 - [ ] **TASK-733:** Lock `data/roles.json` and `data/citizens.json` for Thursday demo.
 - [ ] **TASK-734:** Lock `data/crises.json` for Thursday demo.
 - [ ] **TASK-735:** Prepare `feature/content` Thursday branch state for final merge.
 
 ### Agent 4: Simulation & Loom (`feature/sim` — 50 Tasks)
 - [ ] **TASK-736:** Perform final playtest tuning of `data/sim.json` based on Wednesday playtest logs and Thursday balance pass changes in `data/crises.json`.
-- [ ] **TASK-737:** Re-run `server/sim/calibrate.js` on Fixed Crises 1A, 1B, 2A, and 2B (`1A` and `1B` variants) to confirm forecast medians still land on `-5`, `+10`, `-5`, and `+5` ($\pm 1.5$ GDW).
-- [ ] **TASK-738:** Verify that across all 4 worlds (`AA`, `AB`, `BA`, `BB`), no single binary choice in Cycles 3–4 causes an unavoidable 100% deterministic collapse from a median starting state.
+- [x] **TASK-737:** Re-run `server/sim/calibrate.js` on Fixed Crises 1A, 1B, 2A, and 2B (`1A` and `1B` variants) to confirm forecast medians still land on `-5`, `+10`, `-5`, and `+5` ($\pm 1.5$ GDW).
+- [x] **TASK-738:** Verify that across all 4 worlds (`AA`, `AB`, `BA`, `BB`), no single binary choice in Cycles 3–4 causes an unavoidable 100% deterministic collapse from a median starting state.
 - [ ] **TASK-739:** Verify that reckless consecutive choices (ignoring tanking traits and shocks) reliably push $P(\text{collapse})$ above 30% and can trigger the 0% GDW Loom Shutdown ending.
 - [ ] **TASK-740:** Verify that the Catalyst scoring threshold ($\ge 10$ GDW move in a cycle) triggers in roughly 1.5 to 2.5 cycles per 5-cycle game so the Catalyst is competitive with the other 4 roles.
 - [ ] **TASK-741:** Fine-tune `alpha` or trait weights in `data/sim.json` if Catalyst trigger rate is outside $[1.5, 2.5]$ cycles per game across 1,000 simulated games.
-- [ ] **TASK-742:** Audit all timeout and error-handling paths in `server/loom.js` to guarantee the **Offline Demo Mandate**: a full 5-cycle game runs smoothly with Wi-Fi internet completely disabled (`GEMINI_API_KEY` invalid, unreachable DNS, or network unplugged).
-- [ ] **TASK-743:** Verify that when internet is unreachable, `fetch` failures in `server/loom.js` resolve to fallbacks immediately ($< 100\text{ ms}$) rather than making players wait the full 8 seconds on a dead connection, while slow hanging connections still abort cleanly at `8,000 ms`.
-- [ ] **TASK-744:** Test `loom.narrate` offline fallback across all 5 cycles to confirm citizen messages dynamically reflect the districts and traits that moved most in the simulation summary.
-- [ ] **TASK-745:** Verify that offline citizen fallback selection in `server/loom.js` prioritizes citizens belonging to the districts in `summary.topMoves` and `summary.shocks` so the feed feels reactive even without Gemini!
-- [ ] **TASK-746:** Verify Gemini safety settings in `server/loom.js` block harassment, hate speech, sexually explicit content, and dangerous content at the API layer in addition to the moderation system prompt.
-- [ ] **TASK-747:** Add a fast local profanity/slur pre-filter in `server/loom.js` so blatantly inappropriate classroom submissions are immediately flagged as `status: "revise"` or `"reject"` even if Gemini is slow or offline.
-- [ ] **TASK-748:** Ensure raw unmoderated student text is NEVER returned in `cleaned` under any error or timeout scenario in `server/loom.js`.
+- [x] **TASK-742:** Audit all timeout and error-handling paths in `server/loom.js` to guarantee the **Offline Demo Mandate**: a full 5-cycle game runs smoothly with Wi-Fi internet completely disabled (`GEMINI_API_KEY` invalid, unreachable DNS, or network unplugged).
+- [x] **TASK-743:** Verify that when internet is unreachable, `fetch` failures in `server/loom.js` resolve to fallbacks immediately ($< 100\text{ ms}$) rather than making players wait the full 8 seconds on a dead connection, while slow hanging connections still abort cleanly at `8,000 ms`.
+- [x] **TASK-744:** Test `loom.narrate` offline fallback across all 5 cycles to confirm citizen messages dynamically reflect the districts and traits that moved most in the simulation summary.
+- [x] **TASK-745:** Verify that offline citizen fallback selection in `server/loom.js` prioritizes citizens belonging to the districts in `summary.topMoves` and `summary.shocks` so the feed feels reactive even without Gemini!
+- [x] **TASK-746:** Verify Gemini safety settings in `server/loom.js` block harassment, hate speech, sexually explicit content, and dangerous content at the API layer in addition to the moderation system prompt.
+- [x] **TASK-747:** Add a fast local profanity/slur pre-filter in `server/loom.js` so blatantly inappropriate classroom submissions are immediately flagged as `status: "revise"` or `"reject"` even if Gemini is slow or offline.
+- [x] **TASK-748:** Ensure raw unmoderated student text is NEVER returned in `cleaned` under any error or timeout scenario in `server/loom.js`.
 - [ ] **TASK-749:** Verify `loom.moderate` few-shot calibration examples in `server/loom.js` stay automatically synced with the final tuned effect vectors in `data/crises.json`.
 - [ ] **TASK-750:** Test `simulate()` performance on low-power laptop CPU settings (confirming 501 runs stay well under `50 ms`).
 - [ ] **TASK-751:** Verify that the Stretch Goal interface boundary in `server/sim/index.js` (`simulate(state, effects, options) -> { forecast, realized, finalState, summary }`) is cleanly documented so the 5,000-citizen small-world agent model can be swapped in after Thursday without changing `server/gameEngine.js`.
