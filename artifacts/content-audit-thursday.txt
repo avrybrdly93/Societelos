@@ -1,0 +1,5 @@
+Societelos content audit (Thursday) - branch claude/tasks-2026-11-18-0047
+
+== TASK-724 npm run check:data (scripts/validate-data.js over roles, citizens, crises, sim)
+data/*.json valid (14 core crises complete)
+Negative cases (server/test/validateData.test.js): missing intel role, trait out of range, missing trait, unknown tag, non-writein finale, non-binary fixed crisis, cost-free option, emoji, line > 140 chars, malformed epilogue: all rejected.

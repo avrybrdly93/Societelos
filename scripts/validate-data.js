@@ -7,7 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA = path.join(__dirname, '..', 'data');
+// SOCIETELOS_DATA_DIR points the validator at another copy (used by tests).
+const DATA = process.env.SOCIETELOS_DATA_DIR || path.join(__dirname, '..', 'data');
 const ROLE_KEYS = ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost'];
 const TAGS = ['artisan', 'lotus', 'assimilator', 'ghost'];
 const TRAITS = ['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy'];
