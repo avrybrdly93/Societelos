@@ -17,6 +17,12 @@ services:
       # Join QR code points phones here (+ /mobile.html).
       - key: PUBLIC_URL
         value: https://avesstudios.com/the-loom
+      # Locked production defaults (TASK-795): 60 s debates (~13.5 min game),
+      # forecast hidden until resolution. The teacher can still switch per game in the lobby.
+      - key: DEBATE_SECONDS
+        value: "60"
+      - key: SHOW_FORECAST_BEFORE_VOTE
+        value: "false"
       # Set in the Render dashboard; never committed.
       - key: GEMINI_API_KEY
         sync: false

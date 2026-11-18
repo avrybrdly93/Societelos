@@ -97,8 +97,8 @@ The Loom operates on a delicate balance between cooperative survival and competi
 | `GEMINI_API_KEY` | *(blank)* | Google AI Studio key for live Loom narration and write-in moderation. Blank = fully offline. Server-side only; never sent to phones. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Flash-class model name. |
 | `LOOM_OFFLINE` | `false` | `true` forces offline fallbacks even with a key (rehearsals without spending quota). |
-| `DEBATE_SECONDS` | `90` | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). Also switchable per game from the lobby (`host:config`). |
-| `SHOW_FORECAST_BEFORE_VOTE` | `false` | Show the Loom's A/B forecast fans during the debate. Also switchable from the lobby. |
+| `DEBATE_SECONDS` | `90` (production: `60`) | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). `.env.example`, `render.yaml` and the `Dockerfile` lock `60` for the classroom demo. Also switchable per game from the lobby (`host:config`). |
+| `SHOW_FORECAST_BEFORE_VOTE` | `false` (production: `false`) | Show the Loom's A/B forecast fans during the debate. Locked to `false` in the production configs. Also switchable from the lobby. |
 | `SESSION_TIMER_ENABLED` / `SESSION_DURATION_SEC` | off | Blitz session mode: play crises until the session timer runs out, then the write-in finale. |
 | `LOOM_LOG` | `on` | Log each Gemini call's latency and token usage (`off` to silence). |
 | `LOOM_PRIVACY` | `true` | Never log student write-ins, even with prompt debugging on. |
