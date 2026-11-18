@@ -70,3 +70,24 @@ test('each grade band has a Loom epilogue for the End Screen (<= 140 chars)', ()
   }
   assert.match(data.grades.SHUTDOWN, /zero/);
 });
+
+// TASK-714: 10 citizens x 3 bands of fallback lines, each citizen with a
+// stated voice and no line shared or near-duplicated between citizens.
+const citizens = require('../../data/citizens.json');
+
+test('30 citizen fallback lines: 10 voiced citizens x good/mixed/bad, all distinct', () => {
+  assert.equal(citizens.length, 10);
+  const seen = new Map();
+  for (const c of citizens) {
+    assert.ok(typeof c.voice === 'string' && c.voice.length > 10, `${c.id} has no voice note`);
+    for (const band of ['good', 'mixed', 'bad']) {
+      assert.ok(Array.isArray(c.lines[band]) && c.lines[band].length >= 1, `${c.id}.${band}`);
+      for (const line of c.lines[band]) {
+        const key = line.toLowerCase().replace(/[^a-z ]/g, '').split(' ').slice(0, 6).join(' ');
+        assert.ok(!seen.has(key), `${c.id}.${band} opens like ${seen.get(key)}`);
+        seen.set(key, `${c.id}.${band}`);
+      }
+    }
+  }
+  assert.ok(seen.size >= 30);
+});

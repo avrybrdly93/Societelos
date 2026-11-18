@@ -46,7 +46,7 @@
     "voice": "Ex-CEO who lost his status but not his money",
     "lines": {
       "good": [
-        "Grudgingly: the district is calmer than I have seen it in years. Do not quote me on that."
+        "I will concede, and do not quote me, that the district is calmer than I have seen it in years."
       ],
       "mixed": [
         "I still have the money. I simply no longer have anyone who has to listen to me."
@@ -84,13 +84,13 @@
     "voice": "VR streamer who rarely logs off",
     "lines": {
       "good": [
-        "logged off for six whole hours to meet people in person. they were fine. maybe better than fine"
+        "logged off for six whole hours to meet people in person. chat thought i died. they were fine. better than fine"
       ],
       "mixed": [
-        "stream numbers are steady. outside numbers are steady too. i haven't checked those personally"
+        "stream numbers steady. outside numbers steady too, apparently. chat says go check. i have not checked"
       ],
       "bad": [
-        "the feed glitched for ten minutes and nobody in my building knew what to do with their hands"
+        "feed glitched for ten minutes. nobody in my building knew what to do with their hands. chat neither"
       ]
     }
   },
