@@ -558,26 +558,26 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 
 ### Agent 3: Content & Lore (`feature/content` — 35 Tasks)
 - [x] **TASK-511:** Author `ba-shadow-elite` (World `BA` Cycle 3: The Shadow Elite) incident ("Owners buy private Loom copies to get around the Assembly") and Loom intro in `data/crises.json`.
-- [ ] **TASK-512:** Author `ba-shadow-elite` Option A ("Nationalise all compute into one Loom", tags `["assimilator"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-513:** Author `ba-shadow-elite` Option B ("Allow private copies but tax them heavily", tags `["lotus", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-512:** Author `ba-shadow-elite` Option A ("Nationalise all compute into one Loom", tags `["assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-513:** Author `ba-shadow-elite` Option B ("Allow private copies but tax them heavily", tags `["lotus", "ghost"]`) and effect vector in `data/crises.json`.
 - [x] **TASK-514:** Author all 5 role-slanted secret intel drops for `ba-shadow-elite` in `data/crises.json`.
 - [x] **TASK-515:** Author `ba-status-wars` (World `BA` Cycle 4: The Status Wars) incident ("Citizens fight over coastal homes and other scarce goods") and Loom intro in `data/crises.json`.
-- [ ] **TASK-516:** Author `ba-status-wars` Option A ("Lottery for everything scarce", tags `["lotus"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-517:** Author `ba-status-wars` Option B ("Allocate by community contribution", tags `["artisan"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-516:** Author `ba-status-wars` Option A ("Lottery for everything scarce", tags `["lotus"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-517:** Author `ba-status-wars` Option B ("Allocate by community contribution", tags `["artisan"]`) and effect vector in `data/crises.json`.
 - [x] **TASK-518:** Author all 5 role-slanted secret intel drops for `ba-status-wars` in `data/crises.json`.
 - [x] **TASK-519:** Author `ba-vote-to-seize` (World `BA` Cycle 5 Finale: The Vote to Seize, `mode: "writein"`) incident ("A ballot measure would confiscate the owners' stakes") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-520:** Author `ba-vote-to-seize` fallback Option A ("Pass it", tags `["assimilator", "artisan"]`) and fallback Option B ("Reject it; property rights stand", tags `["lotus", "ghost"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-520:** Author `ba-vote-to-seize` fallback Option A ("Pass it", tags `["assimilator", "artisan"]`) and fallback Option B ("Reject it; property rights stand", tags `["lotus", "ghost"]`) with effect vectors in `data/crises.json`.
 - [x] **TASK-521:** Author all 5 secret intel drops for `ba-vote-to-seize` in `data/crises.json`.
 - [x] **TASK-522:** Author `bb-scroll-extinction` (World `BB` Cycle 3: Scroll Extinction) incident ("Birthrate near zero; most citizens scroll 14 hours a day") and Loom intro in `data/crises.json`.
-- [ ] **TASK-523:** Author `bb-scroll-extinction` Option A ("Loom matchmaking plus large child stipends", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-524:** Author `bb-scroll-extinction` Option B ("Throttle feeds; mandatory offline hours", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-523:** Author `bb-scroll-extinction` Option A ("Loom matchmaking plus large child stipends", tags `["assimilator", "lotus"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-524:** Author `bb-scroll-extinction` Option B ("Throttle feeds; mandatory offline hours", tags `["artisan", "ghost"]`) and effect vector in `data/crises.json`.
 - [x] **TASK-525:** Author all 5 role-slanted secret intel drops for `bb-scroll-extinction` in `data/crises.json`.
 - [x] **TASK-526:** Author `bb-the-unplugged` (World `BB` Cycle 4: The Unplugged) incident ("A movement is sabotaging infrastructure") and Loom intro in `data/crises.json`.
-- [ ] **TASK-527:** Author `bb-the-unplugged` Option A ("Grant them a tech-free autonomous zone", tags `["ghost"]`) and effect vector in `data/crises.json`.
-- [ ] **TASK-528:** Author `bb-the-unplugged` Option B ("Loom surveillance and re-education", tags `["assimilator"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-527:** Author `bb-the-unplugged` Option A ("Grant them a tech-free autonomous zone", tags `["ghost"]`) and effect vector in `data/crises.json`.
+- [x] **TASK-528:** Author `bb-the-unplugged` Option B ("Loom surveillance and re-education", tags `["assimilator"]`) and effect vector in `data/crises.json`.
 - [x] **TASK-529:** Author all 5 role-slanted secret intel drops for `bb-the-unplugged` in `data/crises.json`.
 - [x] **TASK-530:** Author `bb-march-datacenter` (World `BB` Cycle 5 Finale: March on the Datacenter, `mode: "writein"`) incident ("A crowd gathers to shut the Loom down") and Loom prompt in `data/crises.json`.
-- [ ] **TASK-531:** Author `bb-march-datacenter` fallback Option A ("Open the doors: give citizens real control", tags `["ghost", "artisan"]`) and fallback Option B ("Lock down; the Loom pacifies the crowd", tags `["assimilator", "lotus"]`) with effect vectors in `data/crises.json`.
+- [x] **TASK-531:** Author `bb-march-datacenter` fallback Option A ("Open the doors: give citizens real control", tags `["ghost", "artisan"]`) and fallback Option B ("Lock down; the Loom pacifies the crowd", tags `["assimilator", "lotus"]`) with effect vectors in `data/crises.json`.
 - [x] **TASK-532:** Author all 5 secret intel drops for `bb-march-datacenter` in `data/crises.json`.
 - [x] **TASK-533:** Author pre-debate incident citizen feed lines and debate hooks for all `BA` and `BB` crises in `data/crises.json`.
 - [x] **TASK-534:** Ensure `BB` (The Gilded Cage) late crises (`bb-scroll-extinction`, `bb-the-unplugged`, `bb-march-datacenter`) carry harsh negative trait trade-offs so the comfortable early `1B -> 2B` path hits hardest in Cycles 3–5.
@@ -598,7 +598,7 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-543:** Implement deterministic local heuristic fallback for `loom.moderateOne` in case Gemini times out on a single resubmit after succeeding on the initial batch.
 - [ ] **TASK-544:** Tune sensitivity table $S$ and $\alpha$ in `data/sim.json` across all 4 worlds (`AA`, `AB`, `BA`, `BB`) using `server/sim/calibrate.js`.
 - [x] **TASK-545:** Verify World `AA` (Commonwealth) crises (`aa-purpose-drift`, `aa-lost-knowledge`) produce meaningful GDW tension around `purpose` and `autonomy`.
-- [ ] **TASK-546:** Verify World `AB` (Benevolent Machine) crises (`ab-the-pods`, `ab-mood-dial`) trade off `health`/`trust` against `autonomy`/`connection`.
+- [x] **TASK-546:** Verify World `AB` (Benevolent Machine) crises (`ab-the-pods`, `ab-mood-dial`) trade off `health`/`trust` against `autonomy`/`connection`.
 - [x] **TASK-547:** Verify World `BA` (Uneasy Republic) crises (`ba-shadow-elite`, `ba-status-wars`) create sharp `fairness` and `trust` swings between `D1` elite and `D4` workers.
 - [x] **TASK-548:** Verify World `BB` (Gilded Cage) crises (`bb-scroll-extinction`, `bb-the-unplugged`) punish complacency after the easy `1B -> 2B` opening.
 - [ ] **TASK-549:** Tune shock magnitudes (`shockMin: 0.02`, `shockMax: 0.06`) and `volatility: 1.5` multiplier in `data/sim.json` so Catalyst players have a realistic (~35–45%) chance of seeing a $\ge 10$ GDW swing when pushing high-variance policies.
@@ -742,39 +742,39 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [x] **TASK-660:** Implement `drawFullHistoryChart(gdwHistory)` in `public/js/charts.js` plotting the 5-year (60-month) realized GDW line across Cycles 1–5 with vertical cycle dividers and threshold bands (`60+ Thriving`, `35-59 Stable`, `1-34 Fragile`, `0 Shutdown`).
 - [x] **TASK-661:** Animate the End Screen reveal sequence in `public/js/host.js` so the 5-year GDW recap appears first, followed by the Role & Author reveal 15 seconds later, and the Winner announcement 10 seconds after that.
 - [x] **TASK-662:** Display the game's replay `seed` badge on the Host End Screen and add a "NEW SESSION / PLAY AGAIN" button emitting `host:playAgain`.
-- [ ] **TASK-663:** Build the Mobile End Screen in `public/mobile.html` showing the player's final score, whether they won (or if The Loom shut down), their full cycle-by-cycle point breakdown, and the final class grade.
-- [ ] **TASK-664:** Add Lobby configuration controls on Host Lobby screen in `public/index.html`: Debate Length toggle (`60s Fast [13.5m]` vs `90s Standard [16m]`), Pre-Vote Forecast toggle, and optional Replay Seed input box.
-- [ ] **TASK-665:** Implement automatic phone reconnection UI in `public/js/mobile.js`: if the socket disconnects briefly, show a non-destructive `"RECONNECTING TO LOOM..."` top banner and seamlessly restore the active phase view upon reconnect.
-- [ ] **TASK-666:** Verify that refreshing a phone browser during `ROLE_ASSIGN`, `INTEL`, `VOTE`, `FINALE_WRITE`, or `FINALE_RANK` restores the exact screen, role card, intel text, and timer without losing the player's place.
-- [ ] **TASK-667:** Polish Host Council Chamber 10-second reveal animation (`250,000 CITIZENS • 5 DISTRICTS • 20 COHORTS`) with district population counters ticking up.
-- [ ] **TASK-668:** Add visual polish to the Host GDW Meter: animated delta pill (`+8%` in teal or `-6%` in crimson) after each cycle resolution.
-- [ ] **TASK-669:** Add role icon SVGs (`Artisan` hammer/hand, `Lotus-Eater` lotus/chalice, `Assimilator` neural node, `Ghost` leaf/wire-cutter, `Catalyst` lightning/wave) in `public/js/host.js` and `public/js/mobile.js`.
-- [ ] **TASK-670:** Polish Mobile Secret Role Card with role-specific accent borders and clear "+1 WHEN..." scoring rules.
-- [ ] **TASK-671:** Ensure the Shutdown Ending (`GDW = 0%`) turns the projector screen into a dramatic power-down terminal state ("CRITICAL FAILURE: GROSS DOMESTIC WELL-BEING AT 0%. REVOLT IN PROGRESS. THE LOOM HAS SHUT DOWN.").
-- [ ] **TASK-672:** Ensure Mobile End Screen also reflects the Shutdown Ending ("SYSTEM COLLAPSE — ALL AGENDAS FAILED").
-- [ ] **TASK-673:** Add shared-win celebration styling on Host and Mobile End Screens when two or more players tie for the highest score.
-- [ ] **TASK-674:** Display Author attribution tags next to the Cycle 5 policies on the Host End Screen so the class discovers who wrote which anonymous policy!
-- [ ] **TASK-675:** Highlight the 1st-place Finale Policy Author (`+1 AUTHOR BONUS`) on the End Screen table.
-- [ ] **TASK-676:** Polish Citizen Feed cards on projector with subtle district color-coding (`D1` coastal blue, `D2` grid cyan, `D3` river green, `D4` rust orange, `D5` highland amber).
-- [ ] **TASK-677:** Ensure long crisis titles and policy descriptions wrap cleanly without clipping on 16:9 projector screens.
-- [ ] **TASK-678:** Add keyboard shortcuts on Host screen (`Space` to start lobby when 5 joined, `S` to skip intro crawl, `F` for fullscreen) for smooth teacher facilitation.
-- [ ] **TASK-679:** Verify that when a 6th phone connects as a spectator, `public/mobile.html` displays a clean `"SPECTATOR MODE — COUNCIL FULL"` status view synced with the game phase.
-- [ ] **TASK-680:** Test Host End Screen layout when Cycle 5 used the authored A/B fallback (hiding the Write-in Author column gracefully).
-- [ ] **TASK-681:** Test Host End Screen layout when the game ended early in Cycle 2 or Cycle 3 due to GDW hitting 0%.
-- [ ] **TASK-682:** Audit all CSS transitions in `public/css/styles.css` to ensure `prefers-reduced-motion` accessibility support.
-- [ ] **TASK-683:** Verify contrast and font sizing on the Mobile Intel Drop and Mobile Finale Ballot views under bright classroom lighting.
-- [ ] **TASK-684:** Add a "WAKE LOCK" request (`navigator.wakeLock.request('screen')` with safe try/catch fallback) in `public/js/mobile.js` so student phones don't dim and lock during the 90-second in-person debates!
-- [ ] **TASK-685:** Re-request Wake Lock on `visibilitychange` in `public/js/mobile.js` if a student switches tabs and comes back.
-- [ ] **TASK-686:** Verify `host:playAgain` resets the Host UI and all connected Mobile UIs back to the ready state for a fresh game.
+- [x] **TASK-663:** Build the Mobile End Screen in `public/mobile.html` showing the player's final score, whether they won (or if The Loom shut down), their full cycle-by-cycle point breakdown, and the final class grade.
+- [x] **TASK-664:** Add Lobby configuration controls on Host Lobby screen in `public/index.html`: Debate Length toggle (`60s Fast [13.5m]` vs `90s Standard [16m]`), Pre-Vote Forecast toggle, and optional Replay Seed input box.
+- [x] **TASK-665:** Implement automatic phone reconnection UI in `public/js/mobile.js`: if the socket disconnects briefly, show a non-destructive `"RECONNECTING TO LOOM..."` top banner and seamlessly restore the active phase view upon reconnect.
+- [x] **TASK-666:** Verify that refreshing a phone browser during `ROLE_ASSIGN`, `INTEL`, `VOTE`, `FINALE_WRITE`, or `FINALE_RANK` restores the exact screen, role card, intel text, and timer without losing the player's place.
+- [x] **TASK-667:** Polish Host Council Chamber 10-second reveal animation (`250,000 CITIZENS • 5 DISTRICTS • 20 COHORTS`) with district population counters ticking up.
+- [x] **TASK-668:** Add visual polish to the Host GDW Meter: animated delta pill (`+8%` in teal or `-6%` in crimson) after each cycle resolution.
+- [x] **TASK-669:** Add role icon SVGs (`Artisan` hammer/hand, `Lotus-Eater` lotus/chalice, `Assimilator` neural node, `Ghost` leaf/wire-cutter, `Catalyst` lightning/wave) in `public/js/host.js` and `public/js/mobile.js`.
+- [x] **TASK-670:** Polish Mobile Secret Role Card with role-specific accent borders and clear "+1 WHEN..." scoring rules.
+- [x] **TASK-671:** Ensure the Shutdown Ending (`GDW = 0%`) turns the projector screen into a dramatic power-down terminal state ("CRITICAL FAILURE: GROSS DOMESTIC WELL-BEING AT 0%. REVOLT IN PROGRESS. THE LOOM HAS SHUT DOWN.").
+- [x] **TASK-672:** Ensure Mobile End Screen also reflects the Shutdown Ending ("SYSTEM COLLAPSE — ALL AGENDAS FAILED").
+- [x] **TASK-673:** Add shared-win celebration styling on Host and Mobile End Screens when two or more players tie for the highest score.
+- [x] **TASK-674:** Display Author attribution tags next to the Cycle 5 policies on the Host End Screen so the class discovers who wrote which anonymous policy!
+- [x] **TASK-675:** Highlight the 1st-place Finale Policy Author (`+1 AUTHOR BONUS`) on the End Screen table.
+- [x] **TASK-676:** Polish Citizen Feed cards on projector with subtle district color-coding (`D1` coastal blue, `D2` grid cyan, `D3` river green, `D4` rust orange, `D5` highland amber).
+- [x] **TASK-677:** Ensure long crisis titles and policy descriptions wrap cleanly without clipping on 16:9 projector screens.
+- [x] **TASK-678:** Add keyboard shortcuts on Host screen (`Space` to start lobby when 5 joined, `S` to skip intro crawl, `F` for fullscreen) for smooth teacher facilitation.
+- [x] **TASK-679:** Verify that when a 6th phone connects as a spectator, `public/mobile.html` displays a clean `"SPECTATOR MODE — COUNCIL FULL"` status view synced with the game phase.
+- [x] **TASK-680:** Test Host End Screen layout when Cycle 5 used the authored A/B fallback (hiding the Write-in Author column gracefully).
+- [x] **TASK-681:** Test Host End Screen layout when the game ended early in Cycle 2 or Cycle 3 due to GDW hitting 0%.
+- [x] **TASK-682:** Audit all CSS transitions in `public/css/styles.css` to ensure `prefers-reduced-motion` accessibility support.
+- [x] **TASK-683:** Verify contrast and font sizing on the Mobile Intel Drop and Mobile Finale Ballot views under bright classroom lighting.
+- [x] **TASK-684:** Add a "WAKE LOCK" request (`navigator.wakeLock.request('screen')` with safe try/catch fallback) in `public/js/mobile.js` so student phones don't dim and lock during the 90-second in-person debates!
+- [x] **TASK-685:** Re-request Wake Lock on `visibilitychange` in `public/js/mobile.js` if a student switches tabs and comes back.
+- [x] **TASK-686:** Verify `host:playAgain` resets the Host UI and all connected Mobile UIs back to the ready state for a fresh game.
 - [ ] **TASK-687:** Test the entire Intro Crawl -> Role Assign -> Chamber -> Cycle 1 transition timing (30s + 20s + 10s = 60s setup).
-- [ ] **TASK-688:** Verify the 5-year End Screen chart renders cleanly with 12, 24, 36, 48, or 60 months of data.
-- [ ] **TASK-689:** Add hover/tap inspection on the End Screen GDW chart showing what policy was enacted in each cycle.
+- [x] **TASK-688:** Verify the 5-year End Screen chart renders cleanly with 12, 24, 36, 48, or 60 months of data.
+- [x] **TASK-689:** Add hover/tap inspection on the End Screen GDW chart showing what policy was enacted in each cycle.
 - [ ] **TASK-690:** Check all HTML files (`public/index.html`, `public/mobile.html`) for valid W3C structure and closing tags.
 - [ ] **TASK-691:** Check `public/css/styles.css` for unused rules or duplicate selectors.
-- [ ] **TASK-692:** Check `public/js/host.js` for clean event listener teardown/reset on `playAgain`.
-- [ ] **TASK-693:** Check `public/js/mobile.js` for clean state reset on `playAgain`.
-- [ ] **TASK-694:** Check `public/js/map.js` resets all 5 SVG districts to initial baseline colors on `playAgain`.
-- [ ] **TASK-695:** Check `public/js/charts.js` clears both resolution and history canvases on `playAgain`.
+- [x] **TASK-692:** Check `public/js/host.js` for clean event listener teardown/reset on `playAgain`.
+- [x] **TASK-693:** Check `public/js/mobile.js` for clean state reset on `playAgain`.
+- [x] **TASK-694:** Check `public/js/map.js` resets all 5 SVG districts to initial baseline colors on `playAgain`.
+- [x] **TASK-695:** Check `public/js/charts.js` clears both resolution and history canvases on `playAgain`.
 - [ ] **TASK-696:** Test UI in Chrome, Safari (iOS), and Firefox.
 - [ ] **TASK-697:** Verify zero network requests are made to external fonts, icons, or analytics domains (100% offline-capable frontend).
 - [ ] **TASK-698:** Confirm all Thursday frontend tasks complete.
