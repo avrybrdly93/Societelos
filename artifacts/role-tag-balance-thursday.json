@@ -1,0 +1,190 @@
+{
+  "crises": 14,
+  "options": 28,
+  "byWorld": {
+    "fixed": {
+      "artisan": 2,
+      "lotus": 2,
+      "assimilator": 2,
+      "ghost": 1
+    },
+    "AA": {
+      "artisan": 3,
+      "lotus": 2,
+      "assimilator": 3,
+      "ghost": 2
+    },
+    "AB": {
+      "artisan": 3,
+      "lotus": 3,
+      "assimilator": 3,
+      "ghost": 3
+    },
+    "BA": {
+      "artisan": 2,
+      "lotus": 3,
+      "assimilator": 2,
+      "ghost": 2
+    },
+    "BB": {
+      "artisan": 2,
+      "lotus": 2,
+      "assimilator": 3,
+      "ghost": 3
+    }
+  },
+  "total": {
+    "artisan": 12,
+    "lotus": 12,
+    "assimilator": 13,
+    "ghost": 11
+  },
+  "paths": {
+    "AA": {
+      "artisan": 2,
+      "lotus": 0,
+      "assimilator": 1,
+      "ghost": 1
+    },
+    "AB": {
+      "artisan": 1,
+      "lotus": 0,
+      "assimilator": 2,
+      "ghost": 0
+    },
+    "BA": {
+      "artisan": 1,
+      "lotus": 1,
+      "assimilator": 0,
+      "ghost": 1
+    },
+    "BB": {
+      "artisan": 0,
+      "lotus": 2,
+      "assimilator": 0,
+      "ghost": 0
+    }
+  },
+  "balanced": {
+    "fixed": false,
+    "AA": false,
+    "AB": true,
+    "BA": false,
+    "BB": false,
+    "total": false
+  },
+  "modes": {
+    "binary": 10,
+    "writein": 4,
+    "finalesWithFallbacks": 4
+  },
+  "allOptionsHurt": true,
+  "lengths": {
+    "intel": {
+      "count": 70,
+      "max": 172,
+      "over": []
+    },
+    "optionText": {
+      "count": 28,
+      "max": 237,
+      "over": [
+        {
+          "crisis": "fixed-1-ownership",
+          "option": "A",
+          "length": 206
+        },
+        {
+          "crisis": "fixed-1-ownership",
+          "option": "B",
+          "length": 187
+        },
+        {
+          "crisis": "fixed-2-offswitch",
+          "option": "A",
+          "length": 237
+        },
+        {
+          "crisis": "fixed-2-offswitch",
+          "option": "B",
+          "length": 235
+        },
+        {
+          "crisis": "aa-purpose-drift",
+          "option": "A",
+          "length": 122
+        },
+        {
+          "crisis": "aa-purpose-drift",
+          "option": "B",
+          "length": 128
+        },
+        {
+          "crisis": "aa-lost-knowledge",
+          "option": "A",
+          "length": 156
+        },
+        {
+          "crisis": "aa-lost-knowledge",
+          "option": "B",
+          "length": 137
+        },
+        {
+          "crisis": "aa-fake-struggle",
+          "option": "A",
+          "length": 129
+        },
+        {
+          "crisis": "aa-fake-struggle",
+          "option": "B",
+          "length": 146
+        },
+        {
+          "crisis": "ab-the-pods",
+          "option": "A",
+          "length": 156
+        },
+        {
+          "crisis": "ab-the-pods",
+          "option": "B",
+          "length": 153
+        },
+        {
+          "crisis": "ab-mood-dial",
+          "option": "A",
+          "length": 128
+        },
+        {
+          "crisis": "ab-mood-dial",
+          "option": "B",
+          "length": 139
+        },
+        {
+          "crisis": "ab-merge-offer",
+          "option": "A",
+          "length": 142
+        },
+        {
+          "crisis": "bb-scroll-extinction",
+          "option": "A",
+          "length": 130
+        },
+        {
+          "crisis": "bb-scroll-extinction",
+          "option": "B",
+          "length": 127
+        }
+      ]
+    },
+    "citizenLines": {
+      "count": 30,
+      "max": 112,
+      "over": []
+    },
+    "loomLines": {
+      "count": 60,
+      "max": 126,
+      "over": []
+    }
+  }
+}

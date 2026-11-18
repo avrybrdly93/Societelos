@@ -4,15 +4,15 @@
     "name": "The Artisan",
     "icon": "△",
     "goal": "Human effort and creative struggle over machine efficiency.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged artisan.",
-    "cardText": "Your grandmother built boats by hand. The Loom builds better ones in four minutes. You believe the four minutes stole something. Push the council toward work that can fail, hands that ache, and things people make themselves."
+    "winCondition": "The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.",
+    "cardText": "Your grandmother built boats by hand. The Loom builds better ones in four minutes, and you think those minutes stole something. Push for work that can fail and things people make themselves."
   },
   {
     "id": "lotus",
     "name": "The Lotus-Eater",
     "icon": "✺",
     "goal": "Frictionless comfort and pleasure.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged lotus.",
+    "winCondition": "The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.",
     "cardText": "Suffering was a bug, and the Loom patched it. You see no reason to reinstall it. Steer the council toward comfort, calm and pleasure, and away from anyone who thinks struggle is good for the soul."
   },
   {
@@ -20,7 +20,7 @@
     "name": "The Assimilator",
     "icon": "⌬",
     "goal": "Humanity merging with the Loom.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged assimilator.",
+    "winCondition": "The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.",
     "cardText": "The Loom does not make mistakes. People do. You think the next step for humanity is to stop resisting and join it. Hand the machine more of the decisions, and more of the mind."
   },
   {
@@ -28,7 +28,7 @@
     "name": "The Catalyst",
     "icon": "⁂",
     "goal": "Resilience through crisis.",
-    "winCondition": "You score +1 each cycle GDW moves by 10 or more and stays above 0.",
+    "winCondition": "Well-being (GDW) swings 10 points or more in a cycle, up or down, and stays above 0.",
     "cardText": "Calm societies grow brittle. You want shocks, swings and arguments, because only a society that is tested learns to bend without breaking. Just never let it break: if well-being hits zero, everyone loses, you included."
   },
   {
@@ -36,7 +36,7 @@
     "name": "The Ghost",
     "icon": "♁",
     "goal": "Dismantling the Loom; a return to the earth.",
-    "winCondition": "You score +1 each cycle the winning policy is tagged ghost.",
+    "winCondition": "The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.",
     "cardText": "You remember soil, weather and silence. The Loom is a cage with perfect climate control. Quietly push the council to pull the plug, piece by piece, and return people to the earth."
   }
 ]

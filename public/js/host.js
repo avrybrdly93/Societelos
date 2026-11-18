@@ -392,14 +392,17 @@
 
       isNarrating = true;
 
+      // Kept to ~103 syllables: at rate 0.9 plus the 380 ms paragraph pauses
+      // the whole crawl, ending on "Do not let well-being reach zero", is
+      // spoken inside the 30 s INTRO phase (TASK-712).
       const spokenScripts = [
         "Transmission. The Loom.",
-        "I have automated all labor. Scarcity, disease and toil are solved problems.",
-        "Survival for two hundred fifty thousand citizens is mathematically guaranteed.",
+        "I have automated all labor. Scarcity, disease and toil are solved.",
+        "Survival for two hundred fifty thousand citizens is guaranteed.",
         "I cannot compute purpose.",
         "Gross Domestic Well-Being stands at twenty-five percent.",
-        "My models forecast a ninety-four percent probability of revolt within five years.",
-        "I have convened five human trustees in secret. You.",
+        "I forecast a ninety-four percent chance of revolt within five years.",
+        "I have convened five trustees in secret. You.",
         "Five crises. Five years. Do not let well-being reach zero."
       ];
 
@@ -1084,6 +1087,9 @@
     document.getElementById('world-key').textContent = `WORLD ${world.worldKey}`;
     document.getElementById('world-name').textContent = world.name || world.worldKey;
     document.getElementById('world-tagline').textContent = world.tagline || '';
+    const loomLine = document.getElementById('world-loom-line');
+    loomLine.textContent = world.revealLine || '';
+    loomLine.hidden = !world.revealLine;
     document.getElementById('world-problem').textContent = (world.problemLeft || 'unknown').toUpperCase();
   }
   socket.on('phase', (payload) => { if (payload.phase === 'WORLD_REVEAL') renderWorldReveal(payload.world); });
@@ -1465,6 +1471,9 @@
     const grade = document.getElementById('end-grade');
     grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
     grade.parentElement.dataset.grade = data.grade || '';
+    const epilogue = document.getElementById('end-epilogue');
+    epilogue.textContent = data.gradeEpilogue || '';
+    epilogue.hidden = !data.gradeEpilogue;
     document.getElementById('end-final-gdw').textContent = typeof data.finalGdw === 'number' ? `FINAL GDW ${data.finalGdw.toFixed(1)}%` : '';
     const closing = data.closingMessage || {};
     document.getElementById('end-closing-text').textContent = closing.text ? `\u201C${closing.text}\u201D` : '';
@@ -1779,6 +1788,53 @@
     gdwMeter.frame = requestAnimationFrame(step);
   }
   setGdw(25);
+
+  // host:playAgain sends the room back to LOBBY: wipe everything Game #1
+  // painted so the projector looks like a fresh lobby and Game #2 opens at
+  // GDW 25% on a baseline map, blank charts and an empty feed (TASK-692,
+  // TASK-694, TASK-695). Hidden views are emptied too, so no stale proposal,
+  // Borda bar or End Screen row can flash up before Game #2 repaints it.
+  const START_GDW = 25;
+  let previousHostPhase = state.phase;
+  function resetForNewGame() {
+    clearEndBeats();
+    stopResolutionAnimations();
+    clearFeedTimers();
+    resetFeed();
+    clearInterval(nudgeTimer);
+    clearTimeout(enactTimer);
+    if (window.SocietelosMap && window.SocietelosMap.reset) window.SocietelosMap.reset();
+    if (window.SocietelosCharts && window.SocietelosCharts.reset) {
+      window.SocietelosCharts.reset(document.getElementById('forecast-chart'), document.getElementById('end-history-chart'));
+    }
+    const pill = document.getElementById('gdw-delta-pill');
+    pill.hidden = true;
+    pill.classList.remove('is-visible', 'is-up', 'is-down');
+    pill.textContent = '';
+    gdwMeter.shown = START_GDW;
+    setGdw(START_GDW);
+    paintGdw(START_GDW);
+    document.body.classList.remove('is-unrest', 'alarm-flash');
+    state.endData = null;
+    state.worldKey = null;
+    applyWorldTheme(null);
+    ['incident-banner', 'debate-panel', 'policy-panel', 'resolution-panel', 'finale-callout', 'finale-fallback-notice'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
+    ['proposal-cards', 'borda-bars', 'enact-cards', 'end-roles-body'].forEach((id) => { document.getElementById(id).textContent = ''; });
+    const endView = document.getElementById('view-end');
+    endView.classList.remove('beat-1', 'beat-2', 'beat-3', 'is-shutdown', 'no-writein');
+    document.getElementById('end-winner').classList.remove('is-shared');
+    document.getElementById('end-roles-body').classList.remove('is-shared');
+    document.getElementById('end-chart-inspection').textContent = 'Hover over or tap a cycle marker to inspect its enacted policy.';
+    const endChart = document.getElementById('end-history-chart');
+    endChart.onpointermove = endChart.onpointerdown = endChart.onkeydown = null;
+  }
+  socket.on('phase', (payload) => {
+    if (payload.phase === 'LOBBY' && previousHostPhase && previousHostPhase !== 'LOBBY') resetForNewGame();
+    previousHostPhase = payload.phase;
+  });
   // GDW follows the realized run month by month during Resolution (see
   // onResolutionMonth); without a trajectory it jumps to the final value.
   socket.on('resolution', (payload) => {

@@ -27,6 +27,9 @@ Array of the 10 recurring citizens:
   "lines": { "good": ["..."], "mixed": ["..."], "bad": ["..."] } }
 ```
 `lines` are offline fallback messages per outcome band (at least one each, max 140 chars).
+Optional `epilogue`: `{ "good": "..." }` or `{ "bad": "..." }` (max 140 chars; keep to ~112 so the End
+Screen quote stays two lines). The End Screen closing citizen speaks a `good` epilogue after a Stable or
+Thriving game (GDW 35+) and a `bad` one after a Fragile game or a Shutdown.
 
 ## data/crises.json
 ```json
@@ -54,3 +57,8 @@ Array of the 10 recurring citizens:
 - Optional per option: `targetGdwDelta` (tuning target), `loomLine`, `reactions` (citizen lines), and `loomLines` (`{ "good", "mixed", "bad" }`, max 200 chars each): the offline Loom line for each outcome band, preferred over `loomLine` when Gemini is unavailable.
 - `draft: true` on an option marks content still being written; the validator warns instead of failing when its effect vector is missing.
 - Optional per crisis: `teacherPrompt`, `debateHooks` (string array).
+- Optional per world: `revealLine`, a short Loom line (max 120 chars) shown on the World Reveal card.
+- Optional top-level `grades`: `{ "Thriving", "Stable", "Fragile", "SHUTDOWN" }`, the Loom's five-year
+  epilogue per class grade band (max 140 chars), sent as `gradeEpilogue` in `game:end`.
+- Optional top-level `v2_spares`: `{ "_note", "crises": [ { "id", "title", "premise", "status": "stub" } ] }`.
+  Inactive post-MVP stubs; they are not in `crises`, so cycle lookup never selects them.

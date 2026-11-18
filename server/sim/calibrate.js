@@ -8,6 +8,7 @@
 //   node server/sim/calibrate.js --json   machine-readable output
 //   node server/sim/calibrate.js --sweep  1,000 random games: final-GDW bands
 //   node server/sim/calibrate.js --crises every crisis option's forecast, validated
+//   node server/sim/calibrate.js --catalyst Catalyst trigger rate over 1,000 random games
 //
 // The data files are loaded with require() (no fs), so server/sim keeps its
 // no-I/O rule (npm run check:sim) and the simulation stays pure.
@@ -172,7 +173,66 @@ function sweepGames(simConfig, crises, { games = 1000, seed = SEED } = {}) {
   return { games, counts, shares, finals };
 }
 
+/**
+ * Catalyst trigger rate (TASK-740): `games` whole games with random A/B
+ * votes (finale: authored A/B), counting cycles whose realized GDW swings by
+ * >= 10 (one decimal) and stays above 0, the engine's catalystScores rule.
+ * Returns { games, mean, perCycle: share of games triggering in cycle 1..5, dist }.
+ */
+function catalystRate(simConfig, crises, { games = 1000, seed = SEED } = {}) {
+  const pick = mulberry32(hashSeed(`catalyst:${seed}`));
+  const fixed = crises.crises.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
+  const start = createInitialState(simConfig);
+  const perCycle = [0, 0, 0, 0, 0];
+  const dist = {};
+  let total = 0;
+  for (let g = 0; g < games; g++) {
+    let state = start;
+    let volatility = 1;
+    let gdw = computeGDW(state);
+    let n = 0;
+    const votes = [];
+    const play = (option, effects, cycle) => {
+      const run = runSingleSimulation(state, effects, hashSeed(`${seed}:${g}:${cycle}`), false, { volatility });
+      state = run.finalState;
+      const next = run.gdw[run.gdw.length - 1];
+      if (Math.round(Math.abs(next - gdw) * 10) / 10 >= 10 && next > 0) { n++; perCycle[cycle - 1]++; }
+      gdw = next;
+      if (typeof option.volatility === 'number') volatility = option.volatility;
+    };
+    for (let i = 0; i < fixed.length && gdw > 0; i++) {
+      const vote = pick() < 0.5 ? 'A' : 'B';
+      votes.push(vote);
+      const o = fixed[i].options[vote];
+      play(o, o.effectsByWorld ? o.effectsByWorld[votes[0]] : o.effects, i + 1);
+    }
+    const world = votes.join('');
+    const worldInfo = crises.worlds && crises.worlds[world];
+    const later = [3, 4].map((cy) => crises.crises.find((c) => c.world === world && c.cycle === cy && c.mode === 'binary'));
+    if (worldInfo) later.push(crises.crises.find((c) => c.id === worldInfo.finale));
+    later.forEach((crisis, i) => {
+      if (!crisis || gdw <= 0) return;
+      const o = crisis.options[pick() < 0.5 ? 'A' : 'B'];
+      play(o, o.effects, i + 3);
+    });
+    total += n;
+    dist[n] = (dist[n] || 0) + 1;
+  }
+  return { games, mean: total / games, perCycle: perCycle.map((x) => x / games), dist };
+}
+
 function main() {
+  if (process.argv.includes('--catalyst')) {
+    const n = Number((process.argv.find((a) => /^--games=\d+$/.test(a)) || '').split('=')[1]) || 1000;
+    const r = catalystRate(readJson('sim.json'), readJson('crises.json'), { games: n });
+    if (process.argv.includes('--json')) { console.log(JSON.stringify(r)); return; }
+    const ok = r.mean >= 1.5 && r.mean <= 2.5;
+    console.log(`Catalyst trigger rate: ${r.games} games, random A/B votes (finale: authored A/B), seed ${SEED}`);
+    console.log(`  mean ${r.mean.toFixed(2)} scoring cycles per game   target 1.5-2.5  ${ok ? 'ok' : 'OFF'}`);
+    console.log(`  by cycle: ${r.perCycle.map((p, i) => `C${i + 1} ${(p * 100).toFixed(0)}%`).join('  ')}`);
+    console.log(`  games by count: ${Object.entries(r.dist).map(([k, v]) => `${k}x ${v}`).join(', ')}`);
+    return;
+  }
   if (process.argv.includes('--crises')) {
     const data = readJson('crises.json');
     const rows = calibrateCrises(readJson('sim.json'), data);
@@ -217,4 +277,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { main, medianDelta, calibrateFixed, calibrateCrises, worldStartState, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };
+module.exports = { main, catalystRate, medianDelta, calibrateFixed, calibrateCrises, worldStartState, pathGdw, sweepGames, SWEEP_BANDS, RUNS, SEED };

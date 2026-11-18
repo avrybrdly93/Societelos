@@ -1,0 +1,120 @@
+# Stream 4 test suite run (TASK-752)
+# Command: npm run test:stream4  (check:sim + server/sim tests (prng, state, step, simulate/index, sensitivity, calibration) + loom, loomSafety, offlineMandate, contracts + bench + calibrate)
+# Run: 2026-11-18T01:59Z, node v22.23.5, no GEMINI_API_KEY (offline fallbacks; Gemini paths use stubbed fetch)
+# Result: exit 0, pass 83 of 83 tests
+
+server/sim: no Math.random(), no I/O, no network
+ok 1 - fixed crisis forecast medians land within 1.5 GDW of their targets
+ok 2 - no Cycle 3-4 binary choice forces collapse from a median starting state
+ok 3 - server/sim exports the documented engine boundary, and the engine uses nothing else
+ok 4 - mulberry32 produces identical sequences for identical seeds
+ok 5 - mulberry32 sequences differ for different seeds and stay in [0, 1)
+ok 6 - D1 elite has negative fairness sensitivity (loses out under redistribution)
+ok 7 - D4 workers and elders are highly sensitive to autonomy and fairness
+ok 8 - D2 youth are highly sensitive to connection and trust
+ok 9 - every D5 cohort has heightened autonomy sensitivity (sympathetic to the Unplugged)
+ok 10 - 500 forecast runs + 1 realized run execute in < 50 ms
+ok 11 - forecast percentiles are ordered p5 <= median <= p95 for every month 1-12
+ok 12 - simulate() is bit-for-bit reproducible for the same state, effects and seed
+ok 13 - summary.topMoves lists exactly the 3 largest-magnitude (district, cohort, trait) changes
+ok 14 - hedonic drift slowly erodes GDW under a zero-effect policy
+ok 15 - near 5% GDW, P(collapse) equals the fraction of forecast runs ending at 0%
+ok 16 - realized run clamps GDW at 0% and records collapsed: true when W <= 0.20 at month 12
+# Subtest: simulate() forecasts a single write-in policy (sparse, unscaled effects) for the Borda tie-breaker
+ok 17 - simulate() forecasts a single write-in policy (sparse, unscaled effects) for the Borda tie-breaker
+ok 18 - getForecastMedian(state, effects, seed) matches simulate()'s month-12 median, with no extra work
+ok 19 - closingCitizen picks the citizen whose cohort changed most over the game, with their own line
+ok 20 - starting state reads exactly GDW 25.0
+ok 21 - computeGDW clamps at 0 when W <= 0.20 and at 100 when W >= 1.00
+ok 22 - data/sim.json passes validateSimConfig, and broken configs are caught
+ok 23 - trait names in server/sim match the data/crises.json effect schema
+ok 24 - getCitizenMood reads the wellbeing and traits of the citizen's own (district, cohort)
+ok 25 - stepMonth keeps all 6 traits within [0, 1] under extreme +/-1 effect vectors
+ok 26 - neighbour spillover moves D1 traits toward the average of D2 and D3
+ok 27 - volatility 1.5 raises noise SD and shock frequency by 50%
+ok 28 - every shock carries its district's named flavour for narration (no extra RNG draws)
+ok 29 - every Stream 4 JS file passes node --check
+ok 30 - data/sim.json parses and passes validateSimConfig with no errors
+ok 31 - server/sim modules (not tests) use no Math.random(), I/O or network
+ok 32 - server/loom.js loads without a GEMINI_API_KEY and exports narrate/moderate/moderateOne
+ok 33 - server/sim/index.js exports everything gameEngine.js calls, with the agreed shapes
+ok 34 - server/loom.js exports the narrate/moderate contract gameEngine.js expects
+ok 35 - loom.narrate returns valid fallback JSON when the API key is missing
+ok 36 - loom.moderate returns valid fallback JSON when the API key is missing
+ok 37 - loom never mutates the game state or scores it is given
+ok 38 - narrateFallback prefers the option's authored loomLines for the outcome band
+ok 39 - narrate accepts { crisis, winningPolicy, summary, citizens } as well as the engine shape
+ok 40 - rankCitizensByShift puts citizens of the most-moved district and cohort first
+ok 41 - narrate prompt names the most affected citizens and asks for 6-10 in character
+ok 42 - offline narration names the most affected district and the realized shock
+ok 43 - narrate sends each citizen's simulated mood and top trait change to Gemini
+# [loom] narrate gemini-2.5-flash 8 ms FAILED: timeout
+# [loom] moderateOne gemini-2.5-flash 0 ms FAILED: timeout
+# [loom] moderateOne gemini-2.5-flash 0 ms FAILED: timeout
+# [loom] moderateOne gemini-2.5-flash 0 ms FAILED: timeout
+# [loom] moderateOne gemini-2.5-flash 0 ms FAILED: timeout
+# [loom] moderateOne gemini-2.5-flash 1 ms FAILED: timeout
+ok 44 - loom.narrate times out cleanly at 8,000 ms and returns fallback citizen messages
+ok 45 - loom.narrate strips emoji the model outputs despite instructions
+ok 46 - loom.narrate truncates a 250-character citizen message to 140 characters cleanly
+ok 47 - narrate fallback never repeats a citizen in the same resolution feed
+ok 48 - loom.moderate sends all 5 write-ins and the Cycle 5 crisis in one batch call, results mapped by node
+ok 49 - loom.moderate embeds few-shot calibration: authored policies with exact effect vectors and role tags
+ok 50 - loom.moderate requests temperature 0.2 and a JSON responseSchema of { node, status, cleaned, feedback, roles, effects }
+ok 51 - moderation rules: ok rewrites (140), revise for crude/off-topic/personal attacks with kind feedback (200, no lecturing), reject for unsafe or a failed revision
+ok 52 - loom.moderateOne marks the call as a revision: ok or reject only, a second "revise" becomes "reject"
+ok 53 - loom.moderate runs every Gemini result through sanitizeModerationResult (emoji, lengths, roles, traits)
+ok 54 - loom.getPlaceholderPolicy(node): the standard protocol text, no roles, zero effects
+ok 55 - loom.moderateOne falls back to a deterministic local heuristic when Gemini times out on a resubmit
+ok 56 - offline Loom line names the shock: "A Coastal Storm hit D1 Old Harbour in month 3."
+ok 57 - loom.narrate for the Cycle 5 finale gets the 50/25/25 package and asks for one commentary on it
+ok 58 - sanitizeModerationResult clamps { purpose: 2.5, trust: -9.0 } to { purpose: 1.0, trust: -1.0 } and zero-fills the rest
+ok 59 - sanitizeModerationResult drops invalid role tags like "catalyst" or "hacker" and keeps at most 2 valid tags
+ok 60 - sanitizeModerationResult truncates 300-character strings to 140 (cleaned) and 200 (feedback)
+# [loom] moderate gemini-2.5-flash 7 ms FAILED: timeout
+ok 61 - loom.moderate falls back cleanly after the 8,000 ms timeout, and the engine then switches to the authored A/B finale
+# [loom] narrate gemini-2.5-flash 101 ms (2 attempts) HTTP 429 FAILED: Gemini HTTP 429
+# [loom] narrate gemini-2.5-flash 1 ms HTTP 400 FAILED: Gemini HTTP 400
+# [loom] narrate gemini-2.5-flash 0 ms HTTP 503 FAILED: Gemini HTTP 503
+ok 62 - callGemini retries once on 429/503 inside the 8 s budget, then gives up
+ok 63 - every Gemini call logs latency and token usage, never student write-ins in privacy mode
+ok 64 - loom.narrate fallback works for the Cycle 5 finale when the winning option is a 50/25/25 package
+ok 65 - every Gemini request blocks harassment, hate speech, sexual and dangerous content at the API layer
+ok 66 - a safety-blocked prompt or answer is reported as LOOM_SAFETY_BLOCK, never as content
+ok 67 - a blocked moderation batch is re-moderated one by one: only the unsafe write-in is rejected
+ok 68 - a blocked narration falls back to the authored Loom line
+ok 69 - the pre-filter catches blatant profanity, slurs and disguises (leetspeak, f.u.c.k, F U C K)
+ok 70 - the pre-filter never flags game vocabulary or any authored text in the data files
+ok 71 - pre-filtered write-ins come back "revise" instantly, even offline, and never reach Gemini
+ok 72 - any unmoderated (fallback) write-in sends Cycle 5 to the authored A/B finale
+ok 73 - raw student text is never returned in cleaned under any error or timeout
+ok 74 - the engine never puts a raw submission on the projector when cleaned text is missing
+ok 75 - moderation few-shot examples match the tuned effect vectors and tags in data/crises.json
+ok 76 - a full 5-cycle game completes with a key set and the network down (fetch rejects)
+ok 77 - after one hung request times out, the next Loom calls fall back in < 100 ms without touching the network
+ok 78 - narrate and moderate return their fallbacks in < 100 ms while the breaker is open
+ok 79 - an HTTP error (Gemini reachable) does not open the breaker; a refused connection does
+ok 80 - the breaker probes again after the cooldown, and a success closes it
+ok 81 - a full game with the network down hits it once, then plays on instant fallbacks
+ok 82 - offline narrate across all 5 cycles leads with the citizens and districts that moved most
+ok 83 - offline citizen selection prioritizes topMoves and shocked districts
+1..83
+# tests 83
+# pass 83
+# fail 0
+single realized run          0.113 ms
+single forecast run          0.068 ms
+simulate (500 + 1 runs)      43.545 ms
+PASS (targets: run < 0.2 ms, cycle < 50 ms)
+Calibration: 500 forecast runs per option, seed 20261119, start GDW 25.0
+option            target  median  realized  name
+1A                  -5.0    -4.9    -3.5    The Commons
+1B                 +10.0   +10.2   +11.6    The Charter
+2A                  -5.0    -4.8    -3.3    The Assembly
+2B (after 1A)       +5.0    +5.2    +6.5    Delegated Control
+2B (after 1B)       +5.0    +4.8    +6.1    Delegated Control
+Two-cycle paths (median GDW: start -> after cycle 1 -> after cycle 2):
+  AA: 25.0 -> 20.1 -> 17.6
+  AB: 25.0 -> 20.1 -> 26.6
+  BA: 25.0 -> 35.2 -> 31.9
+  BB: 25.0 -> 35.2 -> 41.3

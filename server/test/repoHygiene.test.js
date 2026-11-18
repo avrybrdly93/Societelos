@@ -34,3 +34,54 @@ test('no .env file or node_modules is tracked by git', (t) => {
     .filter((f) => { try { return keyLike.test(fs.readFileSync(path.join(ROOT, f), 'utf8')); } catch { return false; } });
   assert.deepEqual(leaks, [], 'no Google API key committed');
 });
+
+// TASK-777: no TODO / FIXME stubs left in production code.
+const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+const PRODUCTION = () => [
+  ...walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js'))),
+  ...walk(path.join(ROOT, 'public', 'js')).filter((f) => f.endsWith('.js')),
+  ...['index.html', 'mobile.html', 'css/styles.css'].map((f) => path.join(ROOT, 'public', f)),
+  ...walk(path.join(ROOT, 'scripts')).filter((f) => f.endsWith('.js')),
+  ...walk(path.join(ROOT, 'data')).filter((f) => f.endsWith('.json'))
+];
+
+test('TASK-777: no TODO, FIXME, XXX or HACK markers in production code', () => {
+  const hits = [];
+  for (const f of PRODUCTION()) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+      if (/\b(TODO|FIXME|XXX|HACK)\b/.test(line)) hits.push(`${path.relative(ROOT, f)}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(hits, []);
+});
+
+// TASK-778: no Math.random() in the simulation or anywhere in the live game
+// server (role assignment, crisis selection, seat order, tie-breaks all use
+// seeded hashes of the game id, so a game replays from its seed). Only the
+// legacy pre-hackathon prototype (server/index.js, npm run start:legacy) is exempt.
+test('TASK-778: no Math.random() in server/sim or the live game server', () => {
+  const files = walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js')));
+  assert.ok(files.some((f) => f.endsWith('gameEngine.js')) && files.some((f) => /[\\/]sim[\\/]/.test(f)));
+  const hits = [];
+  for (const f of files) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+      const code = line.replace(/\/\/.*$/, '').replace(/^\s*\*.*$/, '');
+      if (/Math\.random\s*\(/.test(code)) hits.push(`${path.relative(ROOT, f)}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(hits, []);
+});
+
+// TASK-781: every environment variable the live server reads is documented
+// in .env.example (test-only and harness variables excepted).
+test('TASK-781: .env.example documents every variable the server reads', () => {
+  const files = walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js')));
+  files.push(path.join(ROOT, 'scripts', 'write-config.js'));
+  const used = new Set();
+  for (const f of files) for (const m of fs.readFileSync(f, 'utf8').matchAll(/\benv\.([A-Z][A-Z0-9_]+)/g)) used.add(m[1]);
+  const IGNORED = new Set(['NODE_ENV']);
+  const example = fs.readFileSync(path.join(ROOT, '.env.example'), 'utf8');
+  const documented = new Set(Array.from(example.matchAll(/^#?\s*([A-Z][A-Z0-9_]+)=/gm), (m) => m[1]));
+  const missing = [...used].filter((v) => !IGNORED.has(v) && !documented.has(v)).sort();
+  assert.deepEqual(missing, []);
+});

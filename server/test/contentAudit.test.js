@@ -1,0 +1,330 @@
+'use strict';
+
+// Thursday content audit (TASK-709 onward) over the 14 core crises a game
+// can reach: 2 fixed + per world its Cycle 3-4 binaries and its finale.
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+
+const data = require('../../data/crises.json');
+
+const ROLES = ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost'];
+const finaleIds = new Set(Object.values(data.worlds).map((w) => w.finale));
+const CORE = data.crises.filter((c) => c.world === 'fixed'
+  || (c.mode === 'binary' && (c.cycle === 3 || c.cycle === 4))
+  || finaleIds.has(c.id));
+
+test('the core set is 14 crises', () => {
+  assert.equal(CORE.length, 14);
+});
+
+// TASK-709: 70 drops, each readable in 20 s on a phone (<= 180 chars) and
+// framed as an in-world document ("Loom archive:", "Leaked memo:", ...).
+test('all 70 Intel Drops are <= 180 characters with in-world document framing', () => {
+  let n = 0;
+  for (const c of CORE) {
+    for (const role of ROLES) {
+      const drop = c.intel && c.intel[role];
+      assert.equal(typeof drop, 'string', `${c.id}/${role} missing`);
+      assert.ok(drop.length <= 180, `${c.id}/${role} is ${drop.length} chars`);
+      assert.match(drop, /^[A-Z][a-z]*( [a-z]+){0,3}: \S/, `${c.id}/${role} lacks a "Source label:" opener: ${drop}`);
+      n++;
+    }
+  }
+  assert.equal(n, 70);
+});
+
+// TASK-710: every Catalyst drop is a forecast that tells the Catalyst where
+// the GDW swing (or the calm) is. Directions and sizes were checked against
+// npm run calibrate:crises (median delta and p5-95 spread per option).
+test('every Catalyst Intel Drop is a forecast that names the swing', () => {
+  for (const c of CORE) {
+    const drop = c.intel.catalyst;
+    assert.match(drop.split(':')[0], /forecast/i, `${c.id}: Catalyst drop is not a forecast`);
+    assert.match(drop, /swing|spread|whipsaw|crash|points|barely|flat/i, `${c.id}: Catalyst drop does not say what moves the line`);
+  }
+});
+
+// TASK-711: World Reveal copy. Names, taglines and problems are the MVP spec
+// strings; each world also has a short Loom revealLine for the projector.
+test('each world reveal has spec name/tagline/problem and a projector-length Loom line', () => {
+  const spec = {
+    AA: ['The Commonwealth', 'Shared wealth, shared power', 'meaning'],
+    AB: ['The Benevolent Machine', 'Shared wealth, the Loom rules', 'dependence'],
+    BA: ['The Uneasy Republic', 'Rich owners, voting masses', 'class conflict'],
+    BB: ['The Gilded Cage', 'Owners rule, masses on stipends', 'pacification']
+  };
+  for (const [key, [name, tagline, problemLeft]] of Object.entries(spec)) {
+    const w = data.worlds[key];
+    assert.deepEqual([w.name, w.tagline, w.problemLeft], [name, tagline, problemLeft], key);
+    assert.equal(typeof w.revealLine, 'string', `${key} revealLine`);
+    assert.ok(w.revealLine.length >= 40 && w.revealLine.length <= 120, `${key} revealLine is ${w.revealLine.length} chars`);
+  }
+});
+
+// TASK-713: the Loom's five-year epilogue for each class grade band.
+test('each grade band has a Loom epilogue for the End Screen (<= 140 chars)', () => {
+  assert.deepEqual(Object.keys(data.grades).sort(), ['Fragile', 'SHUTDOWN', 'Stable', 'Thriving']);
+  for (const [grade, text] of Object.entries(data.grades)) {
+    assert.ok(typeof text === 'string' && text.length >= 40 && text.length <= 140, `${grade}: ${text && text.length} chars`);
+  }
+  assert.match(data.grades.SHUTDOWN, /zero/);
+});
+
+// TASK-714: 10 citizens x 3 bands of fallback lines, each citizen with a
+// stated voice and no line shared or near-duplicated between citizens.
+const citizens = require('../../data/citizens.json');
+
+test('30 citizen fallback lines: 10 voiced citizens x good/mixed/bad, all distinct', () => {
+  assert.equal(citizens.length, 10);
+  const seen = new Map();
+  for (const c of citizens) {
+    assert.ok(typeof c.voice === 'string' && c.voice.length > 10, `${c.id} has no voice note`);
+    for (const band of ['good', 'mixed', 'bad']) {
+      assert.ok(Array.isArray(c.lines[band]) && c.lines[band].length >= 1, `${c.id}.${band}`);
+      for (const line of c.lines[band]) {
+        const key = line.toLowerCase().replace(/[^a-z ]/g, '').split(' ').slice(0, 6).join(' ');
+        assert.ok(!seen.has(key), `${c.id}.${band} opens like ${seen.get(key)}`);
+        seen.set(key, `${c.id}.${band}`);
+      }
+    }
+  }
+  assert.ok(seen.size >= 30);
+});
+
+// TASK-715: 10 five-year epilogues for the End Screen closing citizen:
+// 5 for a Stable/Thriving ending, 5 for a Fragile/Shutdown ending.
+test('10 closing citizen epilogues: 5 good/stable and 5 fragile/shutdown, <= 112 chars', () => {
+  const pools = { good: [], bad: [] };
+  for (const c of citizens) {
+    for (const [band, text] of Object.entries(c.epilogue || {})) {
+      assert.ok(band in pools, `${c.id}: unknown epilogue band ${band}`);
+      // <= 112, like the longest cycle line: two lines in the End Screen quote.
+      assert.ok(text.length <= 112, `${c.id}.epilogue.${band} is ${text.length} chars`);
+      pools[band].push(c.id);
+    }
+  }
+  assert.equal(pools.good.length, 5, `good: ${pools.good}`);
+  assert.equal(pools.bad.length, 5, `bad: ${pools.bad}`);
+  // A shutdown can end the game in Cycle 2, so bad epilogues never claim five years.
+  for (const id of pools.bad) assert.doesNotMatch(citizens.find((c) => c.id === id).epilogue.bad, /five years/i, id);
+});
+
+test('the End Screen closing citizen speaks an epilogue that matches the ending', () => {
+  const engine = require('../gameEngine');
+  const log = console.log;
+  console.log = () => {};
+  try {
+    for (const [gdw, ending, band] of [[48, null, 'good'], [20, null, 'bad'], [0, 'shutdown', 'bad']]) {
+      const game = new engine.GameState({ roomCode: 'EPIL' });
+      game.cycle = 5;
+      game.gdw = gdw;
+      game.ending = ending;
+      game.startEndPhase();
+      const closing = game.endData.closingMessage;
+      const c = citizens.find((x) => x.id === closing.citizenId);
+      assert.ok(c && c.epilogue && c.epilogue[band], `GDW ${gdw}: ${closing.citizenId} has no ${band} epilogue`);
+      assert.equal(closing.text, c.epilogue[band]);
+      game.clearPhaseTimer();
+    }
+  } finally {
+    console.log = log;
+  }
+});
+
+// TASK-716: role cards read cleanly on a 375x667 phone, in player language
+// (tags are hidden from players, so no "tagged ..." jargon).
+test('role cards: player-facing win conditions and phone-length card text', () => {
+  const roles = require('../../data/roles.json');
+  for (const r of roles) {
+    assert.doesNotMatch(r.winCondition, /tagged|\btag\b/i, `${r.id} winCondition uses internal tag jargon`);
+    assert.doesNotMatch(r.winCondition, /^\+1/, `${r.id} winCondition repeats the "+1 score when" heading`);
+    assert.ok(r.cardText.length <= 220, `${r.id} cardText is ${r.cardText.length} chars`);
+    assert.ok(r.winCondition.length <= 110, `${r.id} winCondition is ${r.winCondition.length} chars`);
+  }
+});
+
+// TASK-717 / TASK-718: mechanical proofreading - spacing, punctuation,
+// repeated words, quote style and a classroom word list - over every
+// player- or projector-facing string in a data file.
+const BANNED = /\b(damn|hell|crap|sucks?|stupid|idiot|kill yourself|sexy|drunk|shit|fuck|bitch|bastard)\b/i;
+
+function proofread(label, text) {
+  const problems = [];
+  if (/ {2}/.test(text)) problems.push('double space');
+  if (/\s[,.!?;:]/.test(text)) problems.push('space before punctuation');
+  if (/[,!?;][A-Za-z]/.test(text) || /[a-z]\.[A-Z]/.test(text)) problems.push('missing space after punctuation');
+  if (/[‘’“”]/.test(text)) problems.push('curly quotes (data uses straight quotes)');
+  if (/\b(\w{2,}) \1\b/i.test(text)) problems.push('repeated word');
+  if (/^\s|\s$/.test(text)) problems.push('leading/trailing whitespace');
+  if (BANNED.test(text)) problems.push(`not classroom-appropriate: "${text.match(BANNED)[0]}"`);
+  return problems.map((p) => `${label}: ${p}: ${text}`);
+}
+
+function strings(value, label, out = []) {
+  if (typeof value === 'string') out.push([label, value]);
+  else if (Array.isArray(value)) value.forEach((v, i) => strings(v, `${label}[${i}]`, out));
+  else if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) strings(v, `${label}.${k}`, out);
+  return out;
+}
+
+test('citizens.json proofreads clean', () => {
+  const problems = strings(citizens, 'citizens').flatMap(([l, t]) => proofread(l, t));
+  assert.deepEqual(problems, []);
+});
+
+// TASK-718: crises.json (every incident, option, intel drop, feed line and
+// Loom line) proofreads clean and uses the project's American spelling.
+test('crises.json proofreads clean with consistent American spelling', () => {
+  const all = strings(data, 'crises');
+  assert.deepEqual(all.flatMap(([l, t]) => proofread(l, t)), []);
+  const british = /\b(neighbour\w*|colour\w*|behaviour\w*|labour\w*|optimis\w+|nationalis\w+|organis\w+|realis(e|ed|ing|ation)s?)\b/i;
+  for (const [label, text] of [...all, ...strings(citizens, 'citizens'), ...strings(require('../../data/roles.json'), 'roles')]) {
+    assert.doesNotMatch(text, british, `${label}: British spelling`);
+  }
+});
+
+// TASK-719: no emoji in any content file. Role icons are plain Unicode
+// symbols (geometric/astronomical), which render in the system fonts
+// offline; emoji fonts and colour glyphs vary by phone.
+test('zero emoji in crises.json, roles.json and citizens.json', () => {
+  const fs = require('fs');
+  const path = require('path');
+  for (const f of ['crises.json', 'roles.json', 'citizens.json']) {
+    const text = fs.readFileSync(path.join(__dirname, '../../data', f), 'utf8');
+    const emoji = text.match(/\p{Extended_Pictographic}|\p{Emoji_Presentation}|️|‍/gu);
+    assert.equal(emoji, null, `${f} contains emoji: ${emoji && emoji.join(' ')}`);
+  }
+});
+
+// TASK-720: every Policy A/B text a game can show is under 120 characters,
+// so the class can scan both cards on the projector during the debate.
+test('all 28 Policy A/B texts are under 120 characters', () => {
+  let n = 0;
+  for (const c of CORE) {
+    for (const key of ['A', 'B']) {
+      const text = c.options[key].text;
+      assert.ok(text.length < 120, `${c.id} ${key} is ${text.length} chars: ${text}`);
+      n++;
+    }
+  }
+  assert.equal(n, 28);
+});
+
+// TASK-721: the Loom's voice in every loomIntro - calm (no exclamation
+// marks or shouting), precise (most quote a figure), first person, short
+// enough for the incident card, and ending flat, not excited.
+test('every loomIntro is calm, precise, first person and projector-length', () => {
+  const NUMBER = /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|hundred|thousand|second|seconds)\b/i;
+  let precise = 0;
+  for (const c of CORE) {
+    const t = c.loomIntro;
+    assert.match(t, /\bI\b/, `${c.id}: the Loom speaks in the first person`);
+    assert.doesNotMatch(t, /!/, `${c.id}: no exclamation marks`);
+    assert.doesNotMatch(t, /\b[A-Z]{3,}\b/, `${c.id}: no shouting`);
+    assert.match(t, /[.?]$/, `${c.id}: ends on a full stop or a question`);
+    assert.ok(t.length <= 180, `${c.id} is ${t.length} chars`);
+    if (NUMBER.test(t)) precise++;
+  }
+  assert.ok(precise >= 12, `only ${precise}/14 Loom intros quote a figure`);
+});
+
+// TASK-722: Fixed Crisis 2 lines match mvp_spec.md word for word: the 2A
+// and 2B Loom resolution lines and 2B's per-world projector lines.
+test('Fixed Crisis 2 projector and Loom resolution lines match the MVP spec exactly', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const spec = fs.readFileSync(path.join(__dirname, '../../mvp_spec.md'), 'utf8');
+  const resolution = [...spec.matchAll(/\*\*Loom resolution line:\*\* "([^"]+)"/g)].map((m) => m[1]);
+  const projector = spec.match(/\| \*\*Projector line\*\* \| "([^"]+)" \| "([^"]+)" \|/);
+  assert.ok(resolution.length >= 2 && projector, 'spec lines found');
+  const c2 = data.crises.find((c) => c.id === 'fixed-2-offswitch');
+  assert.equal(c2.options.A.loomLine, resolution[0], '2A Loom resolution line');
+  assert.equal(c2.options.B.loomLine, resolution[1], '2B Loom resolution line');
+  assert.equal(c2.options.B.worldNotes.A.loomLine, projector[1], '2B projector line after 1A');
+  assert.equal(c2.options.B.worldNotes.B.loomLine, projector[2], '2B projector line after 1B');
+  assert.match(c2.options.A.text, /\b101\b/, '2A: the spec Assembly is 101 citizens');
+});
+
+// TASK-723: the 7 v2 spare crises are parked as inactive stubs outside the
+// crises list, so the MVP cycle lookup can never pick one.
+test('v2 spare crises are inactive stubs the MVP never selects', () => {
+  const engine = require('../gameEngine');
+  const spares = data.v2_spares.crises;
+  assert.deepEqual(spares.map((s) => s.title), ['Artificial Friends', 'Thrill Seekers', 'Outsourced Parents', 'The Neighbors', 'The Empty Classroom', 'The Ghost Vote', 'The Soft Body']);
+  const spareIds = new Set(spares.map((s) => s.id));
+  for (const s of spares) {
+    assert.equal(s.status, 'stub');
+    assert.ok(s.premise.length > 20 && s.premise.length <= 140, s.id);
+    assert.ok(!data.crises.some((c) => c.id === s.id), `${s.id} must not be in the active crises list`);
+  }
+  for (const world of ['AA', 'AB', 'BA', 'BB']) {
+    for (let cycle = 1; cycle <= 5; cycle++) {
+      const crisis = engine.selectCrisis(data, cycle, world);
+      assert.ok(crisis && !spareIds.has(crisis.id), `${world} cycle ${cycle} picked ${crisis && crisis.id}`);
+    }
+  }
+});
+
+// TASK-726: every effect vector (both 2B world variants and the spares too)
+// has exactly the 6 trait keys, each a number in [-1, 1].
+test('every effect vector has exactly the 6 traits as numbers in [-1, 1]', () => {
+  const TRAITS = ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust'];
+  let n = 0;
+  for (const c of data.crises) {
+    for (const key of ['A', 'B']) {
+      const o = c.options[key];
+      for (const [variant, e] of Object.entries(o.effectsByWorld || { '': o.effects })) {
+        const label = `${c.id} ${key}${variant ? `/${variant}` : ''}`;
+        assert.deepEqual(Object.keys(e).sort(), TRAITS, label);
+        for (const t of TRAITS) assert.ok(typeof e[t] === 'number' && e[t] >= -1 && e[t] <= 1, `${label}.${t} = ${e[t]}`);
+        n++;
+      }
+    }
+  }
+  assert.equal(n, 45);
+});
+
+// TASK-727: the 4 world finales are write-ins whose A/B options are a
+// complete, playable fallback if the Loom cannot moderate write-ins.
+test('all 4 finales are mode writein with valid fallback options A and B', () => {
+  const engine = require('../gameEngine');
+  for (const [world, w] of Object.entries(data.worlds)) {
+    const c = data.crises.find((x) => x.id === w.finale);
+    assert.ok(c, `${world} finale ${w.finale} exists`);
+    assert.equal(c.mode, 'writein', `${world} finale mode`);
+    assert.equal(c.world, world);
+    for (const key of ['A', 'B']) {
+      const o = c.options[key];
+      assert.ok(o.name && o.text && o.effects && o.roles && o.roles.length, `${c.id} fallback ${key} incomplete`);
+    }
+    // The engine's Cycle 5 lookup lands on this finale, with both options.
+    const picked = engine.selectCrisis(data, 5, world);
+    assert.equal(picked.id, c.id);
+    assert.equal(picked.mode, 'writein');
+    assert.ok(picked.options.A && picked.options.B, `${world}: selectCrisis keeps the fallback options`);
+  }
+});
+
+// TASK-728: the 10 crises voted A/B (2 fixed + 2 per world in Cycles 3-4)
+// are all mode binary, and only the 4 finales are write-ins.
+test('all 10 binary crises have mode binary and only finales are write-ins', () => {
+  const binary = CORE.filter((c) => !finaleIds.has(c.id));
+  assert.equal(binary.length, 10);
+  for (const c of binary) assert.equal(c.mode, 'binary', c.id);
+  assert.deepEqual(data.crises.filter((c) => c.mode === 'writein').map((c) => c.id).sort(), [...finaleIds].sort());
+});
+
+// TASK-731: the 30 citizen fallback lines fit a feed card (<= 140 chars).
+test('all 30 citizen fallback lines are <= 140 characters', () => {
+  let n = 0;
+  for (const c of citizens) {
+    for (const band of ['good', 'mixed', 'bad']) {
+      for (const line of c.lines[band]) {
+        assert.ok(line.length <= 140, `${c.id}.${band} is ${line.length} chars`);
+        n++;
+      }
+    }
+  }
+  assert.equal(n, 30);
+});

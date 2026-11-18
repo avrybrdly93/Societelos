@@ -11,13 +11,17 @@ const { GameState, NODE_IDS } = engine;
  * Play one full game. `world` sets the Cycle 1/2 votes (e.g. 'BA'); cycles
  * 3-5 vote `lateVote(cycle, i)`. Phones write `writeIn(i)` in FINALE_WRITE,
  * rank their ballot in order, and `onEvent` sees every engine event.
+ * `game` replays in an existing room; `keepRoom` leaves the room open after END.
  */
-function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000 }) {
+function playGame({ game: existing = null, keepRoom = false, gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'), writeIn = (i) => `Council proposal number ${i + 1}`, onEvent = () => {}, phaseSeconds = {}, guardMs = 20000, apiKey = null }) {
   const saved = { fast: process.env.FAST_TIMERS, secs: process.env.FAST_TIMER_SECONDS, key: process.env.GEMINI_API_KEY };
   process.env.FAST_TIMERS = 'true';
   process.env.FAST_TIMER_SECONDS = '0.01';
-  delete process.env.GEMINI_API_KEY;
-  const game = new GameState({ roomCode: 'PLAY', phaseSeconds });
+  // apiKey: play with the Loom "online" (tests stub the network themselves).
+  if (apiKey) process.env.GEMINI_API_KEY = apiKey; else delete process.env.GEMINI_API_KEY;
+  // `game`: replay in an existing room (e.g. after playAgain) instead of a new one.
+  const game = existing || new GameState({ roomCode: 'PLAY', phaseSeconds });
+  if (existing) game.durations = engine.buildPhaseDurations(process.env, phaseSeconds);
   const restoreEnv = () => {
     for (const [k, v] of [['FAST_TIMERS', saved.fast], ['FAST_TIMER_SECONDS', saved.secs], ['GEMINI_API_KEY', saved.key]]) {
       if (v === undefined) delete process.env[k]; else process.env[k] = v;
@@ -27,7 +31,7 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
   const out = { game, phases: [], payloads: [], resolutions: [], reveals: [], intel: [], ballots: [], feedback: [], roles: {}, end: null, gameEnd: null, restoreEnv };
   const log = console.log;
   console.log = () => {};
-  NODE_IDS.forEach((node, i) => { game.addPlayer(`s${i}`, `P${i}`); game.setReady(node, true); });
+  NODE_IDS.forEach((node, i) => { if (!game.players[node]) game.addPlayer(`s${i}`, `P${i}`); game.setReady(node, true); });
   game.on('role:assigned', ({ node, role }) => { out.roles[node] = role.key; });
   game.on('resolution', (r) => out.resolutions.push(r));
   game.on('world:reveal', (w) => out.reveals.push(w));
@@ -39,7 +43,11 @@ function playGame({ gameId, world, lateVote = (cycle, i) => (i < 3 ? 'A' : 'B'),
     setImmediate(() => game.rankPolicies(b.node, b.policies.map((p) => p.id)));
   });
   return new Promise((resolve, reject) => {
-    const finish = (fn) => { game.stop(); console.log = log; restoreEnv(); fn(); };
+    // keepRoom: leave the room usable for another game (playAgain) instead of closing it.
+    const finish = (fn) => {
+      if (keepRoom) { game.clearPhaseTimer(); game.removeAllListeners(); } else game.stop();
+      console.log = log; restoreEnv(); fn();
+    };
     const guard = setTimeout(() => finish(() => reject(new Error(`stalled: ${out.phases.slice(-4).join(' ')}`))), guardMs);
     game.on('phase', (p) => {
       out.phases.push(`${p.cycle}:${p.phase}`);

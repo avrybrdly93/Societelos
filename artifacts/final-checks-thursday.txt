@@ -1,0 +1,40 @@
+# TASK-780 final check run on branch claude/tasks-2026-11-18-0635 (00997b0, 2026-11-18 07:28 GMT)
+# There is no ESLint in the project: npm run check:all is the lint + schema gate
+# (node --check on 83 files, JSON parse, data schema validator, tag balance, DOM ids, HTML structure, CSS, contrast, XSS sinks, script refs, offline, sim purity, conflict markers, unit suite, bench, memory, smoke).
+
+## npm run check:all  -> exit 0
+syntax ok: 83 files
+No merge-conflict markers in the working tree
+data/*.json valid (14 core crises complete)
+index.html: no duplicate ids
+mobile.html: no duplicate ids
+public/css/styles.css: 779 selectors, no dead declarations, none unused
+All 4 world themes meet WCAG AA (>= 4.5:1) on projector surfaces
+No external CDN dependencies in public/
+server/sim: no Math.random(), no I/O, no network
+# tests 327
+# pass 327
+# fail 0
+simulate (500 + 1 runs)      30.389 ms
+PASS (targets: run < 0.2 ms, cycle < 50 ms)
+PASS: heap flat across consecutive cycles (growth 0.0 MB)
+PASS: no leak across consecutive simulate() calls (growth 0.0 MB)
+[smoke] OK: LOBBY -> INTRO -> ROLE_ASSIGN -> CHAMBER -> INCIDENT -> INTEL -> DEBATE -> VOTE -> RESOLUTION; winner A; GDW 25 -> 20.7
+real	0m45.698s
+
+## npm run e2e:all  -> exit 0
+E2E OK: cycles 1-4 played in the browser with a clean console
+E2E FINALE FLOW OK: every screen matched its phase, clean console
+E2E FINALE FLOW OK (Gemini fallback to A/B): every screen matched its phase, clean console
+E2E END OK: 5 End Screen layouts
+E2E PLAY AGAIN OK: projector and phone reset to a fresh lobby
+E2E OFFLINE OK: full game to the End Screen (cycle 5, GDW 29.1, finale fallback) with offline narration every cycle and zero external requests
+E2E SHUTDOWN OK: GDW 16.5 after Cycle 2 -> 0 in Cycle 3 (world AA); RESOLUTION -> END, grade SHUTDOWN, no winner; projector "THE LOOM HAS SHUT DOWN", 5 phones show the shutdown
+E2E RECONNECT OK: NODE-02 + NODE-03 dropped in Cycle 2 INCIDENT, projector refreshed in DEBATE (same room AKZM), both phones back in their seats; all 5 voted, Cycle 2 resolved (projector on view-chamber), game reached END with 5/5 connected
+E2E MODERATION OK: NODE-05 got private "revise" feedback, resubmitted from the phone and was accepted; 5 phones ranked, Borda matches a recount, enacted POLICY-1 50%, POLICY-4 25%, POLICY-5 25%
+E2E REJECTION OK: NODE-04's unsafe write-in was pre-filtered twice (never sent to Gemini, never on the projector) and replaced by the placeholder; 5 phones ranked, Borda matches a recount, enacted POLICY-1 50%, POLICY-2 25%, POLICY-5 25%
+E2E TIEBREAK OK: Cycle 2 Override 3-3 tie -> B (forecast medians A 16.0, B 24.9), tie badge on the projector; Cycle 5 Borda POLICY-4:13[2110] POLICY-2:13[2110] POLICY-1:8[1012] POLICY-5:8[0202] POLICY-3:8[0121] -> enacted POLICY-4@0.5, POLI
+E2E REPLAY OK: seed a4aecf27e46d (from the End Screen badge) replayed via the lobby box with identical votes: 5 cycles, 61 GDW points and 15 citizen shocks bit-for-bit identical (world BB, final GDW 29.4); a fresh seed differs (final GDW 31
+E2E PRIVACY OK: 79 projector socket events and 280 screen samples before game:end carried no secret field, no policy-author link, none of 110 intel texts and no student name; game:end then revealed 5 roles and 5 authors
+E2E ENDSCREEN OK: projector and phones match an independent recount: roles NODE-01=catalyst NODE-02=assimilator NODE-05=artisan NODE-03=lotus NODE-04=ghost; totals 1/4/2/6/2; grade Fragile at GDW 24.2; winner(s) NODE-03; 5 authors with Bord
+real	12m41.715s

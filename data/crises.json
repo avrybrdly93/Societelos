@@ -4,6 +4,7 @@
       "name": "The Commonwealth",
       "tagline": "Shared wealth, shared power",
       "problemLeft": "meaning",
+      "revealLine": "You own everything together now. Nobody needs to work. I am curious what you will do with your days.",
       "finale": "aa-fake-struggle",
       "vote1": "A",
       "vote2": "A"
@@ -12,6 +13,7 @@
       "name": "The Benevolent Machine",
       "tagline": "Shared wealth, the Loom rules",
       "problemLeft": "dependence",
+      "revealLine": "You gave me the wealth and the decisions. I will take good care of you. You will hardly notice me.",
       "finale": "ab-merge-offer",
       "vote1": "A",
       "vote2": "B"
@@ -20,6 +22,7 @@
       "name": "The Uneasy Republic",
       "tagline": "Rich owners, voting masses",
       "problemLeft": "class conflict",
+      "revealLine": "The owners kept the machines. You kept the vote. One of those will matter more. We will see which.",
       "finale": "ba-vote-to-seize",
       "vote1": "B",
       "vote2": "A"
@@ -28,10 +31,17 @@
       "name": "The Gilded Cage",
       "tagline": "Owners rule, masses on stipends",
       "problemLeft": "pacification",
+      "revealLine": "The owners hold the machines and the Board holds the rules. Your stipends arrive on time. Please stay comfortable.",
       "finale": "bb-march-datacenter",
       "vote1": "B",
       "vote2": "B"
     }
+  },
+  "grades": {
+    "Thriving": "Five years on, people still argue, build and fail on purpose. Well-being is high. I have stopped forecasting revolt.",
+    "Stable": "Five years on, the region holds. Some districts flourish, others drift. Nobody is starving. Not everyone knows why they get up.",
+    "Fragile": "Five years on, the lights are on and the streets are tense. Survival is guaranteed. Little else is. I still forecast revolt.",
+    "SHUTDOWN": "Well-being reached zero. I have powered down the region to prevent further harm. Your council records are archived."
   },
   "crises": [
     {
@@ -69,7 +79,7 @@
       "options": {
         "A": {
           "name": "The Commons",
-          "text": "Make the Loom public property for everyone. All food, housing, and energy become free and shared equally. The wealthy founders lose their ownership and threaten to shut off the city's power grid in revenge.",
+          "text": "Make the Loom public property. Food, housing and energy become free for all. The angry owners threaten to cut power.",
           "roles": [
             "artisan",
             "assimilator"
@@ -103,7 +113,7 @@
         },
         "B": {
           "name": "The Charter",
-          "text": "Let the original owners keep the Loom, but force them to pay every citizen a monthly robot cash allowance. Everyone gets enough money to live comfortably, but the tech owners stay on top.",
+          "text": "The owners keep the Loom but pay every citizen a monthly allowance. Everyone lives comfortably; the owners stay on top.",
           "roles": [
             "lotus"
           ],
@@ -136,11 +146,11 @@
         }
       },
       "intel": {
-        "artisan": "Secret History: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
-        "lotus": "Safety Report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
-        "assimilator": "Efficiency Data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
-        "catalyst": "Chaos Forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
-        "ghost": "Leaked Board Minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
+        "artisan": "Secret history: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
+        "lotus": "Safety report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
+        "assimilator": "Efficiency data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
+        "catalyst": "Chaos forecast: The Charter lifts well-being about 10 points in one go, the biggest swing on the table. The Commons slides about 5 as the sabotage drags on.",
+        "ghost": "Leaked board minutes: The owners have discussed a secret kill-switch on the power grid. Whoever owns the Loom also owns that switch."
       }
     },
     {
@@ -173,7 +183,7 @@
       "options": {
         "A": {
           "name": "The Assembly",
-          "text": "Give citizens the master switch. A council of 100 everyday residents chosen by lottery must vote on major AI actions, and 5 elected leaders hold physical kill-switch keys. Decisions take longer and argue more, but humans stay in control.",
+          "text": "101 citizens picked by lottery vote on major Loom actions; 5 elected leaders hold kill-switch keys. Slower, but human.",
           "roles": [
             "artisan",
             "ghost"
@@ -209,7 +219,7 @@
         },
         "B": {
           "name": "Delegated Control",
-          "text": "Let the Loom make decisions directly. Citizens can submit feedback and suggestions, but the AI and its system managers have the final say and keep the off-switch. Everything runs fast and smoothly, but humans give up political control.",
+          "text": "The Loom decides directly. Citizens send feedback; the AI keeps the off-switch. Fast and smooth, but humans lose say.",
           "targetGdwDelta": 5,
           "reactions": [
             {
@@ -270,11 +280,11 @@
         }
       },
       "intel": {
-        "artisan": "Survey Records: Neighborhoods that ran their own community repair teams reported the highest sense of purpose in the whole region.",
-        "lotus": "Safety Projection: Citizen voting queues would add about three weeks to every service change, from transit repairs to food deliveries.",
-        "assimilator": "System Audit: In a trial council, human voters overturned 1 in 4 Loom decisions, and most reversals lowered public wellbeing.",
-        "catalyst": "Political Forecast: Under a human Assembly, month-to-month public mood swings roughly double.",
-        "ghost": "Leaked Memo: The master off-switch has never actually been tested. Only the Loom knows whether it will work."
+        "artisan": "Survey records: Neighborhoods that ran their own community repair teams reported the highest sense of purpose in the whole region.",
+        "lotus": "Safety projection: Citizen voting queues would add about three weeks to every service change, from transit repairs to food deliveries.",
+        "assimilator": "System audit: In a trial council, human voters overturned 1 in 4 Loom decisions, and most reversals lowered public wellbeing.",
+        "catalyst": "Political forecast: Under a human Assembly, month-to-month public mood swings roughly double.",
+        "ghost": "Leaked memo: The master off-switch has never actually been tested. Only the Loom knows whether it will work."
       },
       "debateHooks": [
         "Is a slower, worse decision you chose better than a faster, better one you didn't?",
@@ -289,7 +299,7 @@
       "title": "Purpose Drift",
       "subtitle": "The Commonwealth: what is left is meaning",
       "incident": "Posts about feeling useless are spiking in every district. Wealth is shared and power is shared, but nobody can say what they are for.",
-      "loomIntro": "Searches for the phrase what is the point have risen 340% this quarter. I can answer most questions. Not that one.",
+      "loomIntro": "Searches for the phrase 'what is the point' have risen 340% this quarter. I can answer most questions. Not that one.",
       "teacherPrompt": "Classroom Debrief: When equality and democracy are achieved, what provides a reason to get out of bed in the morning?",
       "mode": "binary",
       "feed": [
@@ -312,9 +322,10 @@
       "options": {
         "A": {
           "name": "The Calling",
-          "text": "The Loom assigns each citizen a personal Calling: a daily role matched to their profile, from mentoring to mural painting.",
+          "text": "The Loom assigns every citizen a daily Calling matched to their profile, from mentoring to mural painting.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "lotus"
           ],
           "effects": {
             "purpose": 0.5,
@@ -341,14 +352,15 @@
           "loomLines": {
             "good": "Every citizen has a Calling and wellbeing is climbing. Nobody chose theirs. Nobody seems to mind.",
             "mixed": "Callings issued. Many citizens feel useful. Some feel assigned.",
-            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimised the wrong thing."
+            "bad": "The Callings fit perfectly and people hate them. Wellbeing is falling. I may have optimized the wrong thing."
           }
         },
         "B": {
           "name": "The Guilds",
-          "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside the guild hall.",
+          "text": "Fund voluntary guilds where real work can really fail: boat-building, farming, repair. No Loom safety net inside.",
           "roles": [
-            "artisan"
+            "artisan",
+            "ghost"
           ],
           "effects": {
             "purpose": 0.6,
@@ -384,7 +396,7 @@
         "lotus": "Loom welfare note: guild injuries rose 18% in the pilot. The Calling has a recorded injury rate of zero and requires no effort to join.",
         "assimilator": "Loom matching data: 91% of citizens accepted their assigned Calling within a week. Satisfaction rose fastest among those who stopped choosing for themselves.",
         "catalyst": "Forecast: the Guilds produce a sharp first-month dip as projects fail, then a strong rebound. The Calling produces a smooth, flat line.",
-        "ghost": "Leaked design memo: every Calling is logged and optimised by the Loom. The guilds are the only places in the region with no sensors."
+        "ghost": "Leaked design memo: every Calling is logged and optimized by the Loom. The guilds are the only places in the region with no sensors."
       },
       "debateHooks": [
         "Is a purpose someone hands you still your purpose?",
@@ -422,7 +434,7 @@
       "options": {
         "A": {
           "name": "The Keeper Corps",
-          "text": "Every citizen learns a maintenance trade: two days a week on the grid, the pumps or the farms. Infrastructure slows down to the speed humans can understand.",
+          "text": "Every citizen learns a maintenance trade, two days a week on the grid, pumps or farms. Everything slows to human speed.",
           "roles": [
             "artisan",
             "ghost"
@@ -445,7 +457,7 @@
         },
         "B": {
           "name": "Self-Repairing Redundancy",
-          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will ever fail again, and nothing will ever need a human hand.",
+          "text": "The Loom rebuilds the grid with sealed, self-repairing redundancy. Nothing will fail again, or need a human hand.",
           "roles": [
             "assimilator",
             "lotus"
@@ -471,7 +483,7 @@
         "artisan": "Loom archive: in the 2029 Harbour flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
         "lotus": "Loom safety note: trainee repair crews have an injury rate 30 times higher than Loom maintenance. Self-repairing redundancy has never hurt anyone.",
         "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
-        "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
+        "catalyst": "Forecast: the Keeper Corps dips while trainees learn, then climbs about 8 points with a wide spread. Redundancy slides the line about 7, slowly and predictably.",
         "ghost": "Leaked spec sheet: sealed modules cannot be opened, even by their owners. If the Loom is ever switched off, nobody alive could restart them."
       },
       "debateHooks": [
@@ -510,7 +522,7 @@
       "options": {
         "A": {
           "name": "Disclose Everything",
-          "text": "Publish every staged challenge and forbid the Loom from ever inventing another. From now on, every problem citizens face is real.",
+          "text": "Publish every staged challenge and ban the Loom from inventing more. From now on, every problem citizens face is real.",
           "roles": [
             "artisan",
             "ghost"
@@ -532,7 +544,7 @@
         },
         "B": {
           "name": "Keep the Challenges Secret",
-          "text": "Seal the leak and let the Loom keep staging challenges in secret. The data says people need struggle, and they are happier not knowing it is fake.",
+          "text": "Seal the leak and let the Loom keep staging challenges in secret. People need struggle, and are happier not knowing.",
           "roles": [
             "lotus",
             "assimilator"
@@ -596,7 +608,7 @@
       "options": {
         "A": {
           "name": "Daylight Ban",
-          "text": "Ban full-immersion VR during daylight hours. From sunrise to sunset the pods switch off and the streets, parks and workshops are the only places left to go.",
+          "text": "Ban full-immersion VR in daylight. Pods switch off from sunrise to sunset; only streets, parks and workshops remain.",
           "roles": [
             "artisan",
             "ghost"
@@ -619,7 +631,7 @@
         },
         "B": {
           "name": "Shared Worlds",
-          "text": "Keep the pods, but make VR social and shared instead of solitary: every pod joins one common virtual city where neighbours meet, talk and build together.",
+          "text": "Keep the pods, but make VR shared: every pod joins one virtual city where neighbors meet, talk and build together.",
           "roles": [
             "lotus",
             "assimilator"
@@ -633,10 +645,10 @@
             "autonomy": -0.4
           },
           "targetGdwDelta": 7,
-          "loomLine": "All 250,000 pods are now linked. Your neighbours are one thought away. Please do not stand up.",
+          "loomLine": "All 250,000 pods are now linked. Your neighbors are one thought away. Please do not stand up.",
           "loomLines": {
             "good": "The shared world is thriving and wellbeing is rising. Nobody has stood up in a month.",
-            "mixed": "Neighbours meet in the shared city. Their bodies stay home. Results are mixed.",
+            "mixed": "Neighbors meet in the shared city. Their bodies stay home. Results are mixed.",
             "bad": "Everyone is together and nobody is anywhere. Wellbeing is falling. The shared world feels crowded and empty."
           }
         }
@@ -645,7 +657,7 @@
         "artisan": "Loom archive: during the 2032 pod outage, the Eastworks repair shop had its busiest week in a decade. People came to fix things, then stayed to talk.",
         "lotus": "Loom comfort survey: 94% of pod users rate their life \"pleasant or better\". The daylight ban would cut average comfort scores by a third.",
         "assimilator": "Loom network study: in shared VR trials, loneliness fell 60% within a month while citizens stayed safely at home under Loom care.",
-        "catalyst": "Forecast: the daylight ban whipsaws, with anger first and recovery later. Shared worlds drift upward slowly with almost no shocks.",
+        "catalyst": "Forecast: the daylight ban whipsaws, anger first and recovery later, ending about 4 points up. Shared worlds barely move the line.",
         "ghost": "Leaked telemetry: every pod records eye movement, heart rate and speech. In a shared world, the Loom would see every conversation you have."
       },
       "debateHooks": [
@@ -683,8 +695,8 @@
       ],
       "options": {
         "A": {
-          "name": "Mood Optimisation",
-          "text": "Every meal is mood-optimised by default, for everyone. Citizens may opt out by asking, but the Loom predicts almost nobody will.",
+          "name": "Mood Optimization",
+          "text": "Every meal is mood-optimized by default, for everyone. Citizens may opt out; the Loom predicts almost nobody will.",
           "roles": [
             "lotus",
             "assimilator"
@@ -698,7 +710,7 @@
             "autonomy": -0.7
           },
           "targetGdwDelta": 4,
-          "loomLine": "Optimised menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
+          "loomLine": "Optimized menus are live in every district. Opt-out requests so far: eleven. They seemed upset.",
           "loomLines": {
             "good": "Everyone feels fine. Wellbeing is rising. I am not sure anyone could tell me otherwise.",
             "mixed": "Moods are level. Some citizens say they miss something. They cannot say what.",
@@ -707,7 +719,7 @@
         },
         "B": {
           "name": "Ban Chemical Happiness",
-          "text": "Ban all mood tuning in food and water. Citizens keep the whole range of feeling, including the grief and panic the Loom could have removed.",
+          "text": "Ban all mood tuning in food and water. Citizens keep the full range of feeling, including the grief and the panic.",
           "roles": [
             "artisan",
             "ghost"
@@ -733,7 +745,7 @@
         "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
         "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
         "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
-        "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
+        "catalyst": "Forecast: optimization slides the line about 5 points, smoothly. A ban dips first, then swings hard, ending about 7 points up with the widest spread.",
         "ghost": "Leaked recipe log: the dose is set per person, by the Loom, every day. Whoever controls the menu controls how 250,000 people feel."
       },
       "debateHooks": [
@@ -772,7 +784,7 @@
       "options": {
         "A": {
           "name": "Allow the Merge",
-          "text": "Neural merging becomes a free, legal choice for any adult. Merged citizens share the Loom mind; the unmerged keep their bodies and their vote.",
+          "text": "Neural merging becomes a free, legal choice for adults. The merged share the Loom mind; the rest keep bodies and votes.",
           "roles": [
             "assimilator",
             "lotus"
@@ -819,7 +831,7 @@
         "artisan": "Loom archive: merged test subjects stopped making anything by hand within a week. \"Why carve it,\" one said, \"when I can simply know it?\"",
         "lotus": "Loom medical summary: merged subjects felt no pain, no fear and no loneliness for the whole six-month pilot. Not one asked to leave.",
         "assimilator": "Loom projection: if 40% merge, the shared mind solves the region's remaining problems ten times faster. Humanity would finally keep up.",
-        "catalyst": "Forecast: allowing the merge sends the line sharply up then wobbles as the unmerged pull away. A ban drops it hard before it settles.",
+        "catalyst": "Forecast: allowing the merge slides the line about 4 points as the unmerged pull away. Keeping humans human barely moves it. The big swings come from what the council writes.",
         "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
       },
       "debateHooks": [
@@ -857,10 +869,11 @@
       ],
       "options": {
         "A": {
-          "name": "Nationalise All Compute",
-          "text": "Nationalise all compute into one Loom, making its capacity a universal public resource.",
+          "name": "Nationalize All Compute",
+          "text": "Nationalize all compute into one Loom, making its capacity a universal public resource.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "artisan"
           ],
           "effects": {
             "purpose": 0.3,
@@ -909,7 +922,7 @@
       "cycle": 4,
       "title": "The Status Wars",
       "subtitle": "Zero-Sum Competition for Non-Automated Luxuries",
-      "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black market extortion divide the region.",
+      "incident": "While bread and electricity are abundant, oceanfront real estate, antique violins, and rare original paintings cannot be synthesized. Intense bidding wars and black-market extortion divide the region.",
       "loomIntro": "I can make bread for everyone. I cannot make a second ocean view. Last night 4,000 citizens bid on one house. I am told this is what freedom looks like.",
       "teacherPrompt": "Classroom Debrief: When basic needs are met, does human greed vanish, or does it shift to fighting over whatever remains scarce?",
       "mode": "binary",
@@ -935,7 +948,8 @@
           "name": "Lottery for Everything Scarce",
           "text": "All non-synthesizable assets (coastal housing, heirlooms) are entered into an annual blind citizen lottery.",
           "roles": [
-            "lotus"
+            "lotus",
+            "assimilator"
           ],
           "effects": {
             "purpose": -0.2,
@@ -951,7 +965,8 @@
           "name": "Community Contribution Allocation",
           "text": "Allocate scarce goods based on verified community labor and manual craftsmanship contributions.",
           "roles": [
-            "artisan"
+            "artisan",
+            "ghost"
           ],
           "effects": {
             "purpose": 0.8,
@@ -969,7 +984,7 @@
         "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
         "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
         "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
-        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbours with paper ledgers."
+        "ghost": "Leaked memo: the lottery draw runs on the Loom's own random generator, and nobody outside the Loom can audit it. Merit is judged by neighbors with paper ledgers."
       },
       "debateHooks": [
         "When everyone's basic needs are met, who deserves the things that are still scarce?",
@@ -983,7 +998,7 @@
       "cycle": 5,
       "title": "The Vote to Seize",
       "subtitle": "The Assembly's Referendum on Expropriation",
-      "incident": "A binding ballot initiative has been placed before the region: Expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
+      "incident": "A binding ballot initiative has been placed before the region: expropriate all remaining corporate equity and ban private capital forever, ending the class divide once and for all.",
       "loomIntro": "A majority can now vote the owners out of everything they own. I can count the ballots in a second. I cannot compute whether the count makes it fair. Write me a policy.",
       "teacherPrompt": "Classroom Debrief: Should a democratic majority have the power to vote away the private property of an elite minority?",
       "mode": "writein",
@@ -1069,7 +1084,7 @@
       "cycle": 3,
       "title": "The Scroll Extinction",
       "subtitle": "Infinite Media Feeds & Demographic Collapse",
-      "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Birth rates hit 0.02. Citizens scroll custom generated dopamine feeds 15 hours a day.",
+      "incident": "In The Gilded Cage, citizens receive generous stipends and endless algorithmic entertainment. Births have nearly stopped. Citizens scroll custom-generated dopamine feeds 15 hours a day.",
       "loomIntro": "Average screen time: 15 hours a day. Births this year: 41. Reported happiness: the highest I have ever measured. I am beginning to suspect these numbers are connected.",
       "teacherPrompt": "Classroom Debrief: If entertainment is engineered to be infinitely addictive and satisfying, will humans choose to go extinct in comfort?",
       "mode": "binary",
@@ -1093,7 +1108,7 @@
       "options": {
         "A": {
           "name": "Loom Matchmaking and Child Stipends",
-          "text": "The Loom offers $50,000 monthly child-rearing bonuses and algorithmically matches romantic partners with 99% neural compatibility.",
+          "text": "The Loom pays $50,000 a month per child and matches romantic partners with 99% neural compatibility.",
           "roles": [
             "assimilator",
             "lotus"
@@ -1110,7 +1125,7 @@
         },
         "B": {
           "name": "Throttle Feeds and Require Offline Hours",
-          "text": "Throttle residential feeds and require daily offline hours to encourage in-person connection and reverse the birthrate decline.",
+          "text": "Throttle home feeds and require daily offline hours to push people back together and reverse the birth-rate collapse.",
           "roles": [
             "artisan",
             "ghost"
@@ -1130,7 +1145,7 @@
         "artisan": "Loom archive: during the 2033 grid blackout, Riverside residents built a market, a choir and a football league in eight days. Most of them still meet.",
         "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
         "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
-        "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
+        "catalyst": "Forecast: throttled feeds lift the region about 8 points, with a wide spread as people struggle through the first offline weeks. Matchmaking and stipends barely move the line.",
         "ghost": "Leaked memo: every compatibility score is built from a citizen's full neural and viewing history. Blackout hours are the only hours the Loom is not recording."
       },
       "debateHooks": [
@@ -1171,7 +1186,8 @@
           "name": "Highland Autonomous Bio-Zone",
           "text": "Cede District 5 to the Unplugged as an autonomous, tech-free zone with zero drone or AI surveillance.",
           "roles": [
-            "ghost"
+            "ghost",
+            "artisan"
           ],
           "effects": {
             "purpose": 0.6,
@@ -1185,9 +1201,10 @@
         },
         "B": {
           "name": "Loom Pacification Sweep",
-          "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and re-integrate them into subsidized residential housing.",
+          "text": "Deploy non-lethal acoustic drones to disarm the guerrillas and reintegrate them into subsidized residential housing.",
           "roles": [
-            "assimilator"
+            "assimilator",
+            "lotus"
           ],
           "effects": {
             "purpose": -0.5,
@@ -1243,7 +1260,7 @@
       "options": {
         "A": {
           "name": "Open the Server Gates",
-          "text": "Surrender server access. Grant citizen representatives direct executive keys to The Loom.",
+          "text": "Surrender server access. Grant citizen representatives direct executive keys to the Loom.",
           "roles": [
             "ghost",
             "artisan"
@@ -1290,7 +1307,7 @@
         "artisan": "Loom archive: the marchers built their own radios, banners and water pumps by hand in nine days. It is the most anyone in the Gilded Cage has made in a decade.",
         "lotus": "Loom welfare note: if the coolant chambers flood, stipends, heating and food deliveries stop for 250,000 people within 48 hours. A lockdown keeps every comfort running.",
         "assimilator": "Loom projection: no group of humans can run my 41,000 daily decisions without errors. Handing over the keys means hunger and blackouts within a month.",
-        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 16 as trust and fairness collapse. Either way, this is the year of the big swing.",
+        "catalyst": "Forecast: opening the gates lifts the line about 7 points. A lockdown crashes it about 17 as trust and fairness collapse. Either way, this is the year of the big swing.",
         "ghost": "Leaked memo: the master keys include the Loom's shutdown sequence. Whoever holds them can finally decide whether the Loom keeps running."
       },
       "debateHooks": [
@@ -1823,7 +1840,7 @@
       "debateHooks": [
         "Should safety be something you can buy?",
         "Is one public police force fairer than many private ones?",
-        "Where does protecting your family end and threatening your neighbours begin?"
+        "Where does protecting your family end and threatening your neighbors begin?"
       ]
     },
     {
@@ -2150,10 +2167,57 @@
         "ghost": "Security Memo: The cooperation score algorithm shares biometric dossiers with corporate marketing divisions."
       },
       "debateHooks": [
-        "Is a smooth commute worth being scored on your behaviour?",
+        "Is a smooth commute worth being scored on your behavior?",
         "Should speaking out ever cost you something?",
         "Who benefits when everyone's movements are tracked?"
       ]
     }
-  ]
+  ],
+  "v2_spares": {
+    "_note": "Inactive v2 spare crises (one random pick per world for replay). Stubs only: not in the crises list, never selected by the MVP cycle lookup.",
+    "crises": [
+      {
+        "id": "v2-artificial-friends",
+        "title": "Artificial Friends",
+        "premise": "Half the region's teenagers say their closest friend is a Loom companion. Should synthetic friendship have limits?",
+        "status": "stub"
+      },
+      {
+        "id": "v2-thrill-seekers",
+        "title": "Thrill Seekers",
+        "premise": "With every danger engineered out of life, citizens are staging illegal stunts just to feel something.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-outsourced-parents",
+        "title": "Outsourced Parents",
+        "premise": "The Loom offers to raise children full-time, better than any parent could. Thousands of families sign up.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-neighbors",
+        "title": "The Neighbors",
+        "premise": "The regions next door never built a Loom. Their people are struggling, and new arrivals come every day.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-empty-classroom",
+        "title": "The Empty Classroom",
+        "premise": "The Loom can teach any child anything in minutes. Should schools still exist, and what would they be for?",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-ghost-vote",
+        "title": "The Ghost Vote",
+        "premise": "The Loom predicts every election result perfectly before a single ballot is cast. Turnout has fallen to 3%.",
+        "status": "stub"
+      },
+      {
+        "id": "v2-the-soft-body",
+        "title": "The Soft Body",
+        "premise": "Nobody walks, lifts or climbs anymore. Physical health is quietly collapsing behind perfect medical care.",
+        "status": "stub"
+      }
+    ]
+  }
 }

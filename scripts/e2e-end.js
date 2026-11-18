@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Host End Screen layout check (TASK-680, TASK-681): real game:end payloads from the
+// Host End Screen layout check (TASK-680, TASK-681, TASK-688): real game:end payloads from the
 // engine, rendered on the 1920x1080 projector page through its own debug
 // hook (window.debugTriggerEvent), with all three reveal beats shown.
 //
@@ -12,6 +12,7 @@
 //               fallback: the write-in author column is hidden, no gap left
 //   shutdownC2 / shutdownC3 - GDW hit 0% in Cycle 2 (no world yet) or 3:
 //               shutdown styling, a short history chart, no author column
+//   chart     - the five-year chart drawn with 12/24/36/48/60 months of data
 //
 // Each scenario must: raise no page error, keep the End Screen inside the
 // projector (no horizontal overflow, nothing past the bottom edge), and show
@@ -139,6 +140,58 @@ async function checkScenario(page, s) {
   return problems;
 }
 
+/**
+ * TASK-688: the five-year chart with 12, 24, 36, 48 or 60 months of data
+ * (a game that ended after Cycle 1..5). The x axis always spans 5 years;
+ * the line must end, with its cycle dot, exactly at the last month drawn.
+ */
+async function checkChartLengths(page) {
+  const results = await page.evaluate(() => {
+    const canvas = document.getElementById('end-history-chart');
+    const out = [];
+    for (const months of [12, 24, 36, 48, 60]) {
+      const history = Array.from({ length: months + 1 }, (_, m) => 25 + 20 * Math.sin(m / 9));
+      const cycleMarkers = Array.from({ length: months / 12 }, (_, i) => ({ cycle: i + 1, index: (i + 1) * 12 }));
+      let res;
+      try {
+        res = window.SocietelosCharts.drawFullHistoryChart(history, canvas, { cycleMarkers });
+      } catch (e) {
+        out.push({ months, error: e.message });
+        continue;
+      }
+      const { ctx, g } = res;
+      const ratio = canvas.width / (canvas.cssWidth || canvas.offsetWidth || canvas.width);
+      const orange = (x, y) => {
+        const [r, gr, b, a] = ctx.getImageData(Math.round(x * ratio), Math.round(y * ratio), 1, 1).data;
+        // The opaque realized line #f0a430 (the Fragile band is the same hue at 8% alpha).
+        return a > 200 && r > 200 && gr > 130 && gr < 190 && b < 90;
+      };
+      const endX = g.x(months);
+      const endY = g.y(history[months]);
+      out.push({
+        months,
+        axisMonths: res.months,
+        dotAtEnd: orange(endX, endY),
+        clearAfterEnd: months === 60 || !orange(endX + 14, endY),
+        insidePlot: endX <= g.x(60) + 0.5
+      });
+    }
+    return out;
+  });
+  const problems = [];
+  for (const r of results) {
+    const bad = r.error ? r.error : [
+      r.axisMonths !== 60 && `axis spans ${r.axisMonths} months`,
+      !r.dotAtEnd && 'no line/dot at the last month',
+      !r.clearAfterEnd && 'line drawn past the last month',
+      !r.insidePlot && 'last month outside the plot'
+    ].filter(Boolean).join(', ');
+    console.log(`${bad ? 'FAIL' : 'ok  '} chart ${String(r.months).padStart(2)} months${bad ? `: ${bad}` : ''}`);
+    if (bad) problems.push(`chart with ${r.months} months: ${bad}`);
+  }
+  return problems;
+}
+
 (async () => {
   const scenarios = await buildScenarios();
   const { server } = require(path.join(root, 'server', 'server.js'));
@@ -155,6 +208,7 @@ async function checkScenario(page, s) {
   await page.waitForFunction(() => typeof window.debugTriggerEvent === 'function');
   const problems = [];
   for (const s of scenarios) problems.push(...await checkScenario(page, s));
+  problems.push(...await checkChartLengths(page));
   problems.push(...errors);
   await browser.close();
   server.close();

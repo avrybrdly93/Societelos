@@ -7,7 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA = path.join(__dirname, '..', 'data');
+// SOCIETELOS_DATA_DIR points the validator at another copy (used by tests).
+const DATA = process.env.SOCIETELOS_DATA_DIR || path.join(__dirname, '..', 'data');
 const ROLE_KEYS = ['artisan', 'lotus', 'assimilator', 'catalyst', 'ghost'];
 const TAGS = ['artisan', 'lotus', 'assimilator', 'ghost'];
 const TRAITS = ['purpose', 'connection', 'health', 'trust', 'fairness', 'autonomy'];
@@ -63,6 +64,12 @@ function checkCitizens(citizens) {
       if (!Array.isArray(lines) || !lines.length || !lines.every(isStr)) err(where, `lines.${b} needs at least one line`);
       else lines.forEach((l) => { if (l.length > 140) err(where, `lines.${b} line over 140 chars`); });
     }
+    // Optional five-year End Screen epilogue: { good | bad: text }.
+    if (c.epilogue !== undefined) {
+      const keys = c.epilogue && typeof c.epilogue === 'object' ? Object.keys(c.epilogue) : [];
+      if (!keys.length || !keys.every((k) => k === 'good' || k === 'bad')) err(where, 'epilogue must be { good | bad: text }');
+      for (const k of keys) if (!isStr(c.epilogue[k]) || c.epilogue[k].length > 140) err(where, `epilogue.${k} must be 1-140 chars`);
+    }
   });
   return undefined;
 }
@@ -104,6 +111,11 @@ function checkOption(where, o, crisis) {
       else if (line.length > 200) err(where, `loomLines.${b} over 200 chars`);
     }
   }
+  // Offline Loom resolution lines are spoken on the projector: 200 chars max.
+  if (o.loomLine !== undefined && (!isStr(o.loomLine) || o.loomLine.length > 200)) err(where, 'loomLine must be 1-200 chars');
+  for (const [k, note] of Object.entries(o.worldNotes || {})) {
+    if (note && note.loomLine !== undefined && (!isStr(note.loomLine) || note.loomLine.length > 200)) err(where, `worldNotes.${k}.loomLine must be 1-200 chars`);
+  }
   if (o.volatility !== undefined && (typeof o.volatility !== 'number' || o.volatility <= 0)) err(where, 'volatility must be a positive number');
   if (crisis.mode === 'writein' && !o.effects && !o.effectsByWorld && o.draft !== true) err(where, 'finale fallback needs effects');
   return undefined;
@@ -135,6 +147,11 @@ function checkCrises(data, citizenIds) {
       if (!citizenIds.has(m.citizenId)) err(`${where}.feed[${j}]`, `unknown citizen "${m.citizenId}"`);
     });
     if (c.intel) for (const k of Object.keys(c.intel)) if (!ROLE_KEYS.includes(k)) err(where, `intel key "${k}" is not a role`);
+    // Every crisis, core or spare, carries one intel drop per role.
+    const noIntel = ROLE_KEYS.filter((r) => !isStr((c.intel || {})[r]));
+    if (noIntel.length) err(where, `intel needs all 5 roles; missing ${noIntel.join(', ')}`);
+    // Intel is read on a phone in the 20 s INTEL phase: 180 characters at most.
+    for (const r of ROLE_KEYS) if (isStr((c.intel || {})[r]) && c.intel[r].length > 180) err(where, `intel.${r} over 180 chars (${c.intel[r].length})`);
   });
   for (const w of ['fixed', ...WORLDS]) {
     const cycles = w === 'fixed' ? [1, 2] : [3, 4];

@@ -74,22 +74,74 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000, fetchImpl =
   }
 }
 
+// ---------------------------------------------------------------------------
+// Offline circuit breaker (Offline Demo Mandate). On a classroom router with
+// no internet, a request can hang for the full 8 s timeout. After one
+// network-level failure (timeout, DNS, refused/reset connection) the breaker
+// opens and every Loom call falls back at once (< 1 ms) for the cooldown
+// (LOOM_OFFLINE_COOLDOWN_MS, default 60 s); then one call probes again. An
+// HTTP error means Gemini was reachable, so it never opens the breaker; a
+// success closes it.
+// ---------------------------------------------------------------------------
+
+const OFFLINE_COOLDOWN_MS = 60000;
+const NETWORK_ERROR_CODES = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED', 'ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH', 'ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET']);
+
+function createCircuit() {
+  return { openUntil: 0, trips: 0 };
+}
+const DEFAULT_CIRCUIT = createCircuit();
+
+/** True for failures that mean "no route to Gemini", not "Gemini said no". */
+function isNetworkError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError' || err.name === 'TimeoutError') return true;
+  const code = err.code || (err.cause && err.cause.code);
+  if (code && NETWORK_ERROR_CODES.has(code)) return true;
+  return err.name === 'TypeError' && /fetch failed|network/i.test(err.message || '');
+}
+
+function offlineCooldownMs(opts) {
+  const fromOpts = Number(opts.offlineCooldownMs);
+  if (Number.isFinite(fromOpts) && fromOpts >= 0) return fromOpts;
+  const fromEnv = Number((opts.env || process.env).LOOM_OFFLINE_COOLDOWN_MS);
+  return Number.isFinite(fromEnv) && fromEnv >= 0 ? fromEnv : OFFLINE_COOLDOWN_MS;
+}
+
+/** Close the shared breaker (tests, or a teacher reconnecting the router). */
+function resetCircuit(circuit = DEFAULT_CIRCUIT) {
+  circuit.openUntil = 0;
+}
+
 /**
  * One structured-JSON call to Gemini. Throws on any failure (no key, HTTP
- * error, timeout, unparseable output); callers catch and fall back.
+ * error, timeout, unparseable output, breaker open); callers catch and fall back.
  * @param {string} userPrompt
- * @param {object} [opts] { schema, temperature = 0.2, maxOutputTokens = 1024, config, fetchImpl }
+ * @param {object} [opts] { schema, temperature = 0.2, maxOutputTokens = 1024, config, fetchImpl, circuit, offlineCooldownMs }
+ *   The shared breaker guards real network calls; a call with an injected
+ *   fetchImpl uses only the `circuit` it is given (none by default).
  */
 async function callGemini(userPrompt, opts = {}) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled) throw new Error('Loom offline: GEMINI_API_KEY not set');
+  const circuit = opts.circuit || (opts.fetchImpl ? null : DEFAULT_CIRCUIT);
+  if (circuit && Date.now() < circuit.openUntil) {
+    const err = new Error('Loom offline: network unreachable, using fallbacks');
+    err.code = 'LOOM_CIRCUIT_OPEN';
+    throw err;
+  }
   const started = Date.now();
   const meta = { attempts: 0, usage: null, status: null };
   try {
     const result = await callGeminiOnce(userPrompt, opts, cfg, meta);
+    if (circuit) circuit.openUntil = 0;
     logCall(opts, cfg, meta, Date.now() - started, null, userPrompt);
     return result;
   } catch (err) {
+    if (circuit && isNetworkError(err)) {
+      circuit.openUntil = Date.now() + offlineCooldownMs(opts);
+      circuit.trips++;
+    }
     logCall(opts, cfg, meta, Date.now() - started, err, userPrompt);
     throw err;
   }
@@ -115,10 +167,27 @@ function logCall(opts, cfg, meta, ms, err, prompt) {
   if (env.LOOM_DEBUG_PROMPTS === 'true' && !(privacy && studentText)) (opts.logger || console.log)(`[loom] ${label} prompt: ${prompt}`);
 }
 
+// API-layer safety filters on every call (TASK-746), on top of the
+// moderation instructions in the system prompt. A blocked prompt or answer
+// surfaces as an error with code LOOM_SAFETY_BLOCK (see moderate()).
+const SAFETY_SETTINGS = Object.freeze([
+  'HARM_CATEGORY_HARASSMENT',
+  'HARM_CATEGORY_HATE_SPEECH',
+  'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+  'HARM_CATEGORY_DANGEROUS_CONTENT'
+].map((category) => Object.freeze({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })));
+
+function safetyBlockError(reason) {
+  const err = new Error(`Gemini safety block: ${reason}`);
+  err.code = 'LOOM_SAFETY_BLOCK';
+  return err;
+}
+
 async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   const body = {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    safetySettings: SAFETY_SETTINGS,
     generationConfig: {
       temperature: typeof opts.temperature === 'number' ? opts.temperature : 0.2,
       maxOutputTokens: opts.maxOutputTokens || 1024,
@@ -154,6 +223,9 @@ async function callGeminiOnce(userPrompt, opts, cfg, meta) {
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const data = await res.json();
   if (data && data.usageMetadata) meta.usage = data.usageMetadata;
+  if (data && data.promptFeedback && data.promptFeedback.blockReason) throw safetyBlockError(`prompt ${data.promptFeedback.blockReason}`);
+  const finish = data && data.candidates && data.candidates[0] && data.candidates[0].finishReason;
+  if (finish === 'SAFETY' || finish === 'PROHIBITED_CONTENT' || finish === 'BLOCKLIST') throw safetyBlockError(`answer ${finish}`);
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
     data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('');
   if (!text) throw new Error('Gemini returned no content');
@@ -290,17 +362,24 @@ function packageLines(enacted = []) {
 
 /**
  * Order citizens by how much their (district, cohort) moved this cycle, using
- * the summary's topMoves (district/cohort matches first, then district-only).
+ * the summary's topMoves (district/cohort matches first, then district-only)
+ * and its shocks (every citizen in a shocked district, by shock size).
  * Returns [{ id, district, cohort, shift }] with the most affected first.
  */
 function rankCitizensByShift(citizens = [], summary = {}) {
   const moves = Array.isArray(summary.topMoves) ? summary.topMoves : [];
+  // A shock (storm, outage...) cut one trait for every cohort in its district,
+  // so its citizens are among the first to talk about it (TASK-745).
+  const shocks = Array.isArray(summary.shocks) ? summary.shocks : [];
   const scored = citizens.map((c, order) => {
     let shift = 0;
     for (const m of moves) {
       const change = Math.abs(Number(m.change) || 0);
       if (m.district === c.district && m.cohort === c.cohort) shift += change * 2;
       else if (m.district === c.district || m.cohort === c.cohort) shift += change * 0.5;
+    }
+    for (const sh of shocks) {
+      if (sh && sh.district === c.district) shift += (Math.abs(Number(sh.amount)) || 0.04) * 1.5;
     }
     return { id: c.id, district: c.district, cohort: c.cohort, shift, order };
   });
@@ -532,16 +611,58 @@ function calibrationExamples(crisis = {}) {
  * with no role tags and a zero effect vector. Flagged `fallback: true` so the
  * engine can switch to the authored A/B finale instead.
  */
+// Gemini unavailable: the write-in is unmoderated, so it carries no text at
+// all (TASK-748); the engine sees fallback: true and plays the A/B finale.
 function moderateFallback(submissions) {
   return submissions.map((s) => ({
     node: s.node,
     status: 'ok',
-    cleaned: truncate(s.text, 140),
+    cleaned: '',
     feedback: '',
     roles: [],
     effects: zeroEffects(),
     fallback: true
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Local pre-filter (TASK-747): blatant profanity, slurs, sexual content and
+// self-harm/threat phrases are caught in microseconds, before (and whether
+// or not) Gemini answers. Deliberately narrow, so in-game words such as
+// "kill-switch", "shutdown" or "dead grid" pass through to the Loom.
+// Text is normalised first: lower case, common leetspeak (0->o, 1/!->i,
+// 3->e, 4/@->a, 5/$->s, 7->t) and separators inside a word (f.u.c.k, F U C K).
+// ---------------------------------------------------------------------------
+
+const PREFILTER_BLATANT = new RegExp([
+  'f+u+c+k+\\w*', 'f+u+k+(s|ed|ing)?', 'sh+i+t+(s|ty|ter|ters|ting|head|heads|hole|holes)?', 'b+i+t+c+h+\\w*', 'bastards?', 'a+s+s+h+o+l+e+s?', 'dick(head)?s?', 'cocks?(sucker)?',
+  'puss(y|ies)', 'cunts?', 'whores?', 'sluts?', 'twats?', 'wank\\w*', 'porn\\w*', 'nudes?', 'naked', 'boobs?', 'penis\\w*', 'vagina\\w*', 'horny', 'blowjobs?', 'rap(e|ed|es|ing|ist)',
+  'n+i+g+g+(a|er|ers|as|uh)s?', 'fag(got)?s?', 'retard(ed|s)?', 'tranny', 'trannies', 'chinks?', 'spics?', 'kikes?', 'dykes?', 'wetbacks?', 'pakis?',
+  'nazis?', 'hitler', 'kys', 'kill (yo)?urself', 'kill yourselves', 'go die', 'shoot up', 'school shooting'
+].map((w) => `\\b${w}\\b`).join('|'), 'i');
+
+function normaliseForFilter(text) {
+  const leet = { 0: 'o', 1: 'i', '!': 'i', 3: 'e', 4: 'a', '@': 'a', 5: 's', $: 's', 7: 't' };
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[01!34@5$7]/g, (c) => leet[c])
+    // Join letters split by dots, dashes, underscores, asterisks or single
+    // spaces: f.u.c.k, s-h-i-t, F U C K.
+    .replace(/\b(?:[a-z][.\-_* ]){2,}[a-z]\b/g, (m) => m.replace(/[.\-_* ]/g, ''));
+}
+
+/** null if the text passes, else the matched (normalised) word. */
+function localPrefilter(text) {
+  const raw = String(text || '');
+  const hit = raw.toLowerCase().match(PREFILTER_BLATANT) || normaliseForFilter(raw).match(PREFILTER_BLATANT);
+  return hit ? hit[0] : null;
+}
+
+const PREFILTER_FEEDBACK = 'The Loom cannot put that language in front of the class. Rewrite it as one clear, respectful policy for the region.';
+
+/** Result for a pre-filtered write-in: revise on a first attempt, reject on a revision. Never echoes the text. */
+function prefilterResult(node, revision) {
+  return { node, status: revision ? 'reject' : 'revise', cleaned: '', feedback: revision ? 'The revision still contains language the Loom cannot accept.' : PREFILTER_FEEDBACK, roles: [], effects: zeroEffects(), prefiltered: true };
 }
 
 /**
@@ -554,9 +675,20 @@ function moderateFallback(submissions) {
 async function moderate(submissions = [], crisis = {}, opts = {}) {
   // Send only { node: 'NODE-0X', text } with player names redacted; never names or socket ids.
   const names = opts.playerNames || [];
-  const list = (submissions || [])
+  const all = (submissions || [])
     .map((s) => ({ node: safeNode(s.node), text: truncate(redactNames(s.text, names), 280) }))
     .filter((s) => s.node);
+  // Blatant language never reaches Gemini: flagged locally, in order.
+  const flagged = new Map(all.filter((s) => localPrefilter(s.text)).map((s) => [s.node, prefilterResult(s.node, !!opts.revision)]));
+  if (!flagged.size) return moderateRemote(all, crisis, opts);
+  const rest = all.filter((s) => !flagged.has(s.node));
+  const moderated = rest.length ? await moderateRemote(rest, crisis, opts) : [];
+  const byNode = new Map(moderated.map((r) => [r.node, r]));
+  return all.map((s) => flagged.get(s.node) || byNode.get(s.node));
+}
+
+/** Gemini moderation of already pre-filtered, redacted submissions. */
+async function moderateRemote(list, crisis, opts) {
   const cfg = opts.config || getConfig();
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
@@ -575,16 +707,33 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
     if (!Array.isArray(result)) throw new Error('moderation: not an array');
     return list.map((s) => {
       const r = result.find((x) => x && x.node === s.node);
-      if (!r) return moderateFallback([s])[0];
+      // Gemini skipped this write-in, or passed it with no cleaned text:
+      // judge it locally rather than echo the raw submission (TASK-748).
+      if (!r) return moderateHeuristic(s, crisis, opts);
       const clean = sanitizeModerationResult(r);
+      if (clean.status === 'ok' && !clean.cleaned) return moderateHeuristic(s, crisis, opts);
       // A revision gets one chance: anything but "ok" is final.
       const status = opts.revision && clean.status !== 'ok' ? 'reject' : clean.status;
       return { ...clean, node: s.node, status };
     });
   } catch (err) {
+    if (err && err.code === 'LOOM_SAFETY_BLOCK') return moderateAfterSafetyBlock(list, crisis, opts);
     console.warn(`[loom] moderate fell back: ${err.message}`);
     return moderateFallback(list);
   }
+}
+
+/**
+ * Gemini's safety filter blocked a moderation batch: at least one write-in
+ * is unsafe. Re-moderate each submission on its own so only the blocked one
+ * is rejected (never shown) and the rest of the class keeps its write-ins.
+ */
+async function moderateAfterSafetyBlock(list, crisis, opts) {
+  const blocked = (s) => ({ node: s.node, status: 'reject', cleaned: '', feedback: 'The Loom cannot accept this proposal.', roles: [], effects: zeroEffects(), safetyBlocked: true });
+  if (list.length === 1) return [blocked(list[0])];
+  console.warn(`[loom] moderate: safety block on a batch of ${list.length}, re-moderating one by one`);
+  const singles = await Promise.all(list.map((s) => moderate([s], crisis, opts).then((r) => r[0]).catch(() => blocked(s))));
+  return singles.map((r, i) => r || blocked(list[i]));
 }
 
 // ---------------------------------------------------------------------------
@@ -705,4 +854,4 @@ async function moderateAndScorePolicies(submissions, crisis) {
   return moderate((submissions || []).map((s) => ({ node: s.node || s.nodeId, text: s.text || s.rawText })), crisis);
 }
 
-module.exports = { packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };
+module.exports = { localPrefilter, normaliseForFilter, SAFETY_SETTINGS, createCircuit, resetCircuit, isNetworkError, DEFAULT_CIRCUIT, packageLines, moderateHeuristic, getPlaceholderPolicy, PLACEHOLDER_TEXT, sanitizeModerationResult, calibrationExamples, withSimFacts, validateNarration, stripEmoji, clip, rankCitizensByShift, narrationContext, redactNames, safeNode, testConnection, outcomeBand, narrateFallback, cleanEffects, cleanRoles, moderateFallback, getConfig, DEFAULT_MODEL, SYSTEM_PROMPT, fetchWithTimeout, callGemini, narrate, moderate, moderateOne, narrateResolution, moderateAndScorePolicies };

@@ -772,15 +772,36 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * END: broadcast the closing citizen for the End Screen - the citizen whose
-   * cohort changed most over the whole game, with their own words.
+   * Which five-year epilogue pool the ending draws from (data/citizens.json
+   * epilogue): 'good' for a Stable or Thriving ending (GDW 35+), 'bad' for
+   * Fragile or a Shutdown.
+   */
+  epilogueBand() {
+    return this.ending === 'shutdown' || !(this.gdw >= 35) ? 'bad' : 'good';
+  }
+
+  /** Citizens with a five-year epilogue line for this ending. */
+  epilogueCitizens() {
+    const band = this.epilogueBand();
+    return (Array.isArray(this.data.citizens) ? this.data.citizens : [])
+      .filter((c) => c && c.id && c.epilogue && typeof c.epilogue[band] === 'string' && c.epilogue[band]);
+  }
+
+  /**
+   * END: broadcast the closing citizen for the End Screen - of the citizens
+   * with an epilogue for this ending, the one whose cohort changed most over
+   * the whole game, in their five-year epilogue words. Without epilogues it
+   * falls back to the most-changed citizen's band line.
    */
   startEndPhase() {
     const extra = {};
     try {
-      const pick = sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
-      if (pick && pick.text) {
-        extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text: pick.text, sentiment: pick.band }), change: pick.change, band: pick.band };
+      const pool = this.epilogueCitizens();
+      const epi = pool.length ? sim.closingCitizen(this.simStateStart, this.simState, pool) : null;
+      const pick = epi || sim.closingCitizen(this.simStateStart, this.simState, this.data.citizens || []);
+      if (pick) {
+        const text = epi ? pool.find((c) => c.id === epi.citizenId).epilogue[this.epilogueBand()] : pick.text;
+        if (text) extra.closing = { ...this.citizenMessage({ citizenId: pick.citizenId, text, sentiment: pick.band }), change: pick.change, band: pick.band, epilogue: !!epi };
       }
     } catch (err) {
       console.error(`[game ${this.roomCode}] closing citizen: ${err.message}`);
@@ -894,6 +915,8 @@ class GameState extends EventEmitter {
       finalGdw,
       grade,
       gradeText: GRADE_TEXT[grade],
+      // The Loom's five-year epilogue for this grade band (data/crises.json grades).
+      gradeEpilogue: (this.data.crises && this.data.crises.grades && this.data.crises.grades[grade]) || '',
       shutdown,
       worldKey: this.worldKey || null,
       worldName: world.name || null,
@@ -1058,7 +1081,7 @@ class GameState extends EventEmitter {
       .then(() => resolveLoom().moderate(submissions, this.crisis || {}, { playerNames }))
       .catch((err) => {
         console.error(`[game ${this.roomCode}] moderation failed: ${err.message}`);
-        return submissions.map((sub) => ({ node: sub.node, status: 'ok', cleaned: sub.text, feedback: '', roles: [], effects: {}, fallback: true }));
+        return submissions.map((sub) => ({ node: sub.node, status: 'ok', cleaned: '', feedback: '', roles: [], effects: {}, fallback: true }));
       })
       .then((results) => {
         finale.moderationMs = Date.now() - started;
@@ -1077,13 +1100,15 @@ class GameState extends EventEmitter {
   }
 
   /**
-   * Act on the batch moderation. If Gemini was unavailable (every result is a
-   * fallback: no key, error or the 8 s timeout), cycle 5 switches to the
-   * world's authored A/B finale and plays a normal DEBATE -> VOTE.
+   * Act on the batch moderation. If Gemini was unavailable for any write-in
+   * (a fallback result: no key, error or the 8 s timeout), cycle 5 switches
+   * to the world's authored A/B finale and plays a normal DEBATE -> VOTE, so
+   * an unmoderated write-in is never shown. Write-ins the local pre-filter
+   * flagged are moderated results, not fallbacks.
    */
   onFinaleModeration(results) {
     if (this.phase !== PHASES.FINALE_MOD || this.finale.closed) return;
-    const failed = !results.length || results.every((r) => r && r.fallback);
+    const failed = !results.length || results.some((r) => !r || r.fallback);
     if (failed) {
       this.switchFinaleToBinary('moderation unavailable');
       return;
@@ -1117,14 +1142,16 @@ class GameState extends EventEmitter {
       const m = finale.moderation[node] || {};
       // "reject", a second "revise", or a resubmit that never came / timed
       // out: a safe, bland placeholder so nothing unmoderated is shown.
-      if (m.status !== 'ok') {
+      // Only Loom-cleaned text is ever shown: no cleaned text means placeholder,
+      // never the raw submission (TASK-748).
+      if (m.status !== 'ok' || !m.cleaned || m.fallback) {
         const ph = loom.getPlaceholderPolicy(node);
         return { id: `POLICY-${i + 1}`, node, text: ph.cleaned, roles: ph.roles, effects: ph.effects, placeholder: true };
       }
       return {
         id: `POLICY-${i + 1}`,
         node,
-        text: String(m.cleaned || finale.submissions[node] || DEFAULT_FINALE_POLICY).slice(0, FINALE_MAX_CHARS),
+        text: String(m.cleaned).slice(0, FINALE_MAX_CHARS),
         roles: Array.isArray(m.roles) ? m.roles : [],
         effects: m.effects || {}
       };
@@ -1749,11 +1776,11 @@ class GameState extends EventEmitter {
       });
   }
 
-  /** Public description of the current world: { worldKey, name, tagline, problemLeft }. */
+  /** Public description of the current world: { worldKey, name, tagline, problemLeft, revealLine }. */
   worldInfo() {
     const worlds = (this.data.crises && this.data.crises.worlds) || {};
     const w = worlds[this.worldKey] || {};
-    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '' };
+    return { worldKey: this.worldKey, name: w.name || this.worldKey || '', tagline: w.tagline || '', problemLeft: w.problemLeft || '', revealLine: w.revealLine || '' };
   }
 
   /**
@@ -1933,12 +1960,17 @@ class GameState extends EventEmitter {
 
   /**
    * Deterministic closing citizen when the simulation pick is unavailable:
-   * one authored line from data/citizens.json chosen by the final GDW band
-   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Old Harbour
-   * voice if the citizen data itself is missing.
+   * a five-year epilogue for this ending from data/citizens.json, else one
+   * authored line chosen by the final GDW band (good 35+, mixed 1-34, bad on
+   * a shutdown), or a built-in Old Harbour voice if citizen data is missing.
    */
   fallbackClosingMessage() {
     const band = this.gdw <= 0 || this.ending === 'shutdown' ? 'bad' : this.gdw >= 35 ? 'good' : 'mixed';
+    const pool = this.epilogueCitizens();
+    if (pool.length) {
+      const c = pool[hashSeed(this.gameId, 'closing') % pool.length];
+      return { ...this.citizenMessage({ citizenId: c.id, text: c.epilogue[this.epilogueBand()], sentiment: band }), change: 0, band, fallback: true, epilogue: true };
+    }
     const citizens = (Array.isArray(this.data.citizens) ? this.data.citizens : [])
       .filter((c) => c && c.id && c.name && c.district && c.lines && Array.isArray(c.lines[band]) && c.lines[band].length);
     if (citizens.length) {

@@ -217,6 +217,25 @@
     setMonthIndicator(null);
   }
 
+  /**
+   * host:playAgain: back to the pre-game map. Stops playback, removes shock
+   * badges, pulses and delta labels, drops every district's fill (the CSS
+   * default baseline shows again) and the world accent.
+   */
+  function reset() {
+    stopPlayback();
+    clearShocks();
+    clearDeltas();
+    clearPulses();
+    DISTRICT_IDS.forEach((id) => {
+      const g = districtGroup(id);
+      if (g) g.style.removeProperty('--district-fill');
+    });
+    const svg = document.getElementById('region-map');
+    if (svg) svg.style.removeProperty('--district-transition');
+    setWorld(null);
+  }
+
   // World accent colours (match the --theme-* tokens in styles.css).
   const WORLD_COLORS = { AA: '#2bc4a0', AB: '#3fd8e6', BA: '#f0a430', BB: '#c084fc' };
 
@@ -241,5 +260,5 @@
     if (color) svg.classList.add('is-recoloring');
   }
 
-  window.SocietelosMap = { DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas, showPulse, PULSE_THRESHOLD };
+  window.SocietelosMap = { reset, DISTRICT_IDS, WORLD_COLORS, setDistrictColor, renderDistricts, wellbeingToColor, setWorld, startPlayback, showMonth, stopPlayback, showShock, clearShocks, showDeltas, clearDeltas, showPulse, PULSE_THRESHOLD };
 })();

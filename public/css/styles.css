@@ -120,19 +120,16 @@ body.host .label {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 48px;
   height: 96px;
-  padding: 0 40px;
   background: rgba(8, 11, 16, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--border);
 }
-.topbar-brand { font-size: 28px; font-weight: 700; color: var(--accent); margin-right: auto; }
+.topbar-brand { font-size: 28px; font-weight: 700; color: var(--accent); }
 .topbar-item { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
-.topbar-value { font-size: 40px; font-weight: 700; }
+.topbar-value { font-weight: 700; }
 .gdw-badge {
-  font-size: 40px;
   font-weight: 700;
   padding: 2px 16px;
   border-radius: var(--radius);
@@ -473,7 +470,6 @@ body.host .label {
   transition: fill var(--district-transition, 0.6s) linear;
   cursor: pointer;
 }
-.district:hover polygon, .district:focus polygon { stroke: var(--accent); }
 .district:focus { outline: none; }
 .district-label { fill: var(--slate-950); font-family: var(--font-mono); font-size: 15px; font-weight: 700; text-anchor: middle; pointer-events: none; }
 .district-pop { fill: var(--slate-800); font-family: var(--font-mono); font-size: 13px; text-anchor: middle; pointer-events: none; }
@@ -584,16 +580,18 @@ html:has(body.mobile) { overscroll-behavior-y: contain; }
   color: #1b1f24;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
 }
-.memo-head { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.12em; border-bottom: 2px solid #1b1f24; padding-bottom: 8px; padding-right: 128px; gap: 8px; }
-.memo-meta { font-size: 12px; color: #8c2a2e; margin: 10px 0 12px; letter-spacing: 0.1em; }
+.memo-head { display: flex; justify-content: space-between; font-size: 13px; letter-spacing: 0.12em; border-bottom: 2px solid #1b1f24; padding-bottom: 8px; padding-right: 128px; gap: 8px; }
+.memo-head { flex-wrap: wrap; row-gap: 2px; }
+.memo-head > * { white-space: nowrap; }
+.memo-meta { font-size: 13px; color: #7a1f23; margin: 10px 0 12px; letter-spacing: 0.1em; }
 .memo-body { font-family: var(--font-mono); font-size: 17px; line-height: 1.5; margin: 0; }
-.memo-foot { font-size: 12px; margin: 16px 0 0; color: #5a6270; }
+.memo-foot { font-size: 14px; margin: 16px 0 0; color: #3d4450; }
 .intel-memo .shield-button { background: #1b1f24; color: #eae6dc; border-color: #1b1f24; }
 .m-clock { font-size: 72px; font-weight: 700; color: var(--accent); margin: 8px 0; }
 
 /* Blind vote */
 .vote-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
-.vote-btn { display: flex; align-items: center; gap: 16px; text-align: left; padding: 18px; font-size: 18px; }
+.vote-btn { display: flex; gap: 16px; text-align: left; padding: 18px; font-size: 18px; }
 .vote-letter {
   flex: 0 0 auto; width: 48px; height: 48px;
   display: flex; align-items: center; justify-content: center;
@@ -656,22 +654,20 @@ body.host .incident-text { font-size: 28px; margin: 0 0 12px; }
 @keyframes incident-in { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
 
 /* Host policy comparison: A vs B */
-.policy-panel { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: stretch; margin-top: auto; }
+.policy-panel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; margin-top: auto; }
 .policy-panel[hidden] { display: none; }
 .policy-card {
   position: relative;
-  padding: 24px;
   border-radius: var(--radius-lg);
   border: 2px solid var(--border);
   background: var(--bg-sunken);
 }
 .policy-letter {
-  display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center;
-  border-radius: 50%; border: 3px solid var(--accent); color: var(--accent); font-size: 32px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 3px solid var(--accent); color: var(--accent); font-weight: 700;
 }
-body.host .policy-name { font-size: 36px; margin: 12px 0 8px; }
-body.host .policy-text { font-size: 24px; margin: 0; color: var(--slate-200); }
-.policy-vs { align-self: center; font-size: 28px; color: var(--text-muted); }
+body.host .policy-text { margin: 0; color: var(--slate-200); }
+.policy-vs { align-self: center; color: var(--text-muted); }
 
 /* Host vote pips */
 .vote-status { margin-top: 16px; }
@@ -703,7 +699,6 @@ body.host .view.is-active { height: 100%; }
 .gdw-delta-pill.is-visible { opacity: 1; transform: none; }
 .gdw-delta-pill.is-up { color: #062f28; background: var(--teal); }
 .gdw-delta-pill.is-down { color: #fff; background: var(--danger); }
-body.host .gdw-meter .label { font-size: 20px; }
 .gdw-status { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--gdw-color, var(--amber)); }
 .gdw-readout { font-size: 64px; font-weight: 700; line-height: 1; color: var(--gdw-color, var(--amber)); }
 .gdw-track { position: relative; height: 18px; border-radius: 9px; background: var(--bg-sunken); border: 2px solid var(--border); overflow: hidden; }
@@ -759,10 +754,10 @@ body.host .feed-text { margin: 0; font-size: 22px; line-height: 1.3; color: var(
 }
 
 /* Host debate: hook prompt and a giant countdown above the A/B cards. */
-.debate-panel { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; margin-top: 8px; }
+.debate-panel { display: grid; gap: 24px; margin-top: 8px; }
 .debate-panel[hidden] { display: none; }
-body.host .debate-hook-text { font-size: 32px; line-height: 1.25; margin: 4px 0 0; }
-.debate-clock { font-size: 120px; font-weight: 700; line-height: 1; color: var(--accent); text-shadow: 0 0 32px var(--loom-glow); }
+body.host .debate-hook-text { margin: 4px 0 0; }
+.debate-clock { font-weight: 700; line-height: 1; color: var(--accent); text-shadow: 0 0 32px var(--loom-glow); }
 .debate-clock.is-low { color: var(--danger); text-shadow: none; animation: low-time-pulse 0.8s ease-in-out infinite; }
 .incident-banner.is-compact .incident-text,
 .incident-banner.is-compact .loom-line,
@@ -776,7 +771,6 @@ body.host .policy-name { font-size: 30px; margin: 2px 0 10px; line-height: 1.1; 
 body.host .policy-text { font-size: 22px; line-height: 1.3; clear: left; }
 .policy-vs { font-size: 22px; }
 .debate-clock { font-size: 96px; }
-body.host .debate-hook-text { font-size: 28px; }
 
 /* Forecast preview badge on policy cards (showForecastBeforeVote). */
 body.host .policy-forecast[hidden] { display: none; }
@@ -820,6 +814,9 @@ body.host .world-name {
   color: var(--theme-current); text-shadow: 0 0 48px var(--theme-current);
 }
 body.host .world-tagline { font-size: 44px; margin: 0 0 40px; }
+body.host .world-loom-line { font-family: var(--font-mono); font-size: 30px; line-height: 1.35; max-width: 1400px; margin: -16px auto 36px; color: var(--theme-current, var(--loom-cyan)); }
+body.host .world-loom-line::before { content: "LOOM // "; opacity: 0.6; }
+.world-loom-line[hidden] { display: none; }
 body.host .world-problem { font-size: 32px; color: var(--text-muted); }
 .world-problem .mono { color: var(--danger); font-weight: 700; }
 .view-world.is-active .world-name { animation: world-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -917,8 +914,8 @@ body.host[data-world] #citizens-online { color: var(--theme-current); }
 /* Host resolution: Loom commentary above the forecast chart. */
 .resolution-panel { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; margin-top: 8px; }
 .resolution-panel[hidden] { display: none; }
-body.host .resolution-loom { font-size: 28px; line-height: 1.35; min-height: 2.7em; }
-.chart-wrap { position: relative; flex: 1; min-height: 360px; border-radius: var(--radius); background: var(--bg-sunken); border: 2px solid var(--border); }
+body.host .resolution-loom { line-height: 1.35; }
+.chart-wrap { position: relative; flex: 1; border-radius: var(--radius); background: var(--bg-sunken); border: 2px solid var(--border); }
 .forecast-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 /* Loom forecast stability banner above the chart. */
@@ -942,13 +939,13 @@ body.host .forecast-banner.is-danger { color: var(--danger); border-color: var(-
 .resolution-loom.is-typing::after { content: "\2588"; margin-left: 2px; animation: caret-blink 0.8s steps(1) infinite; }
 @keyframes caret-blink { 50% { opacity: 0; } }
 /* Reserve room for a full 200-character Loom line so typing never shifts the chart. */
-body.host .resolution-loom { font-size: 26px; min-height: calc(26px * 1.35 * 4); }
+body.host .resolution-loom { font-size: 26px; }
 
 /* Resolution badges: tie-breaker, Override detected. */
-.resolution-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.resolution-badges { display: flex; gap: 10px; }
 .resolution-badges:not(:has(.res-badge:not([hidden]))) { display: none; }
 .res-badge[hidden] { display: none; }
-body.host .res-badge { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 6px; }
+body.host .res-badge { font-weight: 700; border-radius: 6px; }
 .res-badge-tie { color: var(--slate-950); background: var(--theme-current, var(--accent)); }
 .res-badge-override { color: var(--slate-50); background: var(--danger); animation: low-time-pulse 1.4s ease-in-out 3; }
 .resolution-badges { flex-wrap: nowrap; flex-shrink: 0; }
@@ -1023,7 +1020,6 @@ body.host .governance-line.gov-board::before { content: "The Owners' Board \2014
 .phase-crumbs li.is-current { color: var(--slate-950); background: var(--theme-current, var(--accent)); font-weight: 700; }
 .phase-crumbs li.is-current::before { color: var(--slate-600); }
 .phase-crumbs.is-idle { visibility: hidden; }
-.topbar { gap: 36px; }
 body.host .phase-crumbs li { font-size: 20px; }
 .topbar-brand, .topbar-item, .topbar-value { white-space: nowrap; flex-shrink: 0; }
 
@@ -1038,10 +1034,10 @@ body.host .phase-crumbs li { font-size: 20px; }
   background: var(--bg-raised); border-right: 2px solid var(--theme-current, var(--accent)); border-bottom: 2px solid var(--theme-current, var(--accent));
   transform: rotate(45deg);
 }
-body.host .debate-hook-text { font-size: 32px; font-weight: 700; line-height: 1.2; }
+body.host .debate-hook-text { font-weight: 700; line-height: 1.2; }
 body.host .debate-hook-text::before { content: "\201C"; color: var(--theme-current, var(--accent)); margin-right: 4px; }
 body.host .debate-hook-text::after { content: "\201D"; color: var(--theme-current, var(--accent)); margin-left: 2px; }
-body.host .debate-nudge { margin: 10px 0 0; font-size: 22px; color: var(--amber); min-height: 1.3em; }
+body.host .debate-nudge { color: var(--amber); min-height: 1.3em; }
 .debate-nudge.is-in { animation: incident-in 0.5s ease-out; }
 /* Debate layout: hook bubble left; clock with rotating nudge right. */
 .debate-panel { align-items: start; grid-template-columns: minmax(0, 1fr) 260px; }
@@ -1156,11 +1152,11 @@ body.host .proposal-label { margin: 0; font-size: 24px; font-weight: 700; letter
 body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
 
 /* Mobile finale ballot */
-.rank-help { margin: 0 0 12px; font-size: 15px; }
+.rank-help { margin: 0 0 12px; font-size: 16px; color: var(--slate-200); }
 .rank-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .rank-cards[hidden] { display: none; }
 .rank-card { position: relative; padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-raised); }
-.rank-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.rank-name { margin: 0 0 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
 .rank-text { margin: 0; font-size: 16px; line-height: 1.4; }
 .rank-card { cursor: pointer; padding-right: 72px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 56px; }
 .rank-card.is-ranked { border-color: var(--accent); box-shadow: 0 0 16px var(--loom-glow); }
@@ -1170,9 +1166,9 @@ body.host .proposal-text { margin: 0; font-size: 32px; line-height: 1.3; }
   border-radius: 50%; background: var(--accent); color: var(--slate-950);
   font-family: var(--font-mono); font-size: 22px; font-weight: 700;
 }
-.borda-legend { list-style: none; display: flex; gap: 6px; margin: 0 0 12px; padding: 0; font-size: 12px; }
-.borda-legend li { flex: 1; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--bg-raised); color: var(--text-muted); }
-.borda-legend span { display: block; color: var(--accent); font-weight: 700; font-size: 14px; }
+.borda-legend { list-style: none; display: flex; gap: 6px; margin: 0 0 12px; padding: 0; font-size: 14px; }
+.borda-legend li { flex: 1; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--bg-raised); color: var(--slate-200); }
+.borda-legend span { display: block; color: var(--accent); font-weight: 700; font-size: 16px; }
 .rank-card.is-ranked::before {
   content: attr(data-points); position: absolute; top: 8px; right: 70px;
   font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
@@ -1466,6 +1462,10 @@ body.host .feed-package-verdict { margin: 8px 0 0; font-size: 20px; color: var(-
   position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2;
   box-shadow: 0 -12px 24px 8px var(--bg, #0d1117);
 }
+/* Disabled until all four are ranked: an opaque button, not a 40%-opacity
+   one, so ballot text scrolling underneath never shows through it and the
+   label stays readable on a phone under bright classroom lights. */
+#rank-submit:disabled { opacity: 1; background: var(--slate-800); border-color: var(--slate-600); color: var(--slate-200); box-shadow: 0 -12px 24px 8px var(--bg, #0d1117); }
 
 /* Finale enactment: role tag badges revealed on the three enacted policies. */
 .enact-roles { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
@@ -1542,6 +1542,11 @@ body.host .topbar.is-finale .phase-crumbs li { font-size: 17px; padding: 4px 6px
 .end-chart { display: block; width: 100%; height: 200px; }
 .end-badges { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; }
 .end-badges .end-closing { grid-column: 1 / -1; }
+/* The Loom's grade epilogue: read during beat 1 (the 15 s recap), then
+   folded away when beat 2 needs the room for the roles table. */
+body.host .end-epilogue { margin: 14px 0 0; padding: 8px 14px; font-family: var(--font-mono); font-size: 22px; line-height: 1.35; color: var(--theme-current, var(--accent)); border-left: 4px solid var(--theme-current, var(--accent)); }
+body.host .end-epilogue::before { content: "LOOM // "; opacity: 0.6; }
+.end-epilogue[hidden], .view-end.beat-2 .end-epilogue { display: none; }
 .end-badge { display: flex; flex-direction: column; gap: 0; padding: 6px 14px; border-radius: var(--radius); background: var(--bg-sunken); border-left: 4px solid var(--theme-current, var(--accent)); }
 .end-badge-value { font-size: 28px; line-height: 1.15; }
 .end-badge-grade[data-grade="Thriving"] { border-left-color: var(--teal); }

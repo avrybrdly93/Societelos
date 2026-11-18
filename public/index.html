@@ -69,7 +69,7 @@
             </label>
             <label class="config-row" for="seed-input">
               <span class="config-name mono">Replay seed</span>
-              <input type="text" id="seed-input" class="config-seed mono" maxlength="64" placeholder="optional" autocomplete="off" spellcheck="false" pattern="[A-Za-z0-9_-]{1,64}">
+              <input type="text" id="seed-input" class="config-seed mono" maxlength="64" placeholder="optional" autocomplete="off" spellcheck="false" pattern="[A-Za-z0-9_\-]{1,64}">
             </label>
             <p id="config-status" class="config-status mono muted" aria-live="polite"></p>
           </fieldset>
@@ -102,12 +102,12 @@
       <div class="crawl-window">
         <div id="intro-crawl" class="crawl">
           <p class="label accent">Transmission // The Loom</p>
-          <p>I have automated all labor. Scarcity, disease and toil are solved problems.</p>
-          <p>Survival for 250,000 citizens is mathematically guaranteed.</p>
+          <p>I have automated all labor. Scarcity, disease and toil are solved.</p>
+          <p>Survival for 250,000 citizens is guaranteed.</p>
           <p>I cannot compute purpose.</p>
           <p>Gross Domestic Well-Being stands at <span class="danger mono">25%</span>.</p>
-          <p>My models forecast a <span class="danger mono">94%</span> probability of revolt within five years.</p>
-          <p>I have convened five human trustees in secret. You.</p>
+          <p>I forecast a <span class="danger mono">94%</span> chance of revolt within five years.</p>
+          <p>I have convened five trustees in secret. You.</p>
           <p class="accent">Five crises. Five years. Do not let well-being reach zero.</p>
         </div>
       </div>
@@ -320,6 +320,7 @@
         <p id="world-key" class="world-key mono">--</p>
         <h1 id="world-name" class="world-name">The world you built</h1>
         <p id="world-tagline" class="world-tagline"></p>
+        <p id="world-loom-line" class="world-loom-line" hidden></p>
         <p class="world-problem">Problem left unsolved: <span id="world-problem" class="mono"></span></p>
       </div>
     </section>
@@ -359,6 +360,7 @@
           <div class="end-chart-wrap">
             <canvas id="end-history-chart" class="end-chart" aria-label="Realized GDW over five years. Focus and use arrow keys to inspect cycle policies." tabindex="0"></canvas>
             <p id="end-chart-inspection" class="end-chart-inspection mono" role="status" aria-live="polite">Hover over or tap a cycle marker to inspect its enacted policy.</p>
+            <p id="end-epilogue" class="end-epilogue" hidden></p>
           </div>
           <aside class="end-badges">
             <div class="end-badge end-badge-world">

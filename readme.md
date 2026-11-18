@@ -77,6 +77,10 @@ The Loom operates on a delicate balance between cooperative survival and competi
    * **Phones (5):** join the same Wi-Fi and open the printed `/mobile` address, or scan the QR code on the lobby screen. Each phone enters a name and is seated as `NODE-01`…`NODE-05`; only node ids are shown on the projector.
 6. **Play:** when all five are ready, press Start on the projector. For the next class, the server can reset the room without restarting Node (`host:playAgain`; the projector button is part of the End Screen work).
 
+**Post-MVP hooks** (where `data/crowd.json` and The Accord plug in): [docs/post-mvp-hooks.md](docs/post-mvp-hooks.md).
+
+**Teacher quick-reference card** (room setup, shortcuts, debate hooks and grading discussion prompts): [docs/teacher-quick-reference.md](docs/teacher-quick-reference.md).
+
 ### 📶 Classroom network tips
 * **Everyone must be on the same network as the laptop.** School Wi-Fi often blocks device-to-device traffic ("client isolation"), so phones cannot reach the laptop even though both are online. If phones time out on the `/mobile` address, that is the usual cause.
 * **Most reliable: a pocket travel router** (any small 2.4/5 GHz router, no internet needed). Plug it in, connect the laptop and the five phones to it, and start the server. The game needs no internet; only the live Gemini narration and the write-in moderation do, and both fall back offline automatically.
@@ -93,8 +97,8 @@ The Loom operates on a delicate balance between cooperative survival and competi
 | `GEMINI_API_KEY` | *(blank)* | Google AI Studio key for live Loom narration and write-in moderation. Blank = fully offline. Server-side only; never sent to phones. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Flash-class model name. |
 | `LOOM_OFFLINE` | `false` | `true` forces offline fallbacks even with a key (rehearsals without spending quota). |
-| `DEBATE_SECONDS` | `90` | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). Also switchable per game from the lobby (`host:config`). |
-| `SHOW_FORECAST_BEFORE_VOTE` | `false` | Show the Loom's A/B forecast fans during the debate. Also switchable from the lobby. |
+| `DEBATE_SECONDS` | `90` (production: `60`) | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). `.env.example`, `render.yaml` and the `Dockerfile` lock `60` for the classroom demo. Also switchable per game from the lobby (`host:config`). |
+| `SHOW_FORECAST_BEFORE_VOTE` | `false` (production: `false`) | Show the Loom's A/B forecast fans during the debate. Locked to `false` in the production configs. Also switchable from the lobby. |
 | `SESSION_TIMER_ENABLED` / `SESSION_DURATION_SEC` | off | Blitz session mode: play crises until the session timer runs out, then the write-in finale. |
 | `LOOM_LOG` | `on` | Log each Gemini call's latency and token usage (`off` to silence). |
 | `LOOM_PRIVACY` | `true` | Never log student write-ins, even with prompt debugging on. |

@@ -69,6 +69,7 @@
   socket.on('session:resumed', (info) => {
     state.node = info.node;
     setNodeLabel(info.node);
+    requestWakeLock(); // seated again after a refresh: keep the screen awake
     renderRole(info.role);
     onPhase({ phase: info.phase, cycle: info.cycle, endsAt: info.endsAt });
     state.roomCode = info.roomCode;
@@ -177,6 +178,9 @@
       saveSession({ node: res.node, token: res.token, roomCode: res.roomCode });
       setNodeLabel(res.node);
       showView('m-view-wait');
+      // The JOIN tap still counts as a user gesture here, so the lock is
+      // granted now rather than on the student's next tap.
+      requestWakeLock();
     });
   });
 
@@ -287,8 +291,26 @@
   function onPhase(payload) {
     if (!payload || !payload.phase) return;
     const previousPhase = state.phase;
-    if (previousPhase === 'END' && payload.phase === 'LOBBY') {
+    // Back in the lobby after a game (host:playAgain, normally from END):
+    // this seat starts Game #2 with nothing left over from Game #1.
+    if (previousPhase && previousPhase !== 'LOBBY' && payload.phase === 'LOBBY') {
       state.score = 0;
+      state.role = null;
+      state.worldKey = null;
+      delete document.body.dataset.world;
+      document.getElementById('drawer-role-name').textContent = '';
+      document.getElementById('intel-drawer-text').textContent = '';
+      document.getElementById('intel-text').textContent = 'Awaiting decryption\u2026';
+      setVoteLocked(false);
+      setVoteButtonsDisabled(false);
+      ballot.policies = [];
+      ballot.order = [];
+      ballot.locked = false;
+      document.getElementById('rank-cards').textContent = '';
+      document.getElementById('rank-cards').hidden = false;
+      document.getElementById('rank-locked').hidden = true;
+      document.getElementById('rank-locked-order').textContent = '';
+      document.getElementById('m-view-finale-rank').classList.remove('is-locked');
       state.endData = null;
       state.lastVote = null;
       state.voteLockedCycle = null;
@@ -981,7 +1003,7 @@
   const MOCK_ROLE = {
     key: 'artisan', name: 'The Artisan', icon: '\u2692',
     goal: 'Human effort and creative struggle over machine efficiency.',
-    winCondition: 'The winning policy is tagged artisan.',
+    winCondition: 'The council passes a policy that serves you. Finale: +2 if it ranks 1st, +1 if 2nd or 3rd.',
     cardText: 'Poiesis / Creative Friction'
   };
   function debugEmit(event, payload) {

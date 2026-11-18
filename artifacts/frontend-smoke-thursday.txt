@@ -1,0 +1,96 @@
+Societelos final frontend smoke test (TASK-699)
+Run: 2026-11-18T01:01Z on branch claude/tasks-2026-11-18-0047, headless Chromium (Playwright), no GEMINI_API_KEY
+Reproduce: npm run e2e:all
+
+Views covered: host lobby/intro/role-assign/chamber/incident/intel/debate/vote/resolution/world-reveal/finale (write, mod, debate, rank, enact)/end; phone join/wait/role/intel/vote/result/finale write+rank/end; refresh recovery; play again; air-gapped offline run.
+
+== npm run check:frontend  ->  PASS
+syntax ok: 65 files
+ok   public/index.html
+ok   public/mobile.html
+public/css/styles.css: 772 selectors, no dead declarations, none unused
+public/js: strict-mode IIFEs, cross-module references and debug helpers OK
+No external CDN dependencies in public/
+All 4 world themes meet WCAG AA (>= 4.5:1) on projector surfaces
+
+== npm run e2e:ui  ->  PASS
+{"phases":"0:INTRO 0:ROLE_ASSIGN 0:CHAMBER 1:INCIDENT 1:INTEL 1:DEBATE 1:VOTE 1:RESOLUTION 2:INCIDENT 2:INTEL 2:DEBATE 2:VOTE 2:RESOLUTION 2:WORLD_REVEAL 3:INCIDENT 3:INTEL 3:DEBATE 3:VOTE 3:RESOLUTION 4:INCIDENT 4:INTEL 4:DEBATE 4:VOTE 4:RESOLUTION 5:INCIDENT","voteHistory":{"1":"A","2":"B","3":"A","4":"A"},"worldKey":"AB","hostWorld":"The Benevolent Machine","gdw":23.5}
+E2E OK: cycles 1-4 played in the browser with a clean console
+
+== npm run e2e:finale  ->  PASS
+ok   phone FINALE_WRITE shows the write screen
+ok   phone write screen shows the agenda reminder
+ok   phone write screen timer bar counts the 45 s
+ok   phone submit disabled while the textarea is empty
+ok   phone counter tracks typing
+ok   phone submit enabled once text is typed
+ok   phone textarea stops at 140 characters
+ok   phone FINALE_MOD shows the evaluating screen
+ok   phone evaluating title
+ok   phone feedback ok -> POLICY ACCEPTED
+ok   phone feedback revise opens the resubmit modal
+ok   phone resubmit modal shows the private feedback
+ok   phone resubmit modal has its timer bar
+ok   phone feedback reject closes the modal
+ok   phone feedback reject explains the substitution
+ok   phone FINALE_DEBATE waits on the projector
+ok   phone FINALE_RANK shows the ballot
+ok   phone ballot lists the 4 other policies
+ok   phone ballot has no horizontal scroll at 375 px
+ok   phone lock disabled with 3 of 4 ranked
+ok   phone unranking shifts later ranks up
+ok   phone lock enabled with ranks 1-4
+ok   phone ballot shows Borda badges
+ok   phone finale:rank sends exactly one payload { order }
+ok   phone finale:rank order is [rank1Id, rank2Id, rank3Id, rank4Id]
+ok   phone ballot locks after a successful finale:rank
+ok   phone shows BALLOT ENCRYPTED — AWAITING ENACTMENT with the order cast
+ok   phone renders hostile policy text as text (ballot, feedback)
+ok   phone renders hostile lobby names and intel as text
+ok   phone fallback DEBATE shows the debate screen and notice
+ok   phone fallback VOTE shows the authored options
+ok   phone FINALE_ENACT waits on the projector
+ok   phone has no page errors
+ok   host finale INCIDENT shows the Loom cannot compute callout
+ok   host finale INCIDENT shows no A/B options
+ok   host top bar reads CYCLE 5/5 — FINALE and stays on stage
+ok   host FINALE_WRITE shows submission pips
+ok   host FINALE_MOD shows the Loom interpreting
+ok   host resubmit window says one proposal is being revised
+ok   host FINALE_DEBATE shows the proposals view
+
+== npm run e2e:finale-flow  ->  PASS
+phases: 0:INTRO 0:ROLE_ASSIGN 0:CHAMBER 1:INCIDENT 1:INTEL 1:DEBATE 1:VOTE 1:RESOLUTION 2:INCIDENT 2:INTEL 2:DEBATE 2:VOTE 2:RESOLUTION 2:WORLD_REVEAL 3:INCIDENT 3:INTEL 3:DEBATE 3:VOTE 3:RESOLUTION 4:INCIDENT 4:INTEL 4:DEBATE 4:VOTE 4:RESOLUTION 5:INCIDENT 5:FINALE_WRITE 5:FINALE_MOD 5:FINALE_DEBATE 5:FINALE_RANK 5:FINALE_ENACT
+world AB; finale: INCIDENT -> FINALE_WRITE -> FINALE_MOD -> FINALE_DEBATE -> FINALE_RANK -> FINALE_ENACT -> END; GDW 21.8
+E2E FINALE FLOW OK: every screen matched its phase, clean console
+
+== npm run e2e:refresh  ->  PASS
+ok   refresh during ROLE_ASSIGN: m-view-role
+ok   refresh during INTEL: m-view-intel
+ok   refresh during VOTE: m-view-vote (vote locked)
+ok   refresh during FINALE_WRITE: m-view-finale-wait
+ok   refresh during FINALE_RANK: m-view-finale-rank (ballot locked)
+
+== npm run e2e:end  ->  PASS
+ok   writein    finale=writein cycles=5 months=60 authorCol=true
+ok   writein140 finale=writein cycles=5 months=60 authorCol=true
+ok   fallback   finale=fallback cycles=5 months=60 authorCol=false
+ok   shutdownC2 finale=none cycles=2 months=21 authorCol=false
+ok   shutdownC3 finale=none cycles=3 months=32 authorCol=false
+ok   chart 12 months
+ok   chart 24 months
+ok   chart 36 months
+ok   chart 48 months
+ok   chart 60 months
+E2E END OK: 5 End Screen layouts
+
+== npm run e2e:play-again  ->  PASS
+E2E PLAY AGAIN OK: projector and phone reset to a fresh lobby
+
+== npm run e2e:offline  ->  PASS
+local assets requested: / /api/qr /config.js /css/styles.css /img/Council.png /js/charts.js /js/host.js /js/map.js /js/mobile.js /mobile /vendor/socket.io.min.js
+E2E OFFLINE OK: full game to END (cycle 5, GDW 26) with zero external requests
+
+== FALLBACK=1 npm run e2e:finale-flow  ->  PASS
+finale: INCIDENT -> FINALE_WRITE -> FINALE_MOD -> DEBATE -> VOTE -> RESOLUTION -> END
+E2E FINALE FLOW OK (Gemini fallback to A/B): every screen matched its phase, clean console
