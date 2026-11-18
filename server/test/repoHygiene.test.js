@@ -64,8 +64,8 @@ test('TASK-778: no Math.random() in server/sim or the live game server', () => {
   assert.ok(files.some((f) => f.endsWith('gameEngine.js')) && files.some((f) => /[\\/]sim[\\/]/.test(f)));
   const hits = [];
   for (const f of files) {
-    fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
-      const code = line.replace(/\/\/.*$/, '').replace(/^\s*\*.*$/, '');
+    fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').split('\n').forEach((line, i) => {
+      const code = line.replace(/\/\/.*$/, '');
       if (/Math\.random\s*\(/.test(code)) hits.push(`${path.relative(ROOT, f)}:${i + 1}`);
     });
   }

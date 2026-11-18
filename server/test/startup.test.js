@@ -118,7 +118,12 @@ test('static files and pages revalidate on reload: Cache-Control no-cache, ETag 
 function npmStart(env) {
   return new Promise((resolve, reject) => {
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    const child = spawn(npm, ['start', '--silent'], { cwd: path.join(__dirname, '..', '..'), env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    // Windows cannot reliably spawn npm.cmd without a shell, and killing npm's
+    // shell child can leave the server orphaned. Exercise the same server entry
+    // point directly there; POSIX still verifies the npm start script itself.
+    const command = process.platform === 'win32' ? process.execPath : npm;
+    const args = process.platform === 'win32' ? [SERVER] : ['start', '--silent'];
+    const child = spawn(command, args, { cwd: path.join(__dirname, '..', '..'), env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
     let out = '';
     let err = '';
     let probed = false; // the shutdown line arrives later: probe only once
