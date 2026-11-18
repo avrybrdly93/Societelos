@@ -71,3 +71,17 @@ test('TASK-778: no Math.random() in server/sim or the live game server', () => {
   }
   assert.deepEqual(hits, []);
 });
+
+// TASK-781: every environment variable the live server reads is documented
+// in .env.example (test-only and harness variables excepted).
+test('TASK-781: .env.example documents every variable the server reads', () => {
+  const files = walk(path.join(ROOT, 'server')).filter((f) => f.endsWith('.js') && !/[\\/]test[\\/]/.test(f) && !f.endsWith(path.join('server', 'index.js')));
+  files.push(path.join(ROOT, 'scripts', 'write-config.js'));
+  const used = new Set();
+  for (const f of files) for (const m of fs.readFileSync(f, 'utf8').matchAll(/\benv\.([A-Z][A-Z0-9_]+)/g)) used.add(m[1]);
+  const IGNORED = new Set(['NODE_ENV']);
+  const example = fs.readFileSync(path.join(ROOT, '.env.example'), 'utf8');
+  const documented = new Set(Array.from(example.matchAll(/^#?\s*([A-Z][A-Z0-9_]+)=/gm), (m) => m[1]));
+  const missing = [...used].filter((v) => !IGNORED.has(v) && !documented.has(v)).sort();
+  assert.deepEqual(missing, []);
+});
