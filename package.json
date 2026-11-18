@@ -44,7 +44,8 @@
     "e2e:tiebreak": "node scripts/e2e-tiebreak.js",
     "e2e:replay": "node scripts/e2e-replay.js",
     "e2e:privacy": "node scripts/e2e-privacy.js",
-    "e2e:all": "npm run -s check:frontend && npm run -s e2e:ui && npm run -s e2e:finale && npm run -s e2e:finale-flow && FALLBACK=1 npm run -s e2e:finale-flow && npm run -s e2e:refresh && npm run -s e2e:end && npm run -s e2e:play-again && npm run -s e2e:offline && npm run -s e2e:shutdown && npm run -s e2e:reconnect && npm run -s e2e:moderation && npm run -s e2e:rejection && npm run -s e2e:tiebreak && npm run -s e2e:replay && npm run -s e2e:privacy",
+    "e2e:endscreen": "node scripts/e2e-endscreen.js",
+    "e2e:all": "npm run -s check:frontend && npm run -s e2e:ui && npm run -s e2e:finale && npm run -s e2e:finale-flow && FALLBACK=1 npm run -s e2e:finale-flow && npm run -s e2e:refresh && npm run -s e2e:end && npm run -s e2e:play-again && npm run -s e2e:offline && npm run -s e2e:shutdown && npm run -s e2e:reconnect && npm run -s e2e:moderation && npm run -s e2e:rejection && npm run -s e2e:tiebreak && npm run -s e2e:replay && npm run -s e2e:privacy && npm run -s e2e:endscreen",
     "loom:test": "node -e \"require('dotenv').config({ quiet: true }); require('./server/loom').testConnection().then((r) => { console.log(r); process.exit(r.ok ? 0 : 1); })\""
   },
   "dependencies": {
