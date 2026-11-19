@@ -709,6 +709,8 @@
         return tokenize(el, String(text || ''));
       },
       speakLoomLine: (el, text) => narrate(el, text),
+      // Say a line aloud without showing it (the cycle name over the title card).
+      announce: (text) => narrate(document.createElement('span'), text),
       stop
     };
   })();
@@ -1012,7 +1014,19 @@
     const label = payload.sessionTimerEnabled ? `Policy ${payload.cycle}` : `Cycle ${payload.cycle}`;
     const worldName = (state.worldName || '').trim();
     const kicker = payload.isFinale ? `${label}  ·  The final question` : [label, worldName].filter(Boolean).join('  ·  ');
-    incidentCard = Cine.playCrisis({ crisis, cycle: payload.cycle, kicker, worldKey: state.worldKey });
+    const card = Cine.playCrisis({ crisis, cycle: payload.cycle, kicker, worldKey: state.worldKey });
+    // The Loom reads the cycle name as the title appears; the crisis is only
+    // narrated once both the card and the announcement are done.
+    const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+    const numberWord = NUMBER_WORDS[payload.cycle] || String(payload.cycle);
+    const lead = payload.isFinale ? 'The final question.' : `${payload.sessionTimerEnabled ? 'Policy' : 'Cycle'} ${numberWord}.`;
+    const title = String(crisis.title || '').replace(/[?!.]+$/, '');
+    const spoken = `${lead} ${title}${/\?$/.test(crisis.title || '') ? '?' : '.'}`;
+    LoomVoice.prepare(document.createElement('span'), spoken); // start fetching the clip now
+    const announced = new Promise((resolve) => setTimeout(resolve, 1100))
+      .then(() => LoomVoice.announce(spoken))
+      .catch(() => {});
+    incidentCard = Promise.all([card, announced]);
   }
   socket.on('phase', playCrisisCard);
   socket.on('world:reveal', (world) => { if (world && world.name) state.worldName = world.name; });
