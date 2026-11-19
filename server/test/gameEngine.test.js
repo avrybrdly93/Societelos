@@ -223,7 +223,8 @@ test('resetGame() clears cycle counters, Overrides, scores and volatility', asyn
   assert.deepEqual(game.voteHistory, {});
   assert.deepEqual(game.scoreLedger, []);
   assert.deepEqual(game.gdwHistory, []);
-  assert.equal(game.gdw, engine.STARTING_GDW);
+  assert.equal(game.gdw, game.startGdw);
+  assert.ok(game.startGdw >= 30 && game.startGdw <= 35 && Number.isInteger(game.startGdw));
   assert.equal(game.endsAt, null);
   for (const node of NODE_IDS) {
     assert.equal(game.scores[node], 0);
@@ -1106,4 +1107,20 @@ test('END broadcasts the closing citizen for the End Screen (name, district, wor
   assert.equal(end.closing.text, c.lines[end.closing.band][0]);
   assert.equal(typeof end.closing.change, 'number');
   assert.equal(end.endsAt, null, 'END has no timer');
+});
+
+test('each game opens at a whole-number Satisfaction between 30 and 35, seeded by its game id', () => {
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) {
+    const g = new engine.GameState({ roomCode: 'ST' + i });
+    g.gameId = `start-seed-${i}`;
+    assert.ok(Number.isInteger(g.startGdw) && g.startGdw >= 30 && g.startGdw <= 35);
+    seen.add(g.startGdw);
+    const again = new engine.GameState({ roomCode: 'SX' });
+    again.gameId = g.gameId;
+    assert.equal(again.startGdw, g.startGdw, 'same id, same start');
+    const st = engine.createSimState(engine.simConfigForStart(g.data.sim, g.startGdw));
+    assert.equal(require('../sim').computeGDW(st), g.startGdw, 'the sim opens exactly there');
+  }
+  assert.ok(seen.size >= 4, 'the start varies across games');
 });

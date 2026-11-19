@@ -51,7 +51,7 @@ function playFourCycles({ gameId = 'integration01', voteFor, phaseSeconds = {} }
 test('integration: gameEngine + server/sim (real simulate, state carried across cycles)', async () => {
   const out = await playFourCycles({ voteFor: (cycle, i) => [i < 3 ? 'A' : 'B'] });
   assert.equal(out.resolutions.length, 4);
-  let gdw = engine.STARTING_GDW;
+  let gdw = out.game.startGdw;
   for (const r of out.resolutions) {
     assert.equal(r.result.previousGdw, gdw, 'each cycle starts where the last ended');
     assert.equal(r.gdw, Math.round(r.realized.finalGdw * 10) / 10, 'GDW comes from the realized run');

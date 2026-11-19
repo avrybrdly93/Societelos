@@ -224,7 +224,18 @@ function computeRegionWellbeing(state) {
 function computeGDW(stateOrW, gdwConfig) {
   const cfg = gdwConfig || (stateOrW && stateOrW.config && stateOrW.config.gdw) || { scale: 125, floorWellbeing: 0.2, min: 0, max: 100 };
   const w = typeof stateOrW === 'number' ? stateOrW : computeRegionWellbeing(stateOrW);
-  const raw = cfg.scale * (w - cfg.floorWellbeing);
+  let raw;
+  if (typeof cfg.startGdw === 'number') {
+    // Per-game two-slope score: 0 at the floor, startGdw at the opening wellness,
+    // anchorGdw at anchorWellbeing, so the start can vary without moving the
+    // collapse point or the best-play ceiling.
+    const s0 = cfg.startGdw;
+    raw = w <= cfg.startWellbeing
+      ? (s0 * (w - cfg.floorWellbeing)) / (cfg.startWellbeing - cfg.floorWellbeing)
+      : s0 + ((cfg.anchorGdw - s0) * (w - cfg.startWellbeing)) / (cfg.anchorWellbeing - cfg.startWellbeing);
+  } else {
+    raw = cfg.scale * (w - cfg.floorWellbeing);
+  }
   const clamped = Math.min(cfg.max, Math.max(cfg.min, raw));
   return Math.round(clamped * 1e9) / 1e9;
 }

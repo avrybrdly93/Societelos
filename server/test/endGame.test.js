@@ -76,7 +76,7 @@ test('game:end gdwHistory holds the starting 25 plus all 60 realized months, wit
     const out = await playGame({ gameId: 'enddata-history', world: 'AA' });
     const { gdwHistory, cycleMarkers } = out.gameEnd;
     assert.equal(gdwHistory.length, 61);
-    assert.equal(gdwHistory[0], 25);
+    assert.equal(gdwHistory[0], out.game.startGdw);
     assert.equal(gdwHistory[60], out.gameEnd.finalGdw);
     assert.deepEqual(cycleMarkers.map((m) => m.cycle), [1, 2, 3, 4, 5]);
     assert.deepEqual(cycleMarkers.map((m) => m.index), [12, 24, 36, 48, 60]);
@@ -244,7 +244,7 @@ test('host:playAgain clears scores, Overrides, votes and End Screen data and res
     game.overridesUsed['NODE-01'] = true;
     game.votes = { 'NODE-01': { choice: 'A', override: true } };
     assert.ok(out.gameEnd, 'a finished game');
-    assert.notEqual(game.gdw, 25);
+    assert.notEqual(game.gdw, game.startGdw);
 
     const log = console.log;
     console.log = () => {};
@@ -257,7 +257,7 @@ test('host:playAgain clears scores, Overrides, votes and End Screen data and res
     }
     assert.equal(result.ok, true);
     assert.equal(game.phase, 'LOBBY');
-    assert.equal(game.gdw, 25);
+    assert.equal(game.gdw, game.startGdw);
     assert.deepEqual(game.gdwHistory, []);
     assert.deepEqual(game.votes, {});
     for (const node of NODE_IDS) {

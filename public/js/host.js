@@ -629,7 +629,7 @@
     const INTRO_SPOKEN = [
       'The year is twenty one twenty-one. I have automated all labor. Scarcity, disease and toil are solved problems.',
       'Survival for two hundred fifty thousand citizens is mathematically guaranteed. I cannot compute purpose.',
-      'Societal Satisfaction stands at twenty-five percent. My models forecast a ninety-four percent probability of revolt within five years.',
+      'Societal Satisfaction stands at 30 percent. My models forecast a ninety-four percent probability of revolt within five years.',
       'I have chosen five citizens at random to decide the fate of humanity. You.',
       'Five crises. Keep Satisfaction above zero together. Score alone by voting your character\'s beliefs.'
     ];
@@ -645,7 +645,7 @@
       if (!crawl) return false;
       const vcard = crawl.closest('.voice-card'); if (vcard) vcard.classList.remove('is-briefing');
       const bf = document.getElementById('intro-brief'); if (bf) bf.classList.remove('is-open');
-      const paragraphs = Array.from(crawl.querySelectorAll('p')).map((p, i) => ({ spans: tokenize(p), spoken: INTRO_SPOKEN[i] || p.textContent }));
+      const paragraphs = Array.from(crawl.querySelectorAll('p')).map((p, i) => ({ spans: tokenize(p), spoken: (INTRO_SPOKEN[i] || p.textContent).replace('30 percent', `${state.startGdw || 30} percent`) }));
       if (enabled) { // fetch every spoken line up front so there is no wait between them
         paragraphs.forEach((p) => loadClip(p.spoken));
         BRIEF_SPOKEN.forEach((t) => loadClip(t));
@@ -736,6 +736,7 @@
 
   // phase { cycle, phase, endsAt, crisis } -> switch sections and update the top bar.
   function onPhase(payload) {
+    applyStartGdw(payload);
     state.phase = payload.phase;
     state.cycle = payload.cycle || 0;
     state.endsAt = payload.endsAt || null;
@@ -801,7 +802,16 @@
     }
     return briefHud;
   }
+  // Each game opens at a random 30-35% Satisfaction: show it everywhere before Cycle 1 resolves.
+  function applyStartGdw(payload) {
+    const g = payload && payload.startGdw;
+    if (typeof g !== 'number') return;
+    state.startGdw = g;
+    ['intro-start-gdw', 'intro-start-gdw-meta'].forEach((id) => { const n = document.getElementById(id); if (n) n.textContent = `${g}%`; });
+    if (['LOBBY', 'INTRO', 'ROLE_ASSIGN', 'CHAMBER'].includes(payload.phase) && (payload.cycle || 0) <= 1) setGdw(g);
+  }
   socket.on('phase', (payload) => {
+    applyStartGdw(payload);
     if (!payload || !payload.needs) return;
     lastNeeds = payload.needs;
     if (pyramid) pyramid.setNeeds(payload.needs);
@@ -1790,7 +1800,7 @@
   function gdwBand(gdw) {
     return GDW_BANDS.find((b) => gdw <= b.max) || GDW_BANDS[GDW_BANDS.length - 1];
   }
-  const gdwMeter = { shown: 25, target: 25, from: 25, start: 0, frame: null };
+  const gdwMeter = { shown: 30, target: 30, from: 30, start: 0, frame: null };
   const GDW_TWEEN_MS = 900; // under one simulated month, so monthly ticks stay smooth
   function paintGdw(value) {
     const v = Math.max(0, Math.min(100, value));
@@ -1830,7 +1840,7 @@
     };
     gdwMeter.frame = requestAnimationFrame(step);
   }
-  setGdw(25);
+  setGdw(30);
   // GDW follows the realized run month by month during Resolution (see
   // onResolutionMonth); without a trajectory it jumps to the final value.
   socket.on('resolution', (payload) => {

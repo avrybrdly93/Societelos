@@ -98,10 +98,10 @@ const START_YEAR = 2121;
 // The goal of the game, stated the same way everywhere (intro, phones, projector).
 const GAME_GOAL = 'Five crises, 2121 to 2125. Together, keep Societal Satisfaction above zero. Alone, score the most: vote for what your character believes, and earn a bonus when it passes.';
 // What the Loom says at the start (the projector shows and speaks the same lines).
-const INTRO_TRANSMISSION = Object.freeze([
+const introTransmission = (startGdw) => Object.freeze([
   'The year is 2121. I have automated all labor. Scarcity, disease and toil are solved problems.',
   'Survival for 250,000 citizens is mathematically guaranteed. I cannot compute purpose.',
-  'Societal Satisfaction stands at 25%. My models forecast a 94% probability of revolt within five years.',
+  `Societal Satisfaction stands at ${startGdw}%. My models forecast a 94% probability of revolt within five years.`,
   "I have chosen five citizens at random to decide the fate of humanity. You.",
   GAME_GOAL
 ]);
@@ -111,7 +111,26 @@ const BRIEFING_BEATS = Object.freeze([
   'Beat two, the Psychological Weave. The other half is Self-Determination: autonomy, competence and relatedness. Comfort without agency is a gilded cage. A full belly with no voice scores low.',
   'Beat three, the Council Directive. Watch the two meters, Foundation and Agency, each worth fifty percent. Every policy moves both, and every policy has a price. Balance them.'
 ]);
-const STARTING_GDW = 25;
+const STARTING_GDW = 25; // the sim config's own baseline (data/sim.json), before a game picks its start
+// Each game opens with Societal Satisfaction at a random whole percent in this range.
+const START_GDW_RANGE = Object.freeze([30, 35]);
+function pickStartGdw(rand = Math.random) {
+  const [lo, hi] = START_GDW_RANGE;
+  return lo + Math.floor(rand() * (hi - lo + 1));
+}
+/**
+ * The sim config with a two-slope GDW curve: 0% stays at the config's floor,
+ * the untouched start scores exactly startGdw, and the best-play anchor (80%)
+ * stays where the single-slope curve put it.
+ */
+function simConfigForStart(simConfig, startGdw) {
+  const base = createSimState(simConfig);
+  if (!base) return simConfig;
+  const g0 = sim.computeGDW(base);
+  const w0 = simConfig.gdw.floorWellbeing + g0 / simConfig.gdw.scale; // W0 (the base start is never clamped)
+  const g = simConfig.gdw;
+  return { ...simConfig, gdw: { ...g, startGdw, startWellbeing: w0, anchorGdw: 80, anchorWellbeing: g.floorWellbeing + 80 / g.scale } };
+}
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
 // Submitted for a node that is idle or disconnected when FINALE_WRITE ends.
@@ -625,7 +644,7 @@ class GameState extends EventEmitter {
     this.cycle = 0;
 
     // Society.
-    this.gdw = STARTING_GDW;
+    this.gdw = this.startGdw;
     this.cycleMarkers = []; // [{ cycle, index, gdw }]: where each cycle ends in gdwHistory
     this.gdwHistory = []; // monthly realized GDW: [start, month 1, ..., month 12 of cycle 1, month 1 of cycle 2, ...]
     this.volatility = 1.0;
@@ -1027,6 +1046,7 @@ class GameState extends EventEmitter {
       isFinale: this.isFinaleCycle(),
       crisis: this.publicCrisis(),
       needs: this.currentNeedsSnapshot(),
+      startGdw: this.startGdw,
       ...extra
     }, ['name']);
     this.lastPhasePayload = payload; // replayed to reconnecting clients
@@ -1951,12 +1971,22 @@ class GameState extends EventEmitter {
    * LOBBY -> INTRO, triggered by the host. Returns false if the game has
    * already started.
    */
+  /** Opening Satisfaction (30-35), derived from the game id so a seed replays identically. */
+  get startGdw() {
+    if (this._startGdwFor !== this.gameId) {
+      this._startGdwFor = this.gameId;
+      this._startGdw = pickStartGdw(createPrng(hashSeed(this.gameId, 'start')));
+      this.baselineNeeds = null;
+    }
+    return this._startGdw;
+  }
+
   /** Wellness breakdown for the HUD; before cycle 1 it is the untouched baseline. */
   currentNeedsSnapshot() {
     try {
       if (!sim.currentNeeds) return null;
       if (this.simState) return sim.currentNeeds(this.simState);
-      if (!this.baselineNeeds) this.baselineNeeds = sim.currentNeeds(createSimState(this.data.sim));
+      if (!this.baselineNeeds) this.baselineNeeds = sim.currentNeeds(createSimState(simConfigForStart(this.data.sim, this.startGdw)));
       return this.baselineNeeds || null;
     } catch (err) { return null; }
   }
@@ -1966,7 +1996,7 @@ class GameState extends EventEmitter {
     this.startedAt = Date.now();
     this.loomFeed = [];
     this.enterPhase(PHASES.INTRO, { goal: GAME_GOAL });
-    for (const line of INTRO_TRANSMISSION) this.addLoomLine('voice', line);
+    for (const line of introTransmission(this.startGdw)) this.addLoomLine('voice', line);
     for (const line of BRIEFING_BEATS) this.addLoomLine('voice', line);
     console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
     return true;
@@ -2001,9 +2031,9 @@ class GameState extends EventEmitter {
     this.crisis = null;
     this.lastResolution = null;
     if (cycleNumber === 1) {
-      this.simState = createSimState(this.data.sim);
+      this.simState = createSimState(simConfigForStart(this.data.sim, this.startGdw));
       this.simStateStart = this.simState; // for the End Screen's closing citizen
-      this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : STARTING_GDW;
+      this.gdw = this.simState ? roundGdw(sim.computeGDW(this.simState)) : this.startGdw;
       this.gdwHistory = [this.gdw];
       this.cycleMarkers = [];
       this.volatility = 1.0;
@@ -2041,7 +2071,8 @@ class GameState extends EventEmitter {
     this.simCache = {};
     this.lastResolution = null;
     this.simState = null;
-    this.gdw = STARTING_GDW;
+    this.baselineNeeds = null;
+    this.gdw = this.startGdw;
     this.gdwHistory = [];
     this.cycleMarkers = [];
     this.volatility = 1.0;
@@ -2085,6 +2116,8 @@ class GameState extends EventEmitter {
   setSeed(seed) {
     if (this.phase !== PHASES.LOBBY || !isValidSeed(seed)) return false;
     this.gameId = seed;
+    this.gdw = this.startGdw;
+    this.baselineNeeds = null;
     console.log(`[game ${this.roomCode}] replaying seed ${seed}`);
     return true;
   }
@@ -2563,7 +2596,10 @@ module.exports = {
   smokeTest,
   START_YEAR,
   GAME_GOAL,
-  INTRO_TRANSMISSION,
+  introTransmission,
+  START_GDW_RANGE,
+  pickStartGdw,
+  simConfigForStart,
   BRIEFING_BEATS,
   GameState,
   rooms,

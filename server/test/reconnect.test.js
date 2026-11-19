@@ -243,7 +243,7 @@ test('host:playAgain resets the room for the next class: new game id, LOBBY, sea
   assert.notEqual(game.gameId, firstGameId);
   assert.equal(game.phase, 'LOBBY');
   assert.equal(game.cycle, 0);
-  assert.equal(game.gdw, 25);
+  assert.equal(game.gdw, game.startGdw);
   assert.deepEqual(game.players, {});
 
   // The next class joins the same room code.
