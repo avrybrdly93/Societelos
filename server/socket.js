@@ -337,9 +337,14 @@ function initSockets(io, gameEngine) {
     });
   }
 
+  // Demo mode: one fixed room (DEMO_ROOM, 'LOOM' under npm start). Every host
+  // screen and every phone uses it, so nobody can land in a different room.
+  const demoRoom = () => String(process.env.DEMO_ROOM || '').trim().toUpperCase();
+
   function handleHost(socket) {
-    const requested = socket.handshake.auth && socket.handshake.auth.roomCode;
-    const game = gameEngine.getRoom(requested) || gameEngine.createRoom();
+    const demo = demoRoom();
+    const requested = demo || (socket.handshake.auth && socket.handshake.auth.roomCode);
+    const game = gameEngine.getRoom(requested) || gameEngine.createRoom(demo ? { roomCode: demo } : {});
     wireRoom(game);
     socket.data.roomCode = game.roomCode;
     socket.join([roomChannel(game.roomCode), hostChannel(game.roomCode)]);
@@ -448,6 +453,7 @@ function initSockets(io, gameEngine) {
 
   // Room a phone targets: the code it sent, else the classroom's latest room.
   function findPhoneRoom(code) {
+    if (demoRoom()) return gameEngine.getRoom(demoRoom());
     return code ? gameEngine.getRoom(code) : gameEngine.getLatestRoom();
   }
 

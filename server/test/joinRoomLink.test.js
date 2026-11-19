@@ -60,3 +60,22 @@ test('a phone with a room code joins that room, not the newest one', async () =>
   const update = await lobbyA;
   assert.equal(update.players.length, 1, 'the projector that showed the QR sees the phone');
 });
+
+test('demo mode: every host and phone shares the one fixed room', async () => {
+  process.env.DEMO_ROOM = 'loom';
+  try {
+    const hostA = connect({ clientType: 'host' });
+    const infoA = await once(hostA, 'host:room');
+    const hostB = connect({ clientType: 'host' });
+    const infoB = await once(hostB, 'host:room');
+    assert.equal(infoA.roomCode, 'LOOM');
+    assert.equal(infoB.roomCode, 'LOOM');
+    const phone = connect({ clientType: 'phone' });
+    await once(phone, 'client:type');
+    const joined = await phone.emitWithAck('lobby:join', { name: 'Grace' });
+    assert.equal(joined.ok, true);
+    assert.equal(joined.roomCode, 'LOOM');
+  } finally {
+    delete process.env.DEMO_ROOM;
+  }
+});

@@ -2415,7 +2415,8 @@ const rooms = new Map();
 
 /** Create a room with a fresh, unused 4-letter code. */
 function createRoom(options = {}) {
-  const roomCode = generateRoomCode(rooms);
+  // options.roomCode pins the code (the demo's single fixed room).
+  const roomCode = options.roomCode ? String(options.roomCode).toUpperCase() : generateRoomCode(rooms);
   const game = new GameState({ ...options, roomCode });
   rooms.set(roomCode, game);
   return game;

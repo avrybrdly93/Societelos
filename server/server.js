@@ -181,6 +181,8 @@ function installSafetyNets(proc = process, log = console.error) {
 }
 
 if (require.main === module) {
+  // Demo: a single fixed room, so the projector and every phone always meet.
+  if (process.env.DEMO_ROOM === undefined) process.env.DEMO_ROOM = 'LOOM';
   installSafetyNets();
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
