@@ -39,6 +39,35 @@
     // 'fixed-1-ownership': 'fixed-1-ownership.webp',
   };
 
+  // Title cards show the district each crisis centres on (see Districts.md):
+  // Aurelia = wealth/status, Capitol = governance & knowledge, Obsidian Chasm =
+  // automated industry, Sector V Commons = ordinary daily life, Twilight
+  // Promenade = leisure, distraction and escape.
+  const DISTRICT_ART = {
+    aurelia: 'img/new-style/Districts/Aurelia.png',
+    capitol: 'img/new-style/Districts/Capitol.png',
+    chasm: 'img/new-style/Districts/Obsidian-Chasm.png',
+    commons: 'img/new-style/Districts/SectorVCommons.png',
+    promenade: 'img/new-style/Districts/Twilight-Promenade.png'
+  };
+  const CRISIS_DISTRICT = {
+    'fixed-1-ownership': 'aurelia', 'fixed-2-board': 'aurelia', 'fixed-1-factory': 'chasm',
+    'fixed-1-driving': 'commons', 'fixed-2-offswitch': 'capitol', 'fixed-2-planning': 'capitol', 'fixed-2-shares': 'capitol',
+    'aa-purpose-drift': 'promenade', 'aa-robot-art': 'promenade', 'aa-lost-knowledge': 'capitol',
+    'aa-fake-struggle': 'capitol', 'aa-curriculum-revolt': 'capitol',
+    'ab-the-pods': 'commons', 'ab-curated-bonds': 'promenade', 'ab-mood-dial': 'commons',
+    'ab-merge-offer': 'capitol', 'ab-memory-edit': 'capitol',
+    'ba-shadow-elite': 'aurelia', 'ba-media-monopoly': 'aurelia', 'ba-private-security': 'aurelia',
+    'ba-status-wars': 'promenade', 'ba-vote-to-seize': 'capitol',
+    'bb-scroll-extinction': 'promenade', 'bb-the-unplugged': 'promenade', 'bb-biometric-tollways': 'commons',
+    'bb-march-datacenter': 'capitol', 'bb-luxury-lottery': 'aurelia'
+  };
+  const DISTRICT_KEYS = Object.keys(DISTRICT_ART);
+  function districtArtFor(id) {
+    const key = CRISIS_DISTRICT[id] || DISTRICT_KEYS[hash(String(id || 'loom')) % DISTRICT_KEYS.length];
+    return DISTRICT_ART[key].split('/').map(encodeURIComponent).join('/');
+  }
+
   // ---------------------------------------------------------------------------
   // Procedural sound (Web Audio, no assets).
   // ---------------------------------------------------------------------------
@@ -434,7 +463,8 @@
           setArt(src, { ...camera, zoomMs: 9000, wash: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55))' });
         } else {
           const grade = `${look.grade} brightness(${(1 - 0.08 * later3).toFixed(2)})`;
-          setArt(INTRO_ART, { ...camera, zoomMs: 9000, grade, wash: look.wash });
+          // District art is bright and detailed: keep the world's wash but a mild grade.
+          setArt(districtArtFor(crisis.id), { ...camera, zoomMs: 9000, grade: `saturate(0.9) brightness(${(0.88 - 0.06 * later3).toFixed(2)})`, wash: look.wash });
         }
         rig.classList.add('is-zooming');
       });
@@ -459,6 +489,6 @@
     dismiss: hide,
     isActive: () => !root.hidden,
     sound,
-    _test: { cameraFor, worldOf }
+    _test: { cameraFor, worldOf, districtArtFor }
   };
 })();
