@@ -21,6 +21,7 @@ const { Server } = require('socket.io');
 
 const gameEngine = require('./gameEngine');
 const { initSockets } = require('./socket');
+const { createTts } = require('./tts');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -115,6 +116,18 @@ app.get('/api/qr', async (req, res) => {
     console.error('[server] QR generation failed', err);
     res.status(500).json({ error: 'QR_FAILED' });
   }
+});
+
+// The Loom's spoken voice: the host page plays this mp3. 503 (no key, offline,
+// ElevenLabs down) tells the page to use the browser's built-in voice instead.
+const tts = createTts();
+app.get('/api/tts', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  const out = await tts.synth(req.query.text);
+  if (out.status !== 200) return res.sendStatus(out.status);
+  res.set('Content-Type', 'audio/mpeg');
+  res.set('Cache-Control', 'public, max-age=86400');
+  return res.send(out.audio);
 });
 
 // HTTP server wrapper with Socket.IO attached. Sockets are wired in socket.js.

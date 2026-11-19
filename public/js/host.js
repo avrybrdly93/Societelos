@@ -328,9 +328,78 @@
       activeTimers = [];
     }
 
+    // ---- Server voice (ElevenLabs "Rowan" via GET /api/tts) -----------------
+    // Each authored line is fetched as an mp3 and played; words are revealed in
+    // proportion to playback progress. Any failure (503: no key / offline /
+    // ElevenLabs down, or autoplay blocked) resolves 'unavailable' and the
+    // caller falls back to the browser's built-in voice below.
+    let voiceToken = 0; // bumped by stop(): results for older narrations are 'stale'
+    let currentAudio = null;
+    let endCurrentClip = null;
+    const clipCache = new Map(); // text -> Promise<object URL | null>
+
+    function loadClip(text) {
+      if (!clipCache.has(text)) {
+        const base = socketUrl ? `${socketUrl}/api/tts` : 'api/tts';
+        const p = fetch(`${base}?text=${encodeURIComponent(text)}`)
+          .then((res) => (res.ok ? res.blob() : null))
+          .then((blob) => (blob && blob.size ? URL.createObjectURL(blob) : null))
+          .catch(() => null);
+        clipCache.set(text, p);
+        p.then((src) => { if (!src) clipCache.delete(text); });
+      }
+      return clipCache.get(text);
+    }
+
+    // Index of the word being spoken at `fraction` (0..1) of the clip, weighting
+    // each word by its length so short words do not get as much time as long ones.
+    function wordIndexAt(spans, fraction) {
+      const total = spans.reduce((n, s) => n + s.textContent.length + 1, 0);
+      let acc = 0;
+      for (let i = 0; i < spans.length; i++) {
+        acc += spans[i].textContent.length + 1;
+        if (fraction * total < acc) return i;
+      }
+      return spans.length - 1;
+    }
+
+    // Resolves 'played' | 'unavailable' | 'stale'.
+    function playClip(text, token, onFraction) {
+      return loadClip(text).then((src) => {
+        if (token !== voiceToken) return 'stale';
+        if (!src) return 'unavailable';
+        return new Promise((resolve) => {
+          const audio = new Audio(src);
+          let raf = 0;
+          let done = false;
+          const end = (result) => {
+            if (done) return;
+            done = true;
+            cancelAnimationFrame(raf);
+            if (currentAudio === audio) { currentAudio = null; endCurrentClip = null; }
+            resolve(result);
+          };
+          const tick = () => {
+            if (audio.duration > 0) onFraction(audio.currentTime / audio.duration);
+            raf = requestAnimationFrame(tick);
+          };
+          currentAudio = audio;
+          endCurrentClip = end;
+          audio.onended = () => end('played');
+          audio.onerror = () => end('unavailable');
+          audio.play().then(() => { raf = requestAnimationFrame(tick); }).catch(() => end('unavailable'));
+        });
+      });
+    }
+
     function stop() {
       isNarrating = false;
+      voiceToken++;
       clearTimers();
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch (err) { /* ignore */ }
+        if (endCurrentClip) endCurrentClip('stale');
+      }
       if (synth) {
         try {
           synth.cancel();
@@ -453,6 +522,9 @@
           }
         }
 
+        // Fallback: the browser's built-in voice (also the silent word-by-word
+        // reveal when voice is muted or unsupported).
+        function browserSpeech() {
         let usedSpeech = false;
         if (enabled && synth) {
           try {
@@ -542,8 +614,20 @@
         if (!usedSpeech) {
           stepFallback();
         }
+        }
+
+        if (enabled) {
+          const token = voiceToken;
+          playClip(spokenText, token, (f) => revealUpTo(wordIndexAt(wordSpans, f))).then((result) => {
+            if (result === 'played') finishParagraph();
+            else if (result === 'unavailable' && isNarrating) browserSpeech();
+          });
+        } else {
+          browserSpeech();
+        }
       }
 
+      if (enabled) paragraphsData.forEach((d) => loadClip(d.spokenText)); // fetch every line up front
       speakNextParagraph();
     }
 
@@ -584,6 +668,7 @@
         isNarrating = false;
       }
 
+      function browserSpeech() {
       let usedSpeech = false;
       if (enabled && synth) {
         try {
@@ -635,6 +720,17 @@
         tick();
       }
       if (!usedSpeech) stepFallback();
+      }
+
+      if (enabled) {
+        const token = voiceToken;
+        playClip(text, token, (f) => revealUpTo(wordIndexAt(spans, f))).then((result) => {
+          if (result === 'played') finish();
+          else if (result === 'unavailable' && isNarrating) browserSpeech();
+        });
+      } else {
+        browserSpeech();
+      }
     }
 
     return {
