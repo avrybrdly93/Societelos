@@ -4,7 +4,7 @@
     "name": "The Optimist",
     "icon": "✵",
     "motto": "Progress for all.",
-    "portrait": "img/new-style/Characters/Elena.png",
+    "portrait": "img/characters/optimist.webp",
     "ideas": {
       "purpose": 0.8,
       "connection": 0.4,
@@ -23,7 +23,7 @@
     "name": "The Traditionalist",
     "icon": "⌂",
     "motto": "Preserve what matters.",
-    "portrait": "img/new-style/Characters/Thaddeus.png",
+    "portrait": "img/characters/traditionalist.webp",
     "ideas": {
       "purpose": 0.5,
       "connection": 0.9,
@@ -42,7 +42,7 @@
     "name": "The Pragmatist",
     "icon": "≡",
     "motto": "Stability above all.",
-    "portrait": "img/new-style/Characters/Zoe.png",
+    "portrait": "img/characters/pragmatist.webp",
     "ideas": {
       "purpose": 0.2,
       "connection": 0.3,
@@ -61,7 +61,7 @@
     "name": "The Radical",
     "icon": "✧",
     "motto": "A bolder future.",
-    "portrait": "img/new-style/Characters/Leo.png",
+    "portrait": "img/characters/radical.webp",
     "ideas": {
       "purpose": 0.5,
       "connection": 0.1,
@@ -80,7 +80,7 @@
     "name": "The Humanist",
     "icon": "❦",
     "motto": "People, not systems.",
-    "portrait": "img/new-style/Characters/Maya.png",
+    "portrait": "img/characters/humanist.webp",
     "ideas": {
       "purpose": 0.4,
       "connection": 0.8,
