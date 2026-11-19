@@ -263,7 +263,7 @@ body.host #view-chamber .seat-name { font-size: 13px !important; letter-spacing:
 
 /* The title: THE LOOM set in Montserrat, half as large again as the old mark. */
 .cine-logo { width: 1560px !important; }
-.cine-logo.phase-settled { width: 1080px !important; left: 33% !important; top: 22% !important; }
+.cine-logo.phase-settled { width: 640px !important; left: 57% !important; top: 15.5% !important; } /* clear sky: off the tower, character and branches */
 .cine-wordmark { display: flex; flex-direction: column; align-items: center; line-height: 1; user-select: none; }
 .cine-wordmark-the {
   font-size: 54px; font-weight: 300; letter-spacing: 0.9em; margin-right: -0.9em;
@@ -275,8 +275,9 @@ body.host #view-chamber .seat-name { font-size: 13px !important; letter-spacing:
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 22px rgba(150, 200, 255, 0.55)) drop-shadow(0 0 60px rgba(160, 140, 255, 0.3));
 }
-.cine-logo.phase-settled .cine-wordmark-loom { font-size: 158px; }
-.cine-logo.phase-settled .cine-wordmark-the { font-size: 38px; }
+.cine-logo.phase-settled .cine-wordmark-loom { font-size: 112px; }
+.cine-logo.phase-settled .cine-wordmark-the { font-size: 28px; }
+.cine-logo.phase-settled .cine-tagline { color: #e8f1ff !important; text-shadow: 0 0 10px rgba(10, 14, 40, 0.8) !important; font-size: 15px !important; margin-top: 14px !important; letter-spacing: 0.3em; }
 .cine-wordmark > * { opacity: 0; transform: translateY(14px); filter: blur(10px); transition: opacity 1.4s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1), filter 1.6s ease, font-size 2.2s cubic-bezier(0.65, 0, 0.25, 1); }
 .cine-wordmark .cine-wordmark-loom { transition-delay: 0.25s; }
 .cine-logo.phase-appear .cine-wordmark > *, .cine-logo.phase-settled .cine-wordmark > * { opacity: 1; transform: none; filter: none; }

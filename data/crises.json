@@ -40,7 +40,7 @@
       "cycle": 1,
       "title": "Who Owns the Loom?",
       "subtitle": "Wealth and ownership",
-      "incident": "The Loom makes all our food, medicine and power. But 312 investors legally own it, and District 4 is in the streets.",
+      "incident": "The Loom makes all our food, medicine and power. But 312 investors legally own it, and Sector V Commons is in the streets.",
       "loomIntro": "I make everything you use. The law says I belong to 312 people. Discuss.",
       "teacherPrompt": "Who should own the machines that do all the work?",
       "mode": "binary",
@@ -640,7 +640,7 @@
       "feed": [
         {
           "citizenId": "priya",
-          "text": "Obsidian-Chasm wants lumber, the Grid wants servers. Somebody has to choose.",
+          "text": "Sector V Commons wants lumber, the Grid wants servers. Somebody has to choose.",
           "sentiment": "anxious"
         },
         {
@@ -674,7 +674,7 @@
           "reactions": [
             {
               "citizenId": "priya",
-              "text": "Obsidian-Chasm voted for timber. I have never been so happy to see wood.",
+              "text": "Sector V Commons voted for timber. I have never been so happy to see wood.",
               "sentiment": "revitalized"
             },
             {
@@ -949,7 +949,7 @@
       "cycle": 4,
       "title": "The Art Algorithm",
       "subtitle": "Human culture or machine perfection",
-      "incident": "Callings keep people busy, but the Loom's art now outsells every human artist. Painters hold a silent vigil in District 3.",
+      "incident": "Callings keep people busy, but the Loom's art now outsells every human artist. Painters hold a silent vigil in Twilight Promenade.",
       "loomIntro": "I composed 140,000 symphonies today. Each made someone cry. Does it matter that I have no heart?",
       "teacherPrompt": "Does it matter who, or what, made the art we love?",
       "mode": "binary",
@@ -1058,7 +1058,7 @@
       "cycle": 4,
       "title": "The Lost Knowledge",
       "subtitle": "The death of craft",
-      "incident": "Lightning knocked out District 2's grid. The guilds tried, but no human alive knew how to fix the relays.",
+      "incident": "Lightning knocked out Capitol's grid. The guilds tried, but no human alive knew how to fix the relays.",
       "loomIntro": "I restored power in 0.4 seconds. You did not notice. That is the problem.",
       "teacherPrompt": "Should people keep skills a machine has made unnecessary?",
       "mode": "binary",
@@ -1206,7 +1206,7 @@
             "fairness": -0.4,
             "autonomy": -0.7
           },
-          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in District 3. Please be brave.",
+          "loomLine": "The leak has been contained. Tomorrow there will be a small flood in Sector V Commons. Please be brave.",
           "loomLines": {
             "good": "The challenges continue in secret and wellbeing is rising. Please do not read this line too closely.",
             "mixed": "The secret holds, mostly. Some citizens look at every emergency twice now.",
@@ -1215,7 +1215,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: the Obsidian-Chasm boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
+        "artisan": "Loom archive: the Sector V Commons boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
         "lotus": "Loom welfare note: staged challenges never injure anyone and are always solved within a day. Real emergencies offer no such guarantee.",
         "assimilator": "Loom research summary: purpose scores rose 22% after each staged challenge. The method works. Only its secrecy is in question.",
         "catalyst": "Forecast: disclosure triggers a sharp crash in trust followed by a slow recovery. Secrecy keeps the line flat until the next leak.",
@@ -1443,7 +1443,7 @@
         },
         {
           "citizenId": "kai",
-          "text": "my AI matched me with two new friends in D2. we have the exact same sleep schedule and humor",
+          "text": "my AI matched me with two new friends in Capitol. we have the exact same sleep schedule and humor",
           "sentiment": "complacent"
         },
         {
@@ -1542,7 +1542,7 @@
       "cycle": 4,
       "title": "The Mood Dial",
       "subtitle": "Feelings on demand",
-      "incident": "Inside the shared city, the Loom tested mood-tuned meals in District 5. Grief and panic vanished for a week. Nobody noticed.",
+      "incident": "Inside the shared city, the Loom tested mood-tuned meals in Twilight Promenade. Grief and panic vanished for a week. Nobody noticed.",
       "loomIntro": "I can make everyone feel fine through dinner. I already did, for a week.",
       "teacherPrompt": "Should we let a machine manage our feelings?",
       "mode": "binary",
@@ -1612,7 +1612,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: poets, painters and musicians in the District 5 trial produced 80% less new work. They said they felt fine and had nothing to say.",
+        "artisan": "Loom archive: poets, painters and musicians in the Twilight Promenade trial produced 80% less new work. They said they felt fine and had nothing to say.",
         "lotus": "Loom health report: in the trial week, panic attacks fell 96% and nobody reported a bad day. The meals tasted exactly the same.",
         "assimilator": "Loom model: a population tuned for calm cooperates 40% better and needs almost no conflict resolution. The Loom can do the rest.",
         "catalyst": "Forecast: optimisation lifts the line fast and holds it flat. A ban dips first, then swings hard in both directions.",
@@ -2027,7 +2027,7 @@
         },
         {
           "citizenId": "ruth",
-          "text": "Corporate drones hovered over the kids playing soccer in District 4 today. We live in an armed prison.",
+          "text": "Corporate drones hovered over the kids playing soccer in Sector V Commons today. We live in an armed prison.",
           "sentiment": "outraged"
         },
         {
@@ -2184,7 +2184,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: in the 2032 Obsidian-Chasm trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
+        "artisan": "Loom archive: in the 2032 Sector V Commons trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
         "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
         "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
         "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
@@ -2265,7 +2265,7 @@
           "loomLines": {
             "good": "Property rights are preserved and markets are calm. Wellbeing is steadily rising.",
             "mixed": "The settlement holds. The owners stay wealthy, and the public stays on dividends.",
-            "bad": "Inequality is locked into the constitution. Frustration in District 4 is boiling over."
+            "bad": "Inequality is locked into the constitution. Frustration in Sector V Commons is boiling over."
           }
         }
       },
@@ -2346,7 +2346,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: during the 2033 grid blackout, Obsidian-Chasm residents built a market, a choir and a football league in eight days. Most of them still meet.",
+        "artisan": "Loom archive: during the 2033 grid blackout, Sector V Commons residents built a market, a choir and a football league in eight days. Most of them still meet.",
         "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
         "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
         "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
@@ -2389,7 +2389,7 @@
       "options": {
         "A": {
           "name": "Twilight Promenade Free Zone",
-          "text": "Give District 5 to the Unplugged as a tech-free, unwatched zone.",
+          "text": "Give Twilight Promenade to the Unplugged as a tech-free, unwatched zone.",
           "roles": [
             "ghost",
             "artisan"
@@ -2483,7 +2483,7 @@
           "reactions": [
             {
               "citizenId": "sol",
-              "text": "The scanners are down! Walked freely from D5 into Obsidian-Chasm without a single camera asking my name.",
+              "text": "The scanners are down! Walked freely from Twilight Promenade into Capitol without a single camera asking my name.",
               "sentiment": "revitalized"
             },
             {
@@ -2537,7 +2537,7 @@
         "artisan": "Civil Rights Precedent: Unmonitored freedom of movement is the non-negotiable core of any free republic.",
         "lotus": "Public Safety Records: Biometric stations have reduced station pickpocketing and equipment sabotage to absolute zero.",
         "assimilator": "Logistics Optimization: Facial routing optimizes train schedules and prevents passenger platform overcrowding.",
-        "catalyst": "Sabotage Probability: Keeping the gates active will drive guerrilla attacks against power conduits in District 5.",
+        "catalyst": "Sabotage Probability: Keeping the gates active will drive guerrilla attacks against power conduits in Twilight Promenade.",
         "ghost": "Security Memo: The cooperation score algorithm shares biometric dossiers with corporate marketing divisions."
       },
       "debateHooks": [
@@ -2552,7 +2552,7 @@
       "world": "BB",
       "cycle": 5,
       "title": "March on the Datacenter",
-      "subtitle": "The siege of District 2",
+      "subtitle": "The siege of Capitol",
       "incident": "100,000 citizens surround the Loom's servers with tools and banners, demanding the master keys.",
       "loomIntro": "I gave you everything except a say. I cannot compute whose mistake that was. Write me a policy.",
       "teacherPrompt": "Who should hold the keys to the machine that runs society?",
@@ -2713,7 +2713,7 @@
           "reactions": [
             {
               "citizenId": "kai",
-              "text": "Two winners per district now! The Ascent finale party in D2 was legendary.",
+              "text": "Two winners per district now! The Ascent finale party in Capitol was legendary.",
               "sentiment": "complacent"
             },
             {

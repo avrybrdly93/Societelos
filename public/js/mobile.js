@@ -624,7 +624,7 @@
     if (!world || !world.worldKey) return;
     state.worldKey = world.worldKey;
     document.body.dataset.world = world.worldKey;
-    document.getElementById('m-world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('m-world-key').textContent = '';
     document.getElementById('m-world-name').textContent = world.name || world.worldKey;
     document.getElementById('m-world-tagline').textContent = world.tagline || '';
     const list = document.getElementById('m-world-impact');

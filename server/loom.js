@@ -212,13 +212,13 @@ const DISTRICT_NAMES = { D1: 'Aurelia', D2: 'Capitol', D3: 'Obsidian-Chasm', D4:
 function withSimFacts(base, summary = {}) {
   const top = Array.isArray(summary.topMoves) && summary.topMoves[0];
   const shock = Array.isArray(summary.shocks) && summary.shocks[0];
-  const district = top && top.district ? `${top.district} ${DISTRICT_NAMES[top.district] || ''}`.trim() : '';
+  const district = top && top.district ? (DISTRICT_NAMES[top.district] || '') : '';
   const facts = [];
   if (district) facts.push(`${district} moved most.`);
   if (shock && shock.district) {
     // Named shock flavour from the simulation (e.g. "A Coastal Storm hit D1 Aurelia in month 3.").
-    const where = `${shock.district} ${DISTRICT_NAMES[shock.district] || ''}`.trim();
-    facts.push(shock.name ? `A ${shock.name} hit ${where} in month ${shock.month}.` : `A shock hit ${shock.district} in month ${shock.month}.`);
+    const where = DISTRICT_NAMES[shock.district] || 'the region';
+    facts.push(shock.name ? `A ${shock.name} hit ${where} in month ${shock.month}.` : `A shock hit ${where} in month ${shock.month}.`);
   }
   while (facts.length) {
     const line = `${base} ${facts.join(' ')}`;
@@ -342,7 +342,8 @@ async function narrate(rawContext = {}, opts = {}) {
       ...enactedLines,
       `Simulation summary: ${JSON.stringify(context.simSummary)}`,
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
-      `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${c.district} ${c.cohort})`).join(', ')}`,
+      `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${DISTRICT_NAMES[c.district] || c.district} ${c.cohort})`).join(', ')}`,
+      'Always name districts by name (D1 Aurelia, D2 Capitol, D3 Obsidian-Chasm, D4 Sector V Commons, D5 Twilight Promenade), never by code like D3 or "District 3", and never mention world codes like AA or BB.',
       'Pick 6-10 different citizens, favouring those whose district and cohort moved most in the summary.',
       'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'

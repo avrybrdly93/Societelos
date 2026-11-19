@@ -135,7 +135,7 @@ test('narrate prompt names the most affected citizens and asks for 6-10 in chara
     { config: { ...OFFLINE, enabled: true, apiKey: 'test' }, fetchImpl }
   );
   assert.equal(out.loomLine, 'ok');
-  assert.match(prompt, /Most affected first: ruth \(D4 elders\)/);
+  assert.match(prompt, /Most affected first: ruth \(Sector V Commons elders\)/);
   assert.match(prompt, /Pick 6-10 different citizens/);
 });
 
@@ -146,10 +146,10 @@ test('offline narration names the most affected district and the realized shock'
     shocks: [{ month: 5, district: 'D2', trait: 'health', amount: 0.05 }]
   };
   const out = await loom.narrate({ winningOption: { name: 'P', loomLine: 'Done.' }, simSummary: summary, citizens }, { config: OFFLINE });
-  assert.equal(out.loomLine, 'Done. D4 Sector V Commons moved most. A shock hit D2 in month 5.');
+  assert.equal(out.loomLine, 'Done. Sector V Commons moved most. A shock hit Capitol in month 5.');
   // Facts are dropped (shock first) rather than overflowing 200 characters.
   const long = 'x'.repeat(160);
-  assert.equal(loom.withSimFacts(long, summary), `${long} D4 Sector V Commons moved most.`);
+  assert.equal(loom.withSimFacts(long, summary), `${long} Sector V Commons moved most.`);
   assert.equal(loom.withSimFacts('y'.repeat(199), summary), 'y'.repeat(199));
 });
 
@@ -395,9 +395,9 @@ test('loom.moderateOne falls back to a deterministic local heuristic when Gemini
   }
 });
 
-test('offline Loom line names the shock: "A Coastal Storm hit D1 Aurelia in month 3."', () => {
+test('offline Loom line names the shock: "A Coastal Storm hit Aurelia in month 3."', () => {
   const line = loom.withSimFacts('The council has chosen.', { topMoves: [], shocks: [{ month: 3, district: 'D1', trait: 'health', amount: 0.04, name: 'Coastal Storm' }] });
-  assert.equal(line, 'The council has chosen. A Coastal Storm hit D1 Aurelia in month 3.');
+  assert.equal(line, 'The council has chosen. A Coastal Storm hit Aurelia in month 3.');
 });
 
 test('loom.narrate for the Cycle 5 finale gets the 50/25/25 package and asks for one commentary on it', async () => {

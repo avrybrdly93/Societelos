@@ -325,6 +325,8 @@
     const timers = new Set();
     const synth = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
     let cachedVoices = [];
+    let lastCancelAt = 0; // when synth.cancel() last ran (Chrome drops a speak() right after it)
+    let lastNudge = 0;
 
     function updateVoices() {
       if (!synth) return;
@@ -351,7 +353,7 @@
       runId++;
       timers.forEach(clearTimeout);
       timers.clear();
-      if (synth) { try { synth.cancel(); } catch (err) { /* ignore */ } }
+      if (synth) { try { synth.cancel(); lastCancelAt = performance.now(); } catch (err) { /* ignore */ } }
     }
 
     // Reading pace when there is no voice (or the voice reports no word
@@ -447,11 +449,6 @@
 
         if (enabled && synth) {
           try {
-            const utterance = new SpeechSynthesisUtterance(spokenText);
-            const voice = getBestVoice();
-            if (voice) utterance.voice = voice;
-            utterance.rate = 0.92;
-            utterance.pitch = 0.86;
             // Where each shown word starts in the spoken text.
             const lower = spokenText.toLowerCase();
             let from = 0;
@@ -462,27 +459,72 @@
               return Math.round((i / spans.length) * spokenText.length);
             });
             let boundary = false;
-            utterance.onboundary = (e) => {
-              if (e.name !== 'word' || done || id !== runId) return;
-              boundary = true;
-              if (timed) return;
-              let idx = 0;
-              for (let i = 0; i < starts.length; i++) if (e.charIndex >= starts[i]) idx = i;
-              reveal(idx);
-            };
-            utterance.onend = () => {
-              speaking = false;
-              if (!timed || timedDone) later(250, finish);
-            };
-            utterance.onerror = () => {
-              speaking = false;
-              startTimed();
-              if (timedDone) finish();
-            };
-            speaking = true;
-            synth.speak(utterance);
-            // No word boundaries from this voice: pace the words ourselves.
-            later(900, () => { if (!boundary) startTimed(); });
+            let started = false;
+            let attempts = 0;
+            let current = null;
+            let lastProgress = performance.now();
+            // A fresh utterance per attempt, so late events from a cancelled
+            // one (e.g. "interrupted") can never end or restart this reading.
+            function speak() {
+              if (done || id !== runId || timed) return;
+              attempts++;
+              const utterance = new SpeechSynthesisUtterance(spokenText);
+              current = utterance;
+              const voice = getBestVoice();
+              if (voice) utterance.voice = voice;
+              utterance.rate = 0.92;
+              utterance.pitch = 0.86;
+              utterance.onstart = () => { if (current === utterance) { started = true; lastProgress = performance.now(); } };
+              utterance.onboundary = (e) => {
+                if (current !== utterance || e.name !== 'word' || done || id !== runId) return;
+                boundary = true;
+                lastProgress = performance.now();
+                if (timed) return;
+                let idx = 0;
+                for (let i = 0; i < starts.length; i++) if (e.charIndex >= starts[i]) idx = i;
+                reveal(idx);
+              };
+              utterance.onend = () => {
+                if (current !== utterance) return;
+                speaking = false;
+                if (!timed || timedDone) later(250, finish);
+              };
+              utterance.onerror = () => {
+                if (current !== utterance) return;
+                speaking = false;
+                startTimed();
+                if (timedDone) finish();
+              };
+              speaking = true;
+              lastProgress = performance.now();
+              synth.speak(utterance);
+            }
+            // Chrome drops a speak() issued right after cancel(): wait a beat.
+            later(Math.max(0, 160 - (performance.now() - lastCancelAt)), speak);
+            // Watchdog: if the voice never starts (retry once) or goes quiet
+            // mid-reading (some engines stall), carry on with timed words so
+            // the Loom never freezes half way through a sentence.
+            (function watch() {
+              if (done || id !== runId || timed) return;
+              const idle = performance.now() - lastProgress;
+              if (!started && attempts < 2 && idle > 2200) {
+                current = null;
+                try { synth.cancel(); lastCancelAt = performance.now(); } catch (err) { /* ignore */ }
+                later(200, speak);
+              } else if (idle > (started ? 3500 : 4500)) {
+                current = null;
+                speaking = false;
+                try { synth.cancel(); lastCancelAt = performance.now(); } catch (err) { /* ignore */ }
+                startTimed();
+                return;
+              }
+              // Chrome silently stops long utterances after ~15 s: nudge it.
+              if (started && speaking && performance.now() - lastNudge > 9000) {
+                lastNudge = performance.now();
+                try { synth.pause(); synth.resume(); } catch (err) { /* ignore */ }
+              }
+              later(500, watch);
+            })();
             // Some engines never fire onend: never hold the game up for them.
             later(spans.length * 750 + 5000, () => { speaking = false; finish(); });
             return;
@@ -503,7 +545,6 @@
 
     // The intro crawl, paragraph by paragraph. Resolves true when finished.
     const INTRO_SPOKEN = [
-      'The voice of the Loom.',
       'The year is twenty one twenty-one. I have automated all labor. Scarcity, disease and toil are solved problems.',
       'Survival for two hundred fifty thousand citizens is mathematically guaranteed. I cannot compute purpose.',
       'Societal Satisfaction stands at twenty-five percent. My models forecast a ninety-four percent probability of revolt within five years.',
@@ -707,11 +748,11 @@
     if (item.district) {
       const tag = document.createElement('span');
       tag.className = 'feed-district mono';
-      tag.textContent = item.district;
+      tag.textContent = item.districtName || DISTRICT_NAMES[item.district] || '';
       meta.appendChild(tag);
     }
-    // "D3 Obsidian-Chasm • Former workers" under the name.
-    const detail = [item.district && item.districtName ? `${item.district} ${item.districtName}` : item.district, item.cohort]
+    // "Obsidian-Chasm • Former workers" under the name.
+    const detail = [item.districtName || DISTRICT_NAMES[item.district] || '', item.cohort]
       .filter(Boolean).join(' \u2022 ');
     const text = document.createElement('p');
     text.className = 'feed-text';
@@ -776,7 +817,7 @@
       const row = document.createElement('li');
       row.dataset.district = id;
       row.className = delta > 0.05 ? 'is-up' : delta < -0.05 ? 'is-down' : 'is-flat';
-      row.textContent = `${id} ${DISTRICT_NAMES[id]} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
+      row.textContent = `${DISTRICT_NAMES[id]} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`;
       rows.appendChild(row);
     });
     const verdict = document.createElement('p');
@@ -998,7 +1039,7 @@
   // World reveal (10 s after Cycle 2): fullscreen takeover naming the world.
   function renderWorldReveal(world) {
     if (!world || !world.worldKey) return;
-    document.getElementById('world-key').textContent = `WORLD ${world.worldKey}`;
+    document.getElementById('world-key').textContent = '';
     document.getElementById('world-name').textContent = world.name || world.worldKey;
     document.getElementById('world-tagline').textContent = world.tagline || '';
     document.getElementById('world-problem').textContent = (world.problemLeft || 'unknown').toUpperCase();
@@ -1361,7 +1402,7 @@
 
   function renderEndRecap(data) {
     document.getElementById('end-world-name').textContent = data.worldName || (data.shutdown ? 'Never formed' : '\u2014');
-    document.getElementById('end-world-key').textContent = data.worldKey ? `WORLD ${data.worldKey}` : '';
+    document.getElementById('end-world-key').textContent = '';
     const grade = document.getElementById('end-grade');
     grade.textContent = END_GRADE_LABELS[data.grade] || data.grade || '';
     grade.parentElement.dataset.grade = data.grade || '';
