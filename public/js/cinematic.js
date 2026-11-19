@@ -31,7 +31,7 @@
   const ruleEl = crisisBox.querySelector('.cine-rule');
 
   const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const INTRO_ART = 'img/Golden%20Horizon%20Over%20the%20Utopian%20City.png';
+  const INTRO_ART = 'img/new-style/Loom-Loading-Screen.png';
   const CRISIS_ART_DIR = 'img/crises/';
   // Crisis id -> image in public/img/crises/ (1920x1080 or larger, no text).
   // Prompts for every crisis: docs/crisis-art-prompts.md.
@@ -169,8 +169,8 @@
     let particles = [];
     let raf = null;
     let rgb = '176, 212, 249';
-    // Fine motes drifting on the air, plus glassy bubbles rising slowly
-    // through the scene (the start screen's moving bubbles).
+    // Fine motes drifting on the air, plus tiny shimmering sparks rising
+    // slowly through the scene (soft glints, not glassy bubbles).
     const MOTES = 90;
     const BUBBLES = 55;
     function seed() {
@@ -186,33 +186,32 @@
         a: Math.random() * 0.55 + 0.15,
         p: Math.random() * Math.PI * 2
       })).concat(Array.from({ length: BUBBLES }, () => {
-        const r = Math.random() < 0.7 ? 4 + Math.random() * 12 : 14 + Math.random() * 24;
+        const r = 0.6 + Math.random() * 1.2;
         return {
           kind: 'bubble',
           x: Math.random() * w,
           y: Math.random() * h,
           r,
           vx: (Math.random() - 0.5) * 0.12,
-          vy: -(0.18 + Math.random() * 0.5) * (16 / (r + 8)) - 0.12, // small ones rise faster
-          a: 0.18 + Math.random() * 0.32,
+          vy: -(0.1 + Math.random() * 0.3) - 0.05, // slow upward drift
+          a: 0.3 + Math.random() * 0.5,
           p: Math.random() * Math.PI * 2,
           wobble: 0.3 + Math.random() * 0.7
         };
       }));
     }
     function drawBubble(m) {
-      const alpha = m.a * (0.75 + 0.25 * Math.sin(m.p));
-      const g = c2d.createRadialGradient(m.x - m.r * 0.35, m.y - m.r * 0.35, m.r * 0.1, m.x, m.y, m.r);
-      g.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.55})`);
-      g.addColorStop(0.55, `rgba(${rgb}, ${alpha * 0.12})`);
-      g.addColorStop(1, `rgba(${rgb}, ${alpha * 0.32})`);
+      // Shimmer: a soft glow that twinkles; no rim, no glassy highlight.
+      const alpha = m.a * (0.35 + 0.65 * Math.abs(Math.sin(m.p * 1.7)));
+      const gr = m.r * 2.6;
+      const g = c2d.createRadialGradient(m.x, m.y, 0, m.x, m.y, gr);
+      g.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+      g.addColorStop(0.35, `rgba(${rgb}, ${alpha * 0.45})`);
+      g.addColorStop(1, `rgba(${rgb}, 0)`);
       c2d.beginPath();
-      c2d.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      c2d.arc(m.x, m.y, gr, 0, Math.PI * 2);
       c2d.fillStyle = g;
       c2d.fill();
-      c2d.lineWidth = 1;
-      c2d.strokeStyle = `rgba(${rgb}, ${alpha})`;
-      c2d.stroke();
     }
     function frame() {
       const w = canvas.width;

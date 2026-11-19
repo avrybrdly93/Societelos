@@ -185,7 +185,7 @@ function applyNoise(state, params, rng) {
 }
 /**
  * Named shock flavours per district, so narration can say what happened
- * ("a Coastal Storm hit Old Harbour") instead of "a shock". Names only: they
+ * ("a Coastal Storm hit Aurelia") instead of "a shock". Names only: they
  * never change the maths or draw from the RNG.
  */
 const SHOCK_NAMES = Object.freeze({

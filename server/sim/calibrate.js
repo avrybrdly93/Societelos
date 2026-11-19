@@ -37,7 +37,7 @@ function fixedPath(crises, v1 = 'A', root = 'ownership') {
   const list = crises.crises;
   const fixed = list.filter((c) => c.world === 'fixed').sort((a, b) => a.cycle - b.cycle);
   const c1 = list.find((c) => c.root === root && c.cycle === 1) || fixed[0];
-  const c2 = list.find((c) => c.root === root && c.cycle === 2 && c.path === v1) || fixed.find((c) => c.cycle === 2);
+  const c2 = list.find((c) => c.id === 'fixed-2-offswitch') || list.find((c) => c.root === root && c.cycle === 2 && c.path === v1) || fixed.find((c) => c.cycle === 2);
   return [c1, c2];
 }
 

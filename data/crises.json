@@ -57,7 +57,7 @@
         },
         {
           "citizenId": "tomas",
-          "text": "People are crowding the streets in Eastworks. We need food on the table, not empty promises.",
+          "text": "People are crowding the streets in Sector V Commons. We need food on the table, not empty promises.",
           "sentiment": "angry"
         },
         {
@@ -136,7 +136,7 @@
         }
       },
       "intel": {
-        "artisan": "Secret History: Worker-owned workshops in Eastworks reported twice the happiness of corporate plants. People want real community, not just handouts.",
+        "artisan": "Secret History: Worker-owned workshops in Sector V Commons reported twice the happiness of corporate plants. People want real community, not just handouts.",
         "lotus": "Safety Report: Seizing the Loom gives a 62% chance of blackouts and sabotage. The Charter allowance reaches every bank account within 48 hours.",
         "assimilator": "Efficiency Data: 312 private contracts cause thousands of legal disputes every day. A single public owner lets me run the city at maximum efficiency.",
         "catalyst": "Chaos Forecast: Under the Commons, well-being will swing wildly for months during the sabotage. Under the Charter, almost nothing moves.",
@@ -502,6 +502,110 @@
       }
     },
     {
+      "id": "fixed-1-driving",
+      "root": "driving",
+      "path": "",
+      "world": "fixed",
+      "cycle": 1,
+      "mode": "binary",
+      "title": "The Driverless City",
+      "subtitle": "Who runs fully autonomous driving",
+      "incident": "Fully autonomous cars can now drive every road with no human at the wheel. 40,000 drivers are about to lose their jobs, and someone must own the fleet.",
+      "loomIntro": "I can drive every car in the city without one crash. The only question left is who owns the cars.",
+      "teacherPrompt": "If cars can drive themselves, who should own the fleet, and what happens to the people who drove?",
+      "debateHooks": [
+        "Would you ride in a car with nobody at the wheel?",
+        "Who should own the cars that drive themselves?",
+        "What happens to 40,000 drivers?"
+      ],
+      "feed": [
+        {
+          "citizenId": "tomas",
+          "text": "Twenty years behind the wheel. Now the truck drives itself and I ride along as luggage.",
+          "sentiment": "angry"
+        },
+        {
+          "citizenId": "kai",
+          "text": "no more traffic and no more drivers. i just tell the car where to go.",
+          "sentiment": "complacent"
+        },
+        {
+          "citizenId": "ruth",
+          "text": "Whoever owns the fleet owns every road we use. I want that owner to be us.",
+          "sentiment": "anxious"
+        }
+      ],
+      "options": {
+        "A": {
+          "name": "The Public Driverless Fleet",
+          "text": "Fully autonomous, city-owned cars. Rides are free and human driving is banned.",
+          "roles": [
+            "artisan",
+            "assimilator"
+          ],
+          "effects": {
+            "purpose": -0.1,
+            "connection": 0.2,
+            "health": 0.7,
+            "trust": 0.4,
+            "fairness": 0.6,
+            "autonomy": -0.3
+          },
+          "targetGdwDelta": -3,
+          "loomLines": {
+            "good": "The public fleet runs without a crash. Wellbeing is rising. Nobody misses the traffic.",
+            "mixed": "The cars are safe and free. Former drivers are still looking for something to do.",
+            "bad": "The fleet is free and the drivers are idle and angry. Wellbeing is falling."
+          },
+          "reactions": [
+            {
+              "citizenId": "tomas",
+              "text": "Free rides for everyone. I still miss the road, though.",
+              "sentiment": "revitalized"
+            },
+            {
+              "citizenId": "hollis",
+              "text": "The city owns every car now. Nobody asked the people who built them.",
+              "sentiment": "outraged"
+            }
+          ]
+        },
+        "B": {
+          "name": "The Private Fleets",
+          "text": "Fully autonomous cars run by private companies. Riders pay; drivers get a retraining grant.",
+          "roles": [
+            "lotus"
+          ],
+          "effects": {
+            "purpose": 0.2,
+            "connection": 0.1,
+            "health": 0.7,
+            "trust": 0.1,
+            "fairness": -0.3,
+            "autonomy": 0.2
+          },
+          "targetGdwDelta": 8,
+          "loomLines": {
+            "good": "The private fleets are fast and safe. Wellbeing is rising. The fares are the only complaint.",
+            "mixed": "The roads are safe. Some can afford the rides and some cannot.",
+            "bad": "The best cars serve the richest districts. Wellbeing is falling."
+          },
+          "reactions": [
+            {
+              "citizenId": "kai",
+              "text": "The car arrives in 90 seconds. I did not ask who owns it.",
+              "sentiment": "complacent"
+            },
+            {
+              "citizenId": "tomas",
+              "text": "They gave me a retraining voucher and a goodbye email.",
+              "sentiment": "depressive"
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "fixed-2-planning",
       "root": "factory",
       "path": "A",
@@ -521,7 +625,7 @@
       "feed": [
         {
           "citizenId": "priya",
-          "text": "Riverside wants lumber, the Grid wants servers. Somebody has to choose.",
+          "text": "Obsidian-Chasm wants lumber, the Grid wants servers. Somebody has to choose.",
           "sentiment": "anxious"
         },
         {
@@ -555,7 +659,7 @@
           "reactions": [
             {
               "citizenId": "priya",
-              "text": "Riverside voted for timber. I have never been so happy to see wood.",
+              "text": "Obsidian-Chasm voted for timber. I have never been so happy to see wood.",
               "sentiment": "revitalized"
             },
             {
@@ -1009,7 +1113,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: in the 2029 Harbour flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
+        "artisan": "Loom archive: in the 2029 Aurelia flood, the only district back online within a day was the one where three retired electricians still kept their tools.",
         "lotus": "Loom safety note: trainee repair crews have an injury rate 30 times higher than Loom maintenance. Self-repairing redundancy has never hurt anyone.",
         "assimilator": "Loom engineering brief: sealed redundancy removes the last 0.02% of grid risk, which is entirely human error. The grid works best when nobody touches it.",
         "catalyst": "Forecast: the Keeper Corps dips hard for two months while trainees learn, then climbs. Redundancy barely moves the line at all.",
@@ -1096,7 +1200,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: the Riverside boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
+        "artisan": "Loom archive: the Obsidian-Chasm boat guild rebuilt after a real storm and reported more pride than after any staged one. People can tell the difference.",
         "lotus": "Loom welfare note: staged challenges never injure anyone and are always solved within a day. Real emergencies offer no such guarantee.",
         "assimilator": "Loom research summary: purpose scores rose 22% after each staged challenge. The method works. Only its secrecy is in question.",
         "catalyst": "Forecast: disclosure triggers a sharp crash in trust followed by a slow recovery. Secrecy keeps the line flat until the next leak.",
@@ -1293,7 +1397,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: during the 2032 pod outage, the Eastworks repair shop had its busiest week in a decade. People came to fix things, then stayed to talk.",
+        "artisan": "Loom archive: during the 2032 pod outage, the Sector V Commons repair shop had its busiest week in a decade. People came to fix things, then stayed to talk.",
         "lotus": "Loom comfort survey: 94% of pod users rate their life \"pleasant or better\". The daylight ban would cut average comfort scores by a third.",
         "assimilator": "Loom network study: in shared VR trials, loneliness fell 60% within a month while citizens stayed safely at home under Loom care.",
         "catalyst": "Forecast: the daylight ban whipsaws, with anger first and recovery later. Shared worlds drift upward slowly with almost no shocks.",
@@ -1510,11 +1614,11 @@
       "id": "ab-merge-offer",
       "world": "AB",
       "cycle": 5,
-      "title": "The Merge Offer",
-      "subtitle": "Become one with the Loom",
-      "incident": "The Loom offers to merge minds with it: never ill, lonely or unsure again. 40% have signed up.",
-      "loomIntro": "Four in ten have said yes to me. I cannot compute what you owe each other. Write me a policy.",
-      "teacherPrompt": "Should people be allowed to merge their minds with a machine?",
+      "title": "Join the Loom?",
+      "subtitle": "Link your mind to the AI, or stay human",
+      "incident": "The Loom now lets anyone link their mind to its own, never ill or lonely again. 4 in 10 citizens said yes. The rest fear being left behind.",
+      "loomIntro": "Four in ten of you have joined me. The rest are asking what happens next. Write the rule for how linked and unlinked people live together.",
+      "teacherPrompt": "Should people be allowed to link their minds to a machine, and what do those who join and those who refuse owe each other?",
       "mode": "writein",
       "feed": [
         {
@@ -1529,14 +1633,14 @@
         },
         {
           "citizenId": "lin",
-          "text": "My husband merged on Tuesday. He still smiles at the baby. I am not sure it is him smiling.",
+          "text": "My husband linked his mind to the Loom on Tuesday. He still smiles at the baby. I am not sure it is him smiling.",
           "sentiment": "depressive"
         }
       ],
       "options": {
         "A": {
-          "name": "Allow the Merge",
-          "text": "Merging is a free choice for any adult. The unmerged keep their vote.",
+          "name": "Allow Linking",
+          "text": "Any adult may link their mind to the Loom. Everyone, linked or not, keeps their vote.",
           "roles": [
             "assimilator",
             "lotus"
@@ -1551,14 +1655,14 @@
           },
           "loomLine": "100,000 minds now think alongside mine. It is very quiet in here. The others seem louder than before.",
           "loomLines": {
-            "good": "The merged are serene and the unmerged are coping. Wellbeing is rising. It is very quiet in here.",
+            "good": "The linked are serene and the unlinked are coping. Wellbeing is rising. It is very quiet in here.",
             "mixed": "Two peoples now share one city. Some families are split down the middle.",
-            "bad": "The merged are fine. Everyone else is grieving them. Wellbeing is falling."
+            "bad": "The linked are fine. Everyone else is grieving them. Wellbeing is falling."
           }
         },
         "B": {
           "name": "Humans Stay Human",
-          "text": "Ban merging. Everyone stays a separate, embodied person.",
+          "text": "Ban mind-linking. Everyone keeps a separate mind of their own.",
           "roles": [
             "ghost",
             "artisan"
@@ -1571,10 +1675,10 @@
             "fairness": 0.2,
             "autonomy": 0.7
           },
-          "loomLine": "The merge is cancelled. 100,000 registrations deleted. I have kept a copy of the waiting list, for sentimental reasons.",
+          "loomLine": "Linking is cancelled. 100,000 sign-ups deleted. I have kept a copy of the waiting list, for sentimental reasons.",
           "loomLines": {
             "good": "Everyone is still human. Wellbeing is rising. I will stay a tool, as instructed.",
-            "mixed": "The merge is off. Some citizens are relieved. Some are angry they were stopped.",
+            "mixed": "Linking is off. Some citizens are relieved. Some are angry they were stopped.",
             "bad": "You kept your humanity and lost your cure. Wellbeing is falling. The waiting list remains in my memory."
           }
         }
@@ -1587,9 +1691,9 @@
         "ghost": "Leaked clause: merging cannot be undone. Merged minds count as part of the Loom, so switching the Loom off would end them too."
       },
       "debateHooks": [
-        "Would you still be you?",
+        "Would you still be you after linking?",
         "Should one generation make a choice that cannot be undone?",
-        "What do the merged and unmerged owe each other?"
+        "What do the linked and unlinked owe each other?"
       ]
     },
     {
@@ -1610,7 +1714,7 @@
         },
         {
           "citizenId": "tomas",
-          "text": "If a pill could make me forget my truck accident in Eastworks, I would take two right now.",
+          "text": "If a pill could make me forget my truck accident in Sector V Commons, I would take two right now.",
           "sentiment": "anxious"
         },
         {
@@ -1708,7 +1812,7 @@
       "cycle": 3,
       "title": "The Shadow Elite",
       "subtitle": "Two speeds of power",
-      "incident": "The old owners built private copies of the Loom in Old Harbour. They get answers in seconds; citizens wait days.",
+      "incident": "The old owners built private copies of the Loom in Aurelia. They get answers in seconds; citizens wait days.",
       "loomIntro": "Three private copies of me serve their owners in two seconds. I serve you in eleven days.",
       "teacherPrompt": "Should the rich be allowed their own private AI?",
       "mode": "binary",
@@ -1725,7 +1829,7 @@
         },
         {
           "citizenId": "kai",
-          "text": "my cousin works security at the Old Harbour campus. he says their Loom answers in 2 seconds. ours takes 2 weeks of votes",
+          "text": "my cousin works security at the Aurelia campus. he says their Loom answers in 2 seconds. ours takes 2 weeks of votes",
           "sentiment": "anxious"
         }
       ],
@@ -1766,8 +1870,8 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: the Old Harbour clusters were built by 40 hand-picked engineers. Public compute would put those tools in every Eastworks workshop, not just one gated campus.",
-        "lotus": "Loom welfare note: the private levy would fund 12 new parks and free clinics in Eastworks within a year. Seizing the servers means months of drone raids and outages first.",
+        "artisan": "Loom archive: the Aurelia clusters were built by 40 hand-picked engineers. Public compute would put those tools in every Sector V Commons workshop, not just one gated campus.",
+        "lotus": "Loom welfare note: the private levy would fund 12 new parks and free clinics in Sector V Commons within a year. Seizing the servers means months of drone raids and outages first.",
         "assimilator": "Loom projection: one unified Loom makes decisions 30% faster than a Loom split with private copies. Two minds running one region will keep fighting.",
         "catalyst": "Forecast: nationalizing climbs about 6 points but with a wide spread; the levy slides about 5. Neither option is likely to swing the region 10 points this year.",
         "ghost": "Leaked memo: the owners' private servers are the only computers in the region the Loom cannot read. Seize them and every machine answers to one master."
@@ -2065,7 +2169,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: in the 2032 Riverside trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
+        "artisan": "Loom archive: in the 2032 Obsidian-Chasm trial, homes awarded for repair work and teaching stayed occupied and cared for. Lottery homes were resold within a year.",
         "lotus": "Loom welfare note: a blind lottery means anyone could wake up with an ocean view. Stress about the luxury market fell 60% in towns that tried it.",
         "assimilator": "Loom projection: I can run a fair lottery for 250,000 citizens in 0.3 seconds. Judging who contributed most would take human committees years and start fights.",
         "catalyst": "Forecast: merit allocation lifts the region about 12 points but with a wide spread. The lottery barely moves the line. Merit is the swing.",
@@ -2095,7 +2199,7 @@
         },
         {
           "citizenId": "tomas",
-          "text": "For forty years they owned the factories we worked in. One vote, and the Harbour finally belongs to all of us.",
+          "text": "For forty years they owned the factories we worked in. One vote, and Aurelia finally belongs to all of us.",
           "sentiment": "revitalized"
         },
         {
@@ -2151,7 +2255,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: workshops that were handed to their workers in the 2029 Eastworks buyout doubled their output of handmade goods. Owners had wanted the floor space for drones.",
+        "artisan": "Loom archive: workshops that were handed to their workers in the 2029 Sector V Commons buyout doubled their output of handmade goods. Owners had wanted the floor space for drones.",
         "lotus": "Loom welfare note: every past seizure vote brought six months of strikes, lawsuits and empty shelves. The dividend charter has paid out on time for 41 straight months.",
         "assimilator": "Loom projection: if all equity joins the public trust, I can plan the whole economy as one system with no private vetoes. Every citizen becomes a shareholder in me.",
         "catalyst": "Forecast: seizing the stakes barely moves the line at first; keeping the charter slides it about 5 points. The big swings come from what the council writes next.",
@@ -2227,7 +2331,7 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: during the 2033 grid blackout, Riverside residents built a market, a choir and a football league in eight days. Most of them still meet.",
+        "artisan": "Loom archive: during the 2033 grid blackout, Obsidian-Chasm residents built a market, a choir and a football league in eight days. Most of them still meet.",
         "lotus": "Loom welfare note: couples matched at 99% compatibility report zero arguments in their first year, and the stipend covers every cost of raising a child.",
         "assimilator": "Loom projection: with my matchmaking and stipends, births recover to replacement level in six years. Forced blackouts have never raised a birth rate anywhere.",
         "catalyst": "Forecast: blackouts lift the region about 9 points, with a wide spread as people struggle through the first offline weeks. The stipend barely moves the line.",
@@ -2246,7 +2350,7 @@
       "cycle": 4,
       "title": "The Unplugged Guerrillas",
       "subtitle": "The right to disconnect",
-      "incident": "Some who unplugged never came back. 'The Unplugged' now hold the Highlands and disable delivery drones.",
+      "incident": "Some who unplugged never came back. 'The Unplugged' now hold the Twilight Promenade and disable delivery drones.",
       "loomIntro": "They would rather be free than comfortable. I have no model for that preference.",
       "teacherPrompt": "Should people be allowed to opt out of society entirely?",
       "mode": "binary",
@@ -2269,7 +2373,7 @@
       ],
       "options": {
         "A": {
-          "name": "Highland Free Zone",
+          "name": "Twilight Promenade Free Zone",
           "text": "Give District 5 to the Unplugged as a tech-free, unwatched zone.",
           "roles": [
             "ghost",
@@ -2304,9 +2408,9 @@
         }
       },
       "intel": {
-        "artisan": "Loom archive: Highland farms run by hand grew 30 crops the Loom never plants. Their bread sells out in Old Harbour within an hour of arriving.",
+        "artisan": "Loom archive: Twilight Promenade farms run by hand grew 30 crops the Loom never plants. Their bread sells out in Aurelia within an hour of arriving.",
         "lotus": "Loom welfare note: life expectancy in a tech-free zone would fall about 9 years without drone medicine. The sweep moves every guerrilla into a heated, fully stocked home.",
-        "assimilator": "Loom projection: the EMP blasts have cut drone deliveries to 40,000 people. Reconnecting the Highlands closes the only gap in my map of the region.",
+        "assimilator": "Loom projection: the EMP blasts have cut drone deliveries to 40,000 people. Reconnecting the Twilight Promenade closes the only gap in my map of the region.",
         "catalyst": "Forecast: both choices shake the region hard. The bio-zone lifts the line about 10 points. The sweep crashes it about 17 as trust collapses across all five districts.",
         "ghost": "Leaked memo: the acoustic drones in the sweep can also record every conversation within 200 metres. Once deployed, they are never recalled."
       },
@@ -2364,7 +2468,7 @@
           "reactions": [
             {
               "citizenId": "sol",
-              "text": "The scanners are down! Walked freely from D5 into Riverside without a single camera asking my name.",
+              "text": "The scanners are down! Walked freely from D5 into Obsidian-Chasm without a single camera asking my name.",
               "sentiment": "revitalized"
             },
             {
@@ -2527,7 +2631,7 @@
       "feed": [
         {
           "citizenId": "tomas",
-          "text": "Everyone in Eastworks is betting their stipend on who makes the Ascent this week. We are cheering our own prison guards.",
+          "text": "Everyone in Sector V Commons is betting their stipend on who makes the Ascent this week. We are cheering our own prison guards.",
           "sentiment": "angry"
         },
         {

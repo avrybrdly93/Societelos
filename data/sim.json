@@ -9,8 +9,8 @@
     "autonomy"
   ],
   "gdw": {
-    "scale": 125,
-    "floorWellbeing": 0.2,
+    "scale": 200,
+    "floorWellbeing": 0.275,
     "min": 0,
     "max": 100,
     "startingGdw": 25
@@ -18,7 +18,7 @@
   "districts": [
     {
       "id": "D1",
-      "name": "Old Harbour",
+      "name": "Aurelia",
       "population": 30000,
       "neighbours": [
         "D2",
@@ -28,7 +28,7 @@
     },
     {
       "id": "D2",
-      "name": "The Grid",
+      "name": "Capitol",
       "population": 55000,
       "neighbours": [
         "D1",
@@ -39,7 +39,7 @@
     },
     {
       "id": "D3",
-      "name": "Riverside",
+      "name": "Obsidian-Chasm",
       "population": 65000,
       "neighbours": [
         "D1",
@@ -51,7 +51,7 @@
     },
     {
       "id": "D4",
-      "name": "Eastworks",
+      "name": "Sector V Commons",
       "population": 60000,
       "neighbours": [
         "D2",
@@ -62,7 +62,7 @@
     },
     {
       "id": "D5",
-      "name": "Highlands",
+      "name": "Twilight Promenade",
       "population": 40000,
       "neighbours": [
         "D3",

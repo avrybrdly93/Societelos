@@ -46,7 +46,7 @@ Add the world's mood line after the shared style:
 | `ab-the-pods` | Endless rows of softly glowing egg-shaped pods in a silent white apartment block; the streets below completely empty, delivery drones the only movement. |
 | `ab-mood-dial` | A serene communal dining hall, everyone smiling identically over beautiful meals, a faint teal glow rising from the food, one person's untouched plate. |
 | `ab-merge-offer` | A queue of calm citizens walking into a vast luminous chamber where fine light-threads connect to their heads, merging into one huge glowing mind above. |
-| `ba-shadow-elite` | Old Harbour at night: a private server fortress hidden in old warehouses, cables snaking to it, while the public assembly hall across the water sits dim. |
+| `ba-shadow-elite` | Aurelia at night: a private server fortress hidden in old warehouses, cables snaking to it, while the public assembly hall across the water sits dim. |
 | `ba-status-wars` | A candle-lit auction for an oceanfront villa and an antique violin, bidders in fine clothes, and outside the window a crowd pressed against the glass. |
 | `ba-vote-to-seize` | A huge open-air referendum: a sea of citizens raising voting tablets toward corporate towers lit red by sunset, ballot light-columns rising into the sky. |
 | `bb-scroll-extinction` | Grey apartment towers with every window lit by the same flickering feed; inside, people lie motionless with screens over their faces; a deserted playground below. |

@@ -361,9 +361,6 @@
     const on = !!state.endsAt;
     finaleTimers.forEach((el) => {
       el.querySelector('.finale-timer-fill').style.transform = `scaleX(${on ? fraction.toFixed(4) : 0})`;
-      const secsEl = el.querySelector('.finale-timer-secs');
-      const secsText = on ? String(secs) : '--';
-      if (secsEl.textContent !== secsText) secsEl.textContent = secsText;
       el.classList.toggle('is-warn', on && remaining > 0 && remaining < 15000);
       el.classList.toggle('is-low', on && remaining > 0 && remaining < 5000);
     });
@@ -385,8 +382,8 @@
     const roundLeft = state.round ? Math.max(0, state.round.endsAt - Date.now()) : null;
     const clockSecs = roundLeft === null ? secs : Math.ceil(roundLeft / 1000);
     debateClock.classList.toggle('is-hidden', roundLeft !== null && roundLeft > 30000);
-    const clockText = state.endsAt ? `${String(Math.floor(clockSecs / 60)).padStart(2, '0')}:${String(clockSecs % 60).padStart(2, '0')}` : '--:--';
-    if (debateClock.textContent !== clockText) debateClock.textContent = clockText;
+    // The phone shows the bar only; the numbers stay on the main screen.
+    void clockSecs;
     state.remainingMs = remaining;
     const low = !!state.endsAt && remaining > 0 && remaining < 5000;
     countdownFill.classList.toggle('is-low', low);
@@ -395,23 +392,14 @@
 
     const mSessionTimer = document.getElementById('m-session-timer');
     if (mSessionTimer) {
-      if (state.sessionTimerEnabled && state.sessionEndsAt) {
-        mSessionTimer.hidden = false;
-        const sRem = Math.max(0, state.sessionEndsAt - Date.now());
-        const sSecs = Math.ceil(sRem / 1000);
-        const sessionText = `⚡ ${String(Math.floor(sSecs / 60)).padStart(2, '0')}:${String(sSecs % 60).padStart(2, '0')}`;
-        if (mSessionTimer.textContent !== sessionText) mSessionTimer.textContent = sessionText;
-        mSessionTimer.classList.toggle('is-low', sRem > 0 && sRem < 30000);
-      } else {
-        mSessionTimer.hidden = true;
-      }
+      mSessionTimer.hidden = true; // no numbers on the phone
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
-  // The Loom's live feed (loom:line / loom:history): everything the Loom has
-  // said this game, newest first, on the INCIDENT screen and in a drawer.
+  // The Loom's live feed (loom:line / loom:history): what the Loom has said
+  // this round (oldest first, newest last), on the INCIDENT screen and in a drawer.
   const LOOM_KIND = { voice: 'THE LOOM', crisis: 'CRISIS', verdict: 'VERDICT', world: 'WORLD', end: 'THE RECORD' };
   const loomLines = [];
   function loomItem(line) {
@@ -427,12 +415,16 @@
     return li;
   }
   function renderLoomFeed() {
+    // Only the current round's lines, oldest at the top and newest at the bottom.
+    const latest = loomLines[loomLines.length - 1];
+    const round = latest ? latest.cycle : null;
+    const shown = latest ? loomLines.filter((l) => l.cycle === round) : [];
     for (const id of ['m-loom-feed', 'm-loom-feed-drawer']) {
       const list = document.getElementById(id);
       list.textContent = '';
-      loomLines.slice(-20).reverse().forEach((line) => list.appendChild(loomItem(line)));
+      shown.forEach((line) => list.appendChild(loomItem(line)));
+      list.scrollTop = list.scrollHeight;
     }
-    const latest = loomLines[loomLines.length - 1];
     document.getElementById('loom-drawer-latest').textContent = latest ? `\u00b7 ${latest.year || ''}` : '';
     document.getElementById('loom-drawer').hidden = !loomLines.length || state.phase === 'LOBBY';
   }

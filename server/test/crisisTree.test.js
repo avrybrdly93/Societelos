@@ -47,9 +47,11 @@ test('crisis tree: every root and every decision path reaches its own five crise
 
 test('crisis tree: a branch follows the decision that opened it', () => {
   for (const root of engine.treeRoots(data.crises)) {
+    // Cycle 2 is always "Who Holds the Off-Switch?", whatever cycle 1 decided.
     const [, afterA] = walk(root, ['A', 'A', 'A', 'A']);
     const [, afterB] = walk(root, ['B', 'A', 'A', 'A']);
-    assert.notEqual(afterA, afterB, `${root}: cycle 2 depends on cycle 1`);
+    assert.equal(afterA, 'fixed-2-offswitch', `${root}: cycle 2 is the off-switch policy`);
+    assert.equal(afterB, 'fixed-2-offswitch', `${root}: cycle 2 is the off-switch policy`);
   }
   for (const world of ['AA', 'AB', 'BA', 'BB']) {
     const c4 = (v3) => walk('ownership', [world[0], world[1], v3, 'A'])[3];

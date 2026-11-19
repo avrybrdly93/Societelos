@@ -96,7 +96,7 @@ body.host {
   background-color: var(--slate-950);
   background-image:
     radial-gradient(ellipse at 50% 30%, rgba(13, 16, 23, 0.35) 0%, rgba(7, 9, 13, 0.78) 100%),
-    url('../img/Council.png');
+    url('../img/new-style/Council.png');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -711,11 +711,11 @@ body.host .gdw-meter .label { font-size: 20px; }
 
 /* Citizen feed cards: slide in from above, colour-coded by district. */
 :root {
-  --district-d1: #9572d1; /* Old Harbour */
-  --district-d2: #8cb6e1; /* The Grid */
-  --district-d3: #78a9cc; /* Riverside */
-  --district-d4: #3a90e6; /* Eastworks */
-  --district-d5: #c9a6dc; /* Highlands */
+  --district-d1: #9572d1; /* Aurelia */
+  --district-d2: #8cb6e1; /* Capitol */
+  --district-d3: #78a9cc; /* Obsidian-Chasm */
+  --district-d4: #3a90e6; /* Sector V Commons */
+  --district-d5: #c9a6dc; /* Twilight Promenade */
 }
 .feed-item {
   --district-color: var(--slate-600);
@@ -1337,7 +1337,7 @@ body[data-world="BA"] {
 body.host[data-world="BA"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(11, 14, 21, 0.72) 0%, rgba(6, 7, 9, 0.93) 100%),
-    url('../img/Council.png');
+    url('../img/new-style/Council.png');
 }
 body[data-world="BA"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-brass), var(--theme-rust) 55%, var(--theme-brass-deep)) 1;
@@ -1370,7 +1370,7 @@ body[data-world="BB"] {
 body.host[data-world="BB"] {
   background-image:
     radial-gradient(ellipse at 50% 35%, rgba(30, 10, 44, 0.70) 0%, rgba(12, 6, 18, 0.93) 100%),
-    url('../img/Council.png');
+    url('../img/new-style/Council.png');
 }
 body[data-world="BB"] .topbar {
   border-image: linear-gradient(90deg, var(--theme-gold), var(--theme-bb) 50%, var(--theme-gold)) 1;
@@ -1889,7 +1889,7 @@ body.host .feed-item { border-left: 3px solid var(--gold-line-strong) !important
 
 /* Phones share the chamber: warm glass over a dimmed painting. */
 body.mobile {
-  background: linear-gradient(180deg, rgba(7, 9, 13, 0.82), rgba(6, 7, 9, 0.94)), url('../img/Council.png') center / cover fixed;
+  background: linear-gradient(180deg, rgba(7, 9, 13, 0.82), rgba(6, 7, 9, 0.94)), url('../img/new-style/Council.png') center / cover fixed;
 }
 .debate-panel { grid-template-columns: minmax(0, 1fr) 200px !important; }
 body.host .debate-clock { font-size: 88px; }
@@ -2204,3 +2204,35 @@ body.mobile .end-score-value { font-size: 40px; letter-spacing: 0.06em !importan
 .champion-profile { min-width: 0; }
 .idea-row { grid-template-columns: 300px 1fr; }
 body.host .idea-row .idea-name { letter-spacing: 0.1em !important; font-size: 14px; }
+
+/* Lobby QR: centred in its panel, a little larger (the image used to be wider
+   than its 230px box, which pushed it off-centre). */
+body.host .lobby-join .qr-container {
+  width: 290px; height: 290px; margin: 12px auto; padding: 10px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+}
+body.host .lobby-join .qr-container img { width: 100%; height: 100%; max-width: 100%; object-fit: contain; display: block; margin: 0 auto; }
+body.host .lobby-join .join-url, body.host .lobby-join .join-room { text-align: center; }
+
+/* Mobile: time is shown by the bars only, no numbers. */
+body.mobile #debate-clock,
+body.mobile .m-session-timer,
+body.mobile .finale-timer-label { display: none !important; }
+
+/* Mobile: "Councilperson N" must fit (header badge and waiting screen). */
+body.mobile .m-header { flex-wrap: nowrap; gap: 8px; }
+body.mobile .m-brand { flex: 0 0 auto; letter-spacing: 0.1em; font-size: 13px; }
+body.mobile .m-node-label {
+  flex: 1 1 auto; min-width: 0; margin-left: 0; text-align: right;
+  font-size: 12px; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.mobile .node-badge {
+  max-width: 100%; box-sizing: border-box; text-align: center;
+  font-size: clamp(24px, 9vw, 40px); line-height: 1.15; padding: 12px 16px;
+  overflow-wrap: anywhere;
+}
+
+/* Lobby left panel: everything on one centre line with the QR code. */
+body.host .lobby-join { text-align: center; display: flex; flex-direction: column; align-items: center; }
+body.host .lobby-join h1, body.host .lobby-join > p { width: 100%; text-align: center; }
+body.host .lobby-join .lobby-config { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; box-sizing: border-box; text-align: left; }

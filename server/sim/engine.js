@@ -13,11 +13,11 @@ function createPrng(seed) {
 
 // 5 Districts Definition
 const DISTRICTS = [
-  { id: 'D1', name: 'Old Harbour', population: 30000, elitePct: 0.05 },
-  { id: 'D2', name: 'The Grid', population: 55000, elitePct: 0.01 },
-  { id: 'D3', name: 'Riverside', population: 65000, elitePct: 0.01 },
-  { id: 'D4', name: 'Eastworks', population: 60000, elitePct: 0.01 },
-  { id: 'D5', name: 'Highlands', population: 40000, elitePct: 0.005 }
+  { id: 'D1', name: 'Aurelia', population: 30000, elitePct: 0.05 },
+  { id: 'D2', name: 'Capitol', population: 55000, elitePct: 0.01 },
+  { id: 'D3', name: 'Obsidian-Chasm', population: 65000, elitePct: 0.01 },
+  { id: 'D4', name: 'Sector V Commons', population: 60000, elitePct: 0.01 },
+  { id: 'D5', name: 'Twilight Promenade', population: 40000, elitePct: 0.005 }
 ];
 
 // Initial Cohort State Generator

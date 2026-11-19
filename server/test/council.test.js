@@ -42,7 +42,7 @@ test('500 citizens are seeded deterministically across the districts and cohorts
     assert.equal(x.ideas.length, 6);
     for (const v of x.ideas) assert.ok(v >= -1 && v <= 1);
   }
-  // Bigger districts get more citizens (Riverside 65k vs Old Harbour 30k).
+  // Bigger districts get more citizens (Obsidian-Chasm 65k vs Aurelia 30k).
   const count = (d) => a.filter((x) => x.district === d).length;
   assert.ok(count('D3') > count('D1'));
 });

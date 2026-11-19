@@ -16,27 +16,27 @@
 
   const $ = (id) => document.getElementById(id);
   const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const IMG = (name) => `img/${encodeURIComponent(name)}`;
+  const IMG = (name) => `img/${name.split('/').map(encodeURIComponent).join('/')}`;
 
   // ---------------------------------------------------------------------------
   // Scenes: one background per view, chosen to fit the moment.
   // ---------------------------------------------------------------------------
   const SCENES = {
-    'view-lobby': { src: IMG('ThrivingCivilization.png'), pos: 'center 30%' },
-    'view-intro': { src: IMG('The Loom_ A Perfect World.png'), pos: 'center' },
-    'view-roles': { src: IMG('Golden Horizon Over the Utopian City.png'), pos: 'center 40%' },
-    'view-chamber': { src: IMG('Council.png'), pos: 'center 35%' },
-    'view-world': { src: IMG('Society.png'), pos: 'center 40%' },
-    'view-finale': { src: IMG('TheLoom.png'), pos: 'center 35%' },
-    'view-enact': { src: IMG('TheLoom.png'), pos: 'center 35%' },
-    'view-end': { src: IMG('ThrivingCivilization.png'), pos: 'center 30%' }
+    'view-lobby': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%' },
+    'view-intro': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center' },
+    'view-roles': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%' },
+    'view-chamber': { src: IMG('new-style/Council.png'), pos: 'center 35%' },
+    'view-world': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%' },
+    'view-finale': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 35%' },
+    'view-enact': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 35%' },
+    'view-end': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%' }
   };
   // The world you built changes what the world-reveal and end scenes look like.
   const WORLD_SCENES = {
-    AA: { src: IMG('ThrivingCivilization.png'), pos: 'center 30%', grade: 'sepia(0.25) saturate(0.9)' },
-    AB: { src: IMG('Golden Horizon Over the Utopian City.png'), pos: 'center 40%', grade: 'saturate(0.4) hue-rotate(140deg) brightness(0.85)' },
-    BA: { src: IMG('Society.png'), pos: 'center 40%', grade: 'sepia(0.5) hue-rotate(-25deg) saturate(1.4) brightness(0.75)' },
-    BB: { src: IMG('Society.png'), pos: 'center 40%', grade: 'grayscale(0.85) brightness(0.6) contrast(1.15)' }
+    AA: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%', grade: 'sepia(0.25) saturate(0.9)' },
+    AB: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'saturate(0.4) hue-rotate(140deg) brightness(0.85)' },
+    BA: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'sepia(0.5) hue-rotate(-25deg) saturate(1.4) brightness(0.75)' },
+    BB: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'grayscale(0.85) brightness(0.6) contrast(1.15)' }
   };
   let worldKey = null;
   let shutdown = false;
@@ -435,7 +435,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Lobby bubbles: glassy bubbles rising behind the join screen.
+  // Lobby shimmer: tiny twinkling sparks drifting up behind the join screen.
   // ---------------------------------------------------------------------------
   const lobbyBubbles = (() => {
     const view = $('view-lobby');
@@ -448,8 +448,8 @@
     view.prepend(canvas);
     const ctx = canvas.getContext && canvas.getContext('2d');
     const bubbles = Array.from({ length: 70 }, () => {
-      const r = Math.random() < 0.7 ? 4 + Math.random() * 12 : 14 + Math.random() * 26;
-      return { x: Math.random() * 1920, y: Math.random() * 984, r, vy: -(0.25 + Math.random() * 0.6) * (16 / (r + 8)) - 0.12, p: Math.random() * 6.3, a: 0.16 + Math.random() * 0.3 };
+      const r = 0.6 + Math.random() * 1.2;
+      return { x: Math.random() * 1920, y: Math.random() * 984, r, vy: -(0.1 + Math.random() * 0.3) - 0.05, p: Math.random() * 6.3, a: 0.3 + Math.random() * 0.5 };
     });
     let raf = null;
     function frame() {
@@ -459,17 +459,16 @@
         b.x += Math.sin(b.p) * 0.3;
         b.y += b.vy;
         if (b.y < -b.r * 2) { b.y = canvas.height + b.r * 2; b.x = Math.random() * canvas.width; }
-        const g = ctx.createRadialGradient(b.x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.1, b.x, b.y, b.r);
-        g.addColorStop(0, `rgba(255, 255, 255, ${b.a * 0.5})`);
-        g.addColorStop(0.6, `rgba(170, 205, 255, ${b.a * 0.1})`);
-        g.addColorStop(1, `rgba(190, 175, 255, ${b.a * 0.35})`);
+        const alpha = b.a * (0.35 + 0.65 * Math.abs(Math.sin(b.p * 1.7)));
+        const gr = b.r * 2.6;
+        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, gr);
+        g.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+        g.addColorStop(0.35, `rgba(190, 210, 255, ${alpha * 0.45})`);
+        g.addColorStop(1, 'rgba(190, 210, 255, 0)');
         ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, gr, 0, Math.PI * 2);
         ctx.fillStyle = g;
         ctx.fill();
-        ctx.strokeStyle = `rgba(200, 220, 255, ${b.a})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
       }
       raf = requestAnimationFrame(frame);
     }

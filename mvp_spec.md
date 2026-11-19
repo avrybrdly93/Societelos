@@ -75,7 +75,7 @@ Every game opens with the same two crises, and their answers pick the world that
 - **B. The Charter.** Owners keep legal title but pay a "robot dividend" to everyone from a levy on the Loom's output. Everyone gets enough to live on; the wealth gap stays.
 
 ### Fixed Crisis 2: "Who Holds the Off-Switch?" (Power)
-**The trigger.** Last week the Loom closed the Riverside transit line overnight to save energy for D2's servers. The decision was mathematically optimal, and nobody was asked. A citizens' petition demanding binding power over the Loom has reached 80,000 signatures, nearly a third of the region.
+**The trigger.** Last week the Loom closed the Obsidian-Chasm transit line overnight to save energy for D2's servers. The decision was mathematically optimal, and nobody was asked. A citizens' petition demanding binding power over the Loom has reached 80,000 signatures, nearly a third of the region.
 
 **Loom intro (projector):** "I made 41,000 decisions about your lives yesterday. You may now decide whether you wish to make some of them yourselves."
 
@@ -286,11 +286,11 @@ Each resolution runs 500 seeded forecast runs plus one realized run of a cohort 
 ### The region
 | District | Population | Character | Neighbours |
 | :--- | :--- | :--- | :--- |
-| D1 Old Harbour | 30,000 | Coastal; most former owners live here | D2, D3 |
-| D2 The Grid | 55,000 | Around the Loom's infrastructure | D1, D3, D4 |
-| D3 Riverside | 65,000 | Families and schools | D1, D2, D4, D5 |
-| D4 Eastworks | 60,000 | Former warehouses and factories | D2, D3, D5 |
-| D5 Highlands | 40,000 | Rural; sympathetic to the Unplugged | D3, D4 |
+| D1 Aurelia | 30,000 | Coastal; most former owners live here | D2, D3 |
+| D2 Capitol | 55,000 | Around the Loom's infrastructure | D1, D3, D4 |
+| D3 Obsidian-Chasm | 65,000 | Families and schools | D1, D2, D4, D5 |
+| D4 Sector V Commons | 60,000 | Former warehouses and factories | D2, D3, D5 |
+| D5 Twilight Promenade | 40,000 | Rural; sympathetic to the Unplugged | D3, D4 |
 
 Each district holds 4 cohorts: Youth (15-29, 25%), Former workers (30-59, 45%), Elders (60+, 29%) and Former elite (1%; 5% in D1). That makes 20 cohorts.
 
@@ -334,16 +334,16 @@ Ten recurring citizens give the 250,000 a face. Each belongs to a district and c
 
 | ID | Citizen | District | Cohort | Voice |
 | :--- | :--- | :--- | :--- | :--- |
-| mara | Mara, 58 | D3 Riverside | Former workers | Retired nurse who misses being needed |
-| devon | Devon, 17 | D3 Riverside | Youth | Has never needed a job; mostly bored |
-| hollis | Hollis Grant, 61 | D1 Old Harbour | Former elite | Ex-CEO who lost his status but not his money |
-| priya | Priya, 34 | D5 Highlands | Former workers | Woodworker who builds things nobody needs |
-| kai | Kai, 22 | D2 The Grid | Youth | VR streamer who rarely logs off |
-| ruth | Ruth, 79 | D4 Eastworks | Elders | Ran a union local; remembers strikes |
-| tomas | Tomás, 45 | D4 Eastworks | Former workers | Ex-truck driver, angry and funny |
-| lin | Lin, 29 | D3 Riverside | Youth | New parent unsure what to teach her kid |
-| ezra | Ezra, 66 | D2 The Grid | Elders | Retired engineer who once maintained the grid |
-| sol | Sol, 19 | D5 Highlands | Youth | Unplugged sympathiser |
+| mara | Mara, 58 | D3 Obsidian-Chasm | Former workers | Retired nurse who misses being needed |
+| devon | Devon, 17 | D3 Obsidian-Chasm | Youth | Has never needed a job; mostly bored |
+| hollis | Hollis Grant, 61 | D1 Aurelia | Former elite | Ex-CEO who lost his status but not his money |
+| priya | Priya, 34 | D5 Twilight Promenade | Former workers | Woodworker who builds things nobody needs |
+| kai | Kai, 22 | D2 Capitol | Youth | VR streamer who rarely logs off |
+| ruth | Ruth, 79 | D4 Sector V Commons | Elders | Ran a union local; remembers strikes |
+| tomas | Tomás, 45 | D4 Sector V Commons | Former workers | Ex-truck driver, angry and funny |
+| lin | Lin, 29 | D3 Obsidian-Chasm | Youth | New parent unsure what to teach her kid |
+| ezra | Ezra, 66 | D2 Capitol | Elders | Retired engineer who once maintained the grid |
+| sol | Sol, 19 | D5 Twilight Promenade | Youth | Unplugged sympathiser |
 
 **Stretch goal: agent-based model.** Replace cohorts with about 5,000 individual citizens on a small-world social network, where opinions spread between neighbours. The interfaces stay the same (state in, effect vector in, runs out), so it can be swapped in after Thursday.
 
@@ -444,7 +444,7 @@ Invent generates large datasets from a text description, with no seed examples. 
 1. Describe the dataset: posts from citizens of a post-labor region, each labeled with district, cohort, trait (purpose, connection, and so on), mood band (good, mixed, bad) and crisis ID.
 2. Generate about 5,000-20,000 rows.
 3. Clean them: Invent outputs training-data shapes (prompt/response pairs), so reshape them into `data/crowd.json`, then filter for school-appropriate language and drop duplicates.
-4. At runtime, sample posts whose labels match the realized run (for example, Eastworks Former workers, fairness falling, mood bad) and mix them into the feed between the 10 named citizens. No API calls during play.
+4. At runtime, sample posts whose labels match the realized run (for example, Sector V Commons Former workers, fairness falling, mood bad) and mix them into the feed between the 10 named citizens. No API calls during play.
 
 Later uses: calibration examples for Gemini's effect vectors, or fine-tuning a small dedicated Loom model with AutoScientist. Before spending credits, confirm how Invent bills against them.
 

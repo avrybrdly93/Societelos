@@ -202,7 +202,7 @@ function outcomeBand(summary = {}) {
   return 'mixed';
 }
 
-const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+const DISTRICT_NAMES = { D1: 'Aurelia', D2: 'Capitol', D3: 'Obsidian-Chasm', D4: 'Sector V Commons', D5: 'Twilight Promenade' };
 
 /**
  * Append the realized facts to an offline Loom line: the district that moved
@@ -216,7 +216,7 @@ function withSimFacts(base, summary = {}) {
   const facts = [];
   if (district) facts.push(`${district} moved most.`);
   if (shock && shock.district) {
-    // Named shock flavour from the simulation (e.g. "A Coastal Storm hit D1 Old Harbour in month 3.").
+    // Named shock flavour from the simulation (e.g. "A Coastal Storm hit D1 Aurelia in month 3.").
     const where = `${shock.district} ${DISTRICT_NAMES[shock.district] || ''}`.trim();
     facts.push(shock.name ? `A ${shock.name} hit ${where} in month ${shock.month}.` : `A shock hit ${shock.district} in month ${shock.month}.`);
   }

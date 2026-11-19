@@ -701,7 +701,7 @@
       tag.textContent = item.district;
       meta.appendChild(tag);
     }
-    // "D3 Riverside • Former workers" under the name.
+    // "D3 Obsidian-Chasm • Former workers" under the name.
     const detail = [item.district && item.districtName ? `${item.district} ${item.districtName}` : item.district, item.cohort]
       .filter(Boolean).join(' \u2022 ');
     const text = document.createElement('p');
@@ -732,7 +732,7 @@
   const FEED_MAX = 6;
   // Finale: each district's wellbeing change (W x 100) over the package's
   // 12 months, from the resolution payload's month-by-month districts.
-  const DISTRICT_NAMES = { D1: 'Old Harbour', D2: 'The Grid', D3: 'Riverside', D4: 'Eastworks', D5: 'Highlands' };
+  const DISTRICT_NAMES = { D1: 'Aurelia', D2: 'Capitol', D3: 'Obsidian-Chasm', D4: 'Sector V Commons', D5: 'Twilight Promenade' };
   function districtShifts(districts) {
     const first = Array.isArray(districts) && districts[0];
     const last = Array.isArray(districts) && districts[districts.length - 1];
@@ -935,7 +935,7 @@
   const DEBATE_NUDGES = [
     'Who benefits from each option, and who pays?',
     'Ask the person who has been quietest: A or B?',
-    'What would a citizen of Eastworks say?',
+    'What would a citizen of Sector V Commons say?',
     'Which option would you pick if you did not know your district?',
     'What is the worst thing that could happen under each option?',
     'Someone here is arguing against their own interest. Who?'
@@ -1362,7 +1362,9 @@
     const authorsByNode = {};
     for (const a of data.authors || []) authorsByNode[a.node] = a;
     const winners = new Set(data.winner || []);
-    for (const r of data.roles || []) {
+    // Leaderboard order: highest score first (ties keep council order).
+    const ranked = (data.roles || []).map((r, i) => [r, i]).sort((a, b) => (Number(b[0].total) || 0) - (Number(a[0].total) || 0) || a[1] - b[1]).map(([r]) => r);
+    for (const r of ranked) {
       const tr = document.createElement('tr');
       tr.dataset.node = r.node;
       if (winners.has(r.node)) tr.classList.add('is-winner');
@@ -1658,13 +1660,13 @@
   // ---------------------------------------------------------------------------
   const MOCK_CRISIS = {
     id: 'mock', title: 'Crisis 01: Who Owns the Loom?', subtitle: 'Economic Distribution',
-    incident: 'Dividend riots are erupting across District 4 Eastworks.',
+    incident: 'Dividend riots are erupting across District 4 Sector V Commons.',
     loomIntro: 'I produce everything. Who should own me?',
     mode: 'binary',
     debateHook: 'When machines create all wealth, who should own them?',
     feed: [
-      { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', districtName: 'Eastworks', cohort: 'Elders', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
-      { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', districtName: 'The Grid', cohort: 'Youth', text: 'just deliver my food on time', sentiment: 'complacent' }
+      { citizenId: 'ruth', name: 'Ruth', age: 79, district: 'D4', districtName: 'Sector V Commons', cohort: 'Elders', text: 'We built these factories. Now the drones lock us out.', sentiment: 'outraged' },
+      { citizenId: 'kai', name: 'Kai', age: 22, district: 'D2', districtName: 'Capitol', cohort: 'Youth', text: 'just deliver my food on time', sentiment: 'complacent' }
     ]
   };
   const MOCK_OPTIONS = {

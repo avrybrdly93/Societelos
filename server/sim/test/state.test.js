@@ -14,14 +14,14 @@ test('starting state reads exactly GDW 25.0', () => {
   assert.equal(computeGDW(createInitialState(simConfig)), 25);
 });
 
-test('computeGDW clamps at 0 when W <= 0.20 and at 100 when W >= 1.00', () => {
+test('computeGDW clamps at 0 when W <= 0.275 and at 100 when W >= 0.775', () => {
   const gdwCfg = simConfig.gdw;
-  assert.equal(computeGDW(0.20, gdwCfg), 0);
+  assert.equal(computeGDW(0.275, gdwCfg), 0);
   assert.equal(computeGDW(0.05, gdwCfg), 0);
   assert.equal(computeGDW(-1, gdwCfg), 0);
-  assert.equal(computeGDW(1.0, gdwCfg), 100);
+  assert.equal(computeGDW(0.775, gdwCfg), 100);
   assert.equal(computeGDW(1.7, gdwCfg), 100);
-  assert.equal(computeGDW(0.60, gdwCfg), 50);
+  assert.equal(computeGDW(0.525, gdwCfg), 50);
 
   // Same through a real state: all traits 0 -> W = 0 -> GDW 0; all 1 -> GDW 100.
   const low = createInitialState(simConfig);

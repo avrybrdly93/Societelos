@@ -8,17 +8,17 @@ const { simulate, createInitialState } = require('../index');
 const simConfig = require('../../../data/sim.json');
 const crises = require('../../../data/crises.json');
 
-test('comfortable 1B -> 2B path (Gilded Cage) reaches ~40% GDW after Cycle 2', () => {
+test('comfortable 1B -> 2B path (Gilded Cage) reaches ~51% GDW after Cycle 2', () => {
   const [start, afterC1, afterC2] = pathGdw(simConfig, crises, ['B', 'B']);
   assert.equal(start, 25);
   assert.ok(afterC1 > start, `1B raises GDW (${afterC1.toFixed(1)})`);
-  assert.ok(afterC2 >= 36 && afterC2 <= 44, `BB after cycle 2: ${afterC2.toFixed(1)} (target ~40)`);
+  assert.ok(afterC2 >= 46 && afterC2 <= 56, `BB after cycle 2: ${afterC2.toFixed(1)} (target ~51)`);
 });
 
-test('turbulent 1A -> 2A path (Commonwealth) drops toward ~15% without premature collapse', () => {
+test('turbulent 1A -> 2A path (Commonwealth) drops toward ~13% without premature collapse', () => {
   const [start, afterC1, afterC2] = pathGdw(simConfig, crises, ['A', 'A']);
   assert.ok(afterC1 < start, `1A lowers GDW (${afterC1.toFixed(1)})`);
-  assert.ok(afterC2 >= 12 && afterC2 <= 19, `AA after cycle 2: ${afterC2.toFixed(1)} (target ~15)`);
+  assert.ok(afterC2 >= 9 && afterC2 <= 17, `AA after cycle 2: ${afterC2.toFixed(1)} (target ~13)`);
   // Collapse stays rare on this path: the 500-run forecast for 2A after 1A.
   const fixed = fixedPath(crises, 'A');
   const c1 = simulate(createInitialState(simConfig), fixed[0].options.A.effects, { runs: 500, seed: 1 });
@@ -62,9 +62,9 @@ test('every crisis (the whole tree and the Blitz extras) loads into calibrate.js
   const rows = calibrateCrises(simConfig, crises);
   const ids = new Set(rows.map((r) => r.id));
   assert.equal(ids.size, crises.crises.length);
-  // The tree: 2 roots x 3 crises (cycles 1-2), 4 worlds x 3 crises (cycles 3-4), 4 finales.
+  // The tree: 3 opening crises + 4 cycle 2 crises (only fixed-2-offswitch is played), 4 worlds x 3 crises (cycles 3-4), 4 finales.
   const core = crises.crises.filter((c) => typeof c.path === 'string' || Object.values(crises.worlds).some((w) => w.finale === c.id));
-  assert.equal(core.length, 22);
+  assert.equal(core.length, 23);
   for (const c of core) assert.ok(rows.filter((r) => r.id === c.id).length === 2, `${c.id}: both options forecast`);
   const bad = rows.filter((r) => !r.ok);
   assert.deepEqual(bad.map((r) => `${r.id} ${r.option}: ${r.problems.join('; ')}`), []);

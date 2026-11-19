@@ -94,7 +94,7 @@ test('near 5% GDW, P(collapse) equals the fraction of forecast runs ending at 0%
   const { hashSeed } = require('../prng');
   const { computeGDW } = require('../state');
   const state = createInitialState(simConfig);
-  state.traits.fill(0.24); // W = 0.24 -> GDW = 125 * (0.24 - 0.20) = 5%
+  state.traits.fill(0.30); // W = 0.30 -> GDW = 200 * (0.30 - 0.275) = 5%
   assert.ok(Math.abs(computeGDW(state) - 5) < 1e-9);
   const effects = { purpose: -0.1, connection: -0.05, health: 0, trust: 0, fairness: 0, autonomy: 0 };
   const runs = 500;

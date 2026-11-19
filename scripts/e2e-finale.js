@@ -226,7 +226,7 @@ async function hostChecks(browser, shot) {
       ]
     },
     gdw: 31, forecast: { median: med, p5: med.map((v) => v - 6), p95: med.map((v) => v + 6) }, realized: { gdw: med.map((v) => v + 1) }, districts: months,
-    loomLine: 'The package holds.', messages: [{ name: 'Ruth', age: 79, district: 'D4', districtName: 'Eastworks', cohort: 'Elders', text: 'Finally.' }]
+    loomLine: 'The package holds.', messages: [{ name: 'Ruth', age: 79, district: 'D4', districtName: 'Sector V Commons', cohort: 'Elders', text: 'Finally.' }]
   });
   await page.waitForTimeout(1800);
   check('host enactment reveal shows 3 weighted cards', (await page.locator('.enact-card').count()) === 3 && /50% WEIGHT/.test(await text('#enact-cards')));

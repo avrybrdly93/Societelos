@@ -135,11 +135,11 @@ function roundGdw(value) {
 const REGION = Object.freeze({
   population: 250000,
   districts: Object.freeze([
-    { id: 'D1', name: 'Old Harbour', population: 30000 },
-    { id: 'D2', name: 'The Grid', population: 55000 },
-    { id: 'D3', name: 'Riverside', population: 65000 },
-    { id: 'D4', name: 'Eastworks', population: 60000 },
-    { id: 'D5', name: 'Highlands', population: 40000 }
+    { id: 'D1', name: 'Aurelia', population: 30000 },
+    { id: 'D2', name: 'Capitol', population: 55000 },
+    { id: 'D3', name: 'Obsidian-Chasm', population: 65000 },
+    { id: 'D4', name: 'Sector V Commons', population: 60000 },
+    { id: 'D5', name: 'Twilight Promenade', population: 40000 }
   ])
 });
 
@@ -377,7 +377,9 @@ function selectTreeCrisis(list, cycle, worldKey, tree) {
   const binary = list.filter((c) => c.mode === 'binary' && typeof c.path === 'string');
   let raw = null;
   if (cycle === 1) raw = binary.find((c) => c.root === tree.root && c.cycle === 1);
-  else if (cycle === 2) raw = binary.find((c) => c.root === tree.root && c.cycle === 2 && c.path === (votes[1] || 'A'));
+  // Cycle 2 is always "Who Holds the Off-Switch?" (the Loom itself or a council of people),
+  // whichever opening policy came first.
+  else if (cycle === 2) raw = binary.find((c) => c.id === 'fixed-2-offswitch') || binary.find((c) => c.root === tree.root && c.cycle === 2 && c.path === (votes[1] || 'A'));
   else if (cycle === 3) raw = binary.find((c) => c.world === worldKey && c.cycle === 3 && c.path === '');
   else if (cycle === 4) raw = binary.find((c) => c.world === worldKey && c.cycle === 4 && c.path === (votes[3] || 'A'));
   if (raw && !used.has(raw.id)) return raw;
@@ -2081,7 +2083,7 @@ class GameState extends EventEmitter {
   /**
    * Deterministic closing citizen when the simulation pick is unavailable:
    * one authored line from data/citizens.json chosen by the final GDW band
-   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Old Harbour
+   * (good 35+, mixed 1-34, bad on a shutdown), or a built-in Aurelia
    * voice if the citizen data itself is missing.
    */
   fallbackClosingMessage() {
@@ -2099,7 +2101,7 @@ class GameState extends EventEmitter {
       : band === 'good'
         ? 'Five years ago I had nothing to do. Tonight I am tired from doing something that mattered.'
         : 'We are still here. Some days that feels like enough. Some days it does not.';
-    return { citizenId: 'closing', name: 'A citizen of Old Harbour', age: null, district: 'D1', districtName: 'Old Harbour', cohort: null, text, sentiment: band, change: 0, band, fallback: true };
+    return { citizenId: 'closing', name: 'A citizen of Aurelia', age: null, district: 'D1', districtName: 'Aurelia', cohort: null, text, sentiment: band, change: 0, band, fallback: true };
   }
 
   /**

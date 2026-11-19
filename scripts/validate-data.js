@@ -170,7 +170,8 @@ function checkCoreCrises(data) {
   if (!roots.length) err('crises.json', 'crisis tree: no roots');
   for (const root of roots) {
     core.push(need(`root ${root} cycle 1`, list.find((c) => c.root === root && c.cycle === 1 && c.path === '')));
-    for (const p of ['A', 'B']) core.push(need(`root ${root} cycle 2 after ${p}`, list.find((c) => c.root === root && c.cycle === 2 && c.path === p)));
+    // Cycle 2 is always fixed-2-offswitch, so a root only needs its own cycle 1 crisis.
+    core.push(need('fixed-2-offswitch', list.find((c) => c.id === 'fixed-2-offswitch' && c.cycle === 2)));
   }
   for (const w of WORLDS) {
     core.push(need(`world ${w} cycle 3`, list.find((c) => c.world === w && c.cycle === 3 && c.path === '')));

@@ -37,7 +37,7 @@ Ownership is defined by exact file path. Identify which stream you are assisting
 * **Host Projector Screen (`public/index.html`):**
   * Tuned for 1920x1080 display (min 24px body text, 48px headers for back-row classroom legibility).
   * Features persistent status topbar: Room Code, Cycle indicator (`CYCLE X/5`), Phase timer (`MM:SS`), Year (2121-2125) and Societal Satisfaction badge (internally `gdw`).
-  * Interactive 5-district SVG map (`D1 Old Harbour`, `D2 The Grid`, `D3 Riverside`, `D4 Eastworks`, `D5 Highlands`) with neighbour spillover links.
+  * Interactive 5-district SVG map (`D1 Aurelia`, `D2 Capitol`, `D3 Obsidian-Chasm`, `D4 Sector V Commons`, `D5 Twilight Promenade`) with neighbour spillover links.
   * Canvas-rendered Societal Satisfaction 500-run fan chart; five council seats facing the Loom; the Loom's live feed; one-at-a-time citizen quote bar; scene backgrounds with transitions (public/js/council.js); Unicode math-bold titles (public/js/mathbold.js).
 * **Mobile Phone Controller (`public/mobile.html`):**
   * Touch-optimized viewport (`user-scalable=no`).
