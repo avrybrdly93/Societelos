@@ -41,5 +41,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "optionalDependencies": {
+    "kokoro-js": "^1.2.1"
   }
 }

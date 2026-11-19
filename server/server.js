@@ -128,7 +128,7 @@ app.get('/api/tts', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   const out = await tts.synth(req.query.text, req.ip);
   if (out.status !== 200) return res.sendStatus(out.status);
-  res.set('Content-Type', 'audio/mpeg');
+  res.set('Content-Type', out.type || 'audio/mpeg');
   res.set('Cache-Control', 'public, max-age=86400');
   return res.send(out.audio);
 });
@@ -207,6 +207,7 @@ if (require.main === module) {
     }
     console.error(`[server] HTTP server error: ${err && err.message}`);
   });
+  tts.warm(); // Kokoro (if chosen): load the voice model in the background
   server.listen(PORT, () => {
     const port = server.address().port;
     console.log(`[server] Societelos listening on http://localhost:${port}`);

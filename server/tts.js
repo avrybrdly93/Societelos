@@ -1,7 +1,13 @@
 'use strict';
 
-// Societelos - The Loom's spoken voice (ElevenLabs text-to-speech).
+// Societelos - The Loom's spoken voice.
 //
+// Two providers behind one endpoint, chosen by TTS_PROVIDER:
+//   kokoro      free, runs on this machine (server/kokoro.js), works offline once
+//               its model is cached, no key or cost
+//   elevenlabs  paid cloud voice (default when ELEVENLABS_API_KEY is set)
+//   off         browser voice only
+// 
 // The host page asks GET /api/tts?text=... for each line the Loom speaks (intro,
 // briefing, incidents, verdicts - some written live by Gemini) and plays the
 // returned mp3. The API key stays on the server (ELEVENLABS_API_KEY, never
@@ -13,6 +19,8 @@
 // a length cap per line, a per-client rate limit, a global cap on uncached
 // ElevenLabs calls per hour (spend guard) and a bounded cache.
 
+const { createKokoro } = require('./kokoro');
+
 const API_BASE = 'https://api.elevenlabs.io/v1/text-to-speech';
 const DEFAULT_VOICE_ID = 'xzZRXG86mSM3naOyL9fa'; // Rowan - soothing, relaxing, calming
 const DEFAULT_MODEL = 'eleven_multilingual_v2';
@@ -22,10 +30,17 @@ const CLIENT_LIMIT_PER_MIN = 60;   // one host prefetches ~15 lines at once
 const DEFAULT_MAX_CALLS_PER_HOUR = 400;
 const CACHE_MAX = 300;
 
+function getProvider(env = process.env) {
+  const explicit = (env.TTS_PROVIDER || '').trim().toLowerCase();
+  if (['kokoro', 'elevenlabs', 'off'].includes(explicit)) return explicit;
+  return (env.ELEVENLABS_API_KEY || '').trim() ? 'elevenlabs' : 'off';
+}
+
 function getConfig(env = process.env) {
   const apiKey = (env.ELEVENLABS_API_KEY || '').trim();
   const cap = Number(env.ELEVENLABS_MAX_CALLS_PER_HOUR);
   return {
+    provider: getProvider(env),
     apiKey,
     enabled: apiKey.length > 0 && env.LOOM_OFFLINE !== 'true',
     voiceId: (env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID).trim(),
@@ -36,15 +51,17 @@ function getConfig(env = process.env) {
 }
 
 /**
- * Create a synthesiser. `deps` exists for tests: { env, fetchImpl, logger, now }.
- * synth(text, clientId) resolves { status: 200, audio } | { status: 400|429|503 }; it never rejects.
+ * Create a synthesiser. `deps` exists for tests: { env, fetchImpl, logger, now, kokoro }.
+ * synth(text, clientId) resolves { status: 200, audio, type } | { status: 400|429|503 }; it never rejects.
  */
 function createTts(deps = {}) {
   const env = deps.env || process.env;
   const fetchImpl = deps.fetchImpl || ((...a) => globalThis.fetch(...a));
   const logger = deps.logger || ((...a) => console.error(...a));
   const now = deps.now || Date.now;
-  const cache = new Map();        // text -> Promise<Buffer|null>, oldest first
+  let kokoro = deps.kokoro || null; // created on first use, so ElevenLabs-only setups never load it
+  const getKokoro = () => (kokoro = kokoro || createKokoro({ env, logger: deps.logger }));
+  const cache = new Map();        // text -> Promise<{ audio, type } | null>, oldest first
   const clientHits = new Map();   // clientId -> request timestamps in the last minute
   let callTimes = [];             // uncached ElevenLabs calls in the last hour
 
@@ -72,7 +89,7 @@ function createTts(deps = {}) {
         return null;
       }
       const buf = Buffer.from(await res.arrayBuffer());
-      return buf.length ? buf : null;
+      return buf.length ? { audio: buf, type: 'audio/mpeg' } : null;
     } catch (err) {
       logger(`[tts] request failed: ${err && err.name === 'AbortError' ? 'timeout' : (err && err.message) || err}`);
       return null;
@@ -85,29 +102,41 @@ function createTts(deps = {}) {
     const text = typeof rawText === 'string' ? rawText.trim() : '';
     if (!text || text.length > MAX_TEXT) return { status: 400 };
     const cfg = getConfig(env);
-    if (!cfg.enabled) return { status: 503 };
+    if (cfg.provider === 'off') return { status: 503 };
+    if (cfg.provider === 'elevenlabs' && !cfg.enabled) return { status: 503 };
     if (rateLimited(clientId)) return { status: 429 };
 
     if (!cache.has(text)) {
-      const t = now();
-      callTimes = callTimes.filter((x) => t - x < 3600000);
-      if (callTimes.length >= cfg.maxCallsPerHour) {
-        logger('[tts] hourly ElevenLabs call cap reached; using browser voice');
-        return { status: 503 };
+      if (cfg.provider === 'kokoro') {
+        const k = getKokoro();
+        if (!k.isReady()) { k.warm(); return { status: 503 }; } // still loading: browser voice for now
+        cache.set(text, k.generate(text).then((audio) => (audio ? { audio, type: 'audio/wav' } : null)));
+      } else {
+        const t = now();
+        callTimes = callTimes.filter((x) => t - x < 3600000);
+        if (callTimes.length >= cfg.maxCallsPerHour) {
+          logger('[tts] hourly ElevenLabs call cap reached; using browser voice');
+          return { status: 503 };
+        }
+        callTimes.push(t);
+        cache.set(text, request(text, cfg));
       }
-      callTimes.push(t);
-      cache.set(text, request(text, cfg));
       if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
     }
-    const audio = await cache.get(text);
-    if (!audio) {
+    const clip = await cache.get(text);
+    if (!clip) {
       cache.delete(text); // failures are not cached: the next call may succeed
       return { status: 503 };
     }
-    return { status: 200, audio };
+    return { status: 200, audio: clip.audio, type: clip.type };
   }
 
-  return { synth };
+  // Start loading the Kokoro model in the background (called once at server start).
+  function warm() {
+    if (getConfig(env).provider === 'kokoro') getKokoro().warm();
+  }
+
+  return { synth, warm };
 }
 
-module.exports = { createTts, getConfig, DEFAULT_VOICE_ID, MAX_TEXT, CLIENT_LIMIT_PER_MIN };
+module.exports = { createTts, getConfig, getProvider, DEFAULT_VOICE_ID, MAX_TEXT, CLIENT_LIMIT_PER_MIN };
