@@ -64,15 +64,23 @@ test('crisis tree: the root is drawn from the game id (replayable) and recorded 
   const roots = new Set();
   for (let i = 0; i < 24; i++) {
     const game = quiet(() => new GameState({ roomCode: 'TREE' }));
+    game.fixedRoot = null; // default pins "ownership"; unpin to exercise the draw
     game.gameId = `tree-seed-${i}`;
     quiet(() => game.startCycle(1));
     roots.add(game.treeRoot);
     const again = quiet(() => new GameState({ roomCode: 'TREE' }));
+    again.fixedRoot = null;
     again.gameId = game.gameId;
     quiet(() => again.startCycle(1));
     assert.equal(again.treeRoot, game.treeRoot, 'same seed, same root');
   }
   assert.deepEqual([...roots].sort(), engine.treeRoots(data.crises).sort(), 'every root turns up');
+
+  const pinned = quiet(() => new GameState({ roomCode: 'TREE' }));
+  pinned.gameId = 'tree-seed-0';
+  quiet(() => { pinned.startCycle(1); pinned.startIncidentPhase(); });
+  pinned.clearPhaseTimer();
+  assert.equal(pinned.crisis.id, 'fixed-1-ownership', 'by default every game opens with Who Owns the Loom?');
 
   const game = quiet(() => new GameState({ roomCode: 'TREE' }));
   game.fixedRoot = 'factory';
