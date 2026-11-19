@@ -142,6 +142,42 @@ test('a line that hangs is given up on, and the lines after it still get spoken'
   await k.generate('warm');
   await until(() => k.isReady());
   assert.equal(await k.generate('stuck line'), null, 'timed out');
+  await new Promise((r) => setTimeout(r, 120)); // the queue releases a never-ending line after 3x the timeout (90 ms)
   const wav = await k.generate('next line');
   assert.equal(wav.toString('ascii', 0, 4), 'RIFF', 'the queue is not blocked');
+});
+
+test('a line that finishes after its timeout is kept and served instantly next time (no rework)', async () => {
+  let runs = 0;
+  const importer = async () => ({
+    KokoroTTS: {
+      from_pretrained: async () => ({
+        async *stream() {
+          runs++;
+          await new Promise((r) => setTimeout(r, 80)); // slower than the 30 ms timeout, but it does finish
+          yield { audio: clip(10) };
+        }
+      })
+    }
+  });
+  const k = createKokoro({ env: { KOKORO_TIMEOUT_MS: '30' }, logger: quiet, importer });
+  await k.generate('warm');
+  await until(() => k.isReady());
+  assert.equal(await k.generate('slow line'), null, 'caller gave up');
+  assert.equal(await k.generate('slow line'), null, 'still running: shares the same job, not a second one');
+  await new Promise((r) => setTimeout(r, 120));
+  const wav = await k.generate('slow line');
+  assert.equal(wav.toString('ascii', 0, 4), 'RIFF', 'the finished clip was kept');
+  assert.equal(runs, 1, 'synthesised exactly once');
+});
+
+test('KOKORO_DTYPE chooses the model precision (q8 by default)', async () => {
+  const seen = [];
+  const importer = async () => ({ KokoroTTS: { from_pretrained: async (id, o) => { seen.push(o.dtype); return { async *stream() {} }; } } });
+  for (const env of [{}, { KOKORO_DTYPE: 'q4' }, { KOKORO_DTYPE: 'bogus' }]) {
+    const k = createKokoro({ env, logger: quiet, importer });
+    await k.generate('x');
+    await until(() => k.isReady());
+  }
+  assert.deepEqual(seen, ['q8', 'q4', 'q8']);
 });
