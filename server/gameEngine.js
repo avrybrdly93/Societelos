@@ -1020,6 +1020,7 @@ class GameState extends EventEmitter {
       sessionTimerEnabled: this.sessionTimerEnabled,
       isFinale: this.isFinaleCycle(),
       crisis: this.publicCrisis(),
+      needs: this.simState && sim.currentNeeds ? sim.currentNeeds(this.simState) : null,
       ...extra
     }, ['name']);
     this.lastPhasePayload = payload; // replayed to reconnecting clients

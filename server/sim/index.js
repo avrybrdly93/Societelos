@@ -41,7 +41,7 @@
  */
 
 const { createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood } = require('./state');
-const { runSingleSimulation } = require('./step');
+const { runSingleSimulation, needsSnapshot, getTopology } = require('./step');
 const { hashSeed } = require('./prng');
 
 /** Linear-interpolated percentile of a sorted numeric array (p in [0, 1]). */
@@ -149,6 +149,7 @@ function simulate(state, effects, opts = {}) {
     finalGdw,
     collapsed,
     districts: realizedRun.districts,
+    needs: realizedRun.needs,
     shocks: realizedRun.shocks
   };
 
@@ -270,4 +271,9 @@ function citizenMoods(before, after, citizens = []) {
   });
 }
 
-module.exports = { simulate, getForecastMedian, closingCitizen, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };
+function currentNeeds(state) {
+  if (!state) return null;
+  return needsSnapshot(state, getTopology(state).popWeight);
+}
+
+module.exports = { currentNeeds, simulate, getForecastMedian, closingCitizen, simulateStub, createInitialState, cloneState, computeGDW, computeDistrictWellbeing, getCitizenMood, citizenMoods, percentile };

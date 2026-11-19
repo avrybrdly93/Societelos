@@ -94,7 +94,7 @@ const CYCLE5 = {
     'finale-callout', 'finale-progress', 'finale-progress-count', 'finale-status', 'finale-status-text', 'finale-status-sub',
     'view-finale', 'finale-title', 'finale-instruction', 'proposal-cards', 'finale-clock', 'rank-progress', 'rank-progress-count',
     'view-enact', 'enact-wait', 'enact-cards', 'borda-bars', 'resolution-enacted', 'finale-fallback-notice',
-    'forecast-chart', 'council-seats', 'citizen-ticker', 'loom-feed', 'scoreboard', 'champion-card', 'confetti', 'cycle-indicator', 'btn-fullscreen'
+    'forecast-chart', 'council-seats', 'citizen-ticker', 'maslow-pyramid', 'scoreboard', 'champion-card', 'confetti', 'cycle-indicator', 'btn-fullscreen'
   ],
   'mobile.html': [
     'm-view-finale-write', 'finale-goal', 'finale-goal-text', 'finale-form', 'finale-text', 'finale-count', 'finale-submit', 'finale-error',

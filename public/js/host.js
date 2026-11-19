@@ -632,6 +632,11 @@
 
   socket.on('phase', onPhase);
 
+  // Maslow pyramid: average need scores of the 500-citizen sample.
+  const pyramid = window.MaslowPyramid;
+  if (pyramid) pyramid.mount(document.getElementById('maslow-pyramid'));
+  socket.on('phase', (payload) => { if (pyramid && payload && payload.needs) pyramid.setNeeds(payload.needs); });
+
   // Cohort legend under the map (Youth 25% | Former Workers 45% | ...). The
   // static markup matches data/sim.json; a region payload carrying
   // cohorts [{ name, share, ages }] replaces it.
@@ -1080,6 +1085,8 @@
     // exactly on the server's rounded GDW.
     const months = (payload.realized && payload.realized.gdw) || [];
     setGdw(month >= months.length - 1 && typeof payload.gdw === 'number' ? payload.gdw : gdw);
+    const needs = payload.realized && payload.realized.needs;
+    if (window.MaslowPyramid && needs && needs[month]) window.MaslowPyramid.setNeeds(needs[month]);
   }
 
   // Finale: the enactment reveal holds the projector for a few seconds, then

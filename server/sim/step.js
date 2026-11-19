@@ -253,6 +253,21 @@ function districtSnapshot(state, districtIds) {
 }
 
 /**
+ * Population-weighted mean of each trait, 0-100, keyed by trait name.
+ * Feeds the Maslow pyramid on the projector.
+ */
+function needsSnapshot(state, popWeight) {
+  const K = state.traitNames.length;
+  const out = {};
+  state.traitNames.forEach((t, k) => {
+    let sum = 0;
+    for (let i = 0; i < popWeight.length; i++) sum += popWeight[i] * state.traits[i * K + k];
+    out[t] = Math.round(sum * 1000) / 10;
+  });
+  return out;
+}
+
+/**
  * Run one 12-month simulation from `initialState` (left untouched).
  * opts: { volatility, trackDistricts (default: realized runs only) }
  * A forecast run redraws the model's uncertain parameters from the seed:
@@ -279,18 +294,19 @@ function runSingleSimulation(initialState, effects, seed, isForecast = false, op
   const gdw = new Float64Array(months + 1);
   gdw[0] = fastGdw(state, params);
   const districts = trackDistricts ? [districtSnapshot(state, params.districtIds)] : [];
+  const needs = trackDistricts ? [needsSnapshot(state, params.popWeight)] : [];
   const shocks = trackShocks ? [] : null;
   for (let m = 1; m <= months; m++) {
     stepMonth(state, effects, m, params, rng, shocks);
     gdw[m] = fastGdw(state, params);
-    if (trackDistricts) districts.push(districtSnapshot(state, params.districtIds));
+    if (trackDistricts) { districts.push(districtSnapshot(state, params.districtIds)); needs.push(needsSnapshot(state, params.popWeight)); }
   }
   state.month = 0;
-  return { seed, gdw, districts, shocks: shocks || [], finalState: state };
+  return { seed, gdw, districts, needs, shocks: shocks || [], finalState: state };
 }
 
 module.exports = {
   fastGdw,
   getTopology,
   runSingleSimulation,
-  districtSnapshot, buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01, SHOCK_NAMES };
+  districtSnapshot, needsSnapshot, buildParams, stepMonth, adoptedShare, applyAdoption, applyDrift, applyNoise, applyShocks, applySpillover, clampTraits, clamp01, SHOCK_NAMES };
