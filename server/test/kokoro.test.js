@@ -125,3 +125,23 @@ test('a Kokoro error on a line answers 503 and is not cached', async () => {
   fail = false;
   assert.equal((await tts.synth('line one')).status, 200);
 });
+
+test('a line that hangs is given up on, and the lines after it still get spoken', async () => {
+  let first = true;
+  const importer = async () => ({
+    KokoroTTS: {
+      from_pretrained: async () => ({
+        async *stream() {
+          if (first) { first = false; await new Promise(() => {}); } // never finishes
+          yield { audio: clip(10) };
+        }
+      })
+    }
+  });
+  const k = createKokoro({ env: { KOKORO_TIMEOUT_MS: '30' }, logger: quiet, importer });
+  await k.generate('warm');
+  await until(() => k.isReady());
+  assert.equal(await k.generate('stuck line'), null, 'timed out');
+  const wav = await k.generate('next line');
+  assert.equal(wav.toString('ascii', 0, 4), 'RIFF', 'the queue is not blocked');
+});

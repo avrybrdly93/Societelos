@@ -15,6 +15,7 @@ const MODEL_ID = 'onnx-community/Kokoro-82M-v1.0-ONNX';
 const DEFAULT_VOICE = 'bm_george'; // calm British male; try am_michael, bm_lewis, af_heart...
 const DEFAULT_SPEED = 0.95;
 const RETRY_AFTER_MS = 60000;
+const DEFAULT_TIMEOUT_MS = 20000; // a line that takes longer is given up on (browser voice)
 
 /** Float32 samples (-1..1) -> 16-bit PCM mono WAV file (Buffer). */
 function encodeWav(samples, sampleRate) {
@@ -65,6 +66,7 @@ function createKokoro(deps = {}) {
   const voice = (env.KOKORO_VOICE || DEFAULT_VOICE).trim();
   const speed = Number(env.KOKORO_SPEED) > 0 ? Number(env.KOKORO_SPEED) : DEFAULT_SPEED;
 
+  const timeoutMs = Number(env.KOKORO_TIMEOUT_MS) > 0 ? Number(env.KOKORO_TIMEOUT_MS) : DEFAULT_TIMEOUT_MS;
   let state = 'idle'; // idle | loading | ready | failed
   let model = null;
   let failedAt = 0;
@@ -91,17 +93,28 @@ function createKokoro(deps = {}) {
     if (state === 'failed' && now() - failedAt > RETRY_AFTER_MS) warm();
     else if (state === 'idle') warm();
     if (state !== 'ready') return Promise.resolve(null);
-    const job = queue.then(async () => {
-      try {
-        const clips = [];
-        for await (const chunk of model.stream(text, { voice, speed })) clips.push(chunk.audio);
-        if (!clips.length) return null;
-        const { audio, sampling_rate } = concatClips(clips);
-        return encodeWav(audio, sampling_rate);
-      } catch (err) {
-        logger(`[tts] Kokoro failed on a line: ${(err && err.message) || err}`);
-        return null;
-      }
+    const job = queue.then(() => {
+      let timer;
+      const work = (async () => {
+        try {
+          const clips = [];
+          for await (const chunk of model.stream(text, { voice, speed })) clips.push(chunk.audio);
+          if (!clips.length) return null;
+          const { audio, sampling_rate } = concatClips(clips);
+          return encodeWav(audio, sampling_rate);
+        } catch (err) {
+          logger(`[tts] Kokoro failed on a line: ${(err && err.message) || err}`);
+          return null;
+        }
+      })();
+      // A stuck line must not block every line after it.
+      const limit = new Promise((resolve) => {
+        timer = setTimeout(() => {
+          logger(`[tts] Kokoro took over ${timeoutMs / 1000}s on a line; giving up on it (browser voice).`);
+          resolve(null);
+        }, timeoutMs);
+      });
+      return Promise.race([work, limit]).finally(() => clearTimeout(timer));
     });
     queue = job.then(() => undefined, () => undefined);
     return job;

@@ -383,9 +383,17 @@
       return spans.length - 1;
     }
 
+    // Never hold the game up for a slow server voice: after this long, that
+    // line is read by the browser voice instead (the clip keeps loading in the
+    // background and is used the next time the line comes up).
+    const CLIP_WAIT_MS = 8000;
+
     // Resolves 'played' | 'unavailable' | 'stale' (stop() ran meanwhile).
     function playClip(text, id, onFraction) {
-      return loadClip(text).then((src) => {
+      let waitTimer = 0;
+      const tooSlow = new Promise((resolve) => { waitTimer = setTimeout(() => resolve(null), CLIP_WAIT_MS); });
+      return Promise.race([loadClip(text), tooSlow]).then((src) => {
+        clearTimeout(waitTimer);
         if (id !== runId) return 'stale';
         if (!src) return 'unavailable';
         return new Promise((resolve) => {
