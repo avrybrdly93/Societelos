@@ -321,16 +321,45 @@ body.host .resolution-loom {
 body.host .resolution-panel .forecast-banner { flex: 0 0 auto; position: relative; }
 body.host .resolution-panel .chart-wrap { flex: 1 1 0; min-height: 120px; }
 
-/* Maslow pyramid (right column of the chamber) */
+/* Wellness HUD: volumetric Maslow pyramid + SDT gauges + 50/50 split (right column) */
 #view-chamber .chamber-feed { max-height: none; }
-.maslow-pyramid { display: flex; flex-direction: column; align-items: stretch; flex: 1; min-height: 0; gap: 6px; }
-body.host .maslow-pyramid .label { font-size: 15px !important; letter-spacing: .14em !important; line-height: 1.3 !important; margin: 0; }
-body.host .maslow-pyramid .pyramid-sub { margin: 0; font-size: 11px !important; letter-spacing: .08em !important; text-transform: uppercase; color: var(--ice, #cfe3ff); opacity: .7; }
-.pyramid-canvas { width: 100%; flex: 1 1 auto; min-height: 320px; display: block; }
-.pyramid-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
-body.host .pyramid-legend li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 10px; border-left: 4px solid hsl(var(--h) 70% 58%); background: rgba(10,12,18,.5); }
-body.host .pyramid-legend .pl-name { font-size: 14px !important; letter-spacing: .04em !important; text-transform: none !important; color: var(--ice, #cfe3ff); white-space: nowrap; }
-body.host .pyramid-legend .pl-val { font-size: 16px !important; letter-spacing: 0 !important; color: #fff; }
+.maslow-pyramid { display: flex; flex-direction: column; align-items: stretch; flex: 0 1 auto; min-height: 0; gap: 6px; }
+.wellness-hud { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 14px; background: linear-gradient(180deg, rgba(235,243,255,.10), rgba(29,70,200,.14)); border: 1px solid rgba(207,227,255,.28); transition: box-shadow .4s, border-color .4s; }
+body.host .wellness-hud .label { font-size: 15px !important; letter-spacing: .14em !important; line-height: 1.3 !important; margin: 0; color: #fff; }
+body.host .wellness-hud .pyramid-sub { margin: 0; font-size: 10px !important; letter-spacing: .06em !important; text-transform: uppercase; color: var(--ice, #cfe3ff); opacity: .75; }
+.pyramid-canvas { width: 100%; height: 250px; flex: 0 0 auto; display: block; }
+.pyramid-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+body.host .pyramid-legend li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 10px; border-left: 4px solid #2f5fe8; background: rgba(235,243,255,.08); border-radius: 0 6px 6px 0; }
+body.host .pyramid-legend .pl-name { font-size: 13px !important; letter-spacing: .04em !important; text-transform: none !important; color: var(--ice, #cfe3ff); white-space: nowrap; }
+body.host .pyramid-legend .pl-val { font-size: 15px !important; letter-spacing: 0 !important; color: #fff; }
+.sdt-box, .split-box { display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; border-radius: 10px; background: rgba(8,16,40,.35); border: 1px solid rgba(207,227,255,.18); transition: box-shadow .4s, border-color .4s, background .4s; }
+body.host .sdt-box .label { font-size: 13px !important; letter-spacing: .12em !important; margin: 0; }
+.sdt-top, .split-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+body.host .sdt-name, body.host .split-name { font-size: 13px !important; letter-spacing: .04em !important; text-transform: none !important; color: var(--ice, #cfe3ff); }
+body.host .sdt-val, body.host .split-pts { font-size: 14px !important; letter-spacing: 0 !important; color: #fff; }
+.sdt-bar, .split-bar { height: 7px; border-radius: 4px; background: rgba(207,227,255,.16); overflow: hidden; }
+.sdt-bar i, .split-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, #8fb4ff, #2f5fe8); transition: width .3s; }
+.split-row.is-agency .split-bar i { background: linear-gradient(90deg, #e9f1ff, #9cc0ff); }
+.split-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 4px; border-top: 1px solid rgba(207,227,255,.22); }
+body.host .split-total-label { font-size: 13px !important; letter-spacing: .12em !important; text-transform: uppercase; color: var(--ice, #cfe3ff); }
+body.host .split-total-val { font-size: 22px !important; letter-spacing: 0 !important; color: #fff; }
+.wellness-hud[data-hl="foundation"] .pyramid-canvas, .wellness-hud[data-hl="foundation"] .pyramid-legend,
+.wellness-hud[data-hl="both"] .split-box { filter: drop-shadow(0 0 10px rgba(143,180,255,.8)); }
+.wellness-hud[data-hl="foundation"] .split-row.is-foundation, .wellness-hud[data-hl="weave"] .split-row.is-agency { outline: 2px solid #9cc0ff; outline-offset: 3px; border-radius: 6px; }
+.wellness-hud[data-hl="weave"] .sdt-box { border-color: #9cc0ff; box-shadow: 0 0 18px rgba(143,180,255,.55); }
+.wellness-hud[data-hl="both"] .split-box { border-color: #9cc0ff; box-shadow: 0 0 22px rgba(143,180,255,.65); }
+
+/* Cycle 00 briefing (Loom onboarding on the projector) */
+.intro-brief { display: none; grid-template-columns: minmax(0, 1.1fr) minmax(300px, 420px); gap: 28px; align-items: start; margin-top: 14px; }
+.intro-brief.is-open { display: grid; }
+.intro-brief .brief-beats { display: flex; flex-direction: column; gap: 10px; }
+.intro-brief .brief-beat { margin: 0; padding: 12px 16px; border-left: 4px solid rgba(207,227,255,.3); background: rgba(235,243,255,.06); opacity: .35; transition: opacity .4s, border-color .4s, background .4s; }
+.intro-brief .brief-beat.is-active { opacity: 1; border-color: #9cc0ff; background: rgba(47,95,232,.22); }
+.intro-brief .brief-beat.is-done { opacity: .6; }
+body.host .intro-brief .brief-tag { display: block; font-size: 12px !important; letter-spacing: .16em !important; color: #9cc0ff; text-transform: uppercase; margin-bottom: 4px; }
+body.host .intro-brief .brief-beat .brief-text { display: block; font-size: 21px !important; line-height: 1.45 !important; letter-spacing: .01em !important; text-transform: none !important; color: #fff; }
+.voice-card.is-briefing #intro-crawl { display: none; }
+.voice-card.is-briefing .intro-brief { margin-top: 0; }
 
 /* Delayed payoff line (Public Dividends) */
 body.host .dividend-line { margin: 0; padding: 8px 16px; font-size: 20px !important; letter-spacing: .04em !important; color: #bff2d4; background: rgba(40, 120, 80, 0.28); border: 1px solid rgba(120, 220, 170, 0.45); border-radius: 12px; flex: 0 0 auto; }

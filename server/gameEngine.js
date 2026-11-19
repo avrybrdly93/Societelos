@@ -105,6 +105,12 @@ const INTRO_TRANSMISSION = Object.freeze([
   "I have chosen five citizens at random to decide the fate of humanity. You.",
   GAME_GOAL
 ]);
+// Cycle 00 briefing: the three beats the Loom walks the council through.
+const BRIEFING_BEATS = Object.freeze([
+  'Beat one, the Foundation. Half of Societal Satisfaction is Maslow\'s pyramid, weighted by volume: physiological 48.8%, safety 29.6%, belonging 15.2%, esteem 5.6%, self-actualization 0.8%. Each tier only counts as far as the tier beneath it holds, so a cracked base pinches everything above it.',
+  'Beat two, the Psychological Weave. The other half is Self-Determination: autonomy, competence and relatedness. Comfort without agency is a gilded cage. A full belly with no voice scores low.',
+  'Beat three, the Council Directive. Watch the two meters, Foundation and Agency, each worth fifty percent. Every policy moves both, and every policy has a price. Balance them.'
+]);
 const STARTING_GDW = 25;
 const ASSEMBLY_VOLATILITY = 1.5;
 const FINALE_MAX_CHARS = 140; // finale write-in length limit
@@ -164,7 +170,7 @@ const PHASE_STARTERS = {
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
-  INTRO: 75, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
+  INTRO: 160, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
   ROLE_ASSIGN: 40,
   CHAMBER: 10,
   INCIDENT: 15, // minimum; stretched to fit the Loom reading the crisis (incidentDurationMs)
@@ -1020,7 +1026,7 @@ class GameState extends EventEmitter {
       sessionTimerEnabled: this.sessionTimerEnabled,
       isFinale: this.isFinaleCycle(),
       crisis: this.publicCrisis(),
-      needs: this.simState && sim.currentNeeds ? sim.currentNeeds(this.simState) : null,
+      needs: this.currentNeedsSnapshot(),
       ...extra
     }, ['name']);
     this.lastPhasePayload = payload; // replayed to reconnecting clients
@@ -1945,12 +1951,23 @@ class GameState extends EventEmitter {
    * LOBBY -> INTRO, triggered by the host. Returns false if the game has
    * already started.
    */
+  /** Wellness breakdown for the HUD; before cycle 1 it is the untouched baseline. */
+  currentNeedsSnapshot() {
+    try {
+      if (!sim.currentNeeds) return null;
+      if (this.simState) return sim.currentNeeds(this.simState);
+      if (!this.baselineNeeds) this.baselineNeeds = sim.currentNeeds(createSimState(this.data.sim));
+      return this.baselineNeeds || null;
+    } catch (err) { return null; }
+  }
+
   startIntroPhase() {
     if (this.phase !== PHASES.LOBBY) return false;
     this.startedAt = Date.now();
     this.loomFeed = [];
     this.enterPhase(PHASES.INTRO, { goal: GAME_GOAL });
     for (const line of INTRO_TRANSMISSION) this.addLoomLine('voice', line);
+    for (const line of BRIEFING_BEATS) this.addLoomLine('voice', line);
     console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
     return true;
   }
@@ -2547,6 +2564,7 @@ module.exports = {
   START_YEAR,
   GAME_GOAL,
   INTRO_TRANSMISSION,
+  BRIEFING_BEATS,
   GameState,
   rooms,
   createRoom,

@@ -48,6 +48,10 @@ const SYSTEM_PROMPT = [
   '',
   'When translating a policy, score its likely effect on six traits from -1.0 (strongly worse) to +1.0 (strongly better):',
   'purpose, connection, health, trust (in the Loom), fairness, autonomy. Most policies move 2-3 traits; use 0 for the rest.',
+  'Societal Satisfaction is a 50/50 blend of two models, so every policy must be scored against both:',
+  'Maslow tiers (50%, each tier builds on the one below, so a cracked base drags every tier above it): health = Physiological (48.8% of the tier weight), trust = Safety (29.6%), connection = Belonging (15.2%), fairness = Esteem (5.6%), purpose = Self-actualization (0.8%).',
+  'Self-Determination Theory (50%): autonomy = Autonomy, purpose = Competence, connection and trust = Relatedness.',
+  'Show realistic trade-offs: authoritarian security raises health and trust but cuts autonomy; unchecked autonomy raises autonomy and purpose but strains health and trust (grid and supply strain); comfort without agency (a gilded cage) raises health while cutting autonomy and purpose.',
   'Match the calibration examples. Tag at most 2 roles from: artisan, lotus, assimilator, ghost.',
   '',
   'When narrating, use only the facts in the simulation summary. Write citizen messages in each citizen\'s own voice, as short texts or posts.',
@@ -344,6 +348,7 @@ async function narrate(rawContext = {}, opts = {}) {
       `Citizens (use only these ids): ${JSON.stringify(citizens)}`,
       `Most affected first: ${rankCitizensByShift(citizens, context.simSummary).slice(0, 10).map((c) => `${c.id} (${DISTRICT_NAMES[c.district] || c.district} ${c.cohort})`).join(', ')}`,
       'Always name districts by name (D1 Aurelia, D2 Capitol, D3 Obsidian-Chasm, D4 Sector V Commons, D5 Twilight Promenade), never by code like D3 or "District 3", and never mention world codes like AA or BB.',
+      'Where it helps, say which layer moved: the foundation (survival and safety) or agency (autonomy, competence, relatedness).',
       'Pick 6-10 different citizens, favouring those whose district and cohort moved most in the summary.',
       'Voice each one in character (see "voice"); their message must match how their own cohort fared (mood, moodChange and topChange when given).',
       'Return a Loom line (max 200 characters) and 6-10 citizen messages (max 140 characters each).'

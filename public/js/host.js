@@ -551,16 +551,44 @@
       'I have chosen five citizens at random to decide the fate of humanity. You.',
       'Five crises. Keep Satisfaction above zero together. Score alone by voting your character\'s beliefs.'
     ];
+    const BRIEF_SPOKEN = [
+      'Beat one, the Foundation. Half of Societal Satisfaction is Maslow\'s pyramid, weighted by volume. Each tier only counts as far as the tier beneath it holds, so a cracked base pinches everything above it.',
+      'Beat two, the Psychological Weave. The other half is autonomy, competence and relatedness. Comfort without agency is a gilded cage.',
+      'Beat three, the Council Directive. Watch the two meters, Foundation and Agency, each worth fifty percent. Every policy moves both, and every policy has a price.'
+    ];
     async function narrateIntro() {
       stop();
       const id = runId;
       const crawl = document.getElementById('intro-crawl');
       if (!crawl) return false;
+      const vcard = crawl.closest('.voice-card'); if (vcard) vcard.classList.remove('is-briefing');
+      const bf = document.getElementById('intro-brief'); if (bf) bf.classList.remove('is-open');
       const paragraphs = Array.from(crawl.querySelectorAll('p')).map((p, i) => ({ spans: tokenize(p), spoken: INTRO_SPOKEN[i] || p.textContent }));
       for (const { spans, spoken } of paragraphs) {
         if (id !== runId) return false;
         if (!(await play(spans, spoken))) return false;
         await new Promise((r) => later(380, r));
+      }
+      // Cycle 00 briefing: three Loom beats, each lighting up its part of the HUD.
+      const brief = document.getElementById('intro-brief');
+      if (brief) {
+        brief.classList.add('is-open');
+        const vc = brief.closest('.voice-card'); if (vc) vc.classList.add('is-briefing');
+        const hud = getBriefHud();
+        const beats = Array.from(brief.querySelectorAll('.brief-beat'));
+        beats.forEach((b) => b.classList.remove('is-active', 'is-done'));
+        for (let i = 0; i < beats.length; i++) {
+          if (id !== runId) return false;
+          const b = beats[i];
+          b.classList.add('is-active');
+          if (hud) hud.highlight(b.dataset.hl);
+          const textEl = b.querySelector('.brief-text');
+          const ok = await narrate(textEl, textEl.textContent, { spoken: BRIEF_SPOKEN[i] });
+          b.classList.remove('is-active'); b.classList.add('is-done');
+          if (!ok) return false;
+          await new Promise((r) => later(500, r));
+        }
+        if (hud) hud.highlight('both');
       }
       return id === runId;
     }
@@ -627,7 +655,7 @@
     state.isFinale = !!payload.isFinale;
     showView(PHASE_VIEWS[payload.phase] || 'view-chamber');
     document.body.dataset.phase = payload.phase;
-    const cycleText = state.sessionTimerEnabled ? `POLICY ${state.cycle}` : `CYCLE ${state.cycle}/5`;
+    const cycleText = state.sessionTimerEnabled ? `POLICY ${state.cycle}` : (payload.phase === 'INTRO' ? 'CYCLE 00' : `CYCLE ${state.cycle}/5`);
     if (payload.year) document.getElementById('year-indicator').textContent = String(payload.year);
     // Finale: "CYCLE 5/5 — FINALE", the tag in the theme accent.
     const cycleEl = document.getElementById('cycle-indicator');
@@ -676,7 +704,20 @@
   // Maslow pyramid: average need scores of the 500-citizen sample.
   const pyramid = window.MaslowPyramid;
   if (pyramid) pyramid.mount(document.getElementById('maslow-pyramid'));
-  socket.on('phase', (payload) => { if (pyramid && payload && payload.needs) pyramid.setNeeds(payload.needs); });
+  let briefHud = null, lastNeeds = null;
+  function getBriefHud() {
+    if (!briefHud && window.MaslowPyramid) {
+      briefHud = window.MaslowPyramid.create(document.getElementById('brief-hud'));
+      if (briefHud && lastNeeds) briefHud.setNeeds(lastNeeds);
+    }
+    return briefHud;
+  }
+  socket.on('phase', (payload) => {
+    if (!payload || !payload.needs) return;
+    lastNeeds = payload.needs;
+    if (pyramid) pyramid.setNeeds(payload.needs);
+    if (briefHud) briefHud.setNeeds(payload.needs);
+  });
 
   // Cohort legend under the map (Youth 25% | Former Workers 45% | ...). The
   // static markup matches data/sim.json; a region payload carrying

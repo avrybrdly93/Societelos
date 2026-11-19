@@ -228,7 +228,7 @@
   };
   const WAIT_MESSAGES = {
     LOBBY: 'Waiting for the council to assemble…',
-    INTRO: 'Incoming transmission. Watch the screen.',
+    INTRO: 'Cycle 00: the Loom is briefing the council on the Foundation and the Weave. Watch the screen.',
     CHAMBER: 'The region is coming online. Watch the screen.',
     INCIDENT: 'A crisis is unfolding. Watch the screen.',
     RESOLUTION: 'The Loom is simulating your decision. Watch the screen.',
