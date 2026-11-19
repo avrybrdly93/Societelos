@@ -20,3 +20,7 @@ services:
       # Set in the Render dashboard; never committed.
       - key: GEMINI_API_KEY
         sync: false
+      # The Loom's spoken voice (ElevenLabs, Rowan). Optional: without it the
+      # host page uses the browser's built-in voice. Set in the Render dashboard.
+      - key: ELEVENLABS_API_KEY
+        sync: false

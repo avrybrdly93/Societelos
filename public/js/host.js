@@ -349,10 +349,77 @@
       timers.add(t);
       return t;
     }
+    // ---- Server voice (ElevenLabs "Rowan" via GET /api/tts) -----------------
+    // Each line is fetched as an mp3 and played; words are revealed in proportion
+    // to playback. Any failure (503: no key / offline / ElevenLabs down, or
+    // autoplay blocked) resolves 'unavailable' and play() carries on with the
+    // browser's built-in voice below, exactly as before.
+    let currentAudio = null;
+    let endCurrentClip = null;
+    const clipCache = new Map(); // spoken text -> Promise<object URL | null>
+
+    function loadClip(text) {
+      if (!clipCache.has(text)) {
+        const base = socketUrl ? `${socketUrl}/api/tts` : 'api/tts';
+        const p = fetch(`${base}?text=${encodeURIComponent(text)}`)
+          .then((res) => (res.ok ? res.blob() : null))
+          .then((blob) => (blob && blob.size ? URL.createObjectURL(blob) : null))
+          .catch(() => null);
+        clipCache.set(text, p);
+        p.then((src) => { if (!src) clipCache.delete(text); });
+      }
+      return clipCache.get(text);
+    }
+
+    // Index of the word being spoken at `fraction` (0..1) of the clip, weighting
+    // each word by its length so short words do not get as much time as long ones.
+    function wordIndexAt(spans, fraction) {
+      const total = spans.reduce((n, s) => n + s.textContent.length + 1, 0);
+      let acc = 0;
+      for (let i = 0; i < spans.length; i++) {
+        acc += spans[i].textContent.length + 1;
+        if (fraction * total < acc) return i;
+      }
+      return spans.length - 1;
+    }
+
+    // Resolves 'played' | 'unavailable' | 'stale' (stop() ran meanwhile).
+    function playClip(text, id, onFraction) {
+      return loadClip(text).then((src) => {
+        if (id !== runId) return 'stale';
+        if (!src) return 'unavailable';
+        return new Promise((resolve) => {
+          const audio = new Audio(src);
+          let raf = 0;
+          let over = false;
+          const end = (result) => {
+            if (over) return;
+            over = true;
+            cancelAnimationFrame(raf);
+            if (currentAudio === audio) { currentAudio = null; endCurrentClip = null; }
+            resolve(result);
+          };
+          const tick = () => {
+            if (audio.duration > 0) onFraction(audio.currentTime / audio.duration);
+            raf = requestAnimationFrame(tick);
+          };
+          currentAudio = audio;
+          endCurrentClip = end;
+          audio.onended = () => end('played');
+          audio.onerror = () => end('unavailable');
+          audio.play().then(() => { raf = requestAnimationFrame(tick); }).catch(() => end('unavailable'));
+        });
+      });
+    }
+
     function stop() {
       runId++;
       timers.forEach(clearTimeout);
       timers.clear();
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch (err) { /* ignore */ }
+        if (endCurrentClip) endCurrentClip('stale');
+      }
       if (synth) { try { synth.cancel(); lastCancelAt = performance.now(); } catch (err) { /* ignore */ } }
     }
 
@@ -447,6 +514,10 @@
         }
         if (!spans.length) { finish(); return; }
 
+        // The browser's built-in voice (or the timed word reveal when muted or
+        // unsupported): the original path, now the fallback for the server voice.
+        function browserPlay() {
+        if (done || id !== runId) return;
         if (enabled && synth) {
           try {
             // Where each shown word starts in the spoken text.
@@ -533,6 +604,17 @@
           }
         }
         startTimed();
+        }
+
+        if (enabled) {
+          playClip(spokenText, id, (f) => reveal(wordIndexAt(spans, f))).then((result) => {
+            if (result === 'played') finish();
+            else if (result === 'unavailable') browserPlay();
+            else finish(); // stale: finish() resolves false because stop() ran
+          });
+        } else {
+          browserPlay();
+        }
       });
     }
 
@@ -564,6 +646,10 @@
       const vcard = crawl.closest('.voice-card'); if (vcard) vcard.classList.remove('is-briefing');
       const bf = document.getElementById('intro-brief'); if (bf) bf.classList.remove('is-open');
       const paragraphs = Array.from(crawl.querySelectorAll('p')).map((p, i) => ({ spans: tokenize(p), spoken: INTRO_SPOKEN[i] || p.textContent }));
+      if (enabled) { // fetch every spoken line up front so there is no wait between them
+        paragraphs.forEach((p) => loadClip(p.spoken));
+        BRIEF_SPOKEN.forEach((t) => loadClip(t));
+      }
       for (const { spans, spoken } of paragraphs) {
         if (id !== runId) return false;
         if (!(await play(spans, spoken))) return false;
@@ -603,7 +689,10 @@
       narrateIntro,
       narrate,
       // Lay out `text` as hidden words without speaking (keeps the layout still).
-      prepare: (el, text) => tokenize(el, String(text || '')),
+      prepare: (el, text) => {
+        if (enabled && text) loadClip(String(text)); // start fetching the clip while the page lays out
+        return tokenize(el, String(text || ''));
+      },
       speakLoomLine: (el, text) => narrate(el, text),
       stop
     };
