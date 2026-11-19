@@ -31,7 +31,7 @@
   const ruleEl = crisisBox.querySelector('.cine-rule');
 
   const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const INTRO_ART = 'img/new-style/Loom-Loading-Screen.png';
+  const INTRO_ART = 'img/new-style/Loom-Loading-Screen.webp';
   const CRISIS_ART_DIR = 'img/crises/';
   // Crisis id -> image in public/img/crises/ (1920x1080 or larger, no text).
   // Prompts for every crisis: docs/crisis-art-prompts.md.
@@ -44,11 +44,11 @@
   // automated industry, Sector V Commons = ordinary daily life, Twilight
   // Promenade = leisure, distraction and escape.
   const DISTRICT_ART = {
-    aurelia: 'img/new-style/Districts/Aurelia.png',
-    capitol: 'img/new-style/Districts/Capitol.png',
-    chasm: 'img/new-style/Districts/Obsidian-Chasm.png',
-    commons: 'img/new-style/Districts/SectorVCommons.png',
-    promenade: 'img/new-style/Districts/Twilight-Promenade.png'
+    aurelia: 'img/new-style/Districts/Aurelia.webp',
+    capitol: 'img/new-style/Districts/Capitol.webp',
+    chasm: 'img/new-style/Districts/Obsidian-Chasm.webp',
+    commons: 'img/new-style/Districts/SectorVCommons.webp',
+    promenade: 'img/new-style/Districts/Twilight-Promenade.webp'
   };
   const CRISIS_DISTRICT = {
     'fixed-1-ownership': 'aurelia', 'fixed-2-board': 'aurelia', 'fixed-1-factory': 'chasm',

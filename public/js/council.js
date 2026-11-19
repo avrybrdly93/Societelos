@@ -22,21 +22,21 @@
   // Scenes: one background per view, chosen to fit the moment.
   // ---------------------------------------------------------------------------
   const SCENES = {
-    'view-lobby': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%' },
-    'view-intro': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center' },
-    'view-roles': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%' },
-    'view-chamber': { src: IMG('new-style/Council.png'), pos: 'center 35%' },
-    'view-world': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%' },
-    'view-finale': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 35%' },
-    'view-enact': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 35%' },
-    'view-end': { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%' }
+    'view-lobby': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 30%' },
+    'view-intro': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center' },
+    'view-roles': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 40%' },
+    'view-chamber': { src: IMG('new-style/Council.webp'), pos: 'center 35%' },
+    'view-world': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 40%' },
+    'view-finale': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 35%' },
+    'view-enact': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 35%' },
+    'view-end': { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 30%' }
   };
   // The world you built changes what the world-reveal and end scenes look like.
   const WORLD_SCENES = {
-    AA: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 30%', grade: 'sepia(0.25) saturate(0.9)' },
-    AB: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'saturate(0.4) hue-rotate(140deg) brightness(0.85)' },
-    BA: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'sepia(0.5) hue-rotate(-25deg) saturate(1.4) brightness(0.75)' },
-    BB: { src: IMG('new-style/Loom-Loading-Screen.png'), pos: 'center 40%', grade: 'grayscale(0.85) brightness(0.6) contrast(1.15)' }
+    AA: { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 30%', grade: 'sepia(0.25) saturate(0.9)' },
+    AB: { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 40%', grade: 'saturate(0.4) hue-rotate(140deg) brightness(0.85)' },
+    BA: { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 40%', grade: 'sepia(0.5) hue-rotate(-25deg) saturate(1.4) brightness(0.75)' },
+    BB: { src: IMG('new-style/Loom-Loading-Screen.webp'), pos: 'center 40%', grade: 'grayscale(0.85) brightness(0.6) contrast(1.15)' }
   };
   let worldKey = null;
   let shutdown = false;
