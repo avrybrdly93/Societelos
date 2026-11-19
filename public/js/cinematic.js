@@ -190,6 +190,53 @@
   })();
 
   // ---------------------------------------------------------------------------
+  // Intro song: plays from the "click to begin" gesture and carries the title
+  // screen. It fades out when the host enters the lobby (or the intro is
+  // dismissed). If the file cannot play, the synthesized entrance is the fallback.
+  // ---------------------------------------------------------------------------
+  const song = (() => {
+    const SRC = 'audio/intro-song.m4a';
+    const VOLUME = 0.7;
+    const FADE_MS = 1400;
+    let audio = null;
+    let fadeTimer = null;
+    function stopNow() {
+      clearInterval(fadeTimer);
+      fadeTimer = null;
+      if (audio) { try { audio.pause(); } catch (e) { /* ignore */ } audio = null; }
+    }
+    // Resolves true when the song is playing, false when the caller should
+    // fall back to the synthesized entrance.
+    function play(muted) {
+      stopNow();
+      if (muted || typeof Audio === 'undefined') return Promise.resolve(false);
+      const el = new Audio(SRC);
+      el.loop = true;
+      el.volume = VOLUME;
+      audio = el;
+      return el.play().then(() => true).catch(() => { if (audio === el) audio = null; return false; });
+    }
+    function fadeOut() {
+      const el = audio;
+      if (!el) return;
+      clearInterval(fadeTimer);
+      const steps = 14;
+      let n = 0;
+      fadeTimer = setInterval(() => {
+        n += 1;
+        try { el.volume = Math.max(0, VOLUME * (1 - n / steps)); } catch (e) { /* ignore */ }
+        if (n >= steps) { stopNow(); }
+      }, FADE_MS / steps);
+    }
+    function setMuted(m) {
+      if (!audio) return;
+      if (m) { try { audio.pause(); } catch (e) { /* ignore */ } }
+      else { audio.play().catch(() => {}); }
+    }
+    return { play, fadeOut, stopNow, setMuted, isFading: () => fadeTimer !== null };
+  })();
+
+  // ---------------------------------------------------------------------------
   // Floating motes (only animated while the layer is visible).
   // ---------------------------------------------------------------------------
   const motes = (() => {
@@ -314,6 +361,7 @@
   }
 
   function hide() {
+    if (!song.isFading() && !root.classList.contains('mode-crisis')) song.stopNow();
     clearTimers();
     motes.stop();
     root.hidden = true;
@@ -332,12 +380,13 @@
   // 1. Opening title sequence.
   // ---------------------------------------------------------------------------
   let onEnter = null;
+  let songOn = false; // the intro song is playing, so skip the synthesized entrance
   function runIntro() {
     resetStage('intro');
     setArt(INTRO_ART, { origin: '36% 38%', zoom: 1.115 });
     motes.start();
     later(50, () => rig.classList.add('is-zooming'));
-    later(650, () => { logo.classList.add('phase-appear'); sound.entrance(); });
+    later(650, () => { logo.classList.add('phase-appear'); if (!songOn) sound.entrance(); });
     later(2100, () => { logo.classList.remove('phase-appear'); logo.classList.add('phase-settled'); });
     later(6300, () => { ctaWrap.classList.add('is-visible'); sound.chime(); cta.focus({ preventScroll: true }); });
   }
@@ -358,6 +407,10 @@
     sound.init();
     // The same gesture lets the Loom's voice (speechSynthesis) speak later.
     try { if (window.speechSynthesis) window.speechSynthesis.resume(); } catch (e) { /* unsupported */ }
+    // Start the song inside the click gesture (browser autoplay rules), then
+    // run the title sequence; it falls back to the synth entrance if the song fails.
+    songOn = true;
+    song.play(sound.muted).then((ok) => { songOn = ok; });
     runIntro();
   }
   gate.addEventListener('click', unlockAndStart);
@@ -366,6 +419,7 @@
   });
 
   cta.addEventListener('click', () => {
+    song.fadeOut();
     sound.confirm();
     leave();
     if (onEnter) { const cb = onEnter; onEnter = null; cb(); }
@@ -374,6 +428,7 @@
   muteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     sound.setMuted(!sound.muted);
+    song.setMuted(sound.muted);
     muteBtn.textContent = sound.muted ? 'Sound: Off' : 'Sound: On';
     muteBtn.setAttribute('aria-pressed', String(sound.muted));
     if (!sound.muted) sound.chime();
