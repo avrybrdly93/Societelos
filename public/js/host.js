@@ -387,7 +387,9 @@
           }
           node.parentNode.replaceChild(frag, node);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-          const cls = `${inherited} ${node.className || ''}`.trim();
+          // The root element's own classes (e.g. loom-line, is-quoted) must not
+          // be copied onto every word, or each word draws its own quote marks.
+          const cls = node === el ? inherited : `${inherited} ${node.className || ''}`.trim();
           Array.from(node.childNodes).forEach((child) => walk(child, cls));
         }
       })(el, '');
