@@ -372,8 +372,35 @@ function normalizeCrisis(raw, { world, cycle, mode, roles = [] }) {
     mode: raw.mode || mode,
     feed: raw.feed || [],
     options: { A: normalizeOption(options.A, 'A'), B: normalizeOption(options.B, 'B') },
-    intel: normalizeIntel(raw.intel || raw.intelDrops, roles)
+    intel: normalizeIntel(raw.intel || raw.intelDrops, roles),
+    calm: normalizeCalm(raw.calm)
   };
+}
+
+/**
+ * Optional calm variant of a crisis: when the city is satisfied enough
+ * (gdw >= threshold) the incident is told without unrest. Only the story
+ * text is replaced; options and effects stay the same.
+ */
+const CALM_FIELDS = ['title', 'subtitle', 'incident', 'loomIntro', 'teacherPrompt'];
+function normalizeCalm(calm) {
+  if (!calm || typeof calm !== 'object' || !Number.isFinite(Number(calm.threshold))) return null;
+  const out = { threshold: Number(calm.threshold) };
+  for (const k of CALM_FIELDS) if (typeof calm[k] === 'string' && calm[k].trim()) out[k] = calm[k];
+  if (Array.isArray(calm.feed)) out.feed = calm.feed;
+  return out;
+}
+
+/** Apply (and always strip) a crisis's calm variant for the current satisfaction. */
+function applyCalmVariant(crisis, gdw) {
+  if (!crisis) return crisis;
+  const { calm } = crisis;
+  delete crisis.calm;
+  if (calm && Number(gdw) >= calm.threshold) {
+    for (const k of CALM_FIELDS) if (calm[k]) crisis[k] = calm[k];
+    if (calm.feed) crisis.feed = calm.feed;
+  }
+  return crisis;
 }
 
 /**
@@ -1066,6 +1093,7 @@ class GameState extends EventEmitter {
     this.crisis = selectCrisis(this.data.crises, this.cycle, this.worldKey, this.data.roles, isFinale, {
       root: this.treeRoot, votes: this.voteHistory, used: this.crisisPath.map((p) => p.id)
     });
+    applyCalmVariant(this.crisis, this.gdw);
     if (!this.crisis) console.error(`[game ${this.roomCode}] no crisis for cycle ${this.cycle}`);
     else this.crisisPath.push({ cycle: this.cycle, id: this.crisis.id });
     if (isFinale) this.initFinale();
@@ -2594,6 +2622,8 @@ function smokeTest({ quiet = false } = {}) {
 
 module.exports = {
   smokeTest,
+  selectCrisis,
+  applyCalmVariant,
   START_YEAR,
   GAME_GOAL,
   introTransmission,

@@ -2554,6 +2554,17 @@
       "title": "March on the Datacenter",
       "subtitle": "The siege of Capitol",
       "incident": "100,000 citizens surround the Loom's servers with tools and banners, demanding the master keys.",
+      "calm": {
+        "threshold": 60,
+        "subtitle": "The quiet petition",
+        "incident": "Life is good, and nobody is angry. But 100,000 citizens have signed a petition asking, politely, for a seat at the controls of the machine that runs their lives.",
+        "loomIntro": "They are happy, and they still ask for a say. I cannot compute why. Write me a policy.",
+        "feed": [
+          { "citizenId": "sol", "text": "Honestly, things are fine. We just think the people who live here should hold a key too.", "sentiment": "revitalized" },
+          { "citizenId": "kai", "text": "no drama, everyone signed on their feeds over lunch. it's weirdly peaceful", "sentiment": "complacent" },
+          { "citizenId": "hollis", "text": "Nobody is storming anything. But a petition this big is still a question the Loom has to answer.", "sentiment": "anxious" }
+        ]
+      },
       "loomIntro": "I gave you everything except a say. I cannot compute whose mistake that was. Write me a policy.",
       "teacherPrompt": "Who should hold the keys to the machine that runs society?",
       "mode": "writein",
