@@ -659,7 +659,7 @@ class GameState extends EventEmitter {
     this.finale = null;
     this.voteHistory = {}; // cycle number -> winning binary option ('A' | 'B')
     this.treeRoot = null; // which root of the crisis tree this game opens with
-    this.fixedRoot = null; // optional: always open with this root (tests, demos)
+    this.fixedRoot = 'ownership'; // the opening crisis is always "Who Owns the Loom?"; set to null to draw a root from the game id
     this.crisisPath = []; // [{ cycle, id }]: the crises this game has played, in order
 
     // Current cycle.
