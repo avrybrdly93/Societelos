@@ -361,8 +361,15 @@
     function loadClip(text) {
       if (!clipCache.has(text)) {
         const base = socketUrl ? `${socketUrl}/api/tts` : 'api/tts';
-        const p = fetch(`${base}?text=${encodeURIComponent(text)}`)
-          .then((res) => (res.ok ? res.blob() : null))
+        // While the server voice is still loading it answers 503 + Retry-After:
+        // ask again instead of reading the line in the browser's different voice.
+        const get = (tries) => fetch(`${base}?text=${encodeURIComponent(text)}`).then((res) => {
+          if (res.status === 503 && res.headers.get('Retry-After') && tries < 40) {
+            return new Promise((r) => setTimeout(r, 3000)).then(() => get(tries + 1));
+          }
+          return res.ok ? res.blob() : null;
+        });
+        const p = get(0)
           .then((blob) => (blob && blob.size ? URL.createObjectURL(blob) : null))
           .catch(() => null);
         clipCache.set(text, p);
@@ -383,10 +390,10 @@
       return spans.length - 1;
     }
 
-    // Never hold the game up for a slow server voice: after this long, that
+    // Never hold the game up for a broken server voice: after this long, that
     // line is read by the browser voice instead (the clip keeps loading in the
     // background and is used the next time the line comes up).
-    const CLIP_WAIT_MS = 8000;
+    const CLIP_WAIT_MS = 25000; // a little over the server's 20 s Kokoro limit, so the voice never switches mid-game
 
     // Resolves 'played' | 'unavailable' | 'stale' (stop() ran meanwhile).
     function playClip(text, id, onFraction) {

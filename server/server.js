@@ -127,6 +127,7 @@ const tts = createTts();
 app.get('/api/tts', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   const out = await tts.synth(req.query.text, req.ip);
+  if (out.loading) res.set('Retry-After', '3'); // Kokoro still loading: the host asks again
   if (out.status !== 200) return res.sendStatus(out.status);
   res.set('Content-Type', out.type || 'audio/mpeg');
   res.set('Cache-Control', 'public, max-age=86400');

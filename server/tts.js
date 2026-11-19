@@ -109,7 +109,7 @@ function createTts(deps = {}) {
     if (!cache.has(text)) {
       if (cfg.provider === 'kokoro') {
         const k = getKokoro();
-        if (!k.isReady()) { k.warm(); return { status: 503 }; } // still loading: browser voice for now
+        if (!k.isReady()) { k.warm(); return { status: 503, loading: true }; } // still loading: the host retries rather than switch voices
         cache.set(text, k.generate(text).then((audio) => (audio ? { audio, type: 'audio/wav' } : null)));
       } else {
         const t = now();

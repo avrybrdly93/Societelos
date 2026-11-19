@@ -1089,7 +1089,7 @@ class GameState extends EventEmitter {
     const base = this.durations.INCIDENT;
     if (!(base >= 10000) || !this.crisis) return base;
     const words = `${this.crisis.title} ${this.crisis.incident} ${this.crisis.loomIntro || ''}`.split(/\s+/).filter(Boolean).length;
-    return Math.max(base, Math.min(120000, CRISIS_CARD_MS + words * NARRATION_MS_PER_WORD + NARRATION_CLIP_SLACK_MS));
+    return Math.max(base, Math.min(120000, CRISIS_CARD_MS + words * NARRATION_MS_PER_WORD + 25000));
   }
 
   /**
