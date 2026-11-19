@@ -75,12 +75,12 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.17,
-            "connection": -0.3,
-            "health": -0.8,
-            "trust": -0.6,
-            "fairness": 0.6,
-            "autonomy": 0.2
+            "purpose": 0.031,
+            "connection": -0.055,
+            "health": -0.146,
+            "trust": -0.11,
+            "fairness": 0.11,
+            "autonomy": 0.037
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -113,7 +113,7 @@
               "health": 0.6,
               "trust": 0.6
             },
-            "effectPerPoint": 0.0667
+            "effectPerPoint": 0.038
           }
         },
         "B": {
@@ -123,12 +123,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": 0.5,
-            "connection": 0.4,
-            "health": 0.8,
-            "trust": 0.5,
-            "fairness": -0.3,
-            "autonomy": 0.3
+            "purpose": 0.192,
+            "connection": 0.154,
+            "health": 0.308,
+            "trust": 0.192,
+            "fairness": -0.115,
+            "autonomy": 0.115
           },
           "targetGdwDelta": 10,
           "reactions": [
@@ -201,12 +201,12 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.1,
-            "connection": -0.4,
-            "health": -0.6,
-            "trust": -0.6,
-            "fairness": 0.3,
-            "autonomy": 0.6
+            "purpose": 0.02,
+            "connection": -0.081,
+            "health": -0.121,
+            "trust": -0.121,
+            "fairness": 0.06,
+            "autonomy": 0.121
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -255,20 +255,20 @@
           },
           "effectsByWorld": {
             "A": {
-              "purpose": 0.1,
-              "connection": 0.2,
-              "health": 0.7,
-              "trust": 0.8,
-              "fairness": 0.3,
-              "autonomy": -0.4
+              "purpose": 0.037,
+              "connection": 0.074,
+              "health": 0.26,
+              "trust": 0.298,
+              "fairness": 0.112,
+              "autonomy": -0.149
             },
             "B": {
-              "purpose": 0.2,
-              "connection": 0.3,
-              "health": 0.85,
-              "trust": 0.7,
-              "fairness": -0.3,
-              "autonomy": -0.3
+              "purpose": 0.074,
+              "connection": 0.112,
+              "health": 0.316,
+              "trust": 0.26,
+              "fairness": -0.112,
+              "autonomy": -0.112
             }
           },
           "worldNotes": {
@@ -349,12 +349,12 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.1,
-            "connection": -0.4,
-            "health": -0.6,
-            "trust": -0.6,
-            "fairness": 0.3,
-            "autonomy": 0.6
+            "purpose": 0.02,
+            "connection": -0.081,
+            "health": -0.121,
+            "trust": -0.121,
+            "fairness": 0.06,
+            "autonomy": 0.121
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -383,12 +383,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": 0.3,
-            "health": 0.85,
-            "trust": 0.7,
-            "fairness": -0.3,
-            "autonomy": -0.3
+            "purpose": 0.074,
+            "connection": 0.112,
+            "health": 0.316,
+            "trust": 0.26,
+            "fairness": -0.112,
+            "autonomy": -0.112
           },
           "targetGdwDelta": 5,
           "loomLines": {
@@ -455,12 +455,12 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.17,
-            "connection": -0.3,
-            "health": -0.8,
-            "trust": -0.6,
-            "fairness": 0.6,
-            "autonomy": 0.2
+            "purpose": 0.031,
+            "connection": -0.055,
+            "health": -0.146,
+            "trust": -0.11,
+            "fairness": 0.11,
+            "autonomy": 0.037
           },
           "targetGdwDelta": -5,
           "loomLines": {
@@ -488,12 +488,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": 0.5,
-            "connection": 0.4,
-            "health": 0.8,
-            "trust": 0.5,
-            "fairness": -0.3,
-            "autonomy": 0.3
+            "purpose": 0.192,
+            "connection": 0.154,
+            "health": 0.308,
+            "trust": 0.192,
+            "fairness": -0.115,
+            "autonomy": 0.115
           },
           "targetGdwDelta": 10,
           "loomLines": {
@@ -559,12 +559,12 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": -0.1,
-            "connection": 0.2,
-            "health": 0.7,
-            "trust": 0.4,
-            "fairness": 0.6,
-            "autonomy": -0.3
+            "purpose": -0.15,
+            "connection": 0.0,
+            "health": 0.025,
+            "trust": 0.05,
+            "fairness": 0.075,
+            "autonomy": -0.125
           },
           "targetGdwDelta": -3,
           "loomLines": {
@@ -592,12 +592,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": 0.1,
-            "health": 0.7,
-            "trust": 0.1,
-            "fairness": -0.3,
-            "autonomy": 0.2
+            "purpose": 0.124,
+            "connection": 0.062,
+            "health": 0.434,
+            "trust": 0.062,
+            "fairness": -0.186,
+            "autonomy": 0.124
           },
           "targetGdwDelta": 8,
           "loomLines": {
@@ -663,12 +663,12 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.1,
-            "connection": -0.4,
-            "health": -0.6,
-            "trust": -0.6,
-            "fairness": 0.3,
-            "autonomy": 0.6
+            "purpose": 0.02,
+            "connection": -0.081,
+            "health": -0.121,
+            "trust": -0.121,
+            "fairness": 0.06,
+            "autonomy": 0.121
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -697,12 +697,12 @@
             "assimilator"
           ],
           "effects": {
-            "purpose": 0.1,
-            "connection": 0.2,
-            "health": 0.7,
-            "trust": 0.8,
-            "fairness": 0.3,
-            "autonomy": -0.4
+            "purpose": 0.037,
+            "connection": 0.074,
+            "health": 0.26,
+            "trust": 0.298,
+            "fairness": 0.112,
+            "autonomy": -0.149
           },
           "targetGdwDelta": 5,
           "loomLines": {
@@ -769,12 +769,12 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.1,
-            "connection": -0.4,
-            "health": -0.6,
-            "trust": -0.6,
-            "fairness": 0.3,
-            "autonomy": 0.6
+            "purpose": 0.02,
+            "connection": -0.081,
+            "health": -0.121,
+            "trust": -0.121,
+            "fairness": 0.06,
+            "autonomy": 0.121
           },
           "targetGdwDelta": -5,
           "reactions": [
@@ -803,12 +803,12 @@
             "lotus"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": 0.3,
-            "health": 0.85,
-            "trust": 0.7,
-            "fairness": -0.3,
-            "autonomy": -0.3
+            "purpose": 0.074,
+            "connection": 0.112,
+            "health": 0.316,
+            "trust": 0.26,
+            "fairness": -0.112,
+            "autonomy": -0.112
           },
           "targetGdwDelta": 5,
           "loomLines": {
@@ -1859,9 +1859,9 @@
           "effects": {
             "purpose": 0.3,
             "connection": 0.4,
-            "health": -0.2,
-            "trust": -0.3,
-            "fairness": 0.8,
+            "health": 0.1,
+            "trust": -0.1,
+            "fairness": 0.95,
             "autonomy": 0.3
           },
           "targetGdwDelta": 7
@@ -1937,8 +1937,8 @@
             "purpose": 0.4,
             "connection": 0.3,
             "health": -0.1,
-            "trust": 0.5,
-            "fairness": 0.5,
+            "trust": 0.3,
+            "fairness": 0.9,
             "autonomy": 0.2
           },
           "targetGdwDelta": 6,
@@ -2045,11 +2045,11 @@
             "ghost"
           ],
           "effects": {
-            "purpose": 0.2,
-            "connection": 0.3,
-            "health": -0.3,
-            "trust": 0.4,
-            "fairness": 0.6,
+            "purpose": 0.3,
+            "connection": 0.45,
+            "health": 0.0,
+            "trust": 0.3,
+            "fairness": 1.0,
             "autonomy": -0.2
           },
           "targetGdwDelta": 4,
@@ -2321,7 +2321,7 @@
             "purpose": 0.5,
             "connection": 0.6,
             "health": 0.3,
-            "trust": -0.6,
+            "trust": -0.3,
             "fairness": 0.2,
             "autonomy": 0.4
           },
@@ -2337,8 +2337,8 @@
           "effects": {
             "purpose": 0.2,
             "connection": 0.3,
-            "health": 0.3,
-            "trust": 0.4,
+            "health": 0.1,
+            "trust": 0.15,
             "fairness": 0.1,
             "autonomy": -0.6
           },

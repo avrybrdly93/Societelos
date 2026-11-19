@@ -3,7 +3,7 @@
 // One simulated month for every cohort. Pure functions over the state's trait
 // buffer; randomness only from the PRNG passed in.
 
-const { clamp01, cloneState, computeGDW, computeDistrictWellbeing } = require('./state');
+const { clamp01, cloneState, computeGDW, computeDistrictWellbeing, wellnessSpec, wellnessFast, wellnessParts } = require('./state');
 const { mulberry32, randomNormal, randomUniform } = require('./prng');
 
 /**
@@ -37,7 +37,6 @@ function getTopology(state) {
   // Population weight of each cohort (sums to 1) and trait weights, for fast GDW.
   const totalPop = state.cohorts.reduce((a, c) => a + c.population, 0);
   const popWeight = Float64Array.from(state.cohorts, (c) => c.population / totalPop);
-  const traitWeight = Float64Array.from(state.traitNames, (t) => cfg.weights[t] || 0);
   const c = cfg.constants;
   const tau = c.adoptionTau;
   const maxMonths = (c.monthsPerCycle || 12) + 1;
@@ -51,7 +50,7 @@ function getTopology(state) {
     neighbourCohorts,
     baseS,
     popWeight,
-    traitWeight,
+    wellness: wellnessSpec(cfg),
     adoptionIncrements,
     driftIdx: (c.driftTraits || []).map((t) => state.traitNames.indexOf(t)).filter((k) => k >= 0)
   };
@@ -102,21 +101,17 @@ function buildParams(state, opts = {}) {
     neighbourCohorts: topo.neighbourCohorts,
     driftIdx: topo.driftIdx,
     popWeight: topo.popWeight,
-    traitWeight: topo.traitWeight,
+    wellness: topo.wellness,
     adoptionIncrements: topo.adoptionIncrements
   };
 }
 
 /** Fast GDW from the trait buffer using precomputed weights. */
 function fastGdw(state, params) {
-  const { K, n, popWeight, traitWeight } = params;
+  const { K, n, popWeight, wellness } = params;
   const t = state.traits;
   let w = 0;
-  for (let i = 0; i < n; i++) {
-    let cw = 0;
-    for (let k = 0; k < K; k++) cw += traitWeight[k] * t[i * K + k];
-    w += popWeight[i] * cw;
-  }
+  for (let i = 0; i < n; i++) w += popWeight[i] * wellnessFast(t, i * K, wellness);
   return computeGDW(w, state.config.gdw);
 }
 
@@ -253,17 +248,40 @@ function districtSnapshot(state, districtIds) {
 }
 
 /**
- * Population-weighted mean of each trait, 0-100, keyed by trait name.
- * Feeds the Maslow pyramid on the projector.
+ * The wellness breakdown the projector draws, as population-weighted means
+ * over the cohorts (all 0-100): the five Maslow tiers as raw potential (S)
+ * and supported/effective value (E, after the prepotency cascade), the three
+ * SDT needs, and the 50/50 contributions to overall wellness.
  */
 function needsSnapshot(state, popWeight) {
+  const spec = wellnessSpec(state.config);
   const K = state.traitNames.length;
-  const out = {};
-  state.traitNames.forEach((t, k) => {
-    let sum = 0;
-    for (let i = 0; i < popWeight.length; i++) sum += popWeight[i] * state.traits[i * K + k];
-    out[t] = Math.round(sum * 1000) / 10;
-  });
+  const names = state.config.wellness.tierNames || ['Physiological', 'Safety', 'Belonging', 'Esteem', 'Self-actualization'];
+  const S = [0, 0, 0, 0, 0];
+  const E = [0, 0, 0, 0, 0];
+  const sdt = {};
+  spec.sdtNames.forEach((n) => { sdt[n] = 0; });
+  let maslow = 0;
+  let sdtMean = 0;
+  for (let i = 0; i < popWeight.length; i++) {
+    const p = wellnessParts(state.traits, i * K, spec);
+    const w = popWeight[i];
+    for (let t = 0; t < 5; t++) { S[t] += w * p.S[t]; E[t] += w * p.E[t]; }
+    for (const n of spec.sdtNames) sdt[n] += w * p.sdt[n];
+    maslow += w * p.maslow;
+    sdtMean += w * p.sdtMean;
+  }
+  const pct = (v) => Math.round(v * 1000) / 10;
+  const out = {
+    tiers: names.map((name, t) => ({ name, weight: spec.tierW[t], raw: pct(S[t]), effective: pct(E[t]) })),
+    sdt: Object.fromEntries(Object.entries(sdt).map(([n, v]) => [n, pct(v)])),
+    maslow: pct(maslow),
+    sdtScore: pct(sdtMean),
+    wellness: pct(spec.maslowShare * maslow + spec.sdtShare * sdtMean),
+    shares: { maslow: spec.maslowShare, sdt: spec.sdtShare },
+    // Each half's contribution to wellness, in points out of 100.
+    contributions: { maslow: pct(spec.maslowShare * maslow), sdt: pct(spec.sdtShare * sdtMean) }
+  };
   return out;
 }
 

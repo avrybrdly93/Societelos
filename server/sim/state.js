@@ -58,24 +58,107 @@ function cloneState(state) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Social Wellness: a 50/50 hybrid of a volumetric Maslow pyramid (with an
+// upward prepotency cascade) and Self-Determination Theory. Everything is
+// configured in data/sim.json "wellness"; the six simulated traits feed both:
+//
+//   S1..S5 (raw tier scores)  = trait means named in wellness.tiers
+//   E1 = S1;  E_i = S_i * E_{i-1}^alpha       (i = 2..5, values in 0-1)
+//   Maslow    = sum_i w_i * E_i                (w = .488 .296 .152 .056 .008)
+//   SDT       = mean(Autonomy, Competence, Relatedness), each a mean of traits
+//   Wellness  = maslowShare * Maslow + sdtShare * SDT        (0-1)
+//
+// The cascade is applied per cohort (the model's representative citizen
+// group); the region and districts are population-weighted means.
+// ---------------------------------------------------------------------------
+const wellnessCache = new WeakMap();
+
+/** Resolve data/sim.json "wellness" into trait indexes (cached per config). */
+function wellnessSpec(config) {
+  let spec = wellnessCache.get(config);
+  if (spec) return spec;
+  const w = config.wellness;
+  const idx = (name) => {
+    const k = config.traits.indexOf(name);
+    if (k < 0) throw new Error(`wellness: unknown trait ${name}`);
+    return k;
+  };
+  spec = {
+    alpha: w.alpha,
+    sqrtAlpha: w.alpha === 0.5, // alpha 0.5 (the default) takes the cheap Math.sqrt path
+    maslowShare: w.maslowShare,
+    sdtShare: w.sdtShare,
+    tierW: w.tierWeights.slice(),
+    tierIdx: w.tiers.map((group) => (Array.isArray(group) ? group : [group]).map(idx)),
+    sdtNames: Object.keys(w.sdt),
+    sdtIdx: Object.values(w.sdt).map((group) => (Array.isArray(group) ? group : [group]).map(idx)),
+    sdtN: Object.keys(w.sdt).length,
+    K: config.traits.length
+  };
+  wellnessCache.set(config, spec);
+  return spec;
+}
+
+function groupMean(t, base, group) {
+  let v = 0;
+  for (let j = 0; j < group.length; j++) v += t[base + group[j]];
+  return v / group.length;
+}
+
+/** Wellness (0-1) of the cohort whose traits start at t[base]. The hot path: no allocation. */
+function wellnessFast(t, base, spec) {
+  const { tierIdx, tierW, sdtIdx, sdtN } = spec;
+  let prev = 0;
+  let maslow = 0;
+  for (let i = 0; i < 5; i++) {
+    const g = tierIdx[i];
+    const s = g.length === 1 ? t[base + g[0]] : groupMean(t, base, g);
+    const e = i === 0 ? s : s * (spec.sqrtAlpha ? Math.sqrt(prev) : Math.pow(prev, spec.alpha));
+    maslow += tierW[i] * e;
+    prev = e < 0 ? 0 : e;
+  }
+  let sdt = 0;
+  for (let i = 0; i < sdtN; i++) {
+    const g = sdtIdx[i];
+    sdt += g.length === 1 ? t[base + g[0]] : groupMean(t, base, g);
+  }
+  return spec.maslowShare * maslow + spec.sdtShare * (sdt / sdtN);
+}
+
 /**
- * Cohort wellbeing W = sum_k weight_k * trait_k.
- * @param {object} traits { purpose, connection, health, trust, fairness, autonomy }
- * @param {object} weights same keys (data/sim.json "weights")
+ * Full breakdown for one cohort: raw tiers S, supported tiers E, Maslow, the
+ * three SDT needs and their mean, and the combined wellness (all 0-1).
  */
-function computeCohortWellbeing(traits, weights) {
-  let w = 0;
-  for (const k of Object.keys(weights)) w += weights[k] * (traits[k] || 0);
-  return w;
+function wellnessParts(t, base, spec) {
+  const S = [];
+  const E = [];
+  let maslow = 0;
+  for (let i = 0; i < 5; i++) {
+    const s = groupMean(t, base, spec.tierIdx[i]);
+    const e = i === 0 ? s : s * Math.pow(Math.max(0, E[i - 1]), spec.alpha);
+    S.push(s); E.push(e);
+    maslow += spec.tierW[i] * e;
+  }
+  const sdt = {};
+  let mean = 0;
+  spec.sdtNames.forEach((name, i) => { sdt[name] = groupMean(t, base, spec.sdtIdx[i]); mean += sdt[name]; });
+  mean /= spec.sdtNames.length;
+  return { S, E, maslow, sdt, sdtMean: mean, wellness: spec.maslowShare * maslow + spec.sdtShare * mean };
+}
+
+/**
+ * Cohort wellbeing for a traits object { purpose, connection, ... } (0-1),
+ * using the config's wellness model.
+ */
+function computeCohortWellbeing(traits, config) {
+  const t = config.traits.map((name) => traits[name] || 0);
+  return wellnessFast(t, 0, wellnessSpec(config));
 }
 
 /** Wellbeing of cohort index i read straight from the trait buffer. */
 function cohortWellbeingAt(state, i) {
-  const { traitNames, traits, config } = state;
-  const K = traitNames.length;
-  let w = 0;
-  for (let k = 0; k < K; k++) w += config.weights[traitNames[k]] * traits[i * K + k];
-  return w;
+  return wellnessFast(state.traits, i * state.traitNames.length, wellnessSpec(state.config));
 }
 
 /** Traits of cohort index i as a plain object. */
@@ -174,8 +257,14 @@ function validateSimConfig(cfg) {
     const sum = Object.values(shares).reduce((a, b) => a + b, 0);
     need(Math.abs(sum - 1) < 1e-9, `${d} cohort shares sum to ${sum}, not 1`);
   }
-  const wSum = traits.reduce((a, t) => a + ((cfg.weights || {})[t] || 0), 0);
-  need(Math.abs(wSum - 1) < 1e-9, `trait weights sum to ${wSum}, not 1`);
+  const wl = cfg.wellness || {};
+  need(Array.isArray(wl.tiers) && wl.tiers.length === 5, 'wellness.tiers must list 5 tiers');
+  need(Array.isArray(wl.tierWeights) && wl.tierWeights.length === 5 && Math.abs(wl.tierWeights.reduce((a, b) => a + b, 0) - 1) < 1e-9, 'wellness.tierWeights must have 5 entries summing to 1');
+  need(typeof wl.alpha === 'number' && wl.alpha >= 0, 'wellness.alpha must be a number >= 0');
+  need(typeof wl.maslowShare === 'number' && typeof wl.sdtShare === 'number' && Math.abs(wl.maslowShare + wl.sdtShare - 1) < 1e-9, 'wellness.maslowShare + sdtShare must equal 1');
+  need(wl.sdt && ['autonomy', 'competence', 'relatedness'].every((k) => k in wl.sdt), 'wellness.sdt needs autonomy, competence, relatedness');
+  const usesUnknown = [].concat(wl.tiers || [], Object.values(wl.sdt || {})).flat().some((n) => !traits.includes(n));
+  need(!usesUnknown, 'wellness refers to an unknown trait');
   need(typeof cfg.baseline === 'number', 'baseline must be a number');
   for (const d of ids) {
     for (const c of (cfg.cohorts || []).map((x) => x.id)) {
@@ -196,6 +285,7 @@ function validateSimConfig(cfg) {
 
 module.exports = {
   validateSimConfig,
+  wellnessSpec, wellnessFast, wellnessParts,
   computeRegionWellbeing,
   computeGDW,
   createInitialState,

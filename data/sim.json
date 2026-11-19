@@ -9,11 +9,50 @@
     "autonomy"
   ],
   "gdw": {
-    "scale": 200,
-    "floorWellbeing": 0.275,
+    "scale": 340,
+    "floorWellbeing": 0.2885496207650208,
     "min": 0,
     "max": 100,
     "startingGdw": 25
+  },
+  "wellness": {
+    "_doc": "Social Wellness = maslowShare*Maslow(cascade) + sdtShare*SDT. Tiers 1-5 and the SDT needs are mapped onto the six simulated traits (arrays are averaged). E1=S1, Ei=Si*E(i-1)^alpha.",
+    "maslowShare": 0.5,
+    "sdtShare": 0.5,
+    "alpha": 0.5,
+    "tierWeights": [
+      0.488,
+      0.296,
+      0.152,
+      0.056,
+      0.008
+    ],
+    "tierNames": [
+      "Physiological",
+      "Safety",
+      "Belonging",
+      "Esteem",
+      "Self-actualization"
+    ],
+    "tiers": [
+      "health",
+      "trust",
+      "connection",
+      "fairness",
+      "purpose"
+    ],
+    "sdt": {
+      "autonomy": [
+        "autonomy"
+      ],
+      "competence": [
+        "purpose"
+      ],
+      "relatedness": [
+        "connection",
+        "trust"
+      ]
+    }
   },
   "districts": [
     {
@@ -105,14 +144,6 @@
       "elite": 0.05
     }
   },
-  "weights": {
-    "purpose": 0.25,
-    "connection": 0.2,
-    "health": 0.15,
-    "fairness": 0.15,
-    "autonomy": 0.15,
-    "trust": 0.1
-  },
   "baseline": 0.41340464,
   "offsets": {
     "districts": {
@@ -177,11 +208,11 @@
     },
     "D1:workers": {
       "purpose": 1.3,
-      "connection": 1.0,
+      "connection": 1,
       "health": 0.9,
       "trust": 1.1,
       "fairness": 0.96,
-      "autonomy": 1.0
+      "autonomy": 1
     },
     "D1:elders": {
       "purpose": 0.8,
@@ -213,7 +244,7 @@
       "health": 0.9,
       "trust": 1.2,
       "fairness": 1.2,
-      "autonomy": 1.0
+      "autonomy": 1
     },
     "D2:elders": {
       "purpose": 0.8,
@@ -243,9 +274,9 @@
       "purpose": 1.3,
       "connection": 1.1,
       "health": 0.99,
-      "trust": 1.0,
+      "trust": 1,
       "fairness": 1.2,
-      "autonomy": 1.0
+      "autonomy": 1
     },
     "D3:elders": {
       "purpose": 0.8,
@@ -268,14 +299,14 @@
       "connection": 1.3,
       "health": 0.6,
       "trust": 0.9,
-      "fairness": 1.0,
+      "fairness": 1,
       "autonomy": 1.2
     },
     "D4:workers": {
       "purpose": 1.43,
-      "connection": 1.0,
+      "connection": 1,
       "health": 0.9,
-      "trust": 1.0,
+      "trust": 1,
       "fairness": 1.5,
       "autonomy": 1.35
     },
@@ -292,7 +323,7 @@
       "connection": 0.6,
       "health": 0.7,
       "trust": 0.8,
-      "fairness": -1.0,
+      "fairness": -1,
       "autonomy": 1.1
     },
     "D5:youth": {
@@ -305,7 +336,7 @@
     },
     "D5:workers": {
       "purpose": 1.3,
-      "connection": 1.0,
+      "connection": 1,
       "health": 0.9,
       "trust": 1.2,
       "fairness": 1.2,

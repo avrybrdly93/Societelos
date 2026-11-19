@@ -14,15 +14,16 @@ test('starting state reads exactly GDW 25.0', () => {
   assert.equal(computeGDW(createInitialState(simConfig)), 25);
 });
 
-test('computeGDW clamps at 0 when W <= 0.275 and at 100 when W >= 0.775', () => {
+test('computeGDW clamps at 0 when W <= floor and at 100 when W >= floor + 100/scale', () => {
   const gdwCfg = simConfig.gdw;
-  assert.equal(computeGDW(0.275, gdwCfg), 0);
+  const floor = gdwCfg.floorWellbeing;
+  const top = floor + 100 / gdwCfg.scale;
+  assert.equal(computeGDW(floor, gdwCfg), 0);
   assert.equal(computeGDW(0.05, gdwCfg), 0);
   assert.equal(computeGDW(-1, gdwCfg), 0);
-  assert.equal(computeGDW(0.775, gdwCfg), 100);
+  assert.equal(computeGDW(top, gdwCfg), 100);
   assert.equal(computeGDW(1.7, gdwCfg), 100);
-  assert.equal(computeGDW(0.525, gdwCfg), 50);
-
+  assert.ok(Math.abs(computeGDW(floor + 50 / gdwCfg.scale, gdwCfg) - 50) < 1e-9);
   // Same through a real state: all traits 0 -> W = 0 -> GDW 0; all 1 -> GDW 100.
   const low = createInitialState(simConfig);
   low.traits.fill(0);
@@ -36,11 +37,11 @@ test('data/sim.json passes validateSimConfig, and broken configs are caught', ()
   const { validateSimConfig } = require('../state');
   assert.deepEqual(validateSimConfig(simConfig), []);
   const broken = JSON.parse(JSON.stringify(simConfig));
-  broken.weights.purpose = 0.5;
+  broken.wellness.tierWeights[0] = 0.9;
   broken.districts[0].neighbours.push('D9');
   delete broken.sensitivity['D3:elders'];
   const errors = validateSimConfig(broken);
-  assert.ok(errors.some((e) => e.includes('weights')));
+  assert.ok(errors.some((e) => e.includes('wellness.tierWeights')));
   assert.ok(errors.some((e) => e.includes('D9')));
   assert.ok(errors.some((e) => e.includes('D3:elders')));
 });
@@ -49,7 +50,9 @@ test('trait names in server/sim match the data/crises.json effect schema', () =>
   const crises = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'data', 'crises.json'), 'utf8'));
   const simTraits = [...simConfig.traits].sort();
   assert.deepEqual(simTraits, ['autonomy', 'connection', 'fairness', 'health', 'purpose', 'trust']);
-  assert.deepEqual(Object.keys(simConfig.weights).sort(), simTraits);
+  const used = [].concat(simConfig.wellness.tiers, Object.values(simConfig.wellness.sdt)).flat();
+  for (const t of used) assert.ok(simTraits.includes(t), `wellness uses known trait ${t}`);
+  for (const t of simTraits) assert.ok(used.includes(t), `every trait feeds the wellness model: ${t}`);
   for (const row of Object.values(simConfig.sensitivity)) assert.deepEqual(Object.keys(row).sort(), simTraits);
   for (const c of crises.crises) {
     for (const key of ['A', 'B']) {

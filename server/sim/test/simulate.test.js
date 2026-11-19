@@ -94,8 +94,15 @@ test('near 5% GDW, P(collapse) equals the fraction of forecast runs ending at 0%
   const { hashSeed } = require('../prng');
   const { computeGDW } = require('../state');
   const state = createInitialState(simConfig);
-  state.traits.fill(0.30); // W = 0.30 -> GDW = 200 * (0.30 - 0.275) = 5%
-  assert.ok(Math.abs(computeGDW(state) - 5) < 1e-9);
+  // Find the uniform trait level whose wellness reads GDW 5% (the model is non-linear).
+  let lo = 0; let hi = 1;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    state.traits.fill(mid);
+    if (computeGDW(state) > 5) hi = mid; else lo = mid;
+  }
+  state.traits.fill((lo + hi) / 2);
+  assert.ok(Math.abs(computeGDW(state) - 5) < 1e-6);
   const effects = { purpose: -0.1, connection: -0.05, health: 0, trust: 0, fairness: 0, autonomy: 0 };
   const runs = 500;
   const seed = 2026;
