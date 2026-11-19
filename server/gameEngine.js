@@ -145,7 +145,8 @@ const LOOM_BUDGET_MS = 10000;
 // INCIDENT pacing: the projector's crisis title card, then the Loom reads the
 // crisis aloud (~2.3 words a second at its slow speaking rate).
 const CRISIS_CARD_MS = 6200;
-const NARRATION_MS_PER_WORD = 430;
+const NARRATION_MS_PER_WORD = 560; // slow server voices (Kokoro) read ~2 words/s
+const NARRATION_CLIP_SLACK_MS = 9000; // the projector waits up to 8 s for a voice clip before reading
 const NARRATION_PAUSE_MS = 1500; // a beat after the Loom stops talking
 
 /** Clamp GDW to [0, 100] and round to one decimal place (e.g. 25.0%). */
@@ -189,7 +190,7 @@ const PHASE_STARTERS = {
 // Phase lengths in seconds (MVP spec). Debate is 90 s (~16 min game) or 60 s
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
-  INTRO: 160, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
+  INTRO: 240, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
   ROLE_ASSIGN: 40,
   CHAMBER: 10,
   INCIDENT: 15, // minimum; stretched to fit the Loom reading the crisis (incidentDurationMs)
@@ -1088,7 +1089,7 @@ class GameState extends EventEmitter {
     const base = this.durations.INCIDENT;
     if (!(base >= 10000) || !this.crisis) return base;
     const words = `${this.crisis.title} ${this.crisis.incident} ${this.crisis.loomIntro || ''}`.split(/\s+/).filter(Boolean).length;
-    return Math.max(base, Math.min(90000, CRISIS_CARD_MS + words * NARRATION_MS_PER_WORD + 6000));
+    return Math.max(base, Math.min(120000, CRISIS_CARD_MS + words * NARRATION_MS_PER_WORD + NARRATION_CLIP_SLACK_MS));
   }
 
   /**
@@ -1933,7 +1934,11 @@ class GameState extends EventEmitter {
         }, ['name']);
         // The month-by-month animation starts when clients receive this
         // payload, so the next INCIDENT waits the full RESOLUTION duration from now.
-        this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
+        // Never cut the Loom off: the phase lasts at least as long as it takes
+        // to read the verdict (and any dividend line) aloud.
+        const spokenWords = `${narration.loomLine} ${(result && result.dividend && result.dividend.line) || ''}`.split(/\s+/).filter(Boolean).length;
+        const speechMs = durationMs >= 10000 ? spokenWords * NARRATION_MS_PER_WORD + NARRATION_CLIP_SLACK_MS : 0;
+        this.lastResolution.endsAt = this.startPhaseTimer(Math.max(durationMs, speechMs), () => this.advancePhase());
         this.emit('resolution', this.lastResolution);
         this.addLoomLine('verdict', narration.loomLine);
         if (result && result.dividend && result.dividend.line) this.addLoomLine('voice', result.dividend.line);
