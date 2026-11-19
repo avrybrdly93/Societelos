@@ -94,6 +94,7 @@
     try { sessionStorage.setItem('societelos.hostRoom', info.roomCode); } catch (e) { /* storage unavailable */ }
     document.getElementById('room-code').textContent = info.roomCode;
     document.getElementById('lobby-room-code').textContent = info.roomCode;
+    fetchQR(); // the QR link carries this room's code
   });
 
   // Load the join QR code and LAN URL for the lobby.
@@ -102,7 +103,8 @@
     const placeholder = document.getElementById('qr-placeholder');
     const urlEl = document.getElementById('join-url');
     try {
-      const res = await fetch(socketUrl ? `${socketUrl}/api/qr` : 'api/qr');
+      const roomQuery = state.roomCode ? `?room=${encodeURIComponent(state.roomCode)}` : '';
+      const res = await fetch((socketUrl ? `${socketUrl}/api/qr` : 'api/qr') + roomQuery);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { joinUrl, dataUrl } = await res.json();
       img.src = dataUrl;

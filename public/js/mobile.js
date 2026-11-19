@@ -122,6 +122,8 @@
     BAD_PAYLOAD: 'Enter a name (up to 24 characters).'
   };
   const joinForm = document.getElementById('join-form');
+  // The QR link carries the projector's room code (?room=ABCD).
+  const linkRoom = (() => { try { return (new URLSearchParams(location.search).get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); } catch (e) { return ''; } })();
   const joinError = document.getElementById('join-error');
   const joinSubmit = document.getElementById('join-submit');
   joinForm.addEventListener('submit', (event) => {
@@ -132,7 +134,7 @@
     joinError.hidden = true;
     // Never leave the button dead if the server never answers.
     const retry = setTimeout(() => { joinSubmit.disabled = false; }, 8000);
-    socket.emit('lobby:join', { name }, (res) => {
+    socket.emit('lobby:join', { name, room: linkRoom || undefined }, (res) => {
       clearTimeout(retry);
       joinSubmit.disabled = false;
       if (!res || !res.ok) {

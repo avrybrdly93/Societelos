@@ -108,7 +108,10 @@ app.get('/api/qr', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   try {
     const port = (server.address() && server.address().port) || PORT;
-    const joinUrl = getJoinUrl(port);
+    // The room code rides in the link so a phone always joins the room on the
+    // projector, not just the most recently created one.
+    const room = String(req.query.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+    const joinUrl = getJoinUrl(port) + (room ? `?room=${room}` : '');
     const dataUrl = await QRCode.toDataURL(joinUrl, { margin: 1, width: 320 });
     res.json({ joinUrl, dataUrl });
   } catch (err) {
