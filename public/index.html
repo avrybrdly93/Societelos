@@ -297,9 +297,6 @@
             <ul id="resolution-enacted" class="resolution-enacted" aria-label="Enacted policies and the agendas they serve" hidden></ul>
             <blockquote id="resolution-loom" class="loom-line resolution-loom">The Loom is simulating 12 months…</blockquote>
             <p id="forecast-banner" class="forecast-banner mono">LOOM FORECAST: --% CHANCE OF STABILITY | P(UNREST): --%</p>
-            <div id="chart-wrap" class="chart-wrap">
-              <canvas id="forecast-chart" class="forecast-chart" aria-label="Forecast fan and realized Societal Satisfaction"></canvas>
-            </div>
           </div>
           <div id="vote-status" class="vote-status" hidden>
             <div class="override-armed" role="note">
@@ -319,6 +316,9 @@
             </ol>
           </div>
         </section>
+        <div id="chart-wrap" class="chart-wrap chamber-chart">
+          <canvas id="forecast-chart" class="forecast-chart" aria-label="Forecast fan and realized Societal Satisfaction"></canvas>
+        </div>
         <aside class="chamber-col chamber-feed" aria-label="Maslow pyramid of citizen needs">
           <div id="maslow-pyramid" class="maslow-pyramid"></div>
           <div id="forecast-panel" class="forecast-panel"></div>
@@ -331,10 +331,6 @@
         <path d="M960 0 C 960 120, 1680 120, 1680 220" />
       </svg>
       <ol id="council-seats" class="council-seats" aria-label="The council"></ol>
-      <div id="citizen-ticker" class="citizen-ticker" aria-live="polite" aria-label="A citizen speaks">
-        <span class="ticker-tag">Citizens</span>
-        <div id="ticker-quote" class="ticker-quote"></div>
-      </div>
     </section>
     <section id="view-world" class="view view-world" aria-label="World reveal">
       <div class="world-reveal">
