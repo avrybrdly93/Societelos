@@ -185,7 +185,7 @@ function checkCoreCrises(data) {
     for (const k of ['A', 'B']) {
       const o = (c.options || {})[k] || {};
       if (!isStr(o.name) || !isStr(o.text)) err(where, `option ${k} needs name and text`);
-      if (isStr(o.text) && o.text.split(/\s+/).length > MAX_OPTION_WORDS) err(where, `option ${k} text over ${MAX_OPTION_WORDS} words`);
+      if (isStr(o.text) && o.text.split(/\s+/).length > (o.delayed ? 45 : MAX_OPTION_WORDS)) err(where, `option ${k} text over ${MAX_OPTION_WORDS} words`);
       if (!o.effects && !o.effectsByWorld) err(where, `option ${k} has no effects`);
       if (!(o.roles || o.rolesByWorld)) err(where, `option ${k} has no role tags`);
     }

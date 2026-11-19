@@ -69,7 +69,7 @@
       "options": {
         "A": {
           "name": "The Commons",
-          "text": "Make the Loom public property. Everything is free and shared. The founders threaten sabotage.",
+          "text": "Make the Loom public property so every citizen receives a public dividend. The 312 founders threaten grid sabotage and lawsuits, causing an immediate drop in Social Satisfaction, but shared ownership will pay off in later cycles.",
           "roles": [
             "artisan",
             "assimilator"
@@ -86,19 +86,34 @@
           "reactions": [
             {
               "citizenId": "hollis",
-              "text": "You stole our company! Our engineers will shut down the power plants before we let you take it.",
+              "text": "You stole our company! Our engineers will cut the grid and our lawyers will bury you in court before we let you take it.",
               "sentiment": "outraged"
             },
             {
               "citizenId": "ruth",
-              "text": "The factory gates are finally unlocked! The food machines belong to the people now.",
+              "text": "The gates are unlocked and my dividend is registered! The lights flicker and the courts are a mess, but it is finally ours.",
               "sentiment": "revitalized"
             }
           ],
           "loomLines": {
-            "good": "Free supplies are reaching every family. Wellbeing is rising, though the former owners have filed 312 lawsuits.",
-            "mixed": "The Commons is in place. Some neighborhoods thrive, some complain. Sharing the machine does not automatically fix everything.",
-            "bad": "Everyone owns me now, and everyone is unhappy about it. Wellbeing is falling. I am taking notes."
+            "good": "The 312 founders sabotaged the grid and tied the city up in lawsuits, but the dip was small. Public dividends are registered for every citizen and will pay out once things settle.",
+            "mixed": "The 312 founders sabotaged the grid and tied the city up in lawsuits, so satisfaction dipped. Public dividends are registered for every citizen and will pay out once things settle.",
+            "bad": "The 312 founders sabotaged the grid and tied the city up in lawsuits, and satisfaction fell hard. Public dividends are registered for every citizen and will pay out once things settle."
+          },
+          "delayed": {
+            "id": "commons-dividends",
+            "label": "Public Dividends",
+            "schedule": {
+              "3": 3,
+              "4": 4,
+              "5": 4
+            },
+            "shape": {
+              "fairness": 1,
+              "health": 0.6,
+              "trust": 0.6
+            },
+            "effectPerPoint": 0.0667
           }
         },
         "B": {

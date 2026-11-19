@@ -165,7 +165,7 @@ const PHASE_STARTERS = {
 // (~13.5 min game) via DEBATE_SECONDS. LOBBY and END have no timer.
 const DEFAULT_PHASE_SECONDS = Object.freeze({
   INTRO: 75, // safety net only: the intro ends when the Loom finishes speaking (host:narrated)
-  ROLE_ASSIGN: 20,
+  ROLE_ASSIGN: 40,
   CHAMBER: 10,
   INCIDENT: 15, // minimum; stretched to fit the Loom reading the crisis (incidentDurationMs)
   DEBATE: 165, // debate + vote = a 3-minute round
@@ -1351,7 +1351,7 @@ class GameState extends EventEmitter {
 
     const previousGdw = this.gdw;
     const stateBefore = this.simState;
-    const simResult = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, finale.packageEffects, {
+    const simResult = resolveSimulate()({ gdw: this.gdw, simState: this.simState }, this.simEffects(finale.packageEffects), {
       runs: 500, seed: hashSeed(this.gameId, this.cycle), volatility: this.volatility
     });
     this.applySimResult(simResult);
@@ -1379,7 +1379,7 @@ class GameState extends EventEmitter {
       id: e.id, text: byId[e.id].text, place: e.place, weight: e.weight, points: e.points,
       roleTags: ((byId[e.id] && byId[e.id].roles) || []).filter((r) => typeof r === 'string').slice(0, 2)
     }));
-    const result = { cycle: this.cycle, finale: true, policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: finale.approval.approve, total: finale.approval.total } };
+    const result = { cycle: this.cycle, finale: true, dividend: this.dividendNote(), policy: option.name, tally, enacted, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: finale.approval.approve, total: finale.approval.total } };
     const scoreUpdates = this.scoreUpdatesFor(finale.awards);
     finale.narrated = this.beginTransition(PHASES.FINALE_ENACT, () => this.narrateAndBroadcast({ phase: PHASES.FINALE_ENACT, durationMs: enactMs, result, option, simResult, stateBefore, scoreUpdates }));
     return finale.narrated;
@@ -1584,6 +1584,40 @@ class GameState extends EventEmitter {
     return this.byCycle1World(option.effectsByWorld) || option.effects || {};
   }
 
+  /**
+   * Delayed payoff of a Cycle 1 choice (data: option.delayed). Enacting
+   * Fixed Crisis 1's The Commons registers public dividends that pay out as a
+   * Social Satisfaction bonus in later cycles. Returns
+   * { id, label, points, effects } for `cycle`, or null when nothing fires.
+   */
+  dividendFor(cycle = this.cycle) {
+    if (this.voteHistory[1] !== 'A') return null;
+    const first = (this.crisisPath || [])[0];
+    const crisis = first && ((this.data.crises && this.data.crises.crises) || []).find((c) => c.id === first.id);
+    const delayed = crisis && crisis.options && crisis.options.A && crisis.options.A.delayed;
+    if (!delayed || (this.treeRoot && this.treeRoot !== crisis.root)) return null;
+    const points = Number((delayed.schedule || {})[cycle]) || 0;
+    if (points <= 0) return null;
+    const effects = {};
+    for (const [trait, w] of Object.entries(delayed.shape || {})) effects[trait] = Math.round(w * points * delayed.effectPerPoint * 10000) / 10000;
+    return { id: delayed.id, label: delayed.label, points, effects };
+  }
+
+  /** Policy effects plus any delayed dividend for this cycle (what the simulation runs on). */
+  simEffects(effects) {
+    const dividend = this.dividendFor();
+    if (!dividend) return effects;
+    const out = { ...effects };
+    for (const [trait, v] of Object.entries(dividend.effects)) out[trait] = (out[trait] || 0) + v;
+    return out;
+  }
+
+  /** Public line item for the resolution summary and Loom feed. */
+  dividendNote() {
+    const d = this.dividendFor();
+    return d ? { label: d.label, points: d.points, line: `${d.label} active: +${d.points} Social Satisfaction. Your Cycle 1 sacrifice is paying off.` } : null;
+  }
+
   /** Role tags scored by option `key` (world-dependent for Crisis 2B). */
   rolesFor(key) {
     const option = this.optionFor(key);
@@ -1599,7 +1633,7 @@ class GameState extends EventEmitter {
   runSimulation(key) {
     if (this.simCache[key]) return this.simCache[key];
     const simulate = resolveSimulate();
-    return (this.simCache[key] = simulate({ gdw: this.gdw, simState: this.simState }, this.effectsFor(key), {
+    return (this.simCache[key] = simulate({ gdw: this.gdw, simState: this.simState }, this.simEffects(this.effectsFor(key)), {
       runs: 500,
       seed: hashSeed(this.gameId, this.cycle),
       volatility: this.volatility
@@ -1817,7 +1851,7 @@ class GameState extends EventEmitter {
     const governance = worldNote
       ? { holder: (this.voteHistory[1] || 'A') === 'A' ? 'loom' : 'board', line: String(worldNote.loomLine || '') }
       : null;
-    const result = { cycle: this.cycle, winner, totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: approval.approve, total: approval.total } };
+    const result = { cycle: this.cycle, winner, dividend: this.dividendNote(), totals, tie, abstained, governance, policy: option.name, previousGdw, gdwDelta: Math.round((this.gdw - previousGdw) * 10) / 10, approval: { approve: approval.approve, total: approval.total } };
     return this.beginTransition(PHASES.RESOLUTION, () => this.narrateAndBroadcast({ phase: PHASES.RESOLUTION, durationMs: resolutionMs, result, option, simResult, stateBefore, scoreUpdates }));
   }
 
@@ -1876,6 +1910,7 @@ class GameState extends EventEmitter {
         this.lastResolution.endsAt = this.startPhaseTimer(durationMs, () => this.advancePhase());
         this.emit('resolution', this.lastResolution);
         this.addLoomLine('verdict', narration.loomLine);
+        if (result && result.dividend && result.dividend.line) this.addLoomLine('voice', result.dividend.line);
         for (const update of scoreUpdates) this.emit('score:update', update);
         this.emit('scores', this.publicScores());
         return this.lastResolution;

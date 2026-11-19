@@ -1031,6 +1031,7 @@
     if (resolving) {
       document.querySelectorAll('.res-badge').forEach((b) => { b.hidden = true; });
       document.getElementById('governance-line').hidden = true;
+      document.getElementById('dividend-line').hidden = true;
       document.getElementById('resolution-policy').textContent = 'The Loom is simulating 12 months';
       document.getElementById('resolution-loom').textContent = '…';
     }
@@ -1115,6 +1116,10 @@
     gov.hidden = !(r.governance && r.governance.line);
     gov.className = `governance-line ${r.governance ? `gov-${r.governance.holder}` : ''}`;
     gov.textContent = r.governance ? r.governance.line : '';
+    // A Cycle 1 choice paying out (e.g. The Commons' public dividends).
+    const div = document.getElementById('dividend-line');
+    div.hidden = !(r.dividend && r.dividend.line);
+    div.textContent = r.dividend ? `\u2726 ${r.dividend.line}` : '';
     // Tied vote: the Loom stepped in and picked the higher forecast median.
     document.getElementById('badge-tie').hidden = !r.tie;
     // Override detected: total vote weight exceeds the number of votes cast
