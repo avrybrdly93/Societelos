@@ -92,6 +92,7 @@ The Loom operates on a delicate balance between cooperative survival and competi
 | `PORT` | `3000` | Port for the projector and phone pages. |
 | `GEMINI_API_KEY` | *(blank)* | Google AI Studio key for live Loom narration and write-in moderation. Blank = fully offline. Server-side only; never sent to phones. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Flash-class model name. |
+| `LOOM_MODERATE_TIMEOUT_MS` | `20000` | Timeout for finale write-in moderation (other Loom calls keep their 8 s budget). The FINALE_MOD phase lasts 25 s so it outlasts this. |
 | `LOOM_OFFLINE` | `false` | `true` forces offline fallbacks even with a key (rehearsals without spending quota). |
 | `DEBATE_SECONDS` | `90` | Debate length for Cycles 1–4: `90` (~16 min game) or `60` (~13.5 min game). Also switchable per game from the lobby (`host:config`). |
 | `SHOW_FORECAST_BEFORE_VOTE` | `false` | Show the Loom's A/B forecast fans during the debate. Also switchable from the lobby. |

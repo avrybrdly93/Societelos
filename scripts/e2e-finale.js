@@ -190,7 +190,7 @@ async function hostChecks(browser, shot) {
 
   await phase('FINALE_MOD', { seconds: 10 });
   await page.waitForTimeout(100);
-  check('host FINALE_MOD shows the Loom interpreting', await visible('#finale-status') && /INTERPRETING COUNCIL PROPOSALS/.test(await text('#finale-status-text')));
+  check('host FINALE_MOD shows the Loom interpreting', await visible('#finale-status') && /THE LOOM IS THINKING/.test(await text('#finale-status-text')));
   await phase('FINALE_MOD', { seconds: 25, resubmit: true, revising: 1 });
   check('host resubmit window says one proposal is being revised', /1 proposal is being revised/.test(await text('#finale-status-sub')), await text('#finale-status-sub'));
 

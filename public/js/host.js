@@ -1375,7 +1375,7 @@
     const moderating = payload.phase === 'FINALE_MOD';
     panel.hidden = !moderating;
     if (!moderating) return;
-    document.getElementById('finale-status-text').textContent = 'THE LOOM IS INTERPRETING COUNCIL PROPOSALS...';
+    document.getElementById('finale-status-text').textContent = 'THE LOOM IS THINKING...';
     document.getElementById('finale-status-sub').textContent = payload.resubmit
       ? `${payload.revising || 'Some'} proposal${payload.revising === 1 ? ' is' : 's are'} being revised by ${payload.revising === 1 ? 'its author' : 'their authors'}.`
       : 'Cleaning language. Translating intent into numbers. Withholding judgement.';

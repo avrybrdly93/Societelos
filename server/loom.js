@@ -26,7 +26,10 @@ function getConfig(env = process.env) {
     apiKey,
     enabled: apiKey.length > 0 && env.LOOM_OFFLINE !== 'true',
     model: (env.GEMINI_MODEL || DEFAULT_MODEL).trim(),
-    timeoutMs: 8000
+    timeoutMs: 8000,
+    // Write-in moderation is one batch call for five submissions and the
+    // newer Flash models can take over 8 s, so it gets its own, longer budget.
+    moderateTimeoutMs: Number(env.LOOM_MODERATE_TIMEOUT_MS) > 0 ? Number(env.LOOM_MODERATE_TIMEOUT_MS) : 20000
   };
 }
 
@@ -564,7 +567,8 @@ async function moderate(submissions = [], crisis = {}, opts = {}) {
   const list = (submissions || [])
     .map((s) => ({ node: safeNode(s.node), text: truncate(redactNames(s.text, names), 280) }))
     .filter((s) => s.node);
-  const cfg = opts.config || getConfig();
+  const baseCfg = opts.config || getConfig();
+  const cfg = baseCfg.moderateTimeoutMs ? { ...baseCfg, timeoutMs: baseCfg.moderateTimeoutMs } : baseCfg;
   if (!cfg.enabled || !list.length) return moderateFallback(list);
   try {
     const examples = calibrationExamples(crisis);

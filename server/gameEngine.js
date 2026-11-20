@@ -199,7 +199,7 @@ const DEFAULT_PHASE_SECONDS = Object.freeze({
   RESOLUTION: 20,
   WORLD_REVEAL: 10,
   FINALE_WRITE: 120, // two minutes to write a policy
-  FINALE_MOD: 10,
+  FINALE_MOD: 25, // must outlast the Loom moderation timeout (LOOM_MODERATE_TIMEOUT_MS, default 20 s)
   FINALE_DEBATE: 60,
   FINALE_RANK: 30,
   FINALE_ENACT: 20

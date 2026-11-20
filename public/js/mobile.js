@@ -234,7 +234,7 @@
     RESOLUTION: 'The Loom is simulating your decision. Watch the screen.',
     WORLD_REVEAL: 'Your world is taking shape. Watch the screen.',
     FINALE_WRITE: 'Finale in progress. Watch the screen.',
-    FINALE_MOD: 'The Loom is reviewing policies…',
+    FINALE_MOD: 'The Loom is thinking…',
     FINALE_DEBATE: 'Debate the policies on the screen.',
     FINALE_RANK: 'Ranking in progress…',
     FINALE_ENACT: 'The Loom is enacting your policies. Watch the screen.',
@@ -702,7 +702,7 @@
     // (After a refresh the phone knows only that it submitted, not the text.)
     document.getElementById('finale-wait-mine').textContent = typeof state.finaleSubmitted === 'string' && state.finaleSubmitted ? `"${state.finaleSubmitted}"` : '';
     document.getElementById('finale-wait-status').textContent = status || (state.phase === 'FINALE_MOD'
-      ? 'Cleaning language. Translating intent into numbers.'
+      ? 'Thinking… cleaning language, translating intent into numbers.'
       : 'Submitted. Waiting for the other council members.');
     showView('m-view-finale-wait');
   }
