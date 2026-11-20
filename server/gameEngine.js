@@ -2016,6 +2016,19 @@ class GameState extends EventEmitter {
     for (const line of introTransmission(this.startGdw)) this.addLoomLine('voice', line);
     for (const line of BRIEFING_BEATS) this.addLoomLine('voice', line);
     console.log(`[game ${this.roomCode}] started (gameId ${this.gameId})`);
+    // Dev only (test branch): JUMP_TO_FINALE=true goes straight from the host's
+    // start to the write-in. Roles are still dealt; the intro, chamber and
+    // incident card are skipped.
+    if (String(process.env.JUMP_TO_FINALE).toLowerCase() === 'true') {
+      const gameId = this.gameId;
+      setImmediate(() => {
+        if (this.gameId !== gameId || this.phase !== PHASES.INTRO) return;
+        this.advancePhase(); // ROLE_ASSIGN
+        this.advancePhase(); // CHAMBER
+        this.advancePhase(); // INCIDENT (cycle 5, see the jump in advancePhase)
+        if (this.phase === PHASES.INCIDENT && this.isFinaleWriteIn()) this.advancePhase(); // FINALE_WRITE
+      });
+    }
     return true;
   }
 

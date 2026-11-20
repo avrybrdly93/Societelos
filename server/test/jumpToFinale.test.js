@@ -16,6 +16,7 @@ test('JUMP_TO_FINALE skips cycles 1-4 and plays the write-in finale', async () =
       const cycles = new Set(out.phases.map((p) => p.split(':')[0]));
       assert.deepEqual([...cycles].filter((c) => c !== '0' && c !== '1'), ['5'], 'only the finale cycle is played');
       assert.ok(out.phases.includes('5:FINALE_WRITE'), 'write-in phase reached');
+      assert.ok(!out.phases.some((p) => /:(DEBATE|VOTE)$/.test(p)), 'no debate or vote');
       assert.ok(out.phases.includes('5:FINALE_MOD'), 'moderation phase reached');
       assert.equal(out.game.worldKey, 'BA');
       assert.equal(out.game.crisis.id, 'ba-vote-to-seize');
