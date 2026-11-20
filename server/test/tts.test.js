@@ -113,3 +113,14 @@ test('the hourly cap on uncached ElevenLabs calls falls back to 503, then resets
   assert.equal((await tts.synth('three', 'x')).status, 200, 'an hour later the cap has reset');
   assert.equal(calls.length, 3);
 });
+
+test('speech speed defaults to 1.2, is sent as voice_settings.speed and is clamped to 0.7-1.2', async () => {
+  const calls = [];
+  const tts = createTts({ ...quiet, env: { ELEVENLABS_API_KEY: 'k' }, fetchImpl: okFetch(calls) });
+  await tts.synth(LINE);
+  assert.equal(JSON.parse(calls[0].init.body).voice_settings.speed, 1.2);
+  assert.equal(getConfig({ ELEVENLABS_API_KEY: 'k', ELEVENLABS_SPEED: '1' }).speed, 1);
+  assert.equal(getConfig({ ELEVENLABS_API_KEY: 'k', ELEVENLABS_SPEED: '2' }).speed, 1.2);
+  assert.equal(getConfig({ ELEVENLABS_API_KEY: 'k', ELEVENLABS_SPEED: '0.1' }).speed, 0.7);
+  assert.equal(getConfig({ ELEVENLABS_API_KEY: 'k', ELEVENLABS_SPEED: 'fast' }).speed, 1.2);
+});
