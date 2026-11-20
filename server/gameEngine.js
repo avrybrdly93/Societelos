@@ -853,6 +853,16 @@ class GameState extends EventEmitter {
     // A cycle begins at each INCIDENT reached from setup, a resolution or the world reveal.
     if (to === PHASES.INCIDENT && from !== PHASES.INCIDENT) {
       this.startCycle(from === PHASES.CHAMBER ? 1 : this.cycle + 1);
+      // Dev only: JUMP_TO_FINALE=true skips cycles 1-4 and opens the write-in
+      // finale (cycle 5) straight after the council chamber. FINALE_WORLD picks
+      // the world (AA, AB, BA or BB; default BA, "The Vote to Seize").
+      if (from === PHASES.CHAMBER && String(process.env.JUMP_TO_FINALE).toLowerCase() === 'true') {
+        const worlds = (this.data.crises && this.data.crises.worlds) || {};
+        const wanted = String(process.env.FINALE_WORLD || 'BA').toUpperCase();
+        this.cycle = this.totalCycles;
+        this.worldKey = worlds[wanted] ? wanted : Object.keys(worlds)[0] || null;
+        console.log(`[game ${this.roomCode}] JUMP_TO_FINALE: starting at cycle ${this.cycle}, world ${this.worldKey}`);
+      }
     }
     const starter = PHASE_STARTERS[to];
     if (starter && typeof this[starter] === 'function') {
