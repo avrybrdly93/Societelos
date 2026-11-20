@@ -29,6 +29,7 @@ const MAX_TEXT = 600;              // longest authored line is ~150 chars; Gemin
 const CLIENT_LIMIT_PER_MIN = 60;   // one host prefetches ~15 lines at once
 const DEFAULT_MAX_CALLS_PER_HOUR = 400;
 const CACHE_MAX = 300;
+const DEFAULT_SPEED = 1.2;
 
 function getProvider(env = process.env) {
   const explicit = (env.TTS_PROVIDER || '').trim().toLowerCase();
@@ -39,12 +40,16 @@ function getProvider(env = process.env) {
 function getConfig(env = process.env) {
   const apiKey = (env.ELEVENLABS_API_KEY || '').trim();
   const cap = Number(env.ELEVENLABS_MAX_CALLS_PER_HOUR);
+  // Speech speed: 1.0 is normal; ElevenLabs accepts 0.7 to 1.2. Defaults to 1.2 (20% faster).
+  const rawSpeed = env.ELEVENLABS_SPEED === undefined || String(env.ELEVENLABS_SPEED).trim() === '' ? DEFAULT_SPEED : Number(env.ELEVENLABS_SPEED);
+  const speed = Number.isFinite(rawSpeed) ? Math.min(1.2, Math.max(0.7, rawSpeed)) : DEFAULT_SPEED;
   return {
     provider: getProvider(env),
     apiKey,
     enabled: apiKey.length > 0 && env.LOOM_OFFLINE !== 'true',
     voiceId: (env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID).trim(),
     model: (env.ELEVENLABS_MODEL || DEFAULT_MODEL).trim(),
+    speed,
     maxCallsPerHour: Number.isFinite(cap) && cap > 0 ? cap : DEFAULT_MAX_CALLS_PER_HOUR,
     timeoutMs: TIMEOUT_MS
   };
@@ -81,7 +86,7 @@ function createTts(deps = {}) {
       const res = await fetchImpl(`${API_BASE}/${encodeURIComponent(cfg.voiceId)}?output_format=mp3_44100_128`, {
         method: 'POST',
         headers: { 'xi-api-key': cfg.apiKey, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-        body: JSON.stringify({ text, model_id: cfg.model }),
+        body: JSON.stringify({ text, model_id: cfg.model, voice_settings: { speed: cfg.speed } }),
         signal: controller.signal
       });
       if (!res.ok) {
