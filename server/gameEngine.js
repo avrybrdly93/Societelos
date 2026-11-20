@@ -860,6 +860,8 @@ class GameState extends EventEmitter {
         const worlds = (this.data.crises && this.data.crises.worlds) || {};
         const wanted = String(process.env.FINALE_WORLD || 'BA').toUpperCase();
         this.cycle = this.totalCycles;
+        // Blitz (session timer) mode decides the finale from this, not the cycle number.
+        this._designatedFinaleCycle = this.totalCycles;
         this.worldKey = worlds[wanted] ? wanted : Object.keys(worlds)[0] || null;
         console.log(`[game ${this.roomCode}] JUMP_TO_FINALE: starting at cycle ${this.cycle}, world ${this.worldKey}`);
       }

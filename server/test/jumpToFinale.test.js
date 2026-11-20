@@ -25,3 +25,18 @@ test('JUMP_TO_FINALE skips cycles 1-4 and plays the write-in finale', async () =
     delete process.env.FINALE_WORLD;
   }
 });
+
+test('JUMP_TO_FINALE also works with the session timer (blitz mode) on', async () => {
+  process.env.JUMP_TO_FINALE = 'true';
+  process.env.SESSION_TIMER_ENABLED = 'true';
+  try {
+    await withLoom({ moderate: async (subs) => okModeration(subs) }, async () => {
+      const out = await playGame({ gameId: 'jump-02', world: 'AA' });
+      assert.ok(out.phases.includes('5:FINALE_WRITE'), 'write-in phase reached, not a binary vote');
+      assert.ok(!out.phases.includes('5:VOTE'), 'no A/B vote on the first issue');
+    });
+  } finally {
+    delete process.env.JUMP_TO_FINALE;
+    delete process.env.SESSION_TIMER_ENABLED;
+  }
+});
