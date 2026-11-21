@@ -824,7 +824,7 @@ Because the four domains have asymmetric complexity, tasks are distributed unequ
 - [ ] **TASK-738:** Verify that across all 4 worlds (`AA`, `AB`, `BA`, `BB`), no single binary choice in Cycles 3–4 causes an unavoidable 100% deterministic collapse from a median starting state.
 - [ ] **TASK-739:** Verify that reckless consecutive choices (ignoring tanking traits and shocks) reliably push $P(\text{collapse})$ above 30% and can trigger the 0% GDW Loom Shutdown ending.
 - [x] **TASK-740:** Verify that the Catalyst scoring threshold ($\ge 10$ GDW move in a cycle) triggers in roughly 1.5 to 2.5 cycles per 5-cycle game so the Catalyst is competitive with the other 4 roles.
-- [ ] **TASK-741:** Fine-tune `alpha` or trait weights in `data/sim.json` if Catalyst trigger rate is outside $[1.5, 2.5]$ cycles per game across 1,000 simulated games.
+- [x] **TASK-741:** Fine-tune `alpha` or trait weights in `data/sim.json` if Catalyst trigger rate is outside $[1.5, 2.5]$ cycles per game across 1,000 simulated games.
 - [ ] **TASK-742:** Audit all timeout and error-handling paths in `server/loom.js` to guarantee the **Offline Demo Mandate**: a full 5-cycle game runs smoothly with Wi-Fi internet completely disabled (`GEMINI_API_KEY` invalid, unreachable DNS, or network unplugged).
 - [ ] **TASK-743:** Verify that when internet is unreachable, `fetch` failures in `server/loom.js` resolve to fallbacks immediately ($< 100\text{ ms}$) rather than making players wait the full 8 seconds on a dead connection, while slow hanging connections still abort cleanly at `8,000 ms`.
 - [ ] **TASK-744:** Test `loom.narrate` offline fallback across all 5 cycles to confirm citizen messages dynamically reflect the districts and traits that moved most in the simulation summary.
