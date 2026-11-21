@@ -531,6 +531,49 @@ test('callGemini retries once on 429/503 inside the 8 s budget, then gives up', 
   } finally { console.warn = warn; }
 });
 
+test('Loom uses fast network failures immediately but still aborts a hanging request at 8 seconds', async (t) => {
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const started = Date.now();
+    let calls = 0;
+    const unreachable = await loom.narrate(
+      { winningOption: { name: 'P' }, simSummary: {}, citizens },
+      { config: ONLINE, fetchImpl: async () => { calls++; throw new TypeError('fetch failed'); } }
+    );
+    const elapsedMs = Date.now() - started;
+    assert.equal(calls, 1, 'do not retry an immediate network failure');
+    assert.ok(elapsedMs < 100, `immediate fetch rejection took ${elapsedMs} ms`);
+    assert.equal(unreachable.fallback, true);
+
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    let settled = false;
+    let aborted = false;
+    const hanging = (url, init) => new Promise((resolve, reject) => {
+      init.signal.addEventListener('abort', () => {
+        aborted = true;
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      });
+    });
+    const pending = loom.narrate(
+      { winningOption: { name: 'P' }, simSummary: {}, citizens },
+      { config: { ...ONLINE, timeoutMs: 8000 }, fetchImpl: hanging }
+    ).then((out) => { settled = true; return out; });
+    await Promise.resolve();
+    t.mock.timers.tick(7999);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(settled, false, 'a hanging request is still pending before its deadline');
+    t.mock.timers.tick(1);
+    const timedOut = await pending;
+    assert.equal(aborted, true, 'the request aborts at 8,000 ms');
+    assert.equal(timedOut.fallback, true);
+  } finally {
+    console.warn = warn;
+  }
+});
+
 test('every Gemini call logs latency and token usage, never student write-ins in privacy mode', async () => {
   const lines = [];
   const logger = (l) => lines.push(l);
