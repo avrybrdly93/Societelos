@@ -1,10 +1,11 @@
 'use strict';
 
 // Societelos — The Loom.
-// The single module that talks to the Gemini API. Every call has an 8-second
-// timeout and an offline fallback, so the game never waits on (or breaks
-// because of) the network. The Loom never sets scores or game state: it only
-// returns text and clamped effect vectors for the engine to use.
+// The single module that talks to the Gemini API. Narration and connection
+// checks use an 8-second timeout; write-in moderation has a separate 20-second
+// default. Every call has an offline fallback, so network failure cannot break
+// the game. The Loom never sets scores or game state: it only returns text and
+// clamped effect vectors for the engine to use.
 //
 // Public interface (all async, all resolve, never reject):
 //   narrate(context)                 -> { loomLine, messages: [{ citizenId, text }], fallback? }
@@ -62,10 +63,10 @@ const SYSTEM_PROMPT = [
 ].join('\n');
 
 // ---------------------------------------------------------------------------
-// Transport: fetch with a hard 8-second AbortController timeout.
+// Transport: fetch with a hard AbortController timeout from call config.
 // ---------------------------------------------------------------------------
 
-// Retry-once policy for transient Gemini errors (inside the 8 s budget).
+// Retry-once policy for transient Gemini errors (inside the call timeout budget).
 const RETRYABLE_STATUS = [429, 503];
 const RETRY_BACKOFF_MS = 600;
 const RETRY_MAX_BACKOFF_MS = 2000;
